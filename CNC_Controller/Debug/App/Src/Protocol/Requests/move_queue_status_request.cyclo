@@ -1,0 +1,10 @@
+../App/Inc/Protocol/Requests/../frame_defs.h:91:19:has_header_tail	5
+../App/Inc/Protocol/Requests/../frame_defs.h:138:20:req_init	1
+../App/Inc/Protocol/Requests/../frame_defs.h:146:20:req_set_tail	1
+../App/Inc/Protocol/Requests/../frame_defs.h:157:19:frame_expect_req	5
+../App/Src/Protocol/Requests/move_queue_status_request.c:3:5:move_queue_status_req_decoder	4
+../App/Src/Protocol/Requests/move_queue_status_request.c:13:5:move_queue_status_req_encoder	4
+../App/Src/Protocol/Requests/move_queue_status_request.c:22:9:move_queue_status_req_calc_parity	1
+../App/Src/Protocol/Requests/move_queue_status_request.c:26:5:move_queue_status_req_check_parity	1
+../App/Src/Protocol/Requests/move_queue_status_request.c:31:5:move_queue_status_req_set_parity	1
+../App/Src/Protocol/Requests/move_queue_status_request.c:36:25:move_queue_status_req_make_default	1

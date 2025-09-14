@@ -97,16 +97,20 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 
 ---
 
-## 6) Estrutura do Firmware (gerado pelo CubeIDE)
+## 6) Estrutura do Firmware (Core gerado, App autoral)
 
 ```
 Core/
-  Inc/ main.h, gpio.h, tim.h, spi.h, usart.h, dma.h, ...
-  Src/ main.c, gpio.c, tim.c, spi.c, usart.c, dma.c, stm32l4xx_it.c, ...
-App/   (sugestão)
-  protocol/           // framing, router, checksum
-  services/           // motion_service, led_service, ...
-  console/            // VCP UART (DMA) p/ logs
+  Inc/ main.h, gpio.h, tim.h, spi.h, usart.h, dma.h, ...   (gerado CubeMX)
+  Src/ main.c, gpio.c, tim.c, spi.c, usart.c, dma.c, ...   (gerado CubeMX)
+App/
+  Inc/                // headers autorais (inclua esta pasta no include path)
+    protocol/         // frame_defs.h, router.h, requests/*.h, responses/*.h
+    services/         // service_adapters.h, */*.h
+  Src/                // fontes autorais
+    protocol/         // router.c, requests/*.c, responses/*.c
+    services/         // home/, led/, motion/, probe/, safety/
+  TESTS/              // testes unitários host-based (CMake)
 Drivers/ CMSIS, HAL/...
 ```
 
@@ -149,10 +153,10 @@ Resumo dos frames de **REQUEST** suportados pelo HDL, com foco exclusivo na **es
 - **Tail de request**: `0x55` (`REQ_TAIL`)  
 - **Tipos (`msgType`)**: ver `src/protocol/framings/constants/protocol_constants_pkg.sv`
 
-**LED_CTRL (7 bytes) — 0x07**  
+**LED_CTRL (9 bytes) — 0x07**  
 - Arquivo: `src/protocol/framings/requests/led_control_request_pkg.sv`  
-- Layout: `[0]=AA, [1]=07, [2]=FrameID, [3]=LedMask, [4]=LedValue, [5]=Parity, [6]=55`  
-- Paridade: `Parity = XOR(bytes 1..4)`  
+- Layout: `[0]=AA, [1]=07, [2]=FrameID, [3]=LedMask(R/G/B), [4]=R, [5]=G, [6]=B, [7]=Parity( XOR bytes 1..6 ), [8]=55`  
+- Paridade: `Parity = XOR(bytes 1..6)`  
 - Helpers:  
   - `decoder(raw[55:0])->struct`  
   - `encoder(struct)->raw[55:0]`  
@@ -281,7 +285,7 @@ Resumo dos frames de **RESPONSE** publicados pelo HDL, com foco exclusivo na **e
 ## 12) Router & Serviços (lado STM32)
 
 - **Router SPI**: consome bytes do **RX DMA circular**, monta **frames**, valida **header/tail/paridade** e despacha pelo `msgType`:
-  - `led_service`: ler/escrever LED(s) conforme `LED_CTRL`.
+  - `led_service`: ler/escrever LED RGB conforme `LED_CTRL` (9 bytes). Ver `CNC_Controller/App/README.md` para pinos/mapeamento.
   - `motion_service`: *enqueue* de segmentos (`MOVE_QUEUE_ADD`), *status*, *start/end*, *home/probe*.
 - **Respostas**: seguem o framing **AB..54** e ecoam `FrameID`.
 
@@ -300,6 +304,20 @@ void HAL_SPI_TxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ tx
 - **Filtro de velocidade**: média móvel 50–200 ms sobre `ΔN` reduz ruído a baixas rotações.  
 - **Sincronismo**: o DDA (TIM6) é o relógio mestre; atualize *setpoints* no TIM7 (1 kHz).  
 - **Homing**: *latch* preciso do Z (se usar timestamp sub-tick), com correção de fase do DDA.
+
+---
+
+## 9) Testes Unitários (Ubuntu)
+
+- Local: `CNC_Controller/App/Tests` (CMake + CTest).
+- Requisitos: `sudo apt-get install -y build-essential cmake`.
+- Rodar:
+  - `cd CNC_Controller/App/Tests`
+  - `cmake -S . -B build`
+  - `cmake --build build -j`
+  - `ctest --test-dir build -V`
+
+No CubeIDE, adicione `App/Inc` em Paths & Symbols para os includes `protocol/...` e `services/...` funcionarem.
 
 ---
 

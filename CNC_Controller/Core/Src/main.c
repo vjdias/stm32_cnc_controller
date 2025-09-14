@@ -26,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app.h"
 
 /* USER CODE END Includes */
 
@@ -97,17 +98,19 @@ int main(void) {
 	MX_TIM7_Init();
 	MX_TIM3_Init();
 	MX_USART1_UART_Init();
-	/* USER CODE BEGIN 2 */
+    /* USER CODE BEGIN 2 */
+    app_init();
 
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-	while (1) {
-		/* USER CODE END WHILE */
+    while (1) {
+        /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
-	}
+        /* USER CODE BEGIN 3 */
+        app_poll();
+    }
 	/* USER CODE END 3 */
 }
 

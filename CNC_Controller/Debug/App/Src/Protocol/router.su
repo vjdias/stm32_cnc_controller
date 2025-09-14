@@ -1,0 +1,9 @@
+../App/Src/Protocol/router.c:20:6:router_init	32	static
+../App/Src/Protocol/router.c:29:12:is_req_complete	24	static
+../App/Src/Protocol/router.c:42:13:dispatch	32	static
+../App/Src/Protocol/router.c:84:6:router_feed_bytes	32	static
+../App/Src/Protocol/router.c:101:18:resp_fifo_create	16	static
+../App/Src/Protocol/router.c:105:6:resp_fifo_destroy	24	static
+../App/Src/Protocol/router.c:114:5:resp_fifo_push	32	static
+../App/Src/Protocol/router.c:136:5:resp_fifo_pop	32	static
+../App/Src/Protocol/router.c:152:5:resp_fifo_count	16	static

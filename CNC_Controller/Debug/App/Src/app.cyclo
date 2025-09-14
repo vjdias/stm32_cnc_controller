@@ -1,0 +1,5 @@
+../App/Src/app.c:21:6:app_init	1
+../App/Src/app.c:36:6:app_poll	5
+../App/Src/app.c:54:6:HAL_SPI_RxHalfCpltCallback	3
+../App/Src/app.c:59:6:HAL_SPI_RxCpltCallback	3
+../App/Src/app.c:64:6:HAL_SPI_TxCpltCallback	3

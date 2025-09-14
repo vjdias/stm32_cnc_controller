@@ -1,0 +1,15 @@
+../App/Inc/Protocol/Requests/../frame_defs.h:40:23:xor_reduce_bytes	2
+../App/Inc/Protocol/Requests/../frame_defs.h:59:19:check_parity_byte	2
+../App/Inc/Protocol/Requests/../frame_defs.h:65:19:set_parity_byte	2
+../App/Inc/Protocol/Requests/../frame_defs.h:91:19:has_header_tail	5
+../App/Inc/Protocol/Requests/../frame_defs.h:138:20:req_init	1
+../App/Inc/Protocol/Requests/../frame_defs.h:146:20:req_set_tail	1
+../App/Inc/Protocol/Requests/../frame_defs.h:157:19:frame_expect_req	5
+../App/Inc/Protocol/Requests/../frame_defs.h:180:19:parity_set_byte_1N	1
+../App/Inc/Protocol/Requests/../frame_defs.h:184:19:parity_check_byte_1N	1
+../App/Src/Protocol/Requests/led_control_request.c:7:5:led_ctrl_req_decoder	4
+../App/Src/Protocol/Requests/led_control_request.c:21:9:led_ctrl_req_calc_parity	6
+../App/Src/Protocol/Requests/led_control_request.c:28:5:led_ctrl_req_encoder	4
+../App/Src/Protocol/Requests/led_control_request.c:42:5:led_ctrl_req_check_parity	2
+../App/Src/Protocol/Requests/led_control_request.c:48:5:led_ctrl_req_set_parity	3
+../App/Src/Protocol/Requests/led_control_request.c:54:16:led_ctrl_req_make_default	1

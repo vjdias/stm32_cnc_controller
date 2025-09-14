@@ -1,0 +1,11 @@
+../App/Src/Services/Log/log_service.c:24:24:rb_count	2
+../App/Src/Services/Log/log_service.c:28:24:rb_space	1
+../App/Src/Services/Log/log_service.c:31:13:rb_push_bytes	6
+../App/Src/Services/Log/log_service.c:41:13:push_line	3
+../App/Src/Services/Log/log_service.c:48:6:log_service_init	1
+../App/Src/Services/Log/log_service.c:55:6:log_set_enabled	1
+../App/Src/Services/Log/log_service.c:56:6:log_set_mode	1
+../App/Src/Services/Log/log_service.c:58:6:log_event_ids	4
+../App/Src/Services/Log/log_service.c:68:6:log_event_names	7
+../App/Src/Services/Log/log_service.c:81:6:log_poll	8
+../App/Src/Services/Log/log_service.c:101:6:HAL_UART_TxCpltCallback	3
