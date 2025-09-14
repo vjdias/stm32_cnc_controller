@@ -60,7 +60,7 @@ void log_event_ids(uint8_t service_id, uint8_t state_id, int32_t status){
     if(s_mode != LOG_MODE_CONCISE) return;
     char line[64];
     // Format: L,svc=<id>,state=<id>,status=<num>\r\n
-    int nn = snprintf(line, sizeof line, "L,svc=%u,state=%u,status=%ld\r\n",
+    int nn = snprintf(line, sizeof line, "L:svc=%u,state=%u,status=%ld\r\n",
                       (unsigned)service_id, (unsigned)state_id, (long)status);
     if(nn > 0) push_line(line);
 }
@@ -73,7 +73,7 @@ void log_event_names(const char* service_name, const char* state_name, const cha
     if(!status_text) status_text = "?";
     char line[160];
     // Format: LOG,service=<name>,state=<name>,status=<text>\r\n
-    int nn = snprintf(line, sizeof line, "LOG,service=%s,state=%s,status=%s\r\n",
+    int nn = snprintf(line, sizeof line, "LOG:service=%s,state=%s,status=%s\r\n",
                       service_name, state_name, status_text);
     if(nn > 0) push_line(line);
 }
