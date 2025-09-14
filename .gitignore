@@ -1,0 +1,8 @@
+# Workspace-level metadata
+.metadata/
+
+# Project metadata inside CNC_Controller (Eclipse/STM32CubeMX)
+CNC_Controller/.cproject
+CNC_Controller/.project
+CNC_Controller/.mxproject
+CNC_Controller/.settings/
