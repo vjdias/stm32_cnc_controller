@@ -303,6 +303,25 @@ void HAL_SPI_TxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ tx
 
 ---
 
+## 14) Helpers C (frame_defs.h) & Retornos Padronizados
+
+- Helpers genéricos adicionados para reduzir repetição entre requests/responses:
+  - `req_init(raw, type)` / `resp_init(raw, type)` — escreve header e tipo.
+  - `req_set_tail(raw, idx)` / `resp_set_tail(raw, idx)` — define o tail no índice final.
+  - Paridade sobre bytes `1..N` (do campo `type` até o último campo):
+    - `parity_set_byte_1N(raw, last_idx, parity_idx)` / `parity_check_byte_1N(...)`.
+    - `parity_set_bit_1N(raw, last_idx, parity_idx)` / `parity_check_bit_1N(...)`.
+  - Validadores de frame: `frame_expect_req(raw,len,type,min_len)`, `frame_expect_resp(...)`.
+
+- Códigos de retorno padronizados (todas as funções de encoder/decoder usam):
+  - `PROTO_OK = 0`: sucesso.
+  - `PROTO_WARN = 1`: aviso (opcional, futuro uso).
+  - Erros (< 0): `PROTO_ERR_ARG` (argumento/len inválido), `PROTO_ERR_FRAME` (header/tail/tipo), `PROTO_ERR_ALLOC`, `PROTO_ERR_RANGE`, `PROTO_ERR_PARITY`.
+
+- Macros utilitárias: `PROTO_SUCCEEDED(x)`, `PROTO_FAILED(x)`, `PROTO_IS_WARN(x)`.
+
+---
+
 ## 15) Checklist Rápido
 
 - [ ] HCLK=80 MHz; APB1=/2; APB2=/1.  
