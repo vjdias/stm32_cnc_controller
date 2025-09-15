@@ -3,7 +3,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "stm32l4xx_hal.h" // for ITM_SendChar
+#include "usart.h"
 
 #ifndef LOG_BUF_SZ
 #define LOG_BUF_SZ 1024u
@@ -17,6 +17,9 @@ static volatile log_mode_t s_mode = LOG_MODE_CONCISE;
 static uint8_t s_buf[LOG_BUF_SZ];
 static volatile uint16_t s_head = 0; // write index
 static volatile uint16_t s_tail = 0; // read index
+static volatile uint8_t s_tx_busy = 0;
+static uint8_t s_tx_buf[LOG_CHUNK_MAX];
+static uint16_t s_tx_len = 0;
 
 static inline uint16_t rb_count(void){
     uint16_t h = s_head, t = s_tail;
@@ -46,17 +49,7 @@ void log_service_init(void){
     s_enabled = LOG_DEFAULT_ENABLED;
     s_mode = LOG_DEFAULT_MODE;
     s_head = s_tail = 0;
-
-    /* Enable trace and configure SWO for ITM output */
-    DBGMCU->CR |= DBGMCU_CR_TRACE_IOEN;
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    ITM->LAR = 0xC5ACCE55;           /* Unlock ITM */
-    TPI->SPPR = 2;                   /* NRZ/USART encoding */
-    TPI->ACPR = (HAL_RCC_GetHCLKFreq() / 2000000U) - 1U; /* 2 MHz SWO */
-    TPI->FFCR = 0x100U;              /* Formatter: flush on TPIU disable */
-    ITM->TPR = 0U;                   /* All stimulus ports accessible */
-    ITM->TCR = ITM_TCR_ITMENA_Msk | ITM_TCR_SWOENA_Msk; /* Enable ITM + SWO */
-    ITM->TER = 1U;                   /* Enable stimulus port 0 */
+    s_tx_busy = 0;
 }
 
 void log_set_enabled(int enabled){ s_enabled = (enabled != 0); }
@@ -87,18 +80,28 @@ void log_event_names(const char* service_name, const char* state_name, const cha
 
 void log_poll(void){
     if(!s_enabled) return;
+    if(s_tx_busy) return; // wait for current IT transfer to complete
     uint16_t cnt = rb_count();
     if(!cnt) return;
     uint16_t n = (cnt > LOG_CHUNK_MAX) ? LOG_CHUNK_MAX : cnt;
-    for(uint16_t i = 0; i < n; ++i){
-        ITM_SendChar(s_buf[s_tail]);
-        s_tail = (uint16_t)((s_tail + 1) % LOG_BUF_SZ);
+    uint16_t first = (uint16_t)((s_head >= s_tail) ? (n) : (uint16_t)(LOG_BUF_SZ - s_tail));
+    if(first > n) first = n;
+    memcpy(s_tx_buf, &s_buf[s_tail], first);
+    if(first < n){
+        memcpy(s_tx_buf + first, &s_buf[0], n - first);
+    }
+    if(HAL_UART_Transmit_IT(&huart1, s_tx_buf, (uint16_t)n) == HAL_OK){
+        s_tail = (uint16_t)((s_tail + n) % LOG_BUF_SZ);
+        s_tx_len = n;
+        s_tx_busy = 1;
     }
 }
 
-int __io_putchar(int ch){
-    ITM_SendChar((uint32_t)ch);
-    return ch;
+// Keep ISR work minimal; just clear busy so app can schedule next chunk.
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+    if(huart && huart->Instance == USART1){
+        s_tx_busy = 0;
+    }
 }
 
 #endif // LOG_ENABLE
