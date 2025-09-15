@@ -1,4 +1,4 @@
-../App/Src/Services/Safety/safety_service.c:5:6:safety_service_init	1
-../App/Src/Services/Safety/safety_service.c:8:6:safety_estop_assert	1
-../App/Src/Services/Safety/safety_service.c:11:6:safety_estop_release	2
-../App/Src/Services/Safety/safety_service.c:15:5:safety_is_safe	1
+../App/Src/Services/Safety/safety_service.c:10:6:safety_service_init	1
+../App/Src/Services/Safety/safety_service.c:15:6:safety_estop_assert	1
+../App/Src/Services/Safety/safety_service.c:20:6:safety_estop_release	2
+../App/Src/Services/Safety/safety_service.c:26:5:safety_is_safe	1

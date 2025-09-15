@@ -1,8 +1,8 @@
-../App/Src/Services/Motion/motion_service.c:5:6:motion_service_init	1
-../App/Src/Services/Motion/motion_service.c:12:24:motion_status_get	1
-../App/Src/Services/Motion/motion_service.c:16:6:motion_on_tim6_tick	1
-../App/Src/Services/Motion/motion_service.c:18:6:motion_on_tim7_tick	1
-../App/Src/Services/Motion/motion_service.c:21:6:motion_on_move_queue_add	2
-../App/Src/Services/Motion/motion_service.c:28:6:motion_on_move_queue_status	1
-../App/Src/Services/Motion/motion_service.c:32:6:motion_on_start_move	2
-../App/Src/Services/Motion/motion_service.c:38:6:motion_on_move_end	1
+../App/Src/Services/Motion/motion_service.c:10:6:motion_service_init	1
+../App/Src/Services/Motion/motion_service.c:19:24:motion_status_get	1
+../App/Src/Services/Motion/motion_service.c:23:6:motion_on_tim6_tick	1
+../App/Src/Services/Motion/motion_service.c:25:6:motion_on_tim7_tick	1
+../App/Src/Services/Motion/motion_service.c:28:6:motion_on_move_queue_add	2
+../App/Src/Services/Motion/motion_service.c:37:6:motion_on_move_queue_status	1
+../App/Src/Services/Motion/motion_service.c:43:6:motion_on_start_move	3
+../App/Src/Services/Motion/motion_service.c:51:6:motion_on_move_end	1

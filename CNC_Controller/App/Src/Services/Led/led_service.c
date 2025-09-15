@@ -4,6 +4,8 @@
 #include "Services/Log/log_service.h"
 #include <stdio.h>
 
+LOG_SVC_DEFINE(LOG_SVC_LED, "led");
+
 void led_service_init(void) {
     GPIO_InitTypeDef gi = {0};
 #if defined(LED_R_GPIO_PIN) && defined(LED_G_GPIO_PIN) && defined(LED_B_GPIO_PIN)
@@ -82,20 +84,11 @@ void led_on_led_ctrl(const uint8_t *frame, uint32_t len) {
         return;
 #if defined(LED_R_GPIO_PIN) && defined(LED_G_GPIO_PIN) && defined(LED_B_GPIO_PIN)
     led_apply_rgb(req.r, req.g, req.b, req.ledMask);
-#if LOG_ENABLE
-    // Log concise and verbose (only active mode will emit)
-    log_event_ids(1 /*svc:led*/, 1 /*state:applied*/, PROTO_OK);
-    char status[64];
-    snprintf(status, sizeof status, "mask=0x%02X rgb=%u,%u,%u", (unsigned)req.ledMask, req.r, req.g, req.b);
-    log_event_names("led", "applied", status);
-#endif
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "applied", "mask=0x%02X rgb=%u,%u,%u", (unsigned)req.ledMask, req.r, req.g, req.b);
 #else
     // Use green component as ON/OFF for mono LED when RGB not wired
     if (req.ledMask & (LED_MASK_R | LED_MASK_G | LED_MASK_B))
         led_apply_mono((req.r | req.g | req.b) ? 1u : 0u);
-#if LOG_ENABLE
-    log_event_ids(1, 1, PROTO_OK);
-    log_event_names("led", "applied", ((req.r | req.g | req.b) ? "on" : "off"));
-#endif
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "applied", "%s", ((req.r | req.g | req.b) ? "on" : "off"));
 #endif
 }

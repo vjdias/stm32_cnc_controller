@@ -1,5 +1,5 @@
-../App/Src/app.c:21:6:app_init	8	static
-../App/Src/app.c:41:6:app_poll	80	static
-../App/Src/app.c:59:6:HAL_SPI_RxHalfCpltCallback	16	static
-../App/Src/app.c:64:6:HAL_SPI_RxCpltCallback	16	static
-../App/Src/app.c:69:6:HAL_SPI_TxCpltCallback	16	static
+../App/Src/app.c:23:6:app_init	24	static
+../App/Src/app.c:40:6:app_poll	80	static
+../App/Src/app.c:58:6:HAL_SPI_RxHalfCpltCallback	16	static
+../App/Src/app.c:63:6:HAL_SPI_RxCpltCallback	16	static
+../App/Src/app.c:68:6:HAL_SPI_TxCpltCallback	16	static

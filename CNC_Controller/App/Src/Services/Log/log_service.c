@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "usart.h"
 
 #ifndef LOG_BUF_SZ
@@ -102,6 +103,34 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
     if(huart && huart->Instance == USART1){
         s_tx_busy = 0;
     }
+}
+
+void log_event_auto(log_service_id_t service_id, log_state_id_t state_id, int32_t status,
+                    const char* service_name, const char* state_name,
+                    const char* fmt, ...){
+    if(!s_enabled) return;
+    if(s_mode == LOG_MODE_CONCISE){
+        char line[64];
+        int nn = snprintf(line, sizeof line, "L:svc=%u,state=%u,status=%ld\r\n",
+                          (unsigned)service_id, (unsigned)state_id, (long)status);
+        if(nn > 0) push_line(line);
+        return;
+    }
+    // Verbose: format status text lazily
+    char text[128];
+    text[0] = '\0';
+    if(fmt && fmt[0]){
+        va_list ap;
+        va_start(ap, fmt);
+        (void)vsnprintf(text, sizeof text, fmt, ap);
+        va_end(ap);
+    }
+    const char* svc = service_name ? service_name : "?";
+    const char* stn = state_name ? state_name : "?";
+    const char* tx = text[0] ? text : "?";
+    char line[192];
+    int nn = snprintf(line, sizeof line, "LOG:service=%s,state=%s,status=%s\r\n", svc, stn, tx);
+    if(nn > 0) push_line(line);
 }
 
 #endif // LOG_ENABLE

@@ -18,15 +18,14 @@ static response_fifo_t *g_resp_fifo;
 static uint8_t g_spi_rx_buf[APP_SPI_RX_BUF_SZ];
 static volatile int g_spi_tx_busy = 0;
 
+LOG_SVC_DEFINE(LOG_SVC_APP, "app");
+
 void app_init(void) {
     // Init services (GPIO for LED etc.)
     led_service_init();
     log_service_init();
-    #if LOG_ENABLE
     // Boot log (visible on USART1 VCP terminal)
-    log_event_names("app", "start", "ready");
-    log_event_ids(0 /*svc:app*/, 0 /*state:start*/, PROTO_OK);
-    #endif
+    LOGT_THIS(LOG_STATE_START, PROTO_OK, "start", "ready");
 
     // Prepare router and response FIFO
     g_resp_fifo = resp_fifo_create();

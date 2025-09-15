@@ -27,6 +27,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app.h"
+#include "Services/Log/log_service.h"
+#include "Protocol/frame_defs.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -59,7 +61,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+LOG_SVC_DEFINE(LOG_SVC_APP, "app");
 /* USER CODE END 0 */
 
 /**
@@ -102,6 +104,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	app_init();
+	// Startup log from main (after UART + log_service init)
+	LOGT_THIS(LOG_STATE_START, PROTO_OK, "main", "entered");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -189,6 +193,10 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
+#if LOG_ENABLE
+	log_event_ids(LOG_SVC_APP, LOG_STATE_ERROR, -1);
+	log_event_names("app", "error", "Error_Handler");
+#endif
 	__disable_irq();
 	while (1) {
 	}
