@@ -59,19 +59,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-int _write(int fd, char *ptr, int len) {
-    HAL_StatusTypeDef hstatus;
-
-    if (fd == 1 || fd == 2) {
-      hstatus = HAL_UART_Transmit(&huart1, (uint8_t *) ptr, len, HAL_MAX_DELAY);
-      if (hstatus == HAL_OK)
-        return len;
-      else
-        return -1;
-    }
-    return -1;
-}
+/* Redirects are handled by __io_putchar in log_service.c */
 /* USER CODE END 0 */
 
 /**
@@ -107,12 +95,14 @@ int main(void) {
 	MX_TIM6_Init();
 	MX_TIM2_Init();
 	MX_TIM5_Init();
-	MX_TIM7_Init();
-	MX_TIM3_Init();
-	MX_USART1_UART_Init();
+        MX_TIM7_Init();
+        MX_TIM3_Init();
+        MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
+        /* Disable stdio buffering so prints appear immediately on SWO */
+        setvbuf(stdout, NULL, _IONBF, 0);
 
-	app_init();
+        app_init();
 
 	/* USER CODE END 2 */
 
