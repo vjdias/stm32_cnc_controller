@@ -1,4 +1,4 @@
-// Non-interruptive USB (USART1 VCP) logging service
+// Non-interruptive SWO logging service
 #pragma once
 
 #include <stdint.h>
