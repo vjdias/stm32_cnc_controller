@@ -242,16 +242,21 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef *tim_encoderHandle) {
 		GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
 		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-		GPIO_InitStruct.Pin = GPIO_PIN_3;
-		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-		GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
-		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+                GPIO_InitStruct.Pin = GPIO_PIN_3;
+                GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+                GPIO_InitStruct.Pull = GPIO_NOPULL;
+                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+                GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+                HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-		/* USER CODE BEGIN TIM2_MspInit 1 */
-
-		/* USER CODE END TIM2_MspInit 1 */
+                /* USER CODE BEGIN TIM2_MspInit 1 */
+                /* PB3 doubles as the SWO output. When tracing is enabled,
+                 * release the TIM2 remap so the log service can configure
+                 * the pin for ITM trace. */
+#if SWO_TRACE_ENABLE
+                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
+#endif
+                /* USER CODE END TIM2_MspInit 1 */
 	} else if (tim_encoderHandle->Instance == TIM3) {
 		/* USER CODE BEGIN TIM3_MspInit 0 */
 

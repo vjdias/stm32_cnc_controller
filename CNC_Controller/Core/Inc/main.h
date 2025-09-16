@@ -60,6 +60,11 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
+/* Set to 1 to reserve PB3 for SWO trace output instead of TIM2_CH2. */
+#ifndef SWO_TRACE_ENABLE
+#define SWO_TRACE_ENABLE 0
+#endif
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

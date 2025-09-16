@@ -32,7 +32,7 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 
 | Função | Pino(s) | Observações |
 |---|---|---|
-| **Encoder X (TIM2)** | **PA15=CH1**, **PB3=CH2** | Desative SWO; **Debug=SWD** |
+| **Encoder X (TIM2)** | **PA5 = CH1**, **PB3 = CH2** | Libere PB3 apenas se for usar SWO |
 | **Encoder Y (TIM5)** | **PA0=CH1**, **PA1=CH2** | |
 | **Encoder Z (TIM3)** | **PC6=CH1**, **PC7=CH2** | AF2 |
 | **SPI1 (Slave)** | **PA5=SCK**, **PA6=MISO**, **PA7=MOSI**, **PA4=NSS** | **MODE 3**, Very High speed |
@@ -118,8 +118,9 @@ Drivers/ CMSIS, HAL/...
 - **`tim.c`/`spi.c`/`usart.c`/`dma.c`**: inicialização HAL conforme `.ioc`.  
 - **Interrupções (`stm32l4xx_it.c`)**: handlers com blocos **USER**; chame ali `motion_tick_50k()` (TIM6) e `control_tick_1k()` (TIM7).
 
-**Logs (VCP)**  
-- Implementar `_write()` e usar `printf()` (ou o módulo `console/` DMA não-bloqueante).
+**Logs (VCP / SWO)**
+- `LOG_BACKEND` (ver `Services/Log/log_service.h`) fica em `LOG_BACKEND_USART1` por padrão, mandando `printf()` pela USART1 (PB6/PB7) para o VCP do ST-LINK.
+- Para usar o traço SWO, defina `LOG_BACKEND=LOG_BACKEND_SWO` e `SWO_TRACE_ENABLE=1` (ver `Core/Inc/main.h`); abra o console ITM/SWV na IDE com `HCLK=80 MHz` e `SWO=2 MHz`.
 
 ---
 
@@ -138,10 +139,13 @@ Drivers/ CMSIS, HAL/...
 
 1. **Abrir o .ioc no STM32CubeIDE** → **Generate Code**.  
 2. **Compilar** (botão martelo).  
-3. **Debug/Flash** (botão inseto).  
+3. **Debug/Flash** (botão inseto).
 4. **Terminal embutido** (Window → Show View → **Terminal** → **Serial**):
-   - Porta **ST-LINK VCP**, **115200 8N1**.  
-   - `printf()` aparecerá no terminal (via `_write()` da USART1).
+   - Porta **ST-LINK VCP**, **115200 8N1**.
+   - `printf()` aparecerá no terminal (backend padrão do `log_service`: USART1/VCP).
+5. **Host SPI (Python)**: `cnc_spi_client.py` (neste repositório) reproduz o framing AA..55/AB..54, envia requests (MODE 3, 8 bits) e decodifica as respostas do STM32.
+   - Exemplo: `python cnc_spi_client.py led --mask 0x01 --r 1`
+   - Se o pacote `spidev` não estiver disponível, use `--dry-run` (habilitado automaticamente) para apenas inspecionar os frames.
 
 ---
 

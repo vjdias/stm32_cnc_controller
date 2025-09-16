@@ -1,4 +1,4 @@
-// Non-interruptive USB (USART1 VCP) logging service
+// Lightweight logging service with selectable backend (USART1 or SWO)
 #pragma once
 
 #include <stdint.h>
@@ -7,6 +7,14 @@
 // Compile-time gate: set to 0 to strip logging at build time
 #ifndef LOG_ENABLE
 #define LOG_ENABLE 1
+#endif
+
+// Output backends -----------------------------------------------------------
+#define LOG_BACKEND_USART1 1
+#define LOG_BACKEND_SWO    2
+
+#ifndef LOG_BACKEND
+#define LOG_BACKEND LOG_BACKEND_USART1
 #endif
 
 #if LOG_ENABLE

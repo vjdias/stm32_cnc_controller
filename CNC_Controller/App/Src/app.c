@@ -23,7 +23,7 @@ void app_init(void) {
     led_service_init();
     log_service_init();
     #if LOG_ENABLE
-    // Boot log (visible on USART1 VCP terminal)
+    // Boot log (vai aparecer no backend de log configurado)
     log_event_names("app", "start", "ready");
     log_event_ids(0 /*svc:app*/, 0 /*state:start*/, PROTO_OK);
     #endif
@@ -51,7 +51,7 @@ void app_poll(void) {
         }
     }
 
-    // Lowest priority: drain log output (non-blocking, only if USART idle)
+    // Lowest priority: drena os logs pelo backend configurado (não bloqueante)
     log_poll();
 }
 
