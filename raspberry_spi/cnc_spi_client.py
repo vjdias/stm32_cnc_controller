@@ -317,22 +317,51 @@ class CNCClient:
 
     def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
                          chunk_len: int = 32) -> List[int]:
-        """Lê o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
-        Gera clocks (dummy bytes) e procura pelo padrão no fluxo de MISO.
-        Retorna a lista de bytes do frame encontrado.
+        """Compat: lê o frame de teste 'AB hello 54' e retorna apenas o frame.
+        Use `read_boot_hello_info` para estatísticas detalhadas.
         """
-        pattern = [RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL]
-        for _ in range(max(1, tries)):
+        frame, _stats = self.read_boot_hello_info(tries=tries, settle_delay_s=settle_delay_s,
+                                                  chunk_len=chunk_len)
+        return frame
+
+    def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
+                              chunk_len: int = 32) -> Tuple[List[int], Dict[str, int]]:
+        """Lê o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
+        Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
+        Retorna (frame, stats) onde stats contém:
+          - bytesBeforeHeader: bytes de clock até o header (0xAB)
+          - bytesUntilTail: bytes de clock até o tail (0x54), inclusive
+          - readsUsed: quantidade de leituras (chunks) realizadas
+          - chunkLen: tamanho do chunk utilizado em cada leitura
+        """
+        pattern = bytes([RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL])
+        accum = bytearray()
+        total_read = 0
+        reads_used = 0
+        tries = max(1, tries)
+        for _ in range(tries):
             rx = self._xfer([0x00] * chunk_len)
-            # Procura header e tail subsequentes dentro de janela curta
-            for i, b in enumerate(rx):
-                if b == RESP_HEADER:
-                    end = i + len(pattern)
-                    if end <= len(rx):
-                        candidate = rx[i:end]
-                        if candidate == pattern:
-                            return candidate
-            time.sleep(settle_delay_s)
+            reads_used += 1
+            accum.extend(rx)
+            total_read += len(rx)
+            idx = bytes(accum).find(pattern)
+            if idx != -1:
+                bytes_before_header = total_read - len(accum) + idx
+                bytes_until_tail = bytes_before_header + len(pattern)
+                frame_list = list(pattern)
+                stats = {
+                    "bytesBeforeHeader": int(bytes_before_header),
+                    "bytesUntilTail": int(bytes_until_tail),
+                    "readsUsed": int(reads_used),
+                    "chunkLen": int(chunk_len),
+                }
+                return frame_list, stats
+            if settle_delay_s > 0:
+                time.sleep(settle_delay_s)
+            # Limita o buffer para evitar crescimento desnecessário: manter no máx. 4*chunk + len(pattern)
+            max_keep = (4 * max(1, chunk_len)) + len(pattern)
+            if len(accum) > max_keep:
+                del accum[: len(accum) - max_keep]
         raise TimeoutError("Frame 'hello' não encontrado. Reinicie o STM32 e tente novamente.")
 
     def print_until_zero_after_activity(self, chunk_len: int = 32,
@@ -475,9 +504,10 @@ def main() -> int:
             print(decoder(resp))
 
         elif args.cmd == "hello":
-            # Lê e imprime apenas uma vez o frame de boot 'hello'.
-            frame = client.read_boot_hello()
+            # Lê uma única vez o frame de boot 'hello' e reporta estatísticas
+            frame, stats = client.read_boot_hello_info()
             print(' '.join(f"{b:02X}" for b in frame))
+            print({k: stats[k] for k in ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")})
 
         else:
             raise SystemExit(2)
