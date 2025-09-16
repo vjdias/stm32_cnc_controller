@@ -315,6 +315,26 @@ class CNCClient:
             time.sleep(settle_delay_s)
         raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
 
+    def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
+                         chunk_len: int = 32) -> List[int]:
+        """Lê o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
+        Gera clocks (dummy bytes) e procura pelo padrão no fluxo de MISO.
+        Retorna a lista de bytes do frame encontrado.
+        """
+        pattern = [RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL]
+        for _ in range(max(1, tries)):
+            rx = self._xfer([0x00] * chunk_len)
+            # Procura header e tail subsequentes dentro de janela curta
+            for i, b in enumerate(rx):
+                if b == RESP_HEADER:
+                    end = i + len(pattern)
+                    if end <= len(rx):
+                        candidate = rx[i:end]
+                        if candidate == pattern:
+                            return candidate
+            time.sleep(settle_delay_s)
+        raise TimeoutError("Frame 'hello' não encontrado. Reinicie o STM32 e tente novamente.")
+
 
 def _common_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--bus", type=int, default=0)
@@ -380,6 +400,10 @@ def main() -> int:
     ap_probe.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     ap_probe.add_argument("--vprobe", type=lambda x: int(x, 0), required=True)
 
+    # Hello test (boot frame AB 'hello' 54)
+    ap_hello = sub.add_parser("hello", help="Ler frame de teste 'hello' do STM32 (enfileirado no boot)")
+    _common_args(ap_hello)
+
     args = ap.parse_args()
 
     client = CNCClient(bus=args.bus, dev=args.dev, speed_hz=args.speed)
@@ -432,6 +456,13 @@ def main() -> int:
             resp = client.exchange(req, RESP_MOVE_PROBE_LEVEL, exp_len)
             print(decoder(resp))
 
+        elif args.cmd == "hello":
+            frame = client.read_boot_hello()
+            # Imprime em hexdump simples e ASCII
+            hexs = ' '.join(f"{b:02X}" for b in frame)
+            text = ''.join(chr(b) if 32 <= b < 127 else '.' for b in frame)
+            print({"hex": hexs, "ascii": text})
+
         else:
             raise SystemExit(2)
 
@@ -443,4 +474,3 @@ def main() -> int:
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
-

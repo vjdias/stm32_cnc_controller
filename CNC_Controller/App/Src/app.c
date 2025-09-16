@@ -5,6 +5,7 @@
 #include "Services/service_adapters.h"
 #include "Services/Led/led_service.h"
 #include "Services/Log/log_service.h"
+#include "Services/Test/test_spi_service.h"
 
 // Router + response queue
 static router_t g_router;
@@ -24,6 +25,7 @@ void app_init(void) {
     // Init services (GPIO for LED etc.)
     led_service_init();
     log_service_init();
+    test_spi_service_init();
     // Boot log (visible on USART1 VCP terminal)
     LOGT_THIS(LOG_STATE_START, PROTO_OK, "start", "ready");
 
@@ -35,6 +37,9 @@ void app_init(void) {
 
     // Start SPI RX DMA in circular mode to feed router from callbacks
     (void)HAL_SPI_Receive_DMA(&hspi1, g_spi_rx_buf, (uint16_t)APP_SPI_RX_BUF_SZ);
+
+    // Enfileira um frame de teste: AB "hello" 54
+    (void)test_spi_send_hello();
 }
 
 void app_poll(void) {
@@ -69,4 +74,9 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
         g_spi_tx_busy = 0;
     }
+}
+
+int app_resp_push(const uint8_t *frame, uint32_t len) {
+    if (!g_resp_fifo || !frame || len == 0) return -1;
+    return resp_fifo_push(g_resp_fifo, frame, len);
 }
