@@ -29,21 +29,22 @@ static inline uint16_t rb_count(void){
 static inline uint16_t rb_space(void){
     return (uint16_t)(LOG_BUF_SZ - 1 - rb_count());
 }
-static void rb_push_bytes(const uint8_t* data, uint16_t len){
-    if(!data || !len || !s_enabled) return;
+static uint16_t rb_push_bytes(const uint8_t* data, uint16_t len){
+    if(!data || !len) return 0u;
     uint16_t space = rb_space();
     if(len > space) len = space; // drop excess (lowest priority)
     for(uint16_t i=0;i<len;i++){
         s_buf[s_head] = data[i];
         s_head = (uint16_t)((s_head + 1) % LOG_BUF_SZ);
     }
+    return len;
 }
 
 static void push_line(const char* line){
     if(!line) return;
     size_t n = strlen(line);
     if(n > 240) n = 240; // trim
-    rb_push_bytes((const uint8_t*)line, (uint16_t)n);
+    (void)rb_push_bytes((const uint8_t*)line, (uint16_t)n);
 }
 
 void log_service_init(void){
@@ -80,7 +81,7 @@ void log_event_names(const char* service_name, const char* state_name, const cha
 }
 
 void log_poll(void){
-    if(!s_enabled) return;
+    if(huart1.Instance == NULL) return;
     if(s_tx_busy) return; // wait for current IT transfer to complete
     uint16_t cnt = rb_count();
     if(!cnt) return;
@@ -103,6 +104,28 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
     if(huart && huart->Instance == USART1){
         s_tx_busy = 0;
     }
+}
+
+int _write(int file, char *ptr, int len){
+    if(file != 1 && file != 2) return -1;
+    if(!ptr || len <= 0) return 0;
+
+    for(int i = 0; i < len; ++i){
+        uint8_t ch = (uint8_t)ptr[i];
+        if(ch == '\n'){
+            const uint8_t crlf[2] = {'\r', '\n'};
+            if(rb_push_bytes(crlf, 2u) < 2u){
+                break;
+            }
+        }else{
+            if(rb_push_bytes(&ch, 1u) < 1u){
+                break;
+            }
+        }
+    }
+
+    log_poll();
+    return len;
 }
 
 void log_event_auto(log_service_id_t service_id, log_state_id_t state_id, int32_t status,
