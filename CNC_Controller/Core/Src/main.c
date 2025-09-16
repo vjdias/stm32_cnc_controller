@@ -61,7 +61,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-LOG_SVC_DEFINE(LOG_SVC_APP, "app");
+//LOG_SVC_DEFINE(LOG_SVC_APP, "app");
 // Frame de teste simples: AB 'hello' 54
 static uint8_t g_hello_frame[] = { RESP_HEADER, 'h','e','l','l','o', RESP_TAIL };
 /* USER CODE END 0 */
@@ -177,6 +177,15 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+// Reenvia automaticamente o frame de "hello" após cada transmissão
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h)
+{
+  if (h && h->Instance == SPI1)
+  {
+    // Re-armar TX com o mesmo buffer; o master precisa gerar novo clock
+    (void)HAL_SPI_Transmit_IT(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame);
+  }
+}
 /* USER CODE END 4 */
 
 /**
