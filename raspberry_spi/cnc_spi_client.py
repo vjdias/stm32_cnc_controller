@@ -325,7 +325,7 @@ class CNCClient:
         return frame
 
     def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
-                              chunk_len: int = 32) -> Tuple[List[int], Dict[str, int]]:
+                              chunk_len: int = 32) -> Tuple[List[int], Dict[str, Any]]:
         """Lê o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
         Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
         Retorna (frame, stats) onde stats contém:
@@ -336,6 +336,7 @@ class CNCClient:
         """
         expected = [RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL]
         accum = bytearray()
+        chunks: List[List[int]] = []
         reads_used = 0
         base_offset = 0  # bytes descartados do início de 'accum'
         tries = max(1, tries)
@@ -343,6 +344,7 @@ class CNCClient:
             rx = self._xfer([0x00] * chunk_len)
             reads_used += 1
             accum.extend(rx)
+            chunks.append(list(rx))
 
             # Procura por header e segue tolerando bytes de preenchimento 0x00 entre bytes válidos
             i = 0
@@ -371,11 +373,13 @@ class CNCClient:
                     bytes_before_header = base_offset + i
                     bytes_until_tail = base_offset + j  # inclusivo
                     frame_list = expected[:]  # frame canônico sem fillers
-                    stats = {
+                    stats: Dict[str, Any] = {
                         "bytesBeforeHeader": int(bytes_before_header),
                         "bytesUntilTail": int(bytes_until_tail),
                         "readsUsed": int(reads_used),
                         "chunkLen": int(chunk_len),
+                        "chunks": chunks,
+                        "expected": expected[:],
                     }
                     return frame_list, stats
                 # tenta próximo possível header
@@ -535,7 +539,18 @@ def main() -> int:
             # Lê uma única vez o frame de boot 'hello' e reporta estatísticas
             frame, stats = client.read_boot_hello_info()
             print(' '.join(f"{b:02X}" for b in frame))
+            # imprime estatísticas resumidas
             print({k: stats[k] for k in ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")})
+            # imprime todos os chunks recebidos (para debug)
+            chunks = stats.get("chunks", [])
+            print(f"chunks recebidos: {len(chunks)}")
+            for idx, ch in enumerate(chunks):
+                print(f"chunk {idx:02d}:", ' '.join(f"{b:02X}" for b in ch))
+            # imprime qual 'comando' foi encontrado (no caso do hello, é o byte ASCII após o header)
+            if isinstance(frame, list) and len(frame) >= 2:
+                cmd_byte = frame[1]
+                cmd_chr = chr(cmd_byte) if 32 <= cmd_byte <= 126 else '?'
+                print(f"comando encontrado: 0x{cmd_byte:02X} ('{cmd_chr}')")
 
         else:
             raise SystemExit(2)
