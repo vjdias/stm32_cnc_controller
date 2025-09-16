@@ -108,7 +108,11 @@ int main(void)
 
 	// Enfileira diretamente no SPI (slave) o frame de teste "hello".
 	// O master (Raspberry) deve gerar clock para que os bytes sejam enviados.
-	(void)HAL_SPI_Transmit_IT(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame);
+	// Usa DMA em modo circular para repetir continuamente o frame.
+	if (HAL_SPI_Transmit_DMA(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame) != HAL_OK)
+	{
+		Error_Handler();
+	}
 	// Opcional: log para VCP
 	// LOGT_THIS(LOG_STATE_START, PROTO_OK, "hello", "queued");
   /* USER CODE END 2 */
@@ -177,14 +181,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Reenvia automaticamente o frame de "hello" após cada transmissão
+// Em modo DMA circular não é necessário rearmar manualmente; callback mantido para debug futuro
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h)
 {
-  if (h && h->Instance == SPI1)
-  {
-    // Re-armar TX com o mesmo buffer; o master precisa gerar novo clock
-    (void)HAL_SPI_Transmit_IT(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame);
-  }
+  (void)h;
 }
 /* USER CODE END 4 */
 

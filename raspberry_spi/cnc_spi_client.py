@@ -332,7 +332,7 @@ class CNCClient:
         raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
 
     def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
-                         chunk_len: int = 32) -> List[int]:
+                         chunk_len: int = 7) -> List[int]:
         """Compat: lê o frame de teste 'AB hello 54' e retorna apenas o frame.
         Use `read_boot_hello_info` para estatísticas detalhadas.
         """
@@ -341,7 +341,7 @@ class CNCClient:
         return frame
 
     def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
-                              chunk_len: int = 32) -> Tuple[List[int], Dict[str, Any]]:
+                              chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
         """Lê o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
         Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
         Retorna (frame, stats) onde stats contém:
@@ -351,6 +351,7 @@ class CNCClient:
           - chunkLen: tamanho do chunk utilizado em cada leitura
         """
         expected = [RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL]
+        chunk_len = max(1, chunk_len)
         accum = bytearray()
         chunks: List[List[int]] = []
         reads_used = 0
@@ -498,6 +499,9 @@ def main() -> int:
     # Hello test (boot frame AB 'hello' 54)
     ap_hello = sub.add_parser("hello", help="Ler frame de teste 'hello' do STM32 (enfileirado no boot)")
     _common_args(ap_hello)
+    ap_hello.add_argument("--chunk-len", type=int, default=7)
+    ap_hello.add_argument("--tries", type=int, default=16)
+    ap_hello.add_argument("--settle-delay", type=float, default=0.002)
 
     args = ap.parse_args()
 
@@ -596,7 +600,11 @@ def main() -> int:
 
         elif args.cmd == "hello":
             # Lê uma única vez o frame de boot 'hello' e reporta estatísticas
-            frame, stats = client.read_boot_hello_info()
+            frame, stats = client.read_boot_hello_info(
+                tries=args.tries,
+                settle_delay_s=args.settle_delay,
+                chunk_len=args.chunk_len,
+            )
             print(' '.join(f"{b:02X}" for b in frame))
             print("Frame RX bits:", bits_str(frame))
             # imprime estatísticas resumidas
