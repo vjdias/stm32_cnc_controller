@@ -31,6 +31,7 @@ App/Src/Services/Log \
 App/Src/Services/Motion \
 App/Src/Services/Probe \
 App/Src/Services/Safety \
+App/Src/Services/Test \
 App/Src/Services \
 App/Src \
 Core/Src \

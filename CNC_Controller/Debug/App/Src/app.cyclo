@@ -1,5 +1,6 @@
-../App/Src/app.c:23:6:app_init	1
-../App/Src/app.c:40:6:app_poll	5
-../App/Src/app.c:58:6:HAL_SPI_RxHalfCpltCallback	3
-../App/Src/app.c:63:6:HAL_SPI_RxCpltCallback	3
-../App/Src/app.c:68:6:HAL_SPI_TxCpltCallback	3
+../App/Src/app.c:24:6:app_init	1
+../App/Src/app.c:45:6:app_poll	5
+../App/Src/app.c:63:6:HAL_SPI_RxHalfCpltCallback	3
+../App/Src/app.c:68:6:HAL_SPI_RxCpltCallback	3
+../App/Src/app.c:73:6:HAL_SPI_TxCpltCallback	3
+../App/Src/app.c:79:5:app_resp_push	4

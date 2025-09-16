@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "app.h"
+// #include "app.h" // (comentado a pedido: não usar app.h)
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
 #include <stdio.h>
@@ -62,6 +62,8 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 LOG_SVC_DEFINE(LOG_SVC_APP, "app");
+// Frame de teste simples: AB 'hello' 54
+static uint8_t g_hello_frame[] = { RESP_HEADER, 'h','e','l','l','o', RESP_TAIL };
 /* USER CODE END 0 */
 
 /**
@@ -102,9 +104,13 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	app_init();
-	// Startup log from main (after UART + log_service init)
-	//LOGT_THIS(LOG_STATE_START, PROTO_OK, "main", "entered");
+	// app_init(); // (comentado a pedido)
+
+	// Enfileira diretamente no SPI (slave) o frame de teste "hello".
+	// O master (Raspberry) deve gerar clock para que os bytes sejam enviados.
+	(void)HAL_SPI_Transmit_IT(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame);
+	// Opcional: log para VCP
+	// LOGT_THIS(LOG_STATE_START, PROTO_OK, "hello", "queued");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -115,7 +121,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		//printf("oioioioioioi2\r\n");
 		//HAL_Delay(1000);
-		app_poll();
+		// app_poll(); // (comentado a pedido)
 	}
   /* USER CODE END 3 */
 }

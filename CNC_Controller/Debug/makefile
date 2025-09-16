@@ -12,6 +12,7 @@ RM := rm -rf
 -include Drivers/STM32L4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
+-include App/Src/Services/Test/subdir.mk
 -include App/Src/Services/Safety/subdir.mk
 -include App/Src/Services/Probe/subdir.mk
 -include App/Src/Services/Motion/subdir.mk

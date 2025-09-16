@@ -21,6 +21,7 @@
 "./App/Src/Services/Motion/motion_service.o"
 "./App/Src/Services/Probe/probe_service.o"
 "./App/Src/Services/Safety/safety_service.o"
+"./App/Src/Services/Test/test_spi_service.o"
 "./App/Src/Services/service_adapters.o"
 "./App/Src/app.o"
 "./Core/Src/dma.o"
