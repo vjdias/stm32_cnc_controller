@@ -335,6 +335,24 @@ class CNCClient:
             time.sleep(settle_delay_s)
         raise TimeoutError("Frame 'hello' não encontrado. Reinicie o STM32 e tente novamente.")
 
+    def print_until_zero_after_activity(self, chunk_len: int = 32,
+                                        settle_delay_s: float = 0.0) -> None:
+        """Gera clocks e imprime os bytes recebidos.
+        Ao detectar qualquer byte != 0x00, continua imprimindo até
+        que um 0x00 seja recebido (em qualquer posição do chunk).
+        """
+        saw_activity = False
+        while True:
+            rx = self._xfer([0x00] * chunk_len)
+            # imprime linha em hex
+            print(' '.join(f"{b:02X}" for b in rx))
+            if any(b != 0x00 for b in rx):
+                saw_activity = True
+            if saw_activity and any(b == 0x00 for b in rx):
+                break
+            if settle_delay_s > 0:
+                time.sleep(settle_delay_s)
+
 
 def _common_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--bus", type=int, default=0)
@@ -457,11 +475,9 @@ def main() -> int:
             print(decoder(resp))
 
         elif args.cmd == "hello":
-            frame = client.read_boot_hello()
-            # Imprime em hexdump simples e ASCII
-            hexs = ' '.join(f"{b:02X}" for b in frame)
-            text = ''.join(chr(b) if 32 <= b < 127 else '.' for b in frame)
-            print({"hex": hexs, "ascii": text})
+            # Imprime continuamente o que o STM32 coloca no MISO.
+            # Ao detectar bytes != 0x00, segue imprimindo até encontrar 0x00.
+            client.print_until_zero_after_activity()
 
         else:
             raise SystemExit(2)
