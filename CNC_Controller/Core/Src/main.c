@@ -112,8 +112,8 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		printf("oioioioioioi2\r\n");
-		HAL_Delay(1000);
+		//printf("oioioioioioi2\r\n");
+		//HAL_Delay(1000);
 		app_poll();
 	}
 	/* USER CODE END 3 */
@@ -167,18 +167,6 @@ void SystemClock_Config(void) {
 }
 
 /* USER CODE BEGIN 4 */
-//int _write(int fd, char *ptr, int len) {
-//    HAL_StatusTypeDef hstatus;
-//
-//    if (fd == 1 || fd == 2) {
-//      hstatus = HAL_UART_Transmit(&huart1, (uint8_t *) ptr, len, HAL_MAX_DELAY);
-//      if (hstatus == HAL_OK)
-//        return len;
-//      else
-//        return -1;
-//    }
-//    return -1;
-//}
 /* USER CODE END 4 */
 
 /**
