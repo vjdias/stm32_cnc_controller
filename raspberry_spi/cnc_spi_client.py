@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, Tuple, List
 try:
     import spidev  # type: ignore
 except Exception as e:  # pragma: no cover
-    spidev = None
+spidev = None
 
 
 # Framing bytes
@@ -82,6 +82,10 @@ def parity_check_bit_1N(raw: List[int], last_index: int, parity_index: int) -> b
 # ==========================
 # Request encoders
 # ==========================
+
+
+def bits_str(bs: List[int]) -> str:
+    return ' '.join(f"{b:08b}" for b in bs)
 
 
 def enc_led_ctrl(frame_id: int, led_mask: int, r: int, g: int, b: int) -> List[int]:
@@ -292,7 +296,19 @@ class CNCClient:
             pass
 
     def _xfer(self, data: List[int]) -> List[int]:
-        return self.spi.xfer2([d & 0xFF for d in data])
+        tx = [d & 0xFF for d in data]
+        # Log TX bits antes da transferência
+        try:
+            print("SPI TX bits:", bits_str(tx))
+        except Exception:
+            pass
+        rx = self.spi.xfer2(tx)
+        # Log RX bits imediatamente após
+        try:
+            print("SPI RX bits:", bits_str(rx))
+        except Exception:
+            pass
+        return rx
 
     def exchange(self, req: List[int], expected_type: int, expected_len: int,
                  tries: int = 8, settle_delay_s: float = 0.001) -> List[int]:
@@ -492,7 +508,14 @@ def main() -> int:
                                args.mask, args.r, args.g, args.b)
             exp_len, decoder = RESP_SPECS[REQ_LED_CTRL]
             resp = client.exchange(req, RESP_LED_CTRL, exp_len)
-            print(decoder(resp))
+            # Log do frame recebido em bits antes de decodificar
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "queue-add":
             req = enc_move_queue_add(
@@ -503,42 +526,79 @@ def main() -> int:
                 args.kp_z, args.ki_z, args.kd_z)
             exp_len, decoder = RESP_SPECS[REQ_MOVE_QUEUE_ADD]
             resp = client.exchange(req, RESP_MOVE_QUEUE_ADD_ACK, exp_len)
-            print(decoder(resp))
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "queue-status":
             req = enc_queue_status(args.frame_id)
             exp_len, decoder = RESP_SPECS[REQ_MOVE_QUEUE_STATUS]
             resp = client.exchange(req, RESP_MOVE_QUEUE_STATUS, exp_len)
-            print(decoder(resp))
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "start-move":
             req = enc_start_move(args.frame_id)
             exp_len, decoder = RESP_SPECS[REQ_START_MOVE]
             resp = client.exchange(req, RESP_START_MOVE, exp_len)
-            print(decoder(resp))
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "end-move":
             req = enc_move_end(args.frame_id)
             exp_len, decoder = RESP_SPECS[REQ_MOVE_END]
             resp = client.exchange(req, RESP_MOVE_END, exp_len)
-            print(decoder(resp))
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "home":
             req = enc_move_home(args.frame_id, args.axes, args.dirs, args.vhome)
             exp_len, decoder = RESP_SPECS[REQ_MOVE_HOME]
             resp = client.exchange(req, RESP_MOVE_HOME, exp_len)
-            print(decoder(resp))
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "probe-level":
             req = enc_probe_level(args.frame_id, args.axes, args.vprobe)
             exp_len, decoder = RESP_SPECS[REQ_MOVE_PROBE_LEVEL]
             resp = client.exchange(req, RESP_MOVE_PROBE_LEVEL, exp_len)
-            print(decoder(resp))
+            print("Frame RX bits:", bits_str(resp))
+            try:
+                print(decoder(resp))
+            except Exception as e:
+                print("Decoder error:", e)
+                print("Frame RX bits (again):", bits_str(resp))
+                raise
 
         elif args.cmd == "hello":
             # Lê uma única vez o frame de boot 'hello' e reporta estatísticas
             frame, stats = client.read_boot_hello_info()
             print(' '.join(f"{b:02X}" for b in frame))
+            print("Frame RX bits:", bits_str(frame))
             # imprime estatísticas resumidas
             print({k: stats[k] for k in ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")})
             # imprime todos os chunks recebidos (para debug)
@@ -546,6 +606,7 @@ def main() -> int:
             print(f"chunks recebidos: {len(chunks)}")
             for idx, ch in enumerate(chunks):
                 print(f"chunk {idx:02d}:", ' '.join(f"{b:02X}" for b in ch))
+                print(f"chunk {idx:02d} bits:", bits_str(ch))
             # imprime qual 'comando' foi encontrado (no caso do hello, é o byte ASCII após o header)
             if isinstance(frame, list) and len(frame) >= 2:
                 cmd_byte = frame[1]
