@@ -334,34 +334,62 @@ class CNCClient:
           - readsUsed: quantidade de leituras (chunks) realizadas
           - chunkLen: tamanho do chunk utilizado em cada leitura
         """
-        pattern = bytes([RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL])
+        expected = [RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL]
         accum = bytearray()
-        total_read = 0
         reads_used = 0
+        base_offset = 0  # bytes descartados do início de 'accum'
         tries = max(1, tries)
         for _ in range(tries):
             rx = self._xfer([0x00] * chunk_len)
             reads_used += 1
             accum.extend(rx)
-            total_read += len(rx)
-            idx = bytes(accum).find(pattern)
-            if idx != -1:
-                bytes_before_header = total_read - len(accum) + idx
-                bytes_until_tail = bytes_before_header + len(pattern)
-                frame_list = list(pattern)
-                stats = {
-                    "bytesBeforeHeader": int(bytes_before_header),
-                    "bytesUntilTail": int(bytes_until_tail),
-                    "readsUsed": int(reads_used),
-                    "chunkLen": int(chunk_len),
-                }
-                return frame_list, stats
+
+            # Procura por header e segue tolerando bytes de preenchimento 0x00 entre bytes válidos
+            i = 0
+            while True:
+                try:
+                    i = accum.index(expected[0], i)  # procura RESP_HEADER
+                except ValueError:
+                    break
+                j = i + 1
+                k = 1
+                ok = True
+                while k < len(expected):
+                    # pular fillers 0x00/0xFF (se houver)
+                    while j < len(accum) and accum[j] in (0x00, 0xFF):
+                        j += 1
+                    if j >= len(accum):
+                        ok = False
+                        break  # precisa de mais dados
+                    if accum[j] != expected[k]:
+                        ok = False
+                        break
+                    j += 1
+                    k += 1
+                if ok and k == len(expected):
+                    # Encontrado: header em 'i', tail imediatamente antes de 'j'
+                    bytes_before_header = base_offset + i
+                    bytes_until_tail = base_offset + j  # inclusivo
+                    frame_list = expected[:]  # frame canônico sem fillers
+                    stats = {
+                        "bytesBeforeHeader": int(bytes_before_header),
+                        "bytesUntilTail": int(bytes_until_tail),
+                        "readsUsed": int(reads_used),
+                        "chunkLen": int(chunk_len),
+                    }
+                    return frame_list, stats
+                # tenta próximo possível header
+                i = i + 1
+
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
-            # Limita o buffer para evitar crescimento desnecessário: manter no máx. 4*chunk + len(pattern)
-            max_keep = (4 * max(1, chunk_len)) + len(pattern)
+            # Limita o buffer para evitar crescimento desnecessário, preservando possíveis matches parciais
+            # Mantém no máximo 4*chunk + 2*len(expected) bytes
+            max_keep = (4 * max(1, chunk_len)) + (2 * len(expected))
             if len(accum) > max_keep:
-                del accum[: len(accum) - max_keep]
+                drop = len(accum) - max_keep
+                del accum[:drop]
+                base_offset += drop
         raise TimeoutError("Frame 'hello' não encontrado. Reinicie o STM32 e tente novamente.")
 
     def print_until_zero_after_activity(self, chunk_len: int = 32,
