@@ -51,7 +51,7 @@ void app_poll(void) {
     }
 
     // Lowest priority: drain log output (non-blocking, only if USART idle)
-    log_poll();
+    //log_poll();
 }
 
 // HAL callbacks (override weak definitions) to feed the router
