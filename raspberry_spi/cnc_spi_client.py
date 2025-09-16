@@ -475,9 +475,9 @@ def main() -> int:
             print(decoder(resp))
 
         elif args.cmd == "hello":
-            # Imprime continuamente o que o STM32 coloca no MISO.
-            # Ao detectar bytes != 0x00, segue imprimindo até encontrar 0x00.
-            client.print_until_zero_after_activity()
+            # Lê e imprime apenas uma vez o frame de boot 'hello'.
+            frame = client.read_boot_hello()
+            print(' '.join(f"{b:02X}" for b in frame))
 
         else:
             raise SystemExit(2)
