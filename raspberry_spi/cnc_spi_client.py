@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, Tuple, List
 try:
     import spidev  # type: ignore
 except Exception as e:  # pragma: no cover
-spidev = None
+    spidev = None
 
 
 # Framing bytes
