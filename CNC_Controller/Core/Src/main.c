@@ -27,8 +27,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app.h"
+#include "board_config.h"
 #include "Services/Log/log_service.h"
-#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +55,6 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-static void ConfigureInterruptPriorities(void);
 static void StartMotionTimebasesAndEncoders(void);
 
 /* USER CODE END PFP */
@@ -103,7 +102,11 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	ConfigureInterruptPriorities();
+        board_config_apply_motion_gpio();
+        board_config_remap_tim3_encoder_pins();
+        board_config_force_encoder_quadrature();
+        board_config_apply_interrupt_priorities();
+        board_config_apply_spi_dma_profile();
         StartMotionTimebasesAndEncoders();
 
         app_init();
@@ -173,23 +176,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-static void ConfigureInterruptPriorities(void)
-{
-	// Prioridade mais alta: entradas de segurança (E-STOP / PROX via EXTI).
-	HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-	HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
-	HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-
-	// Sequência proposta: TIM6 -> SPI1 DMA RX -> SPI1 IRQ -> TIM7 -> SPI1 DMA TX -> USART1.
-	HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 1, 0);
-	HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 2, 0);
-	HAL_NVIC_SetPriority(SPI1_IRQn, 2, 1);
-	HAL_NVIC_SetPriority(TIM7_IRQn, 3, 0);
-	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 4, 0);
-	HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
-}
-
 static void StartMotionTimebasesAndEncoders(void)
 {
 	// Zera contadores para que a primeira leitura incremental seja consistente.
