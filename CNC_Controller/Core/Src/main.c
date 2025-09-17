@@ -30,6 +30,7 @@
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
 #include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,7 +64,29 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 //LOG_SVC_DEFINE(LOG_SVC_APP, "app");
 // Frame de teste simples: AB 'hello' 54
-static uint8_t g_hello_frame[] = { RESP_HEADER, 'h','e','l','l','o', RESP_TAIL };
+static const uint8_t g_boot_hello_frame[] = { RESP_HEADER, 'h','e','l','l','o', RESP_TAIL };
+
+// Comprimento do fluxo circular enviado via DMA (multiplo de bytes do host)
+#define BOOT_HELLO_STREAM_LEN   (32U)
+
+// Buffer circular com o frame seguido de preenchimento 0x00.
+static uint8_t g_boot_hello_stream[BOOT_HELLO_STREAM_LEN];
+
+// Buffer de descarte para os bytes recebidos do master (evita OVR).
+static uint8_t g_boot_spi_rx_discard[BOOT_HELLO_STREAM_LEN];
+
+static void boot_spi_stream_prepare(void)
+{
+  memset(g_boot_hello_stream, 0x00, sizeof g_boot_hello_stream);
+
+  size_t copy_len = sizeof g_boot_hello_frame;
+  if (copy_len > sizeof g_boot_hello_stream)
+  {
+    copy_len = sizeof g_boot_hello_stream;
+  }
+
+  (void)memcpy(g_boot_hello_stream, g_boot_hello_frame, copy_len);
+}
 /* USER CODE END 0 */
 
 /**
@@ -106,11 +129,20 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	// app_init(); // (comentado a pedido)
 
-	// Enfileira diretamente no SPI (slave) o frame de teste "hello".
-	// O master (Raspberry) deve gerar clock para que os bytes sejam enviados.
-	(void)HAL_SPI_Transmit_IT(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame);
-	// Opcional: log para VCP
-	// LOGT_THIS(LOG_STATE_START, PROTO_OK, "hello", "queued");
+  // Inicializa o fluxo circular contendo o frame "hello" seguido de bytes nulos.
+  boot_spi_stream_prepare();
+
+  // Inicia transmissão/recepção contínua via DMA em modo slave.
+  // O master gera o clock e recebe sempre o mesmo bloco circular.
+  if (HAL_SPI_TransmitReceive_DMA(&hspi1,
+                                  g_boot_hello_stream,
+                                  g_boot_spi_rx_discard,
+                                  (uint16_t)sizeof g_boot_hello_stream) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  // Opcional: log para VCP
+  // LOGT_THIS(LOG_STATE_START, PROTO_OK, "hello", "queued");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -177,15 +209,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Reenvia automaticamente o frame de "hello" após cada transmissão
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h)
-{
-  if (h && h->Instance == SPI1)
-  {
-    // Re-armar TX com o mesmo buffer; o master precisa gerar novo clock
-    (void)HAL_SPI_Transmit_IT(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame);
-  }
-}
+// Callbacks opcionais do SPI podem ser definidos aqui caso necessário.
 /* USER CODE END 4 */
 
 /**
