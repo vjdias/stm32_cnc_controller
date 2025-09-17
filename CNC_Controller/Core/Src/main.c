@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 // #include "app.h" // (comentado a pedido: não usar app.h)
+#include "board_config.h"
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
 #include <stdio.h>
@@ -104,6 +105,11 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+    board_config_apply_motion_gpio();
+    board_config_remap_tim3_encoder_pins();
+    board_config_force_encoder_quadrature();
+    board_config_apply_interrupt_priorities();
+    board_config_apply_spi_dma_profile();
 	// app_init(); // (comentado a pedido)
 
 	// Enfileira diretamente no SPI (slave) o frame de teste "hello".
