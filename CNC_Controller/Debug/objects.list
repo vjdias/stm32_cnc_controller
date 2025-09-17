@@ -24,6 +24,7 @@
 "./App/Src/Services/Test/test_spi_service.o"
 "./App/Src/Services/service_adapters.o"
 "./App/Src/app.o"
+"./App/Src/board_config.o"
 "./Core/Src/dma.o"
 "./Core/Src/gpio.o"
 "./Core/Src/main.o"
