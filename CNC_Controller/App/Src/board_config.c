@@ -6,7 +6,21 @@
 #include "spi.h"
 #include "usart.h"
 
-/** Local helper to configure the three encoder timers in TI12 mode. */
+/*
+ * Este módulo concentra ajustes que não podem ser descritos diretamente no
+ * CubeMX: modos específicos dos timers de encoder, remapeamento de pinos para
+ * casar com o chicote do maquinário e prioridades de interrupção pensadas para
+ * preservar o determinismo do controlador CNC. As rotinas aqui devem ser
+ * chamadas logo após as funções `MX_*_Init()` geradas pelo código-base.
+ */
+
+/**
+ * @brief Reconfigura um timer de encoder para quadratura TI12.
+ *
+ * A estrutura gerada pelo CubeMX usa TI1 por padrão. Esta função sobrescreve a
+ * configuração para capturar os dois canais do encoder, mantendo todos os
+ * filtros e *prescalers* em 0/1 para preservar a resolução máxima.
+ */
 static void configure_encoder_timer(TIM_HandleTypeDef *htim)
 {
     TIM_Encoder_InitTypeDef config = {0};
@@ -35,7 +49,9 @@ static void configure_encoder_timer(TIM_HandleTypeDef *htim)
     }
 }
 
-/** Local helper to configure one bank of STEP/DIR/ENABLE outputs. */
+/**
+ * @brief Ajusta um conjunto de saídas STEP/DIR/ENABLE para modo *push-pull*.
+ */
 static void configure_output(GPIO_TypeDef *port, uint32_t pins, uint32_t speed)
 {
     GPIO_InitTypeDef init = {0};
@@ -50,20 +66,20 @@ void board_config_apply_motion_gpio(void)
 {
     GPIO_InitTypeDef init = {0};
 
-    /* Output configuration for motion control pins */
+    /* Saídas de movimento com tempos de borda compatíveis com STEP/DIR */
     configure_output(GPIOB, GPIO_PIN_4 | GPIO_PIN_0 | GPIO_PIN_1, GPIO_SPEED_FREQ_VERY_HIGH);
     configure_output(GPIOB, GPIO_PIN_2, GPIO_SPEED_FREQ_VERY_HIGH);
     configure_output(GPIOA, GPIO_PIN_3 | GPIO_PIN_2, GPIO_SPEED_FREQ_VERY_HIGH);
     configure_output(GPIOC, GPIO_PIN_4 | GPIO_PIN_5, GPIO_SPEED_FREQ_LOW);
     configure_output(GPIOA, GPIO_PIN_8, GPIO_SPEED_FREQ_LOW);
 
-    /* STEP/DIR/ENABLE default states */
+    /* Estados seguros antes de habilitar drivers: ENA alto, STEP/DIR baixos */
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4 | GPIO_PIN_2 | GPIO_PIN_0 | GPIO_PIN_1, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3 | GPIO_PIN_2, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4 | GPIO_PIN_5, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 
-    /* Safety inputs (E-STOP / proximity) */
+    /* Entradas de segurança em *pull-up* com detecção de bordas de ambos os sentidos */
     init.Mode = GPIO_MODE_IT_RISING_FALLING;
     init.Pull = GPIO_PULLUP;
 
@@ -85,7 +101,7 @@ void board_config_remap_tim3_encoder_pins(void)
 {
     GPIO_InitTypeDef init = {0};
 
-    /* Release the default CubeMX pins and map the encoder to PC6/PC7. */
+    /* Libera a configuração padrão do CubeMX e migra o encoder para PC6/PC7 */
     HAL_GPIO_DeInit(GPIOE, GPIO_PIN_3 | GPIO_PIN_4);
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -100,7 +116,7 @@ void board_config_remap_tim3_encoder_pins(void)
 
 void board_config_apply_interrupt_priorities(void)
 {
-    /* Safety EXTI inputs outrank everything. */
+    /* EXTI de segurança: interrupções mais altas para abortar movimento */
     HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
@@ -113,7 +129,7 @@ void board_config_apply_interrupt_priorities(void)
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-    /* Motion core timing */
+    /* Temporização do núcleo de movimento (TIM6/TIM7) e transporte SPI */
     HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
@@ -139,6 +155,7 @@ void board_config_apply_spi_dma_profile(void)
     {
         Error_Handler();
     }
+    /* RX circular e prioritário: evita perda de comandos do mestre SPI */
     hdma_spi1_rx.Init.Priority = DMA_PRIORITY_HIGH;
     hdma_spi1_rx.Init.Mode = DMA_CIRCULAR;
     if (HAL_DMA_Init(&hdma_spi1_rx) != HAL_OK)
@@ -151,6 +168,7 @@ void board_config_apply_spi_dma_profile(void)
     {
         Error_Handler();
     }
+    /* TX em prioridade normal, disparado apenas quando há resposta no FIFO */
     hdma_spi1_tx.Init.Priority = DMA_PRIORITY_LOW;
     hdma_spi1_tx.Init.Mode = DMA_NORMAL;
     if (HAL_DMA_Init(&hdma_spi1_tx) != HAL_OK)
