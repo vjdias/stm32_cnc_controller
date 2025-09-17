@@ -60,8 +60,6 @@ void app_poll(void) {
 }
 
 // HAL callbacks (override weak definitions) to feed the router
-// Desabilitadas temporariamente para o caminho de teste simples de "hello" no main.c
-#if 0
 void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
         router_feed_bytes(&g_router, g_spi_rx_buf, APP_SPI_RX_BUF_SZ / 2);
@@ -77,7 +75,6 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h) {
         g_spi_tx_busy = 0;
     }
 }
-#endif
 
 int app_resp_push(const uint8_t *frame, uint32_t len) {
     if (!g_resp_fifo || !frame || len == 0) return -1;

@@ -26,9 +26,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-// #include "app.h" // (comentado a pedido: não usar app.h)
+#include "app.h"
 #include "Services/Log/log_service.h"
-#include "Protocol/frame_defs.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -56,14 +55,14 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+static void ConfigureInterruptPriorities(void);
+static void StartMotionTimebasesAndEncoders(void);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //LOG_SVC_DEFINE(LOG_SVC_APP, "app");
-// Frame de teste simples: AB 'hello' 54
-static uint8_t g_hello_frame[] = { RESP_HEADER, 'h','e','l','l','o', RESP_TAIL };
 /* USER CODE END 0 */
 
 /**
@@ -104,17 +103,10 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	// app_init(); // (comentado a pedido)
+	ConfigureInterruptPriorities();
+        StartMotionTimebasesAndEncoders();
 
-	// Enfileira diretamente no SPI (slave) o frame de teste "hello".
-	// O master (Raspberry) deve gerar clock para que os bytes sejam enviados.
-	// Usa DMA em modo circular para repetir continuamente o frame.
-	if (HAL_SPI_Transmit_DMA(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	// Opcional: log para VCP
-	// LOGT_THIS(LOG_STATE_START, PROTO_OK, "hello", "queued");
+        app_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,7 +117,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		//printf("oioioioioioi2\r\n");
 		//HAL_Delay(1000);
-		// app_poll(); // (comentado a pedido)
+                app_poll();
 	}
   /* USER CODE END 3 */
 }
@@ -181,11 +173,47 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Em modo DMA circular não é necessário rearmar manualmente; callback mantido para debug futuro
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h)
+static void ConfigureInterruptPriorities(void)
 {
-  (void)h;
+	// Prioridade mais alta: entradas de segurança (E-STOP / PROX via EXTI).
+	HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+
+	// Sequência proposta: TIM6 -> SPI1 DMA RX -> SPI1 IRQ -> TIM7 -> SPI1 DMA TX -> USART1.
+	HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 1, 0);
+	HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 2, 0);
+	HAL_NVIC_SetPriority(SPI1_IRQn, 2, 1);
+	HAL_NVIC_SetPriority(TIM7_IRQn, 3, 0);
+	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 4, 0);
+	HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
 }
+
+static void StartMotionTimebasesAndEncoders(void)
+{
+	// Zera contadores para que a primeira leitura incremental seja consistente.
+	__HAL_TIM_SET_COUNTER(&htim2, 0);
+	__HAL_TIM_SET_COUNTER(&htim5, 0);
+	__HAL_TIM_SET_COUNTER(&htim3, 0);
+
+	if (HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL) != HAL_OK) {
+		Error_Handler();
+	}
+	if (HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL) != HAL_OK) {
+		Error_Handler();
+	}
+	if (HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL) != HAL_OK) {
+		Error_Handler();
+	}
+	if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK) {
+		Error_Handler();
+	}
+	if (HAL_TIM_Base_Start_IT(&htim7) != HAL_OK) {
+		Error_Handler();
+	}
+}
+
 /* USER CODE END 4 */
 
 /**
