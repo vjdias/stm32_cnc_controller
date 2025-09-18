@@ -153,16 +153,16 @@ Resumo dos frames de **REQUEST** suportados pelo HDL, com foco exclusivo na **es
 - **Tail de request**: `0x55` (`REQ_TAIL`)  
 - **Tipos (`msgType`)**: ver `src/protocol/framings/constants/protocol_constants_pkg.sv`
 
-**LED_CTRL (9 bytes) — 0x07**  
-- Arquivo: `src/protocol/framings/requests/led_control_request_pkg.sv`  
-- Layout: `[0]=AA, [1]=07, [2]=FrameID, [3]=LedMask(R/G/B), [4]=R, [5]=G, [6]=B, [7]=Parity( XOR bytes 1..6 ), [8]=55`  
-- Paridade: `Parity = XOR(bytes 1..6)`  
-- Helpers:  
-  - `decoder(raw[55:0])->struct`  
-  - `encoder(struct)->raw[55:0]`  
-  - `calc_parity(struct)->byte`  
-  - `check_parity(struct)->logic`  
-  - `set_parity(struct)->struct`  
+**LED_CTRL (12 bytes) — 0x07**
+- Arquivo: `src/protocol/framings/requests/led_control_request_pkg.sv`
+- Layout: `[0]=AA, [1]=07, [2]=FrameID, [3]=LedMask(LED1/LED2), [4]=LED1_Mode, [5..6]=LED1_FreqHz, [7]=LED2_Mode, [8..9]=LED2_FreqHz, [10]=Parity( XOR bytes 1..9 ), [11]=55`
+- Paridade: `Parity = XOR(bytes 1..9)`
+- Helpers:
+  - `decoder(raw[95:0])->struct`
+  - `encoder(struct)->raw[95:0]`
+  - `calc_parity(struct)->byte`
+  - `check_parity(struct)->logic`
+  - `set_parity(struct)->struct`
   - `make_default()->struct`
 
 **FPGA_STATUS (4 bytes) — 0x20**  
@@ -226,9 +226,9 @@ Resumo dos frames de **RESPONSE** publicados pelo HDL, com foco exclusivo na **e
 - **Tail de response**: `0x54` (`RESP_TAIL`)  
 - **Tipos (`msgType`)**: ver `src/protocol/framings/constants/protocol_constants_pkg.sv`
 
-**LED_CTRL (7 bytes) — 0x07**  
-- Arquivo: `src/protocol/framings/responses/led_control_response_pkg.sv`  
-- Layout: `[0]=AB, [1]=07, [2]=FrameID_Echo, [3]=LedMask, [4]=Status, [5]=Parity, [6]=54`  
+- **LED_CTRL (7 bytes) — 0x07**
+- Arquivo: `src/protocol/framings/responses/led_control_response_pkg.sv`
+- Layout: `[0]=AB, [1]=07, [2]=FrameID_Echo, [3]=LedMask(LED1/LED2), [4]=Status, [5]=Parity, [6]=54`
 - Paridade: `Parity = XOR(bytes 1..4)` (byte completo)  
 - Helpers: `decoder`, `encoder`, `calc_parity`, `check_parity`, `set_parity`, `make_default`
 
@@ -285,7 +285,7 @@ Resumo dos frames de **RESPONSE** publicados pelo HDL, com foco exclusivo na **e
 ## 12) Router & Serviços (lado STM32)
 
 - **Router SPI**: consome bytes do **RX DMA circular**, monta **frames**, valida **header/tail/paridade** e despacha pelo `msgType`:
-  - `led_service`: ler/escrever LED RGB conforme `LED_CTRL` (9 bytes). Ver `CNC_Controller/App/README.md` para pinos/mapeamento.
+  - `led_service`: controla LED1/LED2 (verde) conforme `LED_CTRL` (12 bytes). Ver `CNC_Controller/App/README.md` para pinos/mapeamento e modos (desligado/ligado/pisca).
   - `motion_service`: *enqueue* de segmentos (`MOVE_QUEUE_ADD`), *status*, *start/end*, *home/probe*.
 - **Respostas**: seguem o framing **AB..54** e ecoam `FrameID`.
 

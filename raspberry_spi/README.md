@@ -16,8 +16,8 @@ Fiação (Raspberry Pi → STM32 SPI1 Slave)
 - Velocidade sugerida inicial: 1 MHz (ajustável). O firmware usa RX DMA circular.
 
 Uso rápido
-- LED (liga canal R do LED RGB, frameId=1):
-  `python3 cnc_spi_client.py led --frame-id 1 --mask 1 --r 255 --g 0 --b 0`
+- LED (configura LED1 piscando a 5 Hz e LED2 ligado, frameId=1):
+  `python3 cnc_spi_client.py led --frame-id 1 --mask 0x03 --led1-mode 2 --led1-freq 5 --led2-mode 1`
 
 - Status da fila de movimentos:
   `python3 cnc_spi_client.py queue-status --frame-id 2`
