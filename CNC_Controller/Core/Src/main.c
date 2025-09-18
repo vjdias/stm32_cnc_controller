@@ -190,6 +190,11 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   app_on_spi_tx_complete(hspi);
 }
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+  app_on_spi_error(hspi);
+}
 /* USER CODE END 4 */
 
 /**
