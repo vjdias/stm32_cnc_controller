@@ -147,6 +147,9 @@ void board_config_apply_interrupt_priorities(void)
 
     HAL_NVIC_SetPriority(SPI1_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
+
+    HAL_NVIC_SetPriority(TIM1_BRK_TIM15_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
 }
 
 void board_config_apply_spi_dma_profile(void)

@@ -1,41 +1,40 @@
-// LED service (controle simples via frame)
+// Serviço de LED (controle simples via frame)
 #pragma once
 #include <stdint.h>
 
-// GPIO mapping for on-board user LED(s).
-// Defaults assume B-L475E-IOT01A user LEDs, active high.
-// Override via compile definitions if needed for other boards.
-
-// RGB channels (default to PB1/PB14/PB7)
-#ifndef LED_R_GPIO_PORT
-#define LED_R_GPIO_PORT GPIOB
+// Mapeamento de GPIO para os dois LEDs discretos presentes no controlador.
+// Os padrões seguem a placa B-L475E-IOT01A, onde o LED1 (verde) está no PA5
+// e o LED2 (verde) está no PB14. Sobrescreva via definições de compilação
+// ao direcionar para outra placa ou ligação.
+#ifndef LED1_GPIO_PORT
+#define LED1_GPIO_PORT GPIOA
 #endif
-#ifndef LED_R_GPIO_PIN
-#define LED_R_GPIO_PIN  GPIO_PIN_1
+#ifndef LED1_GPIO_PIN
+#define LED1_GPIO_PIN  GPIO_PIN_5
 #endif
-#ifndef LED_G_GPIO_PORT
-#define LED_G_GPIO_PORT GPIOB
+#ifndef LED2_GPIO_PORT
+#define LED2_GPIO_PORT GPIOB
 #endif
-#ifndef LED_G_GPIO_PIN
-#define LED_G_GPIO_PIN  GPIO_PIN_14
-#endif
-#ifndef LED_B_GPIO_PORT
-#define LED_B_GPIO_PORT GPIOB
-#endif
-#ifndef LED_B_GPIO_PIN
-#define LED_B_GPIO_PIN  GPIO_PIN_7
+#ifndef LED2_GPIO_PIN
+#define LED2_GPIO_PIN  GPIO_PIN_14
 #endif
 
-// Fallback single LED (if RGB not defined/used)
-#ifndef LED_GPIO_PORT
-#define LED_GPIO_PORT GPIOB
-#endif
-#ifndef LED_GPIO_PIN
-#define LED_GPIO_PIN  GPIO_PIN_14
-#endif
+// Nível lógico que acende o LED (compartilhado pelos dois LEDs).
 #ifndef LED_ACTIVE_HIGH
 #define LED_ACTIVE_HIGH 1
 #endif
 
+/**
+ * @brief Inicializa o serviço de LED configurando os GPIOs e garantindo que os
+ *        canais iniciem apagados.
+ */
 void led_service_init(void);
+
+/**
+ * @brief Manipula um frame REQ_LED_CTRL recebido via protocolo.
+ *
+ * @param frame Ponteiro para o buffer bruto contendo o frame completo,
+ *              começando pelo byte de header.
+ * @param len   Comprimento, em bytes, do frame apontado por @p frame.
+ */
 void led_on_led_ctrl(const uint8_t *frame, uint32_t len);
