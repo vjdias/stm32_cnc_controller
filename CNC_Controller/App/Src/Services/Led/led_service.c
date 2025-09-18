@@ -1,5 +1,6 @@
 #include "Services/Led/led_service.h"
 #include "gpio.h"
+#include "tim.h"
 #include "Protocol/Requests/led_control_request.h"
 #include "Services/Log/log_service.h"
 #include <stdio.h>
@@ -16,8 +17,9 @@ typedef struct {
     uint8_t mode;
     uint8_t is_on;
     uint16_t frequency_hz;
-    uint32_t half_period_ms;
-    uint32_t next_toggle_ms;
+    uint32_t half_period_ticks;
+    uint32_t ticks_until_toggle;
+
 } led_channel_state_t;
 
 static led_channel_state_t g_leds[LED_CTRL_CHANNEL_COUNT] = {
@@ -40,12 +42,14 @@ static void led_drive(led_channel_state_t *led, uint8_t on) {
     led->is_on = on ? 1u : 0u;
 }
 
-static uint32_t led_compute_half_period_ms(uint16_t freq_hz) {
+static uint32_t led_compute_half_period_ticks(uint16_t freq_hz) {
+
     if (!freq_hz)
         return 0u;
     uint32_t half_period = 500u / (uint32_t)freq_hz;
     if (half_period == 0u)
-        half_period = 1u; // limita à resolução do SysTick (1 ms)
+        half_period = 1u; // limita à resolução de 1 ms do temporizador dedicado
+
     return half_period;
 }
 
@@ -55,31 +59,33 @@ static void led_apply_config(led_channel_state_t *led, uint8_t mode, uint16_t fr
     if (mode > LED_MODE_BLINK)
         mode = LED_MODE_OFF;
 
-    led->half_period_ms = 0u;
-    led->next_toggle_ms = 0u;
+    uint32_t half_period = (mode == LED_MODE_BLINK) ? led_compute_half_period_ticks(freq_hz) : 0u;
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+
 
     if (mode == LED_MODE_ON) {
         led->mode = LED_MODE_ON;
         led->frequency_hz = 0u;
+        led->half_period_ticks = 0u;
+        led->ticks_until_toggle = 0u;
         led_drive(led, 1u);
-    } else if (mode == LED_MODE_BLINK) {
-        uint32_t now = HAL_GetTick();
-        uint32_t half_period = led_compute_half_period_ms(freq_hz);
-        if (half_period == 0u) {
-            led->mode = LED_MODE_OFF;
-            led->frequency_hz = 0u;
-            led_drive(led, 0u);
-        } else {
-            led->mode = LED_MODE_BLINK;
-            led->frequency_hz = freq_hz;
-            led->half_period_ms = half_period;
-            led_drive(led, 1u);
-            led->next_toggle_ms = now + half_period;
-        }
+    } else if (mode == LED_MODE_BLINK && half_period > 0u) {
+        led->mode = LED_MODE_BLINK;
+        led->frequency_hz = freq_hz;
+        led->half_period_ticks = half_period;
+        led->ticks_until_toggle = half_period;
+        led_drive(led, 1u);
     } else {
         led->mode = LED_MODE_OFF;
         led->frequency_hz = 0u;
+        led->half_period_ticks = 0u;
+        led->ticks_until_toggle = 0u;
         led_drive(led, 0u);
+    }
+
+    if (primask == 0u) {
+        __enable_irq();
     }
 }
 
@@ -94,22 +100,40 @@ void led_service_init(void) {
         HAL_GPIO_Init(g_leds[i].port, &gi);
         g_leds[i].mode = LED_MODE_OFF;
         g_leds[i].frequency_hz = 0u;
-        g_leds[i].half_period_ms = 0u;
-        g_leds[i].next_toggle_ms = 0u;
+        g_leds[i].half_period_ticks = 0u;
+        g_leds[i].ticks_until_toggle = 0u;
         led_drive(&g_leds[i], 0u);
+    }
+
+    if (htim15.Instance != TIM15) {
+        MX_TIM15_Init();
+    }
+    if (HAL_TIM_Base_Start_IT(&htim15) != HAL_OK) {
+        LOGE_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao iniciar TIM15");
     }
 }
 
-void led_service_poll(void) {
-    uint32_t now = HAL_GetTick();
+static void led_service_on_tick(void) {
     for (uint32_t i = 0; i < LED_CTRL_CHANNEL_COUNT; ++i) {
         led_channel_state_t *led = &g_leds[i];
-        if (led->mode == LED_MODE_BLINK && led->half_period_ms > 0u) {
-            if ((int32_t)(now - led->next_toggle_ms) >= 0) {
-                led->next_toggle_ms = now + led->half_period_ms;
+        if (led->mode == LED_MODE_BLINK && led->half_period_ticks > 0u) {
+            if (led->ticks_until_toggle > 0u) {
+                --led->ticks_until_toggle;
+            }
+            if (led->ticks_until_toggle == 0u) {
+                led->ticks_until_toggle = led->half_period_ticks;
                 led_drive(led, led->is_on ? 0u : 1u);
             }
         }
+    }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (!htim)
+        return;
+    if (htim == &htim15) {
+        led_service_on_tick();
+
     }
 }
 

@@ -34,7 +34,7 @@ Servico de LED — LED1/LED2 discretos
   - `LED2_GPIO_PORT`, `LED2_GPIO_PIN`
   - `LED_ACTIVE_HIGH` — quando 1: nível alto liga; quando 0: nível baixo liga (ativo em baixo)
 - Estado inicial: ambos iniciam DESLIGADOS em `led_service_init()`.
-- `led_service_poll()` deve ser chamado periodicamente (já integrado em `app_poll()`) para manter o pisca.
+- O pisca é mantido por interrupção de hardware (TIM15) com período de 1 ms; não há necessidade de *polling* na *main loop*.
 
 Pinos padrao (B-L475E-IOT01A)
 - `LED1_GPIO_PORT=GPIOA`, `LED1_GPIO_PIN=GPIO_PIN_5`  (LD1/verde)
@@ -57,7 +57,8 @@ Protocolo LED_CTRL (LED1/LED2)
 - Semantica:
   - Apenas os LEDs com bit correspondente em `ledMask` sao atualizados.
   - Frequencia zero em modo pisca cancela o pisca e desliga o LED.
-  - O pisca utiliza resolucao de 1 ms baseada em `HAL_GetTick()` (aprox. 500 Hz max).
+  - O pisca utiliza resolução de 1 ms fornecida pelo TIM15 (aprox. 500 Hz máx.).
+
 - Resposta `RESP_LED_CTRL` permanece com 7 bytes (ACK/estado).
 
 Observacao

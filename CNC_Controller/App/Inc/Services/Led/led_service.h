@@ -24,6 +24,17 @@
 #define LED_ACTIVE_HIGH 1
 #endif
 
+/**
+ * @brief Inicializa o serviço de LED configurando os GPIOs e garantindo que os
+ *        canais iniciem apagados.
+ */
 void led_service_init(void);
-void led_service_poll(void);
+
+/**
+ * @brief Manipula um frame REQ_LED_CTRL recebido via protocolo.
+ *
+ * @param frame Ponteiro para o buffer bruto contendo o frame completo,
+ *              começando pelo byte de header.
+ * @param len   Comprimento, em bytes, do frame apontado por @p frame.
+ */
 void led_on_led_ctrl(const uint8_t *frame, uint32_t len);
