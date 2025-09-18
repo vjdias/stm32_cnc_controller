@@ -1,11 +1,16 @@
-// App bootstrap: wires SPI DMA callbacks to protocol router and services
+// App bootstrap: integra SPI + serviços de aplicação
 #pragma once
 
-// Initialize app subsystems (router, services, SPI DMA)
+// Inicializa serviços, roteador e ativa DMA circular do SPI
 void app_init(void);
 
-// Poll for pending responses to transmit over SPI
+// Executa tarefas em laço (envio de respostas pendentes)
 void app_poll(void);
 
-// Allow services to push a raw response frame (AB..54) into TX FIFO
+// Permite que serviços enfileirem um frame bruto (AB..54) para TX
 int app_resp_push(const uint8_t *frame, uint32_t len);
+
+// Callbacks internos acionados pelo HAL_SPI_* ao concluir cada etapa do DMA
+void app_on_spi_rx_half_complete(void);
+void app_on_spi_rx_complete(void);
+void app_on_spi_tx_complete(void);

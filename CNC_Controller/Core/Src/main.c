@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-// #include "app.h" // (comentado a pedido: não usar app.h)
+#include "app.h"
 #include "board_config.h"
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
@@ -63,8 +63,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //LOG_SVC_DEFINE(LOG_SVC_APP, "app");
-// Frame de teste simples: AB 'hello' 54
-static uint8_t g_hello_frame[] = { RESP_HEADER, 'h','e','l','l','o', RESP_TAIL };
 /* USER CODE END 0 */
 
 /**
@@ -102,6 +100,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM5_Init();
   MX_TIM7_Init();
+  MX_TIM15_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
@@ -110,29 +109,19 @@ int main(void)
     board_config_force_encoder_quadrature();
     board_config_apply_interrupt_priorities();
     board_config_apply_spi_dma_profile();
-	// app_init(); // (comentado a pedido)
-
-	// Enfileira diretamente no SPI (slave) o frame de teste "hello".
-	// O master (Raspberry) deve gerar clock para que os bytes sejam enviados.
-	// Usa DMA em modo circular para repetir continuamente o frame.
-	if (HAL_SPI_Transmit_DMA(&hspi1, g_hello_frame, (uint16_t)sizeof g_hello_frame) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	// Opcional: log para VCP
-	// LOGT_THIS(LOG_STATE_START, PROTO_OK, "hello", "queued");
+    app_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (1) {
+  while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		//printf("oioioioioioi2\r\n");
-		//HAL_Delay(1000);
-		// app_poll(); // (comentado a pedido)
-	}
+    //printf("oioioioioioi2\r\n");
+    //HAL_Delay(1000);
+    app_poll();
+  }
   /* USER CODE END 3 */
 }
 
@@ -187,10 +176,28 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Em modo DMA circular não é necessário rearmar manualmente; callback mantido para debug futuro
+void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef *h)
+{
+  if (h == &hspi1)
+  {
+    app_on_spi_rx_half_complete();
+  }
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *h)
+{
+  if (h == &hspi1)
+  {
+    app_on_spi_rx_complete();
+  }
+}
+
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h)
 {
-  (void)h;
+  if (h == &hspi1)
+  {
+    app_on_spi_tx_complete();
+  }
 }
 /* USER CODE END 4 */
 
