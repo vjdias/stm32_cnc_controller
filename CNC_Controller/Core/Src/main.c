@@ -176,6 +176,20 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  app_on_spi_rx_half_complete(hspi);
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  app_on_spi_rx_complete(hspi);
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  app_on_spi_tx_complete(hspi);
+}
 /* USER CODE END 4 */
 
 /**
