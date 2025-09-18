@@ -47,6 +47,7 @@ static uint32_t led_compute_half_period_ticks(uint16_t freq_hz) {
     uint32_t half_period = 500u / (uint32_t)freq_hz;
     if (half_period == 0u)
         half_period = 1u; // limita à resolução de 1 ms do temporizador dedicado
+
     return half_period;
 }
 
@@ -106,6 +107,7 @@ void led_service_init(void) {
     }
     if (HAL_TIM_Base_Start_IT(&htim15) != HAL_OK) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao iniciar TIM15");
+
     }
 }
 
@@ -122,10 +124,6 @@ static void led_service_on_tick(void) {
             }
         }
     }
-}
-
-void led_service_poll(void) {
-    // Mantido para compatibilidade: toda a temporização ocorre no TIM15.
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
