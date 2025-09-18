@@ -43,7 +43,6 @@ void app_init(void) {
 }
 
 void app_poll(void) {
-    led_service_poll();
 
     // If TX is idle, try to pop one response frame from FIFO and transmit
     if (!g_spi_tx_busy && g_resp_fifo) {

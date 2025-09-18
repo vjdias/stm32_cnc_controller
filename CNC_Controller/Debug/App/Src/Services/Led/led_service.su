@@ -1,3 +1,7 @@
-../App/Src/Services/Led/led_service.c:9:6:led_service_init	32	static
-../App/Src/Services/Led/led_service.c:53:20:led_apply_rgb	24	static
-../App/Src/Services/Led/led_service.c:79:6:led_on_led_ctrl	56	static
+../App/Src/Services/Led/led_service.c:31:13:led_drive	24	static
+../App/Src/Services/Led/led_service.c:44:17:led_compute_half_period_ticks	24	static
+../App/Src/Services/Led/led_service.c:54:13:led_apply_config	32	static,ignoring_inline_asm
+../App/Src/Services/Led/led_service.c:89:6:led_service_init	40	static
+../App/Src/Services/Led/led_service.c:114:13:led_service_on_tick	16	static
+../App/Src/Services/Led/led_service.c:129:6:HAL_TIM_PeriodElapsedCallback	16	static
+../App/Src/Services/Led/led_service.c:137:6:led_on_led_ctrl	112	static

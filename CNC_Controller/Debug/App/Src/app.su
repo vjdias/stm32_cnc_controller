@@ -1,3 +1,6 @@
 ../App/Src/app.c:24:6:app_init	24	static
 ../App/Src/app.c:45:6:app_poll	80	static
+../App/Src/app.c:64:6:app_on_spi_rx_half_complete	16	static
+../App/Src/app.c:70:6:app_on_spi_rx_complete	16	static
+../App/Src/app.c:76:6:app_on_spi_tx_complete	16	static
 ../App/Src/app.c:82:5:app_resp_push	16	static

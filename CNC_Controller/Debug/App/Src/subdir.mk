@@ -24,8 +24,7 @@ App/Src/%.o App/Src/%.su App/Src/%.cyclo: ../App/Src/%.c App/Src/subdir.mk
 clean: clean-App-2f-Src
 
 clean-App-2f-Src:
-	-$(RM) ./App/Src/app.cyclo ./App/Src/app.d ./App/Src/app.o ./App/Src/app.su \
-	       ./App/Src/board_config.cyclo ./App/Src/board_config.d ./App/Src/board_config.o ./App/Src/board_config.su
+	-$(RM) ./App/Src/app.cyclo ./App/Src/app.d ./App/Src/app.o ./App/Src/app.su ./App/Src/board_config.cyclo ./App/Src/board_config.d ./App/Src/board_config.o ./App/Src/board_config.su
 
 .PHONY: clean-App-2f-Src
 

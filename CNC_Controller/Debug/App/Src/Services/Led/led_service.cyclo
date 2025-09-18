@@ -1,3 +1,7 @@
-../App/Src/Services/Led/led_service.c:9:6:led_service_init	1
-../App/Src/Services/Led/led_service.c:53:20:led_apply_rgb	4
-../App/Src/Services/Led/led_service.c:79:6:led_on_led_ctrl	3
+../App/Src/Services/Led/led_service.c:31:13:led_drive	3
+../App/Src/Services/Led/led_service.c:44:17:led_compute_half_period_ticks	3
+../App/Src/Services/Led/led_service.c:54:13:led_apply_config	8
+../App/Src/Services/Led/led_service.c:89:6:led_service_init	4
+../App/Src/Services/Led/led_service.c:114:13:led_service_on_tick	6
+../App/Src/Services/Led/led_service.c:129:6:HAL_TIM_PeriodElapsedCallback	3
+../App/Src/Services/Led/led_service.c:137:6:led_on_led_ctrl	6

@@ -30,7 +30,7 @@ App/Src/Services/Led/led_service.o: ../App/Src/Services/Led/led_service.c \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
- ../App/Inc/Protocol/Requests/led_control_request.h \
+ ../Core/Inc/tim.h ../App/Inc/Protocol/Requests/led_control_request.h \
  ../App/Inc/Protocol/Requests/../frame_defs.h \
  ../App/Inc/Services/Log/log_service.h
 ../App/Inc/Services/Led/led_service.h:
@@ -66,6 +66,7 @@ App/Src/Services/Led/led_service.o: ../App/Src/Services/Led/led_service.c \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
+../Core/Inc/tim.h:
 ../App/Inc/Protocol/Requests/led_control_request.h:
 ../App/Inc/Protocol/Requests/../frame_defs.h:
 ../App/Inc/Services/Log/log_service.h:
