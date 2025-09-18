@@ -88,17 +88,27 @@ def bits_str(bs: List[int]) -> str:
     return ' '.join(f"{b:08b}" for b in bs)
 
 
-def enc_led_ctrl(frame_id: int, led_mask: int, r: int, g: int, b: int) -> List[int]:
-    raw = [0] * 9
+def enc_led_ctrl(
+    frame_id: int,
+    led_mask: int,
+    led1_mode: int,
+    led1_freq_hz: int,
+    led2_mode: int,
+    led2_freq_hz: int,
+) -> List[int]:
+    raw = [0] * 12
     raw[0] = REQ_HEADER
     raw[1] = REQ_LED_CTRL
     raw[2] = frame_id & 0xFF
     raw[3] = led_mask & 0xFF
-    raw[4] = r & 0xFF
-    raw[5] = g & 0xFF
-    raw[6] = b & 0xFF
-    parity_set_byte_1N(raw, 6, 7)
-    raw[8] = REQ_TAIL
+    raw[4] = led1_mode & 0xFF
+    f1_hi, f1_lo = be16_bytes(led1_freq_hz & 0xFFFF)
+    raw[5], raw[6] = f1_hi, f1_lo
+    raw[7] = led2_mode & 0xFF
+    f2_hi, f2_lo = be16_bytes(led2_freq_hz & 0xFFFF)
+    raw[8], raw[9] = f2_hi, f2_lo
+    parity_set_byte_1N(raw, 9, 10)
+    raw[11] = REQ_TAIL
     return raw
 
 
@@ -443,13 +453,19 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     # LED
-    ap_led = sub.add_parser("led", help="LED RGB control")
+    ap_led = sub.add_parser("led", help="Controle dos LEDs discretos (LED1/LED2)")
     _common_args(ap_led)
     ap_led.add_argument("--frame-id", type=int, required=True)
-    ap_led.add_argument("--mask", type=lambda x: int(x, 0), required=True)
-    ap_led.add_argument("--r", type=int, default=0)
-    ap_led.add_argument("--g", type=int, default=0)
-    ap_led.add_argument("--b", type=int, default=0)
+    ap_led.add_argument("--mask", type=lambda x: int(x, 0), required=True,
+                        help="Bit0=LED1, Bit1=LED2")
+    ap_led.add_argument("--led1-mode", type=int, choices=[0, 1, 2], default=0,
+                        help="0=Off, 1=On, 2=Pisca")
+    ap_led.add_argument("--led1-freq", type=int, default=0,
+                        help="Frequência de pisca de LED1 em Hz (modo=2)")
+    ap_led.add_argument("--led2-mode", type=int, choices=[0, 1, 2], default=0,
+                        help="0=Off, 1=On, 2=Pisca")
+    ap_led.add_argument("--led2-freq", type=int, default=0,
+                        help="Frequência de pisca de LED2 em Hz (modo=2)")
 
     # Queue Add (parâmetros principais; demais com padrão 0)
     ap_qadd = sub.add_parser("queue-add", help="Adicionar movimento à fila")
@@ -508,8 +524,14 @@ def main() -> int:
     client = CNCClient(bus=args.bus, dev=args.dev, speed_hz=args.speed)
     try:
         if args.cmd == "led":
-            req = enc_led_ctrl(args["frame_id"] if isinstance(args, dict) else args.frame_id,
-                               args.mask, args.r, args.g, args.b)
+            req = enc_led_ctrl(
+                args["frame_id"] if isinstance(args, dict) else args.frame_id,
+                args.mask,
+                args.led1_mode,
+                args.led1_freq,
+                args.led2_mode,
+                args.led2_freq,
+            )
             exp_len, decoder = RESP_SPECS[REQ_LED_CTRL]
             resp = client.exchange(req, RESP_LED_CTRL, exp_len)
             # Log do frame recebido em bits antes de decodificar
