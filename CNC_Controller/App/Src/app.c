@@ -17,9 +17,12 @@ static response_fifo_t *g_resp_fifo;
 #define APP_SPI_RX_BUF_SZ 256u
 #endif
 static uint8_t g_spi_rx_buf[APP_SPI_RX_BUF_SZ];
+static uint16_t g_spi_rx_tail = 0;
 static volatile int g_spi_tx_busy = 0;
 
 LOG_SVC_DEFINE(LOG_SVC_APP, "app");
+
+static void app_spi_drain_rx(void);
 
 void app_init(void) {
     // Init services (GPIO for LED etc.)
@@ -44,6 +47,9 @@ void app_init(void) {
 
 void app_poll(void) {
 
+    // Drain any bytes that arrived since the last iteration
+    app_spi_drain_rx();
+
     // If TX is idle, try to pop one response frame from FIFO and transmit
     if (!g_spi_tx_busy && g_resp_fifo) {
         uint8_t out[64];
@@ -63,13 +69,13 @@ void app_poll(void) {
 // Funções auxiliares invocadas por main.c a partir dos callbacks do HAL
 void app_on_spi_rx_half_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
-        router_feed_bytes(&g_router, g_spi_rx_buf, APP_SPI_RX_BUF_SZ / 2);
+        app_spi_drain_rx();
     }
 }
 
 void app_on_spi_rx_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
-        router_feed_bytes(&g_router, g_spi_rx_buf + (APP_SPI_RX_BUF_SZ / 2), APP_SPI_RX_BUF_SZ / 2);
+        app_spi_drain_rx();
     }
 }
 
@@ -82,4 +88,30 @@ void app_on_spi_tx_complete(SPI_HandleTypeDef *h) {
 int app_resp_push(const uint8_t *frame, uint32_t len) {
     if (!g_resp_fifo || !frame || len == 0) return -1;
     return resp_fifo_push(g_resp_fifo, frame, len);
+}
+
+static void app_spi_drain_rx(void) {
+    if (!hspi1.hdmarx) {
+        return;
+    }
+
+    uint16_t cur = (uint16_t)(APP_SPI_RX_BUF_SZ - __HAL_DMA_GET_COUNTER(hspi1.hdmarx));
+    uint16_t tail = g_spi_rx_tail;
+
+    if (cur == tail) {
+        return; // nothing new
+    }
+
+    g_spi_rx_tail = cur;
+
+    if (cur > tail) {
+        router_feed_bytes(&g_router, g_spi_rx_buf + tail, cur - tail);
+    } else {
+        if (tail < APP_SPI_RX_BUF_SZ) {
+            router_feed_bytes(&g_router, g_spi_rx_buf + tail, APP_SPI_RX_BUF_SZ - tail);
+        }
+        if (cur > 0) {
+            router_feed_bytes(&g_router, g_spi_rx_buf, cur);
+        }
+    }
 }
