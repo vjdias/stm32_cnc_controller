@@ -61,18 +61,20 @@ void app_poll(void) {
     //log_poll();
 }
 
-// HAL callbacks (override weak definitions) para alimentar o router e liberar TX
-void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef *h) {
+// Funções auxiliares invocadas por main.c a partir dos callbacks do HAL
+void app_on_spi_rx_half_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
         router_feed_bytes(&g_router, g_spi_rx_buf, APP_SPI_RX_BUF_SZ / 2);
     }
 }
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *h) {
+
+void app_on_spi_rx_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
         router_feed_bytes(&g_router, g_spi_rx_buf + (APP_SPI_RX_BUF_SZ / 2), APP_SPI_RX_BUF_SZ / 2);
     }
 }
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *h) {
+
+void app_on_spi_tx_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
         g_spi_tx_busy = 0;
     }
