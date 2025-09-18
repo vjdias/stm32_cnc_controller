@@ -42,7 +42,6 @@ static void led_drive(led_channel_state_t *led, uint8_t on) {
 }
 
 static uint32_t led_compute_half_period_ticks(uint16_t freq_hz) {
-
     if (!freq_hz)
         return 0u;
     uint32_t half_period = 500u / (uint32_t)freq_hz;
@@ -107,7 +106,8 @@ void led_service_init(void) {
         MX_TIM15_Init();
     }
     if (HAL_TIM_Base_Start_IT(&htim15) != HAL_OK) {
-        LOGE_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao iniciar TIM15");
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao iniciar TIM15");
+
     }
 }
 

@@ -38,3 +38,12 @@ void led_service_init(void);
  * @param len   Comprimento, em bytes, do frame apontado por @p frame.
  */
 void led_on_led_ctrl(const uint8_t *frame, uint32_t len);
+
+/**
+ * @brief Mantido por compatibilidade: realiza tarefas pendentes do serviço.
+ *
+ * A temporização passou a ser feita por interrupção de hardware (TIM15),
+ * portanto esta função não possui mais trabalho periódico. Ela permanece
+ * disponível apenas para builds que ainda a invoquem.
+ */
+void led_service_poll(void);
