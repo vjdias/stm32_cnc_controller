@@ -2,6 +2,8 @@
 #include "gpio.h"
 #include "tim.h"
 #include "Protocol/Requests/led_control_request.h"
+#include "Protocol/Responses/led_control_response.h"
+#include "app.h"
 #include "Services/Log/log_service.h"
 #include <stdio.h>
 
@@ -27,6 +29,18 @@ static led_channel_state_t g_leds[LED_CTRL_CHANNEL_COUNT] = {
 };
 
 static const char *const g_led_names[LED_CTRL_CHANNEL_COUNT] = { "LED1", "LED2" };
+
+static void led_push_response(uint8_t frame_id, uint8_t mask, uint8_t status) {
+    uint8_t raw[7];
+    led_ctrl_resp_t resp = { frame_id, mask, status };
+    if (led_ctrl_resp_encoder(&resp, raw, sizeof raw) != PROTO_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_FRAME, "resp", "failed to encode led ack");
+        return;
+    }
+    if (app_resp_push(raw, (uint32_t)sizeof raw) != PROTO_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "resp", "failed to queue led ack");
+    }
+}
 
 static void led_drive(led_channel_state_t *led, uint8_t on) {
     if (!led)
@@ -138,19 +152,37 @@ void led_on_led_ctrl(const uint8_t *frame, uint32_t len) {
     led_ctrl_req_t req;
     if (!frame)
         return;
-    if (led_ctrl_req_decoder(frame, len, &req) != PROTO_OK)
+    proto_result_t decode_status = led_ctrl_req_decoder(frame, len, &req);
+    if (decode_status != PROTO_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, decode_status, "decode", "failed to decode led request (%d)", (int)decode_status);
         return;
+    }
+
+    const uint8_t requested_mask = req.ledMask;
+    const uint8_t valid_mask = (uint8_t)(LED_MASK_LED1 | LED_MASK_LED2);
+    uint8_t ack_mask = 0u;
+    uint8_t status = PROTO_OK;
 
     for (uint32_t i = 0; i < LED_CTRL_CHANNEL_COUNT; ++i) {
         uint8_t mask_bit = (i == 0u) ? LED_MASK_LED1 : LED_MASK_LED2;
-        if (req.ledMask & mask_bit) {
-            led_apply_config(&g_leds[i], req.channel[i].mode, req.channel[i].frequency);
+        if ((requested_mask & mask_bit) == 0u) {
+            continue;
         }
+        ack_mask |= mask_bit;
+        led_apply_config(&g_leds[i], req.channel[i].mode, req.channel[i].frequency);
     }
 
-    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "applied",
-              "mask=0x%02X %s(mode=%u,f=%uHz,on=%u) %s(mode=%u,f=%uHz,on=%u)",
-              (unsigned)req.ledMask,
+    if ((requested_mask & (uint8_t)~valid_mask) != 0u) {
+        status = PROTO_WARN;
+    } else if (ack_mask == 0u && requested_mask != 0u) {
+        status = PROTO_WARN;
+    }
+
+    led_push_response(req.frameId, ack_mask, status);
+
+    LOGA_THIS(LOG_STATE_APPLIED, status, "applied",
+              "reqMask=0x%02X ackMask=0x%02X %s(mode=%u,f=%uHz,on=%u) %s(mode=%u,f=%uHz,on=%u)",
+              (unsigned)requested_mask, (unsigned)ack_mask,
               g_led_names[0], g_leds[0].mode, g_leds[0].frequency_hz, g_leds[0].is_on,
               g_led_names[1], g_leds[1].mode, g_leds[1].frequency_hz, g_leds[1].is_on);
 }

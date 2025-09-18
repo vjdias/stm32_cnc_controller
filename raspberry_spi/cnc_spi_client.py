@@ -88,6 +88,22 @@ def bits_str(bs: List[int]) -> str:
     return ' '.join(f"{b:08b}" for b in bs)
 
 
+def _print_boot_frame_info(frame: List[int], stats: Dict[str, Any]) -> None:
+    print(' '.join(f"{b:02X}" for b in frame))
+    print("Frame RX bits:", bits_str(frame))
+    summary_keys = ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")
+    print({k: stats[k] for k in summary_keys})
+    chunks = stats.get("chunks", [])
+    print(f"chunks recebidos: {len(chunks)}")
+    for idx, chunk in enumerate(chunks):
+        print(f"chunk {idx:02d}:", ' '.join(f"{b:02X}" for b in chunk))
+        print(f"chunk {idx:02d} bits:", bits_str(chunk))
+    if isinstance(frame, list) and len(frame) >= 2:
+        cmd_byte = frame[1]
+        cmd_chr = chr(cmd_byte) if 32 <= cmd_byte <= 126 else '?'
+        print(f"comando encontrado: 0x{cmd_byte:02X} ('{cmd_chr}')")
+
+
 def enc_led_ctrl(
     frame_id: int,
     led_mask: int,
@@ -340,32 +356,17 @@ class CNCClient:
                     return frame
             time.sleep(settle_delay_s)
         raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
-
-    def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
-                         chunk_len: int = 7) -> List[int]:
-        """Compat: lê o frame de teste 'AB hello 54' e retorna apenas o frame.
-        Use `read_boot_hello_info` para estatísticas detalhadas.
-        """
-        frame, _stats = self.read_boot_hello_info(tries=tries, settle_delay_s=settle_delay_s,
-                                                  chunk_len=chunk_len)
-        return frame
-
-    def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
-                              chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
-        """Lê o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
-        Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
-        Retorna (frame, stats) onde stats contém:
-          - bytesBeforeHeader: bytes de clock até o header (0xAB)
-          - bytesUntilTail: bytes de clock até o tail (0x54), inclusive
-          - readsUsed: quantidade de leituras (chunks) realizadas
-          - chunkLen: tamanho do chunk utilizado em cada leitura
-        """
-        expected = [RESP_HEADER, ord('h'), ord('e'), ord('l'), ord('l'), ord('o'), RESP_TAIL]
+    def _read_boot_token_info(self, token: bytes, tries: int, settle_delay_s: float,
+                              chunk_len: int) -> Tuple[List[int], Dict[str, Any]]:
+        token_bytes = token.encode("ascii") if isinstance(token, str) else bytes(token)
+        if not token_bytes:
+            raise ValueError("token must not be empty")
+        expected = [RESP_HEADER] + list(token_bytes) + [RESP_TAIL]
         chunk_len = max(1, chunk_len)
         accum = bytearray()
         chunks: List[List[int]] = []
         reads_used = 0
-        base_offset = 0  # bytes descartados do início de 'accum'
+        base_offset = 0
         tries = max(1, tries)
         for _ in range(tries):
             rx = self._xfer([0x00] * chunk_len)
@@ -373,33 +374,30 @@ class CNCClient:
             accum.extend(rx)
             chunks.append(list(rx))
 
-            # Procura por header e segue tolerando bytes de preenchimento 0x00 entre bytes válidos
             i = 0
             while True:
                 try:
-                    i = accum.index(expected[0], i)  # procura RESP_HEADER
+                    i = accum.index(expected[0], i)
                 except ValueError:
                     break
                 j = i + 1
                 k = 1
                 ok = True
                 while k < len(expected):
-                    # pular fillers 0x00/0xFF (se houver)
                     while j < len(accum) and accum[j] in (0x00, 0xFF):
                         j += 1
                     if j >= len(accum):
                         ok = False
-                        break  # precisa de mais dados
+                        break
                     if accum[j] != expected[k]:
                         ok = False
                         break
                     j += 1
                     k += 1
                 if ok and k == len(expected):
-                    # Encontrado: header em 'i', tail imediatamente antes de 'j'
                     bytes_before_header = base_offset + i
-                    bytes_until_tail = base_offset + j  # inclusivo
-                    frame_list = expected[:]  # frame canônico sem fillers
+                    bytes_until_tail = base_offset + j
+                    frame_list = expected[:]
                     stats: Dict[str, Any] = {
                         "bytesBeforeHeader": int(bytes_before_header),
                         "bytesUntilTail": int(bytes_until_tail),
@@ -409,19 +407,55 @@ class CNCClient:
                         "expected": expected[:],
                     }
                     return frame_list, stats
-                # tenta próximo possível header
                 i = i + 1
 
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
-            # Limita o buffer para evitar crescimento desnecessário, preservando possíveis matches parciais
-            # Mantém no máximo 4*chunk + 2*len(expected) bytes
             max_keep = (4 * max(1, chunk_len)) + (2 * len(expected))
             if len(accum) > max_keep:
                 drop = len(accum) - max_keep
                 del accum[:drop]
                 base_offset += drop
-        raise TimeoutError("Frame 'hello' não encontrado. Reinicie o STM32 e tente novamente.")
+        token_label = token_bytes.decode("ascii", errors="replace")
+        raise TimeoutError(f"Frame '{token_label}' nao encontrado. Reinicie o STM32 e tente novamente.")
+
+    def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
+                         chunk_len: int = 7) -> List[int]:
+        """Compat: le o frame de teste 'AB hello 54' e retorna apenas o frame.
+        Use `read_boot_hello_info` para estatisticas detalhadas.
+        """
+        frame, _stats = self.read_boot_hello_info(tries=tries, settle_delay_s=settle_delay_s,
+                                                  chunk_len=chunk_len)
+        return frame
+
+    def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
+                              chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
+        """Le o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
+        Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
+        Retorna (frame, stats) onde stats contem:
+          - bytesBeforeHeader: bytes de clock ate o header (0xAB)
+          - bytesUntilTail: bytes de clock ate o tail (0x54), inclusive
+          - readsUsed: quantidade de leituras (chunks) realizadas
+          - chunkLen: tamanho do chunk utilizado em cada leitura
+        """
+        return self._read_boot_token_info(b"hello", tries, settle_delay_s, chunk_len)
+
+    def read_boot_lede(self, tries: int = 16, settle_delay_s: float = 0.002,
+                        chunk_len: int = 7) -> List[int]:
+        """Compat: le o frame de teste 'AB lede 54' e retorna apenas o frame.
+        Use `read_boot_lede_info` para estatisticas detalhadas.
+        """
+        frame, _stats = self.read_boot_lede_info(tries=tries, settle_delay_s=settle_delay_s,
+                                                chunk_len=chunk_len)
+        return frame
+
+    def read_boot_lede_info(self, tries: int = 16, settle_delay_s: float = 0.002,
+                             chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
+        """Le o frame de teste "AB 'lede' 54" enfileirado no boot do STM32.
+        Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
+        Retorna (frame, stats) nos mesmos moldes do frame 'hello'.
+        """
+        return self._read_boot_token_info(b"lede", tries, settle_delay_s, chunk_len)
 
     def print_until_zero_after_activity(self, chunk_len: int = 32,
                                         settle_delay_s: float = 0.0) -> None:
@@ -518,6 +552,13 @@ def main() -> int:
     ap_hello.add_argument("--chunk-len", type=int, default=7)
     ap_hello.add_argument("--tries", type=int, default=16)
     ap_hello.add_argument("--settle-delay", type=float, default=0.002)
+
+    # Lede test (boot frame AB 'lede' 54)
+    ap_lede = sub.add_parser("lede", help="Ler frame de teste 'lede' do STM32 (enfileirado no boot)")
+    _common_args(ap_lede)
+    ap_lede.add_argument("--chunk-len", type=int, default=7)
+    ap_lede.add_argument("--tries", type=int, default=16)
+    ap_lede.add_argument("--settle-delay", type=float, default=0.002)
 
     args = ap.parse_args()
 
@@ -621,27 +662,20 @@ def main() -> int:
                 raise
 
         elif args.cmd == "hello":
-            # Lê uma única vez o frame de boot 'hello' e reporta estatísticas
             frame, stats = client.read_boot_hello_info(
                 tries=args.tries,
                 settle_delay_s=args.settle_delay,
                 chunk_len=args.chunk_len,
             )
-            print(' '.join(f"{b:02X}" for b in frame))
-            print("Frame RX bits:", bits_str(frame))
-            # imprime estatísticas resumidas
-            print({k: stats[k] for k in ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")})
-            # imprime todos os chunks recebidos (para debug)
-            chunks = stats.get("chunks", [])
-            print(f"chunks recebidos: {len(chunks)}")
-            for idx, ch in enumerate(chunks):
-                print(f"chunk {idx:02d}:", ' '.join(f"{b:02X}" for b in ch))
-                print(f"chunk {idx:02d} bits:", bits_str(ch))
-            # imprime qual 'comando' foi encontrado (no caso do hello, é o byte ASCII após o header)
-            if isinstance(frame, list) and len(frame) >= 2:
-                cmd_byte = frame[1]
-                cmd_chr = chr(cmd_byte) if 32 <= cmd_byte <= 126 else '?'
-                print(f"comando encontrado: 0x{cmd_byte:02X} ('{cmd_chr}')")
+            _print_boot_frame_info(frame, stats)
+
+        elif args.cmd == "lede":
+            frame, stats = client.read_boot_lede_info(
+                tries=args.tries,
+                settle_delay_s=args.settle_delay,
+                chunk_len=args.chunk_len,
+            )
+            _print_boot_frame_info(frame, stats)
 
         else:
             raise SystemExit(2)
