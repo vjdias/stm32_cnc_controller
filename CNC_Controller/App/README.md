@@ -59,8 +59,6 @@ Protocolo LED_CTRL (LED1/LED2)
   - Frequencia zero em modo pisca cancela o pisca e desliga o LED.
   - O pisca utiliza resolução de 1 ms fornecida pelo TIM15 (aprox. 500 Hz máx.).
 
-- Resposta `RESP_LED_CTRL` permanece com 7 bytes (ACK/estado).
-
 Observacao
 - Arquivos aqui ficam fora de Core/ para evitar conflitos com o CubeMX.
 - Inclua os .c de `App/Src` no projeto CubeIDE e garanta `App/Inc` em Paths & Symbols.
