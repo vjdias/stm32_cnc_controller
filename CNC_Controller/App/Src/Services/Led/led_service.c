@@ -42,11 +42,13 @@ static void led_drive(led_channel_state_t *led, uint8_t on) {
 }
 
 static uint32_t led_compute_half_period_ticks(uint16_t freq_hz) {
+
     if (!freq_hz)
         return 0u;
     uint32_t half_period = 500u / (uint32_t)freq_hz;
     if (half_period == 0u)
         half_period = 1u; // limita à resolução de 1 ms do temporizador dedicado
+
     return half_period;
 }
 
