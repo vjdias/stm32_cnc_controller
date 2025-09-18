@@ -62,6 +62,40 @@ static void configure_output(GPIO_TypeDef *port, uint32_t pins, uint32_t speed)
     HAL_GPIO_Init(port, &init);
 }
 
+static void configure_spi_dma(DMA_HandleTypeDef *handle,
+                              DMA_Channel_TypeDef *instance,
+                              uint32_t request,
+                              uint32_t direction,
+                              uint32_t mode,
+                              uint32_t priority)
+{
+    if (!handle || !instance)
+    {
+        Error_Handler();
+    }
+
+    handle->Instance = instance;
+
+    if (HAL_DMA_DeInit(handle) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    handle->Init.Request = request;
+    handle->Init.Direction = direction;
+    handle->Init.PeriphInc = DMA_PINC_DISABLE;
+    handle->Init.MemInc = DMA_MINC_ENABLE;
+    handle->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    handle->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    handle->Init.Mode = mode;
+    handle->Init.Priority = priority;
+
+    if (HAL_DMA_Init(handle) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
 void board_config_apply_motion_gpio(void)
 {
     GPIO_InitTypeDef init = {0};
@@ -154,29 +188,21 @@ void board_config_apply_interrupt_priorities(void)
 
 void board_config_apply_spi_dma_profile(void)
 {
-    if (HAL_DMA_DeInit(&hdma_spi1_rx) != HAL_OK)
-    {
-        Error_Handler();
-    }
     /* RX circular e prioritário: evita perda de comandos do mestre SPI */
-    hdma_spi1_rx.Init.Priority = DMA_PRIORITY_HIGH;
-    hdma_spi1_rx.Init.Mode = DMA_CIRCULAR;
-    if (HAL_DMA_Init(&hdma_spi1_rx) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    configure_spi_dma(&hdma_spi1_rx,
+                      DMA1_Channel2,
+                      DMA_REQUEST_1,
+                      DMA_PERIPH_TO_MEMORY,
+                      DMA_CIRCULAR,
+                      DMA_PRIORITY_HIGH);
     __HAL_LINKDMA(&hspi1, hdmarx, hdma_spi1_rx);
 
-    if (HAL_DMA_DeInit(&hdma_spi1_tx) != HAL_OK)
-    {
-        Error_Handler();
-    }
     /* TX em prioridade normal, disparado apenas quando há resposta no FIFO */
-    hdma_spi1_tx.Init.Priority = DMA_PRIORITY_LOW;
-    hdma_spi1_tx.Init.Mode = DMA_NORMAL;
-    if (HAL_DMA_Init(&hdma_spi1_tx) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    configure_spi_dma(&hdma_spi1_tx,
+                      DMA1_Channel3,
+                      DMA_REQUEST_1,
+                      DMA_MEMORY_TO_PERIPH,
+                      DMA_NORMAL,
+                      DMA_PRIORITY_LOW);
     __HAL_LINKDMA(&hspi1, hdmatx, hdma_spi1_tx);
 }
