@@ -19,6 +19,7 @@ typedef struct {
     uint16_t frequency_hz;
     uint32_t half_period_ticks;
     uint32_t ticks_until_toggle;
+
 } led_channel_state_t;
 
 static led_channel_state_t g_leds[LED_CTRL_CHANNEL_COUNT] = {
@@ -42,11 +43,13 @@ static void led_drive(led_channel_state_t *led, uint8_t on) {
 }
 
 static uint32_t led_compute_half_period_ticks(uint16_t freq_hz) {
+
     if (!freq_hz)
         return 0u;
     uint32_t half_period = 500u / (uint32_t)freq_hz;
     if (half_period == 0u)
         half_period = 1u; // limita à resolução de 1 ms do temporizador dedicado
+
     return half_period;
 }
 
@@ -59,6 +62,7 @@ static void led_apply_config(led_channel_state_t *led, uint8_t mode, uint16_t fr
     uint32_t half_period = (mode == LED_MODE_BLINK) ? led_compute_half_period_ticks(freq_hz) : 0u;
     uint32_t primask = __get_PRIMASK();
     __disable_irq();
+
 
     if (mode == LED_MODE_ON) {
         led->mode = LED_MODE_ON;
@@ -129,6 +133,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         return;
     if (htim == &htim15) {
         led_service_on_tick();
+
     }
 }
 
