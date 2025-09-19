@@ -369,7 +369,7 @@ class CNCClient:
         base_offset = 0
         tries = max(1, tries)
         for _ in range(tries):
-            rx = self._xfer([0x00] * chunk_len)
+            rx = self._xfer(list(range(chunk_len)))  # p.ex.: [0,1,2,3,4,5,6] se chunk_len=7
             reads_used += 1
             accum.extend(rx)
             chunks.append(list(rx))
