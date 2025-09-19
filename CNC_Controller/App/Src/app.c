@@ -179,6 +179,7 @@ static void app_spi_try_restart_dma(void) {
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
         return;
     }
+
     app_spi_restart_dma(g_spi_next_status);
 }
 
