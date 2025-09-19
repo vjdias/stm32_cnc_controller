@@ -14,6 +14,6 @@ void app_poll(void);
 int app_resp_push(const uint8_t *frame, uint32_t len);
 
 // Hooks invoked from HAL callbacks (defined in main.c)
-void app_on_spi_rx_half_complete(SPI_HandleTypeDef *h);
-void app_on_spi_rx_complete(SPI_HandleTypeDef *h);
+void app_on_spi_txrx_half_complete(SPI_HandleTypeDef *h);
+void app_on_spi_txrx_complete(SPI_HandleTypeDef *h);
 void app_on_spi_tx_complete(SPI_HandleTypeDef *h);
