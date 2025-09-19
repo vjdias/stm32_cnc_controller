@@ -21,7 +21,7 @@ int move_queue_add_req_decoder(const uint8_t *raw, uint32_t len,
 		move_queue_add_req_t *out);
 int move_queue_add_req_encoder(const move_queue_add_req_t *in, uint8_t *raw,
 		uint32_t len);
-uint8_t move_queue_add_req_calc_parity(const move_queue_add_req_t *in); // returns bit in bit0
+uint8_t move_queue_add_req_calc_parity(const move_queue_add_req_t *in); // retorna o bit no bit0
 int move_queue_add_req_check_parity(const uint8_t *raw, uint32_t len);
 int move_queue_add_req_set_parity(uint8_t *raw, uint32_t len);
 move_queue_add_req_t move_queue_add_req_make_default(void);

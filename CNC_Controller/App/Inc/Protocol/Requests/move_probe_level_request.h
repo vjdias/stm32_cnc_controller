@@ -6,7 +6,7 @@
 typedef struct {
 	uint8_t frameId;
 	uint8_t axisMask;
-	uint16_t vprobe; // big-endian on wire
+        uint16_t vprobe; // big-endian na linha
 } move_probe_level_req_t;
 
 int move_probe_level_req_decoder(const uint8_t *raw, uint32_t len,

@@ -1,15 +1,15 @@
-// Non-interruptive SWO logging service
+// Serviço de logging via SWO sem interrupções
 #pragma once
 
 #include <stdint.h>
 #include <stddef.h>
 
-// Compile-time gate: set to 0 to strip logging at build time
+// Chave de compilação: ajuste para 0 para remover o logging na construção
 #ifndef LOG_ENABLE
 #define LOG_ENABLE 1
 #endif
 
-// Canonical service and state IDs for concise mode (always available)
+// IDs canônicos de serviço e estado para o modo conciso (sempre disponíveis)
 typedef enum {
     LOG_SVC_APP = 0,
     LOG_SVC_LED = 1,
@@ -23,33 +23,33 @@ typedef enum {
     LOG_STATE_START = 0,
     LOG_STATE_RECEIVED = 1,
     LOG_STATE_APPLIED = 2,
-    // Safety-specific
+    // Eventos específicos de segurança
     LOG_STATE_ESTOP_ASSERT = 10,
     LOG_STATE_ESTOP_RELEASE = 11,
-    // Generic error bucket (use with PROTO_ERR_*)
+    // Balde genérico de erro (usar com PROTO_ERR_*)
     LOG_STATE_ERROR = 100,
 } log_state_id_t;
 
 #if LOG_ENABLE
 
-// Initialize logging (sets stdout unbuffered)
+// Inicializa o logging (coloca stdout sem buffer)
 void log_service_init(void);
 
-// Enqueue concise event: service/state IDs and numeric status (ok/warn/err)
+// Empilha evento conciso: IDs de serviço/estado e status numérico (ok/warn/err)
 void log_event_ids(uint8_t service_id, uint8_t state_id, int32_t status);
 
-// Enqueue verbose event: names and textual status
+// Empilha evento verboso: nomes e status textual
 void log_event_names(const char* service_name, const char* state_name, const char* status_text);
 
-// Drain pending log bytes opportunistically (non-blocking)
+// Drena bytes pendentes do log de forma oportunista (não bloqueante)
 void log_poll(void);
 
-// Convenience: single entry point (formats status with printf-style fmt and args).
+// Conveniência: ponto único que formata status com printf e argumentos variáveis.
 void log_event_auto(log_service_id_t service_id, log_state_id_t state_id, int32_t status,
                     const char* service_name, const char* state_name,
                     const char* fmt, ...);
 
-// Minimal macros to reduce call-site noise
+// Macros mínimas para reduzir ruído nos pontos de chamada
 #define LOG_SVC_DEFINE(id, name) \
     enum { LOG_SVC_THIS = (id) }; \
     static const char* const LOG_SVC_THIS_NAME = (name)
@@ -60,7 +60,7 @@ void log_event_auto(log_service_id_t service_id, log_state_id_t state_id, int32_
 #define LOGA_THIS(state_id, status, state_name, ...) \
     do { LOGA(LOG_SVC_THIS,(state_id),(status),LOG_SVC_THIS_NAME,(state_name), __VA_ARGS__); } while(0)
 
-// Text-only helpers (no % placeholders):
+// Auxiliares apenas com texto (sem marcadores %):
 #define LOGT(svc_id, state_id, status, svc_name, state_name, text) \
     LOGA((svc_id),(state_id),(status),(svc_name),(state_name), "%s", (text))
 #define LOGT_THIS(state_id, status, state_name, text) \
@@ -72,7 +72,7 @@ static inline void log_service_init(void) {}
 static inline void log_event_ids(uint8_t s, uint8_t t, int32_t st) { (void)s; (void)t; (void)st; }
 static inline void log_event_names(const char* a, const char* b, const char* c) { (void)a; (void)b; (void)c; }
 static inline void log_poll(void) {}
-// When disabled, make macros no-ops so call-sites remain clean
+// Quando desativado, deixa as macros como no-ops para manter os call-sites limpos
 #define LOG_SVC_DEFINE(id, name)
 #define LOGA(svc_id, state_id, status, svc_name, state_name, ...)
 #define LOGA_THIS(state_id, status, state_name, ...)

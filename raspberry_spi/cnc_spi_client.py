@@ -39,6 +39,14 @@ RESP_FPGA_STATUS = 0x20
 RESP_HOME_STATUS = 0x21
 
 
+# SPI DMA framing (STM32 handshake + payload)
+SPI_DMA_MAX_PAYLOAD = 42
+SPI_DMA_HANDSHAKE_BYTES = 1
+SPI_DMA_FRAME_LEN = SPI_DMA_HANDSHAKE_BYTES + SPI_DMA_MAX_PAYLOAD
+SPI_DMA_HANDSHAKE_READY = 0x5A
+SPI_DMA_HANDSHAKE_BUSY = 0xA5
+
+
 def xor_reduce_bytes(bs: List[int]) -> int:
     x = 0
     for b in bs:
@@ -86,6 +94,16 @@ def parity_check_bit_1N(raw: List[int], last_index: int, parity_index: int) -> b
 
 def bits_str(bs: List[int]) -> str:
     return ' '.join(f"{b:08b}" for b in bs)
+
+
+def _build_spi_dma_frame(payload: List[int]) -> List[int]:
+    if len(payload) > SPI_DMA_MAX_PAYLOAD:
+        raise ValueError(f"payload excede {SPI_DMA_MAX_PAYLOAD} bytes: {len(payload)}")
+    frame = [0x00] * SPI_DMA_FRAME_LEN
+    start = SPI_DMA_FRAME_LEN - len(payload)
+    for idx, byte in enumerate(payload):
+        frame[start + idx] = byte & 0xFF
+    return frame
 
 
 def _print_boot_frame_info(frame: List[int], stats: Dict[str, Any]) -> None:
@@ -338,8 +356,14 @@ class CNCClient:
 
     def exchange(self, req: List[int], expected_type: int, expected_len: int,
                  tries: int = 8, settle_delay_s: float = 0.001) -> List[int]:
-        # Envia request (não depende do retorno full-duplex)
-        self._xfer(req)
+        # Envia request respeitando o handshake de 8 bits
+        dma_frame = _build_spi_dma_frame(req)
+        rx_frame = self._xfer(dma_frame)
+        handshake = rx_frame[0] & 0xFF
+        if handshake == SPI_DMA_HANDSHAKE_BUSY:
+            raise BufferError("STM32 sinalizou buffer cheio (handshake BUSY). Aguarde e tente novamente.")
+        if handshake != SPI_DMA_HANDSHAKE_READY:
+            print(f"Aviso: handshake inesperado 0x{handshake:02X}")
         time.sleep(settle_delay_s)
         # Lê resposta com clock gerado pelo master
         for _ in range(max(1, tries)):

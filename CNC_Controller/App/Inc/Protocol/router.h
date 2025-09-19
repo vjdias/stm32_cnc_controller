@@ -1,4 +1,4 @@
-// SPI frame router (AA..55 -> services, AB..54 <- responses)
+// Roteador de frames SPI (AA..55 -> serviços, AB..54 <- respostas)
 #pragma once
 #include <stdint.h>
 #include "frame_defs.h"
@@ -7,17 +7,17 @@
 extern "C" {
 #endif
 
-// Simple response FIFO API (opaque to callers)
+// API simples do FIFO de respostas (opaca para quem chama)
 typedef struct response_fifo_s response_fifo_t;
 
-// Router state
+// Estado do roteador
 typedef struct {
-	uint8_t acc[64];   // small accumulator buffer
+        uint8_t acc[64];   // buffer acumulador pequeno
 	uint8_t idx;
 	response_fifo_t *resp;
 } router_t;
 
-// Callback types for dispatch
+// Tipos de callback para despacho
 typedef void (*req_handler_fn)(router_t *r, const uint8_t *frame, uint32_t len);
 
 typedef struct {
@@ -33,15 +33,15 @@ typedef struct {
 
 void router_init(router_t *r, response_fifo_t *resp_fifo,
 		const router_handlers_t *h);
-// Feed bytes from SPI RX DMA callbacks (half/full complete)
+// Alimenta bytes vindos dos callbacks de SPI RX DMA (meia/transferência completa)
 void router_feed_bytes(router_t *r, const uint8_t *data, uint32_t len);
 
-// Response FIFO minimal API (producer side)
+// API mínima do FIFO de respostas (lado produtor)
 response_fifo_t* resp_fifo_create(void);
 void resp_fifo_destroy(response_fifo_t *q);
-// Push a fully formed response frame (AB..54)
+// Empilha um frame de resposta completo (AB..54)
 int resp_fifo_push(response_fifo_t *q, const uint8_t *frame, uint32_t len);
-// Pop for transmission (caller owns buffer lifetime)
+// Retira para transmissão (quem chama controla o buffer)
 int resp_fifo_pop(response_fifo_t *q, uint8_t *out, uint32_t max_len);
 int resp_fifo_count(const response_fifo_t *q);
 

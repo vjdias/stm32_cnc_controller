@@ -4,7 +4,7 @@
 #include "Services/Probe/probe_service.h"
 #include "Services/Led/led_service.h"
 
-// Static adapter functions matching router callbacks
+// Funções estáticas de adaptação compatíveis com os callbacks do roteador
 static void h_move_queue_add(router_t *r, const uint8_t *f, uint32_t l) {
 	(void) r;
 	motion_on_move_queue_add(f, l);

@@ -1,13 +1,13 @@
-// Frame definitions aligned with README (IDs, headers, tails)
+// Definições de frame alinhadas com o README (IDs, headers, tails)
 #pragma once
 #include <stdint.h>
 
-// Framing bytes
+// Bytes de enquadramento
 enum {
 	REQ_HEADER = 0xAA, REQ_TAIL = 0x55, RESP_HEADER = 0xAB, RESP_TAIL = 0x54,
 };
 
-// Request message types (STM32 receives)
+// Tipos de mensagens de requisição (STM32 recebe)
 typedef enum {
 	REQ_MOVE_QUEUE_ADD = 0x01,
 	REQ_MOVE_QUEUE_STATUS = 0x02,
@@ -19,7 +19,7 @@ typedef enum {
 	REQ_FPGA_STATUS = 0x20,
 } req_msg_type_t;
 
-// Response message types (STM32 sends)
+// Tipos de mensagens de resposta (STM32 envia)
 typedef enum {
 	RESP_MOVE_QUEUE_ADD_ACK = 0x01,
 	RESP_MOVE_QUEUE_STATUS = 0x02,
@@ -33,10 +33,10 @@ typedef enum {
 } resp_msg_type_t;
 
 // =====================
-// Generic helper toolkit
+// Conjunto genérico de auxiliares
 // =====================
 
-// XOR over bytes (full-byte parity)
+// XOR sobre bytes (paridade byte a byte)
 static inline uint8_t xor_reduce_bytes(const uint8_t *p, uint32_t n) {
 	uint8_t x = 0;
 	for (uint32_t i = 0; i < n; ++i)
@@ -44,7 +44,7 @@ static inline uint8_t xor_reduce_bytes(const uint8_t *p, uint32_t n) {
 	return x;
 }
 
-// XOR bit-reduction over bytes (returns single parity bit in bit0)
+// Redução de XOR bit a bit (retorna um único bit de paridade no bit0)
 static inline uint8_t xor_bit_reduce_bytes(const uint8_t *p, uint32_t n) {
 	uint8_t x = 0;
 	for (uint32_t i = 0; i < n; ++i)
@@ -55,7 +55,7 @@ static inline uint8_t xor_bit_reduce_bytes(const uint8_t *p, uint32_t n) {
 	return (uint8_t) (x & 0x1);
 }
 
-// Check/set byte parity over a range: parity stored at raw[parity_index]
+// Verifica/ajusta a paridade por byte em um intervalo: valor em raw[parity_index]
 static inline int check_parity_byte(const uint8_t *raw, uint32_t start,
 		uint32_t count, uint32_t parity_index) {
 	if (!raw)
@@ -70,7 +70,7 @@ static inline int set_parity_byte(uint8_t *raw, uint32_t start, uint32_t count,
 	return 0;
 }
 
-// Check/set bit-reduced parity over a range: LSB of raw[parity_index]
+// Verifica/ajusta a paridade reduzida a um bit: LSB de raw[parity_index]
 static inline int check_parity_bit(const uint8_t *raw, uint32_t start,
 		uint32_t count, uint32_t parity_index) {
 	if (!raw)
@@ -87,13 +87,13 @@ static inline int set_parity_bit(uint8_t *raw, uint32_t start, uint32_t count,
 	return 0;
 }
 
-// Generic header/tail validation
+// Validação genérica de header/tail
 static inline int has_header_tail(const uint8_t *raw, uint32_t len,
 		uint8_t header, uint8_t tail) {
 	return raw && len >= 2 && raw[0] == header && raw[len - 1] == tail;
 }
 
-// Big-endian reads/writes (wire format)
+// Leituras/escritas big-endian (formato no fio)
 static inline uint16_t be16_read(const uint8_t *p) {
 	return (uint16_t) ((((uint16_t) p[0]) << 8) | p[1]);
 }
@@ -113,27 +113,27 @@ static inline void be32_write(uint8_t *p, uint32_t v) {
 }
 
 // =====================
-// Standard return codes
+// Códigos de retorno padronizados
 // =====================
-// Use across encoders/decoders/validators for uniformity
+// Usados por encoders/decoders/validadores para manter uniformidade
 typedef enum {
-	PROTO_OK = 0,   // Success
-	PROTO_WARN = 1,   // Non-fatal condition (optional use)
+        PROTO_OK = 0,   // Sucesso
+        PROTO_WARN = 1,   // Condição não fatal (uso opcional)
 
-	PROTO_ERR_ARG = -1,  // Invalid argument(s) or length
-	PROTO_ERR_FRAME = -2,  // Framing/type mismatch
-	PROTO_ERR_ALLOC = -3,  // Allocation failure
-	PROTO_ERR_RANGE = -4,  // Range/overflow/insufficient buffer
-	PROTO_ERR_PARITY = -5,  // Parity/checksum mismatch
+        PROTO_ERR_ARG = -1,  // Argumento(s) ou tamanho inválido(s)
+        PROTO_ERR_FRAME = -2,  // Cabeçalho/tipo incompatível
+        PROTO_ERR_ALLOC = -3,  // Falha de alocação
+        PROTO_ERR_RANGE = -4,  // Faixa/overflow/buffer insuficiente
+        PROTO_ERR_PARITY = -5,  // Erro de paridade/checksum
 } proto_result_t;
 
-// Helpers to test result categories
+// Auxiliares para testar categorias de resultado
 #define PROTO_SUCCEEDED(x)   ((x) >= 0)
 #define PROTO_FAILED(x)      ((x) < 0)
 #define PROTO_IS_WARN(x)     ((x) > 0)
 
 // =====================
-// Frame helpers (init/tail)
+// Auxiliares de frame (init/tail)
 // =====================
 static inline void req_init(uint8_t *raw, req_msg_type_t type) {
 	raw[0] = REQ_HEADER;
@@ -151,9 +151,9 @@ static inline void resp_set_tail(uint8_t *raw, uint32_t tail_index) {
 }
 
 // =====================
-// Frame validators
+// Validadores de frame
 // =====================
-// Ensure buffer has min length, proper header/tail, and expected type
+// Garante comprimento mínimo, header/tail corretos e tipo esperado
 static inline int frame_expect_req(const uint8_t *raw, uint32_t len,
 		req_msg_type_t type, uint32_t min_len) {
 	if (!raw || len < min_len)
@@ -174,9 +174,9 @@ static inline int frame_expect_resp(const uint8_t *raw, uint32_t len,
 }
 
 // =====================
-// Parity wrappers (1..N range)
+// Wrappers de paridade (intervalo 1..N)
 // =====================
-// These assume parity covers bytes from index 1 (type) through last_index inclusive
+// Assume que a paridade cobre os bytes do índice 1 (tipo) até last_index inclusive
 static inline int parity_set_byte_1N(uint8_t *raw, uint32_t last_index,
 		uint32_t parity_index) {
 	return set_parity_byte(raw, 1, last_index, parity_index);

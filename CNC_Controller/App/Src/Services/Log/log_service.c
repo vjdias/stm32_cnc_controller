@@ -1,4 +1,4 @@
-// Simplified log service: route everything to printf (USART1 via _write)
+// Serviço de log simplificado: envia tudo para printf (USART1 via _write)
 #include "Services/Log/log_service.h"
 #if LOG_ENABLE
 
@@ -8,12 +8,12 @@
 #include "usart.h"
 
 void log_service_init(void){
-    // Ensure stdout is unbuffered so printf flushes immediately to UART.
+    // Garante stdout sem buffer para que o printf descarregue imediatamente na UART.
     setvbuf(stdout, NULL, _IONBF, 0);
 }
 
 void log_poll(void){
-    // No-op: transmission is synchronous via _write/HAL_UART_Transmit.
+    // No-op: a transmissão é síncrona via _write/HAL_UART_Transmit.
 }
 
 void log_event_ids(uint8_t service_id, uint8_t state_id, int32_t status){
@@ -27,7 +27,7 @@ void log_event_names(const char* service_name, const char* state_name, const cha
     printf("LOG:service=%s,state=%s,status=%s\r\n", service_name, state_name, status_text);
 }
 
-// Keep _write exactly as-is: used by printf to send to USART1.
+// Mantém _write exatamente igual: utilizado pelo printf para enviar à USART1.
 int _write(int fd, char *ptr, int len) {
     HAL_StatusTypeDef hstatus;
 
