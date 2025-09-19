@@ -1,29 +1,58 @@
 """Decodificadores de respostas do protocolo CNC SPI."""
 
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable, Dict, List
 
-from .cnc_protocol import (
-    REQ_LED_CTRL,
-    REQ_MOVE_END,
-    REQ_MOVE_HOME,
-    REQ_MOVE_PROBE_LEVEL,
-    REQ_MOVE_QUEUE_ADD,
-    REQ_MOVE_QUEUE_STATUS,
-    REQ_START_MOVE,
-    RESP_HEADER,
-    RESP_HOME_STATUS,
-    RESP_LED_CTRL,
-    RESP_MOVE_END,
-    RESP_MOVE_HOME,
-    RESP_MOVE_PROBE_LEVEL,
-    RESP_MOVE_QUEUE_ADD_ACK,
-    RESP_MOVE_QUEUE_STATUS,
-    RESP_START_MOVE,
-    RESP_TAIL,
-    parity_check_bit_1N,
-    parity_check_byte_1N,
-)
+MODULE_DIR = Path(__file__).resolve().parent
+
+if __package__:
+    from .cnc_protocol import (
+        REQ_LED_CTRL,
+        REQ_MOVE_END,
+        REQ_MOVE_HOME,
+        REQ_MOVE_PROBE_LEVEL,
+        REQ_MOVE_QUEUE_ADD,
+        REQ_MOVE_QUEUE_STATUS,
+        REQ_START_MOVE,
+        RESP_HEADER,
+        RESP_HOME_STATUS,
+        RESP_LED_CTRL,
+        RESP_MOVE_END,
+        RESP_MOVE_HOME,
+        RESP_MOVE_PROBE_LEVEL,
+        RESP_MOVE_QUEUE_ADD_ACK,
+        RESP_MOVE_QUEUE_STATUS,
+        RESP_START_MOVE,
+        RESP_TAIL,
+        parity_check_bit_1N,
+        parity_check_byte_1N,
+    )
+else:
+    if str(MODULE_DIR) not in sys.path:
+        sys.path.insert(0, str(MODULE_DIR))
+    from cnc_protocol import (  # type: ignore
+        REQ_LED_CTRL,
+        REQ_MOVE_END,
+        REQ_MOVE_HOME,
+        REQ_MOVE_PROBE_LEVEL,
+        REQ_MOVE_QUEUE_ADD,
+        REQ_MOVE_QUEUE_STATUS,
+        REQ_START_MOVE,
+        RESP_HEADER,
+        RESP_HOME_STATUS,
+        RESP_LED_CTRL,
+        RESP_MOVE_END,
+        RESP_MOVE_HOME,
+        RESP_MOVE_PROBE_LEVEL,
+        RESP_MOVE_QUEUE_ADD_ACK,
+        RESP_MOVE_QUEUE_STATUS,
+        RESP_START_MOVE,
+        RESP_TAIL,
+        parity_check_bit_1N,
+        parity_check_byte_1N,
+    )
 
 
 @dataclass(frozen=True)
