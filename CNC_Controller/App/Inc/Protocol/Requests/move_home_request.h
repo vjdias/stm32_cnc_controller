@@ -7,7 +7,7 @@ typedef struct {
 	uint8_t frameId;
 	uint8_t axisMask;
 	uint8_t dirMask;
-	uint16_t vhome; // big-endian on wire
+        uint16_t vhome; // big-endian na linha
 } move_home_req_t;
 
 int move_home_req_decoder(const uint8_t *raw, uint32_t len,

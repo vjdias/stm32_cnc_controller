@@ -13,8 +13,9 @@
 #define APP_SPI_HANDSHAKE_BYTES    (APP_SPI_HANDSHAKE_BITS / 8u)
 #define APP_SPI_DMA_BUF_LEN        (APP_SPI_MAX_REQUEST_LEN + APP_SPI_HANDSHAKE_BYTES)
 #define APP_SPI_RX_QUEUE_DEPTH     4u
-#define APP_SPI_STATUS_READY       0x00u
-#define APP_SPI_STATUS_BUSY        0xFFu
+#define APP_SPI_STATUS_READY       0x5Au
+#define APP_SPI_STATUS_BUSY        0xA5u
+/* Estados de handshake usam padrões alternados para evitar colisão com 0x00/0xFF. */
 #define APP_SPI_IDLE_FILL          0x00u
 
 #if (APP_SPI_HANDSHAKE_BITS % 8u) != 0
@@ -36,6 +37,7 @@ static response_fifo_t *g_resp_fifo;
 static uint8_t g_spi_rx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static uint8_t g_spi_tx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint8_t g_spi_need_restart = 0;
+static volatile uint8_t g_spi_next_status = APP_SPI_STATUS_READY;
 
 static app_spi_frame_t g_spi_rx_queue[APP_SPI_RX_QUEUE_DEPTH];
 static volatile uint8_t g_spi_rx_queue_head = 0;
@@ -69,7 +71,8 @@ void app_init(void) {
     router_init(&g_router, g_resp_fifo, &g_handlers);
 
     app_spi_queue_reset();
-    app_spi_prime_tx_buffer(APP_SPI_STATUS_READY);
+    g_spi_next_status = APP_SPI_STATUS_READY;
+    app_spi_prime_tx_buffer(g_spi_next_status);
     if (HAL_SPI_TransmitReceive_DMA(&hspi1, g_spi_tx_dma_buf, g_spi_rx_dma_buf,
                                     (uint16_t)APP_SPI_DMA_BUF_LEN) != HAL_OK) {
         g_spi_need_restart = 1u;
@@ -106,7 +109,9 @@ void app_poll(void) {
 
 void app_on_spi_txrx_half_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
-        /* Nenhuma ação: handshake já foi enviado no primeiro byte */
+        /* Reserva o handshake para sinalizar BUSY até concluir o tratamento atual */
+        g_spi_next_status = APP_SPI_STATUS_BUSY;
+        g_spi_tx_dma_buf[0] = APP_SPI_STATUS_BUSY;
     }
 }
 
@@ -157,6 +162,7 @@ static void app_spi_restart_dma(uint8_t status) {
         return;
     }
 
+    g_spi_next_status = status;
     app_spi_prime_tx_buffer(status);
     if (HAL_SPI_TransmitReceive_DMA(&hspi1, g_spi_tx_dma_buf, g_spi_rx_dma_buf,
                                     (uint16_t)APP_SPI_DMA_BUF_LEN) == HAL_OK) {
@@ -173,7 +179,8 @@ static void app_spi_try_restart_dma(void) {
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
         return;
     }
-    app_spi_restart_dma(app_spi_compute_status());
+
+    app_spi_restart_dma(g_spi_next_status);
 }
 
 static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len) {
@@ -238,14 +245,23 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;
+    uint8_t armazenado = 0u;
 
     if (app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len) == 0) {
-        if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) != 0) {
+        if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) == 0) {
+            armazenado = 1u;
+        } else {
             g_spi_rx_overflow = 1u;
         }
     } else {
         g_spi_rx_overflow = 1u;
     }
 
-    app_spi_restart_dma(app_spi_compute_status());
+    if (armazenado) {
+        g_spi_next_status = app_spi_compute_status();
+    } else {
+        g_spi_next_status = APP_SPI_STATUS_BUSY;
+    }
+
+    app_spi_restart_dma(g_spi_next_status);
 }

@@ -1,4 +1,4 @@
-// Minimal, self-contained router stub (not linked by default in CubeIDE)
+// Roteador mínimo e autocontido (não é vinculado por padrão no CubeIDE)
 #include <string.h>
 #include <stdlib.h>
 #include "Protocol/router.h"

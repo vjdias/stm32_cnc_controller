@@ -78,14 +78,14 @@ static void test_response_fifo_basic(void){
     assert(memcmp(out, frame, 6) == 0);
     assert(resp_fifo_count(q) == 0);
 
-    // Range error path
+    // Caminho de erro de faixa
     rc = resp_fifo_push(q, frame, sizeof frame);
     assert(rc == 0);
     uint8_t small[4];
     n = resp_fifo_pop(q, small, sizeof small);
     assert(n < 0); // PROTO_ERR_RANGE
 
-    // cleanup
+    // limpeza
     resp_fifo_destroy(q);
 }
 

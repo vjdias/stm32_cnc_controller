@@ -1,4 +1,4 @@
-// Adapters to bind services to router handlers
+// Adaptadores que vinculam os serviços aos handlers do roteador
 #pragma once
 #include "../Protocol/router.h"
 

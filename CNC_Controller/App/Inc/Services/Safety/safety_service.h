@@ -1,4 +1,4 @@
-// Safety service (E-STOP/FAULT)
+// Serviço de segurança (E-STOP/FAULT)
 #pragma once
 #include <stdint.h>
 

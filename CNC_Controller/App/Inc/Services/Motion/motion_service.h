@@ -1,4 +1,4 @@
-// Motion service (FSM simplificado) — interface
+// Serviço de movimento (FSM simplificado) — interface
 #pragma once
 #include <stdint.h>
 

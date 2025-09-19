@@ -1,4 +1,4 @@
-// Probe level service (FSM simplificado)
+// Serviço de nivelamento por probe (FSM simplificado)
 #pragma once
 #include <stdint.h>
 

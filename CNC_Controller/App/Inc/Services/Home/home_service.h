@@ -1,4 +1,4 @@
-// Home service (FSM por eixo)
+// Serviço de homing (FSM por eixo)
 #pragma once
 #include <stdint.h>
 
