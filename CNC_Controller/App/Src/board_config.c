@@ -188,16 +188,16 @@ void board_config_apply_interrupt_priorities(void)
 
 void board_config_apply_spi_dma_profile(void)
 {
-    /* RX circular e prioritário: evita perda de comandos do mestre SPI */
+    /* RX em modo normal: cada quadro AA..55 + handshake ocupa um slot */
     configure_spi_dma(&hdma_spi1_rx,
                       DMA1_Channel2,
                       DMA_REQUEST_1,
                       DMA_PERIPH_TO_MEMORY,
-                      DMA_CIRCULAR,
+                      DMA_NORMAL,
                       DMA_PRIORITY_HIGH);
     __HAL_LINKDMA(&hspi1, hdmarx, hdma_spi1_rx);
 
-    /* TX em prioridade normal, disparado apenas quando há resposta no FIFO */
+    /* TX também em modo normal; buffers são preenchidos a cada transação */
     configure_spi_dma(&hdma_spi1_tx,
                       DMA1_Channel3,
                       DMA_REQUEST_1,
