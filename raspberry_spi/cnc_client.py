@@ -1,0 +1,198 @@
+"""Cliente SPI que conversa com o firmware CNC no STM32."""
+
+import time
+from typing import Any, Dict, List, Tuple
+
+try:
+    from .cnc_protocol import (
+        RESP_HEADER,
+        RESP_TAIL,
+        SPI_DMA_FRAME_LEN,
+        SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_MAX_PAYLOAD,
+        bits_str,
+    )
+    from .cnc_responses import CNCResponseDecoder
+except ImportError:  # Execução direta a partir do diretório raspberry_spi
+    from cnc_protocol import (
+        RESP_HEADER,
+        RESP_TAIL,
+        SPI_DMA_FRAME_LEN,
+        SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_MAX_PAYLOAD,
+        bits_str,
+    )
+    from cnc_responses import CNCResponseDecoder
+
+try:  # pragma: no cover - dependência externa
+    import spidev  # type: ignore
+except Exception as exc:  # pragma: no cover
+    spidev = None
+
+
+def _build_spi_dma_frame(payload: List[int]) -> List[int]:
+    if len(payload) > SPI_DMA_MAX_PAYLOAD:
+        raise ValueError(f"payload excede {SPI_DMA_MAX_PAYLOAD} bytes: {len(payload)}")
+    frame = [0x00] * SPI_DMA_FRAME_LEN
+    start = SPI_DMA_FRAME_LEN - len(payload)
+    for idx, byte in enumerate(payload):
+        frame[start + idx] = byte & 0xFF
+    return frame
+
+
+class CNCClient:
+    def __init__(self, bus: int = 0, dev: int = 0,
+                 speed_hz: int = 1_000_000, mode: int = 0b11) -> None:
+        if spidev is None:
+            raise RuntimeError("spidev não disponível. Instale `python3-spidev` no Raspberry.")
+        self.spi = spidev.SpiDev()
+        self.spi.open(bus, dev)
+        self.spi.max_speed_hz = int(speed_hz)
+        self.spi.mode = mode  # MODE 3: 0b11
+        self.spi.bits_per_word = 8
+
+    def close(self) -> None:
+        try:
+            self.spi.close()
+        except Exception:  # pragma: no cover - limpeza defensiva
+            pass
+
+    def _xfer(self, data: List[int]) -> List[int]:
+        tx = [d & 0xFF for d in data]
+        try:
+            print("SPI TX bits:", bits_str(tx))
+        except Exception:
+            pass
+        rx = self.spi.xfer2(tx)
+        try:
+            print("SPI RX bits:", bits_str(rx))
+        except Exception:
+            pass
+        return rx
+
+    def exchange(self, request_type: int, request: List[int],
+                 tries: int = 8, settle_delay_s: float = 0.001) -> List[int]:
+        spec = CNCResponseDecoder.SPECS[request_type]
+        dma_frame = _build_spi_dma_frame(request)
+        rx_frame = self._xfer(dma_frame)
+        handshake = rx_frame[0] & 0xFF
+        if handshake == SPI_DMA_HANDSHAKE_BUSY:
+            raise BufferError("STM32 sinalizou buffer cheio (handshake BUSY). Aguarde e tente novamente.")
+        if handshake != SPI_DMA_HANDSHAKE_READY:
+            print(f"Aviso: handshake inesperado 0x{handshake:02X}")
+        time.sleep(settle_delay_s)
+
+        for _ in range(max(1, tries)):
+            rx = self._xfer([0x00] * spec.length)
+            try:
+                idx = rx.index(RESP_HEADER)
+            except ValueError:
+                time.sleep(settle_delay_s)
+                continue
+            if idx + spec.length <= len(rx):
+                frame = rx[idx:idx + spec.length]
+                if frame[0] == RESP_HEADER and frame[-1] == RESP_TAIL and frame[1] == spec.response_type:
+                    return frame
+            time.sleep(settle_delay_s)
+        raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
+
+    def _read_boot_token_info(self, token_bytes: bytes, tries: int, settle_delay_s: float,
+                              chunk_len: int) -> Tuple[List[int], Dict[str, Any]]:
+        if chunk_len <= 0:
+            raise ValueError("chunk_len deve ser positivo")
+        expected = [
+            0x00,
+            token_bytes[0],
+            token_bytes[1],
+            token_bytes[2],
+            0x00,
+            RESP_HEADER,
+            token_bytes[0],
+            token_bytes[1],
+            token_bytes[2],
+            RESP_TAIL,
+        ]
+        accum: List[int] = []
+        base_offset = 0
+        chunks: List[List[int]] = []
+        reads_used = 0
+        for _ in range(max(1, tries)):
+            chunk = self._xfer([0x00] * chunk_len)
+            reads_used += 1
+            chunks.append(chunk)
+            accum.extend(chunk)
+            i = 0
+            while i + len(expected) <= len(accum):
+                window = accum[i:i + len(expected)]
+                if window[0] == expected[0]:
+                    ok = True
+                    j = 1
+                    k = 1
+                    while j < len(window) and k < len(expected):
+                        if window[j] != expected[k]:
+                            ok = False
+                            break
+                        j += 1
+                        k += 1
+                    if ok and k == len(expected):
+                        bytes_before_header = base_offset + i
+                        bytes_until_tail = base_offset + j
+                        frame_list = expected[:]
+                        stats: Dict[str, Any] = {
+                            "bytesBeforeHeader": int(bytes_before_header),
+                            "bytesUntilTail": int(bytes_until_tail),
+                            "readsUsed": int(reads_used),
+                            "chunkLen": int(chunk_len),
+                            "chunks": chunks,
+                            "expected": expected[:],
+                        }
+                        return frame_list, stats
+                i = i + 1
+
+            if settle_delay_s > 0:
+                time.sleep(settle_delay_s)
+            max_keep = (4 * max(1, chunk_len)) + (2 * len(expected))
+            if len(accum) > max_keep:
+                drop = len(accum) - max_keep
+                del accum[:drop]
+                base_offset += drop
+        token_label = token_bytes.decode("ascii", errors="replace")
+        raise TimeoutError(f"Frame '{token_label}' nao encontrado. Reinicie o STM32 e tente novamente.")
+
+    def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
+                        chunk_len: int = 7) -> List[int]:
+        frame, _stats = self.read_boot_hello_info(tries=tries, settle_delay_s=settle_delay_s,
+                                                  chunk_len=chunk_len)
+        return frame
+
+    def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
+                             chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
+        return self._read_boot_token_info(b"hello", tries, settle_delay_s, chunk_len)
+
+    def read_boot_led(self, tries: int = 16, settle_delay_s: float = 0.002,
+                      chunk_len: int = 7) -> List[int]:
+        frame, _stats = self.read_boot_led_info(tries=tries, settle_delay_s=settle_delay_s,
+                                                chunk_len=chunk_len)
+        return frame
+
+    def read_boot_led_info(self, tries: int = 16, settle_delay_s: float = 0.002,
+                           chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
+        return self._read_boot_token_info(b"led", tries, settle_delay_s, chunk_len)
+
+    def print_until_zero_after_activity(self, chunk_len: int = 32,
+                                        settle_delay_s: float = 0.0) -> None:
+        saw_activity = False
+        while True:
+            rx = self._xfer([0x00] * chunk_len)
+            print(" ".join(f"{b:02X}" for b in rx))
+            if any(b != 0x00 for b in rx):
+                saw_activity = True
+            if saw_activity and any(b == 0x00 for b in rx):
+                break
+            if settle_delay_s > 0:
+                time.sleep(settle_delay_s)
+
+
+__all__ = ["CNCClient"]
