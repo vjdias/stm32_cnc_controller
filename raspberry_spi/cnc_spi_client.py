@@ -4,12 +4,18 @@
 """Cliente SPI para comunicação com o firmware CNC no STM32."""
 
 import argparse
+import sys
+from pathlib import Path
 from typing import List, Optional
+
+MODULE_DIR = Path(__file__).resolve().parent
 
 if __package__:
     from .cnc_client import CNCClient
     from .cnc_commands import CNCCommandExecutor
 else:  # execução direta do script a partir do diretório raspberry_spi
+    if str(MODULE_DIR) not in sys.path:
+        sys.path.insert(0, str(MODULE_DIR))
     from cnc_client import CNCClient
     from cnc_commands import CNCCommandExecutor
 

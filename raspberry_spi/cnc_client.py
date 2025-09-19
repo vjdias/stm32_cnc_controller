@@ -1,18 +1,36 @@
 """Cliente SPI que conversa com o firmware CNC no STM32."""
 
+import sys
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-from .cnc_protocol import (
-    RESP_HEADER,
-    RESP_TAIL,
-    SPI_DMA_FRAME_LEN,
-    SPI_DMA_HANDSHAKE_BUSY,
-    SPI_DMA_HANDSHAKE_READY,
-    SPI_DMA_MAX_PAYLOAD,
-    bits_str,
-)
-from .cnc_responses import CNCResponseDecoder
+MODULE_DIR = Path(__file__).resolve().parent
+
+if __package__:
+    from .cnc_protocol import (
+        RESP_HEADER,
+        RESP_TAIL,
+        SPI_DMA_FRAME_LEN,
+        SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_MAX_PAYLOAD,
+        bits_str,
+    )
+    from .cnc_responses import CNCResponseDecoder
+else:
+    if str(MODULE_DIR) not in sys.path:
+        sys.path.insert(0, str(MODULE_DIR))
+    from cnc_protocol import (  # type: ignore
+        RESP_HEADER,
+        RESP_TAIL,
+        SPI_DMA_FRAME_LEN,
+        SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_MAX_PAYLOAD,
+        bits_str,
+    )
+    from cnc_responses import CNCResponseDecoder  # type: ignore
 
 try:  # pragma: no cover - dependência externa
     import spidev  # type: ignore
