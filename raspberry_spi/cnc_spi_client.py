@@ -1,503 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time
+"""Cliente SPI para comunicação com o firmware CNC no STM32."""
+
 import argparse
-from typing import Dict, Any, Optional, Tuple, List
+from typing import List, Optional
 
-try:
-    import spidev  # type: ignore
-except Exception as e:  # pragma: no cover
-    spidev = None
-
-
-# Framing bytes
-REQ_HEADER = 0xAA
-REQ_TAIL = 0x55
-RESP_HEADER = 0xAB
-RESP_TAIL = 0x54
-
-# Request types
-REQ_MOVE_QUEUE_ADD = 0x01
-REQ_MOVE_QUEUE_STATUS = 0x02
-REQ_START_MOVE = 0x03
-REQ_MOVE_HOME = 0x04
-REQ_MOVE_PROBE_LEVEL = 0x05
-REQ_MOVE_END = 0x06
-REQ_LED_CTRL = 0x07
-REQ_FPGA_STATUS = 0x20
-
-# Response types
-RESP_MOVE_QUEUE_ADD_ACK = 0x01
-RESP_MOVE_QUEUE_STATUS = 0x02
-RESP_START_MOVE = 0x03
-RESP_MOVE_HOME = 0x04
-RESP_MOVE_PROBE_LEVEL = 0x05
-RESP_MOVE_END = 0x06
-RESP_LED_CTRL = 0x07
-RESP_FPGA_STATUS = 0x20
-RESP_HOME_STATUS = 0x21
-
-
-# SPI DMA framing (STM32 handshake + payload)
-SPI_DMA_MAX_PAYLOAD = 42
-SPI_DMA_HANDSHAKE_BYTES = 1
-SPI_DMA_FRAME_LEN = SPI_DMA_HANDSHAKE_BYTES + SPI_DMA_MAX_PAYLOAD
-SPI_DMA_HANDSHAKE_READY = 0x5A
-SPI_DMA_HANDSHAKE_BUSY = 0xA5
-
-
-def xor_reduce_bytes(bs: List[int]) -> int:
-    x = 0
-    for b in bs:
-        x ^= (b & 0xFF)
-    return x & 0xFF
-
-
-def xor_bit_reduce_bytes(bs: List[int]) -> int:
-    x = xor_reduce_bytes(bs)
-    x ^= (x >> 4)
-    x ^= (x >> 2)
-    x ^= (x >> 1)
-    return x & 0x1
-
-
-def be16_bytes(v: int) -> Tuple[int, int]:
-    return ((v >> 8) & 0xFF, v & 0xFF)
-
-
-def be32_bytes(v: int) -> Tuple[int, int, int, int]:
-    return ((v >> 24) & 0xFF, (v >> 16) & 0xFF, (v >> 8) & 0xFF, v & 0xFF)
-
-
-def parity_set_byte_1N(raw: List[int], last_index: int, parity_index: int) -> None:
-    # XOR dos bytes de [1..last_index] inclusive
-    raw[parity_index] = xor_reduce_bytes(raw[1:last_index + 1])
-
-
-def parity_check_byte_1N(raw: List[int], last_index: int, parity_index: int) -> bool:
-    return (raw[parity_index] & 0xFF) == xor_reduce_bytes(raw[1:last_index + 1])
-
-
-def parity_set_bit_1N(raw: List[int], last_index: int, parity_index: int) -> None:
-    raw[parity_index] = xor_bit_reduce_bytes(raw[1:last_index + 1]) & 0x1
-
-
-def parity_check_bit_1N(raw: List[int], last_index: int, parity_index: int) -> bool:
-    return (raw[parity_index] & 0x1) == xor_bit_reduce_bytes(raw[1:last_index + 1])
-
-
-# ==========================
-# Request encoders
-# ==========================
-
-
-def bits_str(bs: List[int]) -> str:
-    return ' '.join(f"{b:08b}" for b in bs)
-
-
-def _build_spi_dma_frame(payload: List[int]) -> List[int]:
-    if len(payload) > SPI_DMA_MAX_PAYLOAD:
-        raise ValueError(f"payload excede {SPI_DMA_MAX_PAYLOAD} bytes: {len(payload)}")
-    frame = [0x00] * SPI_DMA_FRAME_LEN
-    start = SPI_DMA_FRAME_LEN - len(payload)
-    for idx, byte in enumerate(payload):
-        frame[start + idx] = byte & 0xFF
-    return frame
-
-
-def _print_boot_frame_info(frame: List[int], stats: Dict[str, Any]) -> None:
-    print(' '.join(f"{b:02X}" for b in frame))
-    print("Frame RX bits:", bits_str(frame))
-    summary_keys = ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")
-    print({k: stats[k] for k in summary_keys})
-    chunks = stats.get("chunks", [])
-    print(f"chunks recebidos: {len(chunks)}")
-    for idx, chunk in enumerate(chunks):
-        print(f"chunk {idx:02d}:", ' '.join(f"{b:02X}" for b in chunk))
-        print(f"chunk {idx:02d} bits:", bits_str(chunk))
-    if isinstance(frame, list) and len(frame) >= 2:
-        cmd_byte = frame[1]
-        cmd_chr = chr(cmd_byte) if 32 <= cmd_byte <= 126 else '?'
-        print(f"comando encontrado: 0x{cmd_byte:02X} ('{cmd_chr}')")
-
-
-def enc_led_ctrl(
-    frame_id: int,
-    led_mask: int,
-    led1_mode: int,
-    led1_freq_hz: int,
-    led2_mode: int,
-    led2_freq_hz: int,
-) -> List[int]:
-    raw = [0] * 12
-    raw[0] = REQ_HEADER
-    raw[1] = REQ_LED_CTRL
-    raw[2] = frame_id & 0xFF
-    raw[3] = led_mask & 0xFF
-    raw[4] = led1_mode & 0xFF
-    f1_hi, f1_lo = be16_bytes(led1_freq_hz & 0xFFFF)
-    raw[5], raw[6] = f1_hi, f1_lo
-    raw[7] = led2_mode & 0xFF
-    f2_hi, f2_lo = be16_bytes(led2_freq_hz & 0xFFFF)
-    raw[8], raw[9] = f2_hi, f2_lo
-    parity_set_byte_1N(raw, 9, 10)
-    raw[11] = REQ_TAIL
-    return raw
-
-
-def enc_move_home(frame_id: int, axis_mask: int, dir_mask: int, vhome: int) -> List[int]:
-    raw = [0] * 9
-    raw[0] = REQ_HEADER
-    raw[1] = REQ_MOVE_HOME
-    raw[2] = frame_id & 0xFF
-    raw[3] = axis_mask & 0xFF
-    raw[4] = dir_mask & 0xFF
-    vhi, vlo = be16_bytes(vhome)
-    raw[5], raw[6] = vhi, vlo
-    parity_set_byte_1N(raw, 6, 7)
-    raw[8] = REQ_TAIL
-    return raw
-
-
-def enc_probe_level(frame_id: int, axis_mask: int, vprobe: int) -> List[int]:
-    raw = [0] * 8
-    raw[0] = REQ_HEADER
-    raw[1] = REQ_MOVE_PROBE_LEVEL
-    raw[2] = frame_id & 0xFF
-    raw[3] = axis_mask & 0xFF
-    vhi, vlo = be16_bytes(vprobe)
-    raw[4], raw[5] = vhi, vlo
-    parity_set_byte_1N(raw, 5, 6)
-    raw[7] = REQ_TAIL
-    return raw
-
-
-def enc_move_queue_add(
-    frame_id: int,
-    dir_mask: int,
-    vx: int, sx: int,
-    vy: int, sy: int,
-    vz: int, sz: int,
-    kp_x: int, ki_x: int, kd_x: int,
-    kp_y: int, ki_y: int, kd_y: int,
-    kp_z: int, ki_z: int, kd_z: int,
-) -> List[int]:
-    raw = [0] * 42
-    raw[0] = REQ_HEADER
-    raw[1] = REQ_MOVE_QUEUE_ADD
-    raw[2] = frame_id & 0xFF
-    raw[3] = dir_mask & 0xFF
-    raw[4:6] = list(be16_bytes(vx))
-    raw[6:10] = list(be32_bytes(sx))
-    raw[10:12] = list(be16_bytes(vy))
-    raw[12:16] = list(be32_bytes(sy))
-    raw[16:18] = list(be16_bytes(vz))
-    raw[18:22] = list(be32_bytes(sz))
-    raw[22:24] = list(be16_bytes(kp_x))
-    raw[24:26] = list(be16_bytes(ki_x))
-    raw[26:28] = list(be16_bytes(kd_x))
-    raw[28:30] = list(be16_bytes(kp_y))
-    raw[30:32] = list(be16_bytes(ki_y))
-    raw[32:34] = list(be16_bytes(kd_y))
-    raw[34:36] = list(be16_bytes(kp_z))
-    raw[36:38] = list(be16_bytes(ki_z))
-    raw[38:40] = list(be16_bytes(kd_z))
-    # Paridade: bit-reduce no LSB, cobrindo bytes [1..39], armazenado em [40]
-    parity_set_bit_1N(raw, 39, 40)
-    raw[41] = REQ_TAIL
-    return raw
-
-
-def enc_start_move(frame_id: int) -> List[int]:
-    return [REQ_HEADER, REQ_START_MOVE, frame_id & 0xFF, REQ_TAIL]
-
-
-def enc_move_end(frame_id: int) -> List[int]:
-    return [REQ_HEADER, REQ_MOVE_END, frame_id & 0xFF, REQ_TAIL]
-
-
-def enc_queue_status(frame_id: int) -> List[int]:
-    return [REQ_HEADER, REQ_MOVE_QUEUE_STATUS, frame_id & 0xFF, REQ_TAIL]
-
-
-def enc_fpga_status(frame_id: int) -> List[int]:
-    return [REQ_HEADER, REQ_FPGA_STATUS, frame_id & 0xFF, REQ_TAIL]
-
-
-# ==========================
-# Response decoders (host-side)
-# ==========================
-
-
-def _require_frame(raw: List[int], header: int, tail: int, min_len: int) -> None:
-    if not raw or len(raw) < min_len or raw[0] != header or raw[-1] != tail:
-        raise ValueError("Frame inválido ou incompleto")
-
-
-def dec_led_resp(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 7)
-    if raw[1] != RESP_LED_CTRL or not parity_check_byte_1N(raw, 4, 5):
-        raise ValueError("LED response inválida/paridade")
-    return {"type": raw[1], "frameId": raw[2], "ledMask": raw[3], "status": raw[4]}
-
-
-def dec_queue_add_ack(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 6)
-    if raw[1] != RESP_MOVE_QUEUE_ADD_ACK or not parity_check_bit_1N(raw, 3, 4):
-        raise ValueError("QueueAdd ACK inválida/paridade")
-    return {"type": raw[1], "frameId": raw[2], "status": raw[3]}
-
-
-def dec_queue_status(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 12)
-    if raw[1] != RESP_MOVE_QUEUE_STATUS or not parity_check_bit_1N(raw, 9, 10):
-        raise ValueError("QueueStatus inválida/paridade")
-    return {
-        "type": raw[1], "frameId": raw[2], "status": raw[3],
-        "pidErrX": raw[4], "pidErrY": raw[5], "pidErrZ": raw[6],
-        "pctX": raw[7], "pctY": raw[8], "pctZ": raw[9],
-    }
-
-
-def dec_start_move(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 4)
-    if raw[1] != RESP_START_MOVE:
-        raise ValueError("StartMove inválida")
-    return {"type": raw[1], "frameId": raw[2]}
-
-
-def dec_move_end(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 4)
-    if raw[1] != RESP_MOVE_END:
-        raise ValueError("MoveEnd inválida")
-    return {"type": raw[1], "frameId": raw[2]}
-
-
-def dec_move_home(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 8)
-    if raw[1] != RESP_MOVE_HOME or not parity_check_byte_1N(raw, 5, 6):
-        raise ValueError("MoveHome inválida/paridade")
-    return {
-        "type": raw[1], "frameId": raw[2], "status": raw[3],
-        "axisHomeMask": raw[4], "errorFlags": raw[5],
-    }
-
-
-def dec_probe_level(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 20)
-    if raw[1] != RESP_MOVE_PROBE_LEVEL or not parity_check_byte_1N(raw, 17, 18):
-        raise ValueError("ProbeLevel inválida/paridade")
-    def be32_read(i: int) -> int:
-        return (raw[i] << 24) | (raw[i+1] << 16) | (raw[i+2] << 8) | raw[i+3]
-    return {
-        "type": raw[1], "frameId": raw[2], "status": raw[3],
-        "axisDoneMask": raw[4], "errorFlags": raw[5],
-        "latchedPosX": be32_read(6), "latchedPosY": be32_read(10), "latchedPosZ": be32_read(14),
-    }
-
-
-def dec_home_status(raw: List[int]) -> Dict[str, Any]:
-    _require_frame(raw, RESP_HEADER, RESP_TAIL, 18)
-    if raw[1] != RESP_HOME_STATUS or not parity_check_byte_1N(raw, 15, 16):
-        raise ValueError("HomeStatus inválida/paridade")
-    def be16_read(i: int) -> int:
-        return (raw[i] << 8) | raw[i+1]
-    return {
-        "type": raw[1], "frameId": raw[2], "axisMask": raw[3],
-        "posRelX": be16_read(4), "homeOffX": be16_read(6),
-        "posRelY": be16_read(8), "homeOffY": be16_read(10),
-        "posRelZ": be16_read(12), "homeOffZ": be16_read(14),
-    }
-
-
-RESP_SPECS: Dict[int, Tuple[int, Any]] = {
-    REQ_LED_CTRL: (7, dec_led_resp),
-    REQ_MOVE_QUEUE_ADD: (6, dec_queue_add_ack),
-    REQ_MOVE_QUEUE_STATUS: (12, dec_queue_status),
-    REQ_START_MOVE: (4, dec_start_move),
-    REQ_MOVE_HOME: (8, dec_move_home),
-    REQ_MOVE_PROBE_LEVEL: (20, dec_probe_level),
-    REQ_MOVE_END: (4, dec_move_end),
-    # REQ_FPGA_STATUS: (?, dec_fpga_status)  # não definido no firmware atual
-}
-
-
-class CNCClient:
-    def __init__(self, bus: int = 0, dev: int = 0, speed_hz: int = 1_000_000, mode: int = 0b11):
-        if spidev is None:
-            raise RuntimeError("spidev não disponível. Instale `python3-spidev` no Raspberry.")
-        self.spi = spidev.SpiDev()
-        self.spi.open(bus, dev)
-        self.spi.max_speed_hz = int(speed_hz)
-        self.spi.mode = mode  # MODE 3: 0b11
-        self.spi.bits_per_word = 8
-
-    def close(self) -> None:
-        try:
-            self.spi.close()
-        except Exception:
-            pass
-
-    def _xfer(self, data: List[int]) -> List[int]:
-        tx = [d & 0xFF for d in data]
-        # Log TX bits antes da transferência
-        try:
-            print("SPI TX bits:", bits_str(tx))
-        except Exception:
-            pass
-        rx = self.spi.xfer2(tx)
-        # Log RX bits imediatamente após
-        try:
-            print("SPI RX bits:", bits_str(rx))
-        except Exception:
-            pass
-        return rx
-
-    def exchange(self, req: List[int], expected_type: int, expected_len: int,
-                 tries: int = 8, settle_delay_s: float = 0.001) -> List[int]:
-        # Envia request respeitando o handshake de 8 bits
-        dma_frame = _build_spi_dma_frame(req)
-        rx_frame = self._xfer(dma_frame)
-        handshake = rx_frame[0] & 0xFF
-        if handshake == SPI_DMA_HANDSHAKE_BUSY:
-            raise BufferError("STM32 sinalizou buffer cheio (handshake BUSY). Aguarde e tente novamente.")
-        if handshake != SPI_DMA_HANDSHAKE_READY:
-            print(f"Aviso: handshake inesperado 0x{handshake:02X}")
-        time.sleep(settle_delay_s)
-        # Lê resposta com clock gerado pelo master
-        for _ in range(max(1, tries)):
-            rx = self._xfer([0x00] * expected_len)
-            # Alinha no header se necessário
-            try:
-                idx = rx.index(RESP_HEADER)
-            except ValueError:
-                time.sleep(settle_delay_s)
-                continue
-            if idx + expected_len <= len(rx):
-                frame = rx[idx:idx + expected_len]
-                if frame[0] == RESP_HEADER and frame[-1] == RESP_TAIL and frame[1] == expected_type:
-                    return frame
-            time.sleep(settle_delay_s)
-        raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
-    def _read_boot_token_info(self, token: bytes, tries: int, settle_delay_s: float,
-                              chunk_len: int) -> Tuple[List[int], Dict[str, Any]]:
-        token_bytes = token.encode("ascii") if isinstance(token, str) else bytes(token)
-        if not token_bytes:
-            raise ValueError("token must not be empty")
-        expected = [RESP_HEADER] + list(token_bytes) + [RESP_TAIL]
-        chunk_len = max(1, chunk_len)
-        accum = bytearray()
-        chunks: List[List[int]] = []
-        reads_used = 0
-        base_offset = 0
-        tries = max(1, tries)
-        for _ in range(tries):
-            rx = self._xfer(list(range(chunk_len)))  # p.ex.: [0,1,2,3,4,5,6] se chunk_len=7
-            reads_used += 1
-            accum.extend(rx)
-            chunks.append(list(rx))
-
-            i = 0
-            while True:
-                try:
-                    i = accum.index(expected[0], i)
-                except ValueError:
-                    break
-                j = i + 1
-                k = 1
-                ok = True
-                while k < len(expected):
-                    while j < len(accum) and accum[j] in (0x00, 0xFF):
-                        j += 1
-                    if j >= len(accum):
-                        ok = False
-                        break
-                    if accum[j] != expected[k]:
-                        ok = False
-                        break
-                    j += 1
-                    k += 1
-                if ok and k == len(expected):
-                    bytes_before_header = base_offset + i
-                    bytes_until_tail = base_offset + j
-                    frame_list = expected[:]
-                    stats: Dict[str, Any] = {
-                        "bytesBeforeHeader": int(bytes_before_header),
-                        "bytesUntilTail": int(bytes_until_tail),
-                        "readsUsed": int(reads_used),
-                        "chunkLen": int(chunk_len),
-                        "chunks": chunks,
-                        "expected": expected[:],
-                    }
-                    return frame_list, stats
-                i = i + 1
-
-            if settle_delay_s > 0:
-                time.sleep(settle_delay_s)
-            max_keep = (4 * max(1, chunk_len)) + (2 * len(expected))
-            if len(accum) > max_keep:
-                drop = len(accum) - max_keep
-                del accum[:drop]
-                base_offset += drop
-        token_label = token_bytes.decode("ascii", errors="replace")
-        raise TimeoutError(f"Frame '{token_label}' nao encontrado. Reinicie o STM32 e tente novamente.")
-
-    def read_boot_hello(self, tries: int = 16, settle_delay_s: float = 0.002,
-                         chunk_len: int = 7) -> List[int]:
-        """Compat: le o frame de teste 'AB hello 54' e retorna apenas o frame.
-        Use `read_boot_hello_info` para estatisticas detalhadas.
-        """
-        frame, _stats = self.read_boot_hello_info(tries=tries, settle_delay_s=settle_delay_s,
-                                                  chunk_len=chunk_len)
-        return frame
-
-    def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
-                              chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
-        """Le o frame de teste "AB 'hello' 54" enfileirado no boot do STM32.
-        Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
-        Retorna (frame, stats) onde stats contem:
-          - bytesBeforeHeader: bytes de clock ate o header (0xAB)
-          - bytesUntilTail: bytes de clock ate o tail (0x54), inclusive
-          - readsUsed: quantidade de leituras (chunks) realizadas
-          - chunkLen: tamanho do chunk utilizado em cada leitura
-        """
-        return self._read_boot_token_info(b"hello", tries, settle_delay_s, chunk_len)
-
-    def read_boot_lede(self, tries: int = 16, settle_delay_s: float = 0.002,
-                        chunk_len: int = 7) -> List[int]:
-        """Compat: le o frame de teste 'AB lede 54' e retorna apenas o frame.
-        Use `read_boot_lede_info` para estatisticas detalhadas.
-        """
-        frame, _stats = self.read_boot_lede_info(tries=tries, settle_delay_s=settle_delay_s,
-                                                chunk_len=chunk_len)
-        return frame
-
-    def read_boot_lede_info(self, tries: int = 16, settle_delay_s: float = 0.002,
-                             chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
-        """Le o frame de teste "AB 'lede' 54" enfileirado no boot do STM32.
-        Acumula bytes entre leituras para suportar o frame atravessar fronteiras de chunk.
-        Retorna (frame, stats) nos mesmos moldes do frame 'hello'.
-        """
-        return self._read_boot_token_info(b"lede", tries, settle_delay_s, chunk_len)
-
-    def print_until_zero_after_activity(self, chunk_len: int = 32,
-                                        settle_delay_s: float = 0.0) -> None:
-        """Gera clocks e imprime os bytes recebidos.
-        Ao detectar qualquer byte != 0x00, continua imprimindo até
-        que um 0x00 seja recebido (em qualquer posição do chunk).
-        """
-        saw_activity = False
-        while True:
-            rx = self._xfer([0x00] * chunk_len)
-            # imprime linha em hex
-            print(' '.join(f"{b:02X}" for b in rx))
-            if any(b != 0x00 for b in rx):
-                saw_activity = True
-            if saw_activity and any(b == 0x00 for b in rx):
-                break
-            if settle_delay_s > 0:
-                time.sleep(settle_delay_s)
+from raspberry_spi.cnc_client import CNCClient
+from raspberry_spi.cnc_commands import CNCCommandExecutor
 
 
 def _common_args(p: argparse.ArgumentParser) -> None:
@@ -506,204 +16,126 @@ def _common_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--speed", type=int, default=1_000_000)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI1 Slave)")
-    sub = ap.add_subparsers(dest="cmd", required=True)
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI1 Slave)",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
 
-    # LED
-    ap_led = sub.add_parser("led", help="Controle dos LEDs discretos (LED1/LED2)")
-    _common_args(ap_led)
-    ap_led.add_argument("--frame-id", type=int, required=True)
-    ap_led.add_argument("--mask", type=lambda x: int(x, 0), required=True,
-                        help="Bit0=LED1, Bit1=LED2")
-    ap_led.add_argument("--led1-mode", type=int, choices=[0, 1, 2], default=0,
-                        help="0=Off, 1=On, 2=Pisca")
-    ap_led.add_argument("--led1-freq", type=int, default=0,
-                        help="Frequência de pisca de LED1 em Hz (modo=2)")
-    ap_led.add_argument("--led2-mode", type=int, choices=[0, 1, 2], default=0,
-                        help="0=Off, 1=On, 2=Pisca")
-    ap_led.add_argument("--led2-freq", type=int, default=0,
-                        help="Frequência de pisca de LED2 em Hz (modo=2)")
+    led_ctrl = sub.add_parser(
+        "led-control",
+        aliases=["led-ctrl"],
+        help="Controle dos LEDs discretos (LED1/LED2)",
+    )
+    _common_args(led_ctrl)
+    led_ctrl.add_argument("--frame-id", type=int, required=True)
+    led_ctrl.add_argument(
+        "--mask",
+        type=lambda x: int(x, 0),
+        required=True,
+        help="Bit0=LED1, Bit1=LED2",
+    )
+    led_ctrl.add_argument(
+        "--led1-mode", type=int, choices=[0, 1, 2], default=0,
+        help="0=Off, 1=On, 2=Pisca",
+    )
+    led_ctrl.add_argument(
+        "--led1-freq", type=int, default=0,
+        help="Frequência de pisca de LED1 em Hz (modo=2)",
+    )
+    led_ctrl.add_argument(
+        "--led2-mode", type=int, choices=[0, 1, 2], default=0,
+        help="0=Off, 1=On, 2=Pisca",
+    )
+    led_ctrl.add_argument(
+        "--led2-freq", type=int, default=0,
+        help="Frequência de pisca de LED2 em Hz (modo=2)",
+    )
+    led_ctrl.set_defaults(handler="led_control")
 
-    # Queue Add (parâmetros principais; demais com padrão 0)
-    ap_qadd = sub.add_parser("queue-add", help="Adicionar movimento à fila")
-    _common_args(ap_qadd)
-    ap_qadd.add_argument("--frame-id", type=int, required=True)
-    ap_qadd.add_argument("--dir", type=lambda x: int(x, 0), required=True)
-    ap_qadd.add_argument("--vx", type=int, required=True)
-    ap_qadd.add_argument("--sx", type=int, required=True)
-    ap_qadd.add_argument("--vy", type=int, required=True)
-    ap_qadd.add_argument("--sy", type=int, required=True)
-    ap_qadd.add_argument("--vz", type=int, required=True)
-    ap_qadd.add_argument("--sz", type=int, required=True)
+    q_add = sub.add_parser("queue-add", help="Adicionar movimento à fila")
+    _common_args(q_add)
+    q_add.add_argument("--frame-id", type=int, required=True)
+    q_add.add_argument("--dir", type=lambda x: int(x, 0), required=True)
+    q_add.add_argument("--vx", type=int, required=True)
+    q_add.add_argument("--sx", type=int, required=True)
+    q_add.add_argument("--vy", type=int, required=True)
+    q_add.add_argument("--sy", type=int, required=True)
+    q_add.add_argument("--vz", type=int, required=True)
+    q_add.add_argument("--sz", type=int, required=True)
     for axis in ("x", "y", "z"):
-        ap_qadd.add_argument(f"--kp-{axis}", type=int, default=0)
-        ap_qadd.add_argument(f"--ki-{axis}", type=int, default=0)
-        ap_qadd.add_argument(f"--kd-{axis}", type=int, default=0)
+        q_add.add_argument(f"--kp-{axis}", type=int, default=0)
+        q_add.add_argument(f"--ki-{axis}", type=int, default=0)
+        q_add.add_argument(f"--kd-{axis}", type=int, default=0)
+    q_add.set_defaults(handler="queue_add")
 
-    # Queue Status
-    ap_qst = sub.add_parser("queue-status", help="Consultar status da fila")
-    _common_args(ap_qst)
-    ap_qst.add_argument("--frame-id", type=int, required=True)
+    q_status = sub.add_parser("queue-status", help="Consultar status da fila")
+    _common_args(q_status)
+    q_status.add_argument("--frame-id", type=int, required=True)
+    q_status.set_defaults(handler="queue_status")
 
-    # Start/End move
-    ap_sm = sub.add_parser("start-move", help="Iniciar execução")
-    _common_args(ap_sm)
-    ap_sm.add_argument("--frame-id", type=int, required=True)
+    start_move = sub.add_parser("start-move", help="Iniciar execução")
+    _common_args(start_move)
+    start_move.add_argument("--frame-id", type=int, required=True)
+    start_move.set_defaults(handler="start_move")
 
-    ap_em = sub.add_parser("end-move", help="Finalizar execução")
-    _common_args(ap_em)
-    ap_em.add_argument("--frame-id", type=int, required=True)
+    end_move = sub.add_parser("end-move", help="Finalizar execução")
+    _common_args(end_move)
+    end_move.add_argument("--frame-id", type=int, required=True)
+    end_move.set_defaults(handler="end_move")
 
-    # Home
-    ap_home = sub.add_parser("home", help="Sequência de homing")
-    _common_args(ap_home)
-    ap_home.add_argument("--frame-id", type=int, required=True)
-    ap_home.add_argument("--axes", type=lambda x: int(x, 0), required=True)
-    ap_home.add_argument("--dirs", type=lambda x: int(x, 0), required=True)
-    ap_home.add_argument("--vhome", type=lambda x: int(x, 0), required=True)
+    home = sub.add_parser("home", help="Sequência de homing")
+    _common_args(home)
+    home.add_argument("--frame-id", type=int, required=True)
+    home.add_argument("--axes", type=lambda x: int(x, 0), required=True)
+    home.add_argument("--dirs", type=lambda x: int(x, 0), required=True)
+    home.add_argument("--vhome", type=lambda x: int(x, 0), required=True)
+    home.set_defaults(handler="home")
 
-    # Probe level
-    ap_probe = sub.add_parser("probe-level", help="Sequência de probe level")
-    _common_args(ap_probe)
-    ap_probe.add_argument("--frame-id", type=int, required=True)
-    ap_probe.add_argument("--axes", type=lambda x: int(x, 0), required=True)
-    ap_probe.add_argument("--vprobe", type=lambda x: int(x, 0), required=True)
+    probe = sub.add_parser("probe-level", help="Sequência de probe level")
+    _common_args(probe)
+    probe.add_argument("--frame-id", type=int, required=True)
+    probe.add_argument("--axes", type=lambda x: int(x, 0), required=True)
+    probe.add_argument("--vprobe", type=lambda x: int(x, 0), required=True)
+    probe.set_defaults(handler="probe_level")
 
-    # Hello test (boot frame AB 'hello' 54)
-    ap_hello = sub.add_parser("hello", help="Ler frame de teste 'hello' do STM32 (enfileirado no boot)")
-    _common_args(ap_hello)
-    ap_hello.add_argument("--chunk-len", type=int, default=7)
-    ap_hello.add_argument("--tries", type=int, default=16)
-    ap_hello.add_argument("--settle-delay", type=float, default=0.002)
+    hello = sub.add_parser(
+        "hello",
+        help="Ler frame de teste 'hello' do STM32 (enfileirado no boot)",
+    )
+    _common_args(hello)
+    hello.add_argument("--chunk-len", type=int, default=7)
+    hello.add_argument("--tries", type=int, default=16)
+    hello.add_argument("--settle-delay", type=float, default=0.002)
+    hello.set_defaults(handler="boot_hello")
 
-    # Lede test (boot frame AB 'lede' 54)
-    ap_lede = sub.add_parser("lede", help="Ler frame de teste 'lede' do STM32 (enfileirado no boot)")
-    _common_args(ap_lede)
-    ap_lede.add_argument("--chunk-len", type=int, default=7)
-    ap_lede.add_argument("--tries", type=int, default=16)
-    ap_lede.add_argument("--settle-delay", type=float, default=0.002)
+    led_boot = sub.add_parser(
+        "led",
+        help="Ler frame de teste 'led' do STM32 (enfileirado no boot)",
+    )
+    _common_args(led_boot)
+    led_boot.add_argument("--chunk-len", type=int, default=7)
+    led_boot.add_argument("--tries", type=int, default=16)
+    led_boot.add_argument("--settle-delay", type=float, default=0.002)
+    led_boot.set_defaults(handler="boot_led")
 
-    args = ap.parse_args()
+    return parser
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
 
     client = CNCClient(bus=args.bus, dev=args.dev, speed_hz=args.speed)
+    executor = CNCCommandExecutor(client)
     try:
-        if args.cmd == "led":
-            req = enc_led_ctrl(
-                args["frame_id"] if isinstance(args, dict) else args.frame_id,
-                args.mask,
-                args.led1_mode,
-                args.led1_freq,
-                args.led2_mode,
-                args.led2_freq,
-            )
-            exp_len, decoder = RESP_SPECS[REQ_LED_CTRL]
-            resp = client.exchange(req, RESP_LED_CTRL, exp_len)
-            # Log do frame recebido em bits antes de decodificar
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "queue-add":
-            req = enc_move_queue_add(
-                args.frame_id, args.dir,
-                args.vx, args.sx, args.vy, args.sy, args.vz, args.sz,
-                args.kp_x, args.ki_x, args.kd_x,
-                args.kp_y, args.ki_y, args.kd_y,
-                args.kp_z, args.ki_z, args.kd_z)
-            exp_len, decoder = RESP_SPECS[REQ_MOVE_QUEUE_ADD]
-            resp = client.exchange(req, RESP_MOVE_QUEUE_ADD_ACK, exp_len)
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "queue-status":
-            req = enc_queue_status(args.frame_id)
-            exp_len, decoder = RESP_SPECS[REQ_MOVE_QUEUE_STATUS]
-            resp = client.exchange(req, RESP_MOVE_QUEUE_STATUS, exp_len)
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "start-move":
-            req = enc_start_move(args.frame_id)
-            exp_len, decoder = RESP_SPECS[REQ_START_MOVE]
-            resp = client.exchange(req, RESP_START_MOVE, exp_len)
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "end-move":
-            req = enc_move_end(args.frame_id)
-            exp_len, decoder = RESP_SPECS[REQ_MOVE_END]
-            resp = client.exchange(req, RESP_MOVE_END, exp_len)
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "home":
-            req = enc_move_home(args.frame_id, args.axes, args.dirs, args.vhome)
-            exp_len, decoder = RESP_SPECS[REQ_MOVE_HOME]
-            resp = client.exchange(req, RESP_MOVE_HOME, exp_len)
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "probe-level":
-            req = enc_probe_level(args.frame_id, args.axes, args.vprobe)
-            exp_len, decoder = RESP_SPECS[REQ_MOVE_PROBE_LEVEL]
-            resp = client.exchange(req, RESP_MOVE_PROBE_LEVEL, exp_len)
-            print("Frame RX bits:", bits_str(resp))
-            try:
-                print(decoder(resp))
-            except Exception as e:
-                print("Decoder error:", e)
-                print("Frame RX bits (again):", bits_str(resp))
-                raise
-
-        elif args.cmd == "hello":
-            frame, stats = client.read_boot_hello_info(
-                tries=args.tries,
-                settle_delay_s=args.settle_delay,
-                chunk_len=args.chunk_len,
-            )
-            _print_boot_frame_info(frame, stats)
-
-        elif args.cmd == "lede":
-            frame, stats = client.read_boot_lede_info(
-                tries=args.tries,
-                settle_delay_s=args.settle_delay,
-                chunk_len=args.chunk_len,
-            )
-            _print_boot_frame_info(frame, stats)
-
-        else:
-            raise SystemExit(2)
-
+        handler_name = getattr(args, "handler", None)
+        if not handler_name:
+            parser.error("Nenhum comando informado")
+        handler = getattr(executor, handler_name, None)
+        if handler is None:
+            parser.error(f"Handler desconhecido: {handler_name}")
+        handler(args)
     finally:
         client.close()
 
