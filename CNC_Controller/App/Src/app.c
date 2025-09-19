@@ -52,7 +52,7 @@ static void app_spi_prime_tx_buffer(uint8_t status);
 static uint8_t app_spi_compute_status(void);
 static void app_spi_restart_dma(uint8_t status);
 static void app_spi_try_restart_dma(void);
-static uint16_t app_spi_detect_frame_len(const uint8_t *buf);
+static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len);
 static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len);
 static int app_spi_queue_pop(app_spi_frame_t *out);
 static void app_spi_handle_txrx_complete(void);
@@ -176,22 +176,33 @@ static void app_spi_try_restart_dma(void) {
     app_spi_restart_dma(app_spi_compute_status());
 }
 
-static uint16_t app_spi_detect_frame_len(const uint8_t *buf) {
-    if (!buf || APP_SPI_DMA_BUF_LEN < 2u) {
-        return 0u;
+static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len) {
+    if (!buf || !offset || !len || APP_SPI_DMA_BUF_LEN < 2u) {
+        return -1;
     }
-    if (buf[1] != REQ_HEADER) {
-        return 0u;
+
+    uint16_t start = 1u;
+    while (start < APP_SPI_DMA_BUF_LEN && buf[start] == APP_SPI_IDLE_FILL) {
+        ++start;
     }
-    for (uint16_t i = 1u; i < APP_SPI_DMA_BUF_LEN; ++i) {
+
+    if (start >= APP_SPI_DMA_BUF_LEN || buf[start] != REQ_HEADER) {
+        return -1;
+    }
+
+    for (uint16_t i = (uint16_t)(start + 1u); i < APP_SPI_DMA_BUF_LEN; ++i) {
         if (buf[i] == REQ_TAIL) {
-            if (i > APP_SPI_MAX_REQUEST_LEN) {
-                return 0u;
+            uint16_t frame_len = (uint16_t)(i - start + 1u);
+            if (frame_len > APP_SPI_MAX_REQUEST_LEN) {
+                return -1;
             }
-            return i;
+            *offset = start;
+            *len = frame_len;
+            return 0;
         }
     }
-    return 0u;
+
+    return -1;
 }
 
 static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len) {
@@ -225,10 +236,11 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
 }
 
 static void app_spi_handle_txrx_complete(void) {
+    uint16_t offset = 0u;
+    uint16_t len = 0u;
 
-    uint16_t len = app_spi_detect_frame_len(g_spi_rx_dma_buf);
-    if (len > 0u) {
-        if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[1], len) != 0) {
+    if (app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len) == 0) {
+        if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) != 0) {
             g_spi_rx_overflow = 1u;
         }
     } else {
