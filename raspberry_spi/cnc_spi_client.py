@@ -6,8 +6,12 @@
 import argparse
 from typing import List, Optional
 
-from raspberry_spi.cnc_client import CNCClient
-from raspberry_spi.cnc_commands import CNCCommandExecutor
+if __package__:
+    from .cnc_client import CNCClient
+    from .cnc_commands import CNCCommandExecutor
+else:  # execução direta do script a partir do diretório raspberry_spi
+    from cnc_client import CNCClient
+    from cnc_commands import CNCCommandExecutor
 
 
 def _common_args(p: argparse.ArgumentParser) -> None:
