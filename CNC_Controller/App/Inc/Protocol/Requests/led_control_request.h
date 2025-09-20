@@ -1,9 +1,9 @@
-// Requisição LED_CTRL (12 bytes) — 0x07
+// Requisição LED_CTRL (9 bytes) — 0x07
 #pragma once
 #include <stdint.h>
 #include "../frame_defs.h"
 
-#define LED_CTRL_CHANNEL_COUNT 2u
+#define LED_CTRL_CHANNEL_COUNT 1u
 
 typedef struct {
     uint8_t mode;        // Valor conforme LED_MODE_*
@@ -12,13 +12,12 @@ typedef struct {
 
 typedef struct {
     uint8_t frameId;
-    uint8_t ledMask; // bit0=LED1, bit1=LED2
+    uint8_t ledMask; // bit0=LED1
     led_ctrl_channel_cfg_t channel[LED_CTRL_CHANNEL_COUNT];
 } led_ctrl_req_t;
 
 // Bits da máscara
 #define LED_MASK_LED1 0x01u
-#define LED_MASK_LED2 0x02u
 
 // Modos aceitos pelo firmware
 enum {

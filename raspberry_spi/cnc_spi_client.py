@@ -47,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     led_ctrl = sub.add_parser(
         "led-control",
         aliases=["led-ctrl"],
-        help="Controle dos LEDs discretos (LED1/LED2)",
+        help="Controle do LED discreto (LED1)",
     )
     _common_args(led_ctrl, include_tries=True)
     led_ctrl.add_argument("--frame-id", type=int, required=True)
@@ -55,7 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mask",
         type=lambda x: int(x, 0),
         required=True,
-        help="Bit0=LED1, Bit1=LED2",
+        help="Bit0=LED1",
     )
     led_ctrl.add_argument(
         "--led1-mode", type=int, choices=[0, 1, 2], default=0,
@@ -64,14 +64,6 @@ def build_parser() -> argparse.ArgumentParser:
     led_ctrl.add_argument(
         "--led1-freq", type=int, default=0,
         help="Frequência de pisca de LED1 em Hz (modo=2)",
-    )
-    led_ctrl.add_argument(
-        "--led2-mode", type=int, choices=[0, 1, 2], default=0,
-        help="0=Off, 1=On, 2=Pisca",
-    )
-    led_ctrl.add_argument(
-        "--led2-freq", type=int, default=0,
-        help="Frequência de pisca de LED2 em Hz (modo=2)",
     )
     led_ctrl.set_defaults(handler="led_control", needs_client=True)
 
@@ -152,8 +144,8 @@ def print_examples(_: argparse.Namespace) -> None:
     base_cmd = "python3 cnc_spi_client.py"
     examples = [
         (
-            "LED discretos",
-            f"{base_cmd} led-control --frame-id 1 --mask 0x03 --led1-mode 2 --led1-freq 5 --led2-mode 1",
+            "LED discreto",
+            f"{base_cmd} led-control --frame-id 1 --mask 0x01 --led1-mode 2 --led1-freq 5",
         ),
         (
             "Adicionar movimento à fila",

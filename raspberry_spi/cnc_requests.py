@@ -50,9 +50,8 @@ class CNCRequestBuilder:
     """Factory centralizada das mensagens enviadas ao STM32."""
 
     @staticmethod
-    def led_control(frame_id: int, led_mask: int, led1_mode: int, led1_freq_hz: int,
-                    led2_mode: int, led2_freq_hz: int) -> List[int]:
-        raw = [0] * 12
+    def led_control(frame_id: int, led_mask: int, led1_mode: int, led1_freq_hz: int) -> List[int]:
+        raw = [0] * 9
         raw[0] = REQ_HEADER
         raw[1] = REQ_LED_CTRL
         raw[2] = frame_id & 0xFF
@@ -60,11 +59,8 @@ class CNCRequestBuilder:
         raw[4] = led1_mode & 0xFF
         f1_hi, f1_lo = be16_bytes(led1_freq_hz & 0xFFFF)
         raw[5], raw[6] = f1_hi, f1_lo
-        raw[7] = led2_mode & 0xFF
-        f2_hi, f2_lo = be16_bytes(led2_freq_hz & 0xFFFF)
-        raw[8], raw[9] = f2_hi, f2_lo
-        parity_set_byte_1N(raw, 9, 10)
-        raw[11] = REQ_TAIL
+        parity_set_byte_1N(raw, 6, 7)
+        raw[8] = REQ_TAIL
         return pad_request(raw)
 
     @staticmethod

@@ -108,18 +108,9 @@ class CNCClient:
                               chunk_len: int) -> Tuple[List[int], Dict[str, Any]]:
         if chunk_len <= 0:
             raise ValueError("chunk_len deve ser positivo")
-        expected = [
-            0x00,
-            token_bytes[0],
-            token_bytes[1],
-            token_bytes[2],
-            0x00,
-            RESP_HEADER,
-            token_bytes[0],
-            token_bytes[1],
-            token_bytes[2],
-            RESP_TAIL,
-        ]
+        token_list = [b & 0xFF for b in token_bytes]
+        expected = [RESP_HEADER] + token_list + [RESP_TAIL]
+        expected_len = len(expected)
         accum: List[int] = []
         base_offset = 0
         chunks: List[List[int]] = []
@@ -130,31 +121,25 @@ class CNCClient:
             chunks.append(chunk)
             accum.extend(chunk)
             i = 0
-            while i + len(expected) <= len(accum):
-                window = accum[i:i + len(expected)]
-                if window[0] == expected[0]:
-                    ok = True
-                    j = 1
-                    k = 1
-                    while j < len(window) and k < len(expected):
-                        if window[j] != expected[k]:
-                            ok = False
-                            break
-                        j += 1
-                        k += 1
-                    if ok and k == len(expected):
-                        bytes_before_header = base_offset + i
-                        bytes_until_tail = base_offset + j
-                        frame_list = expected[:]
-                        stats: Dict[str, Any] = {
-                            "bytesBeforeHeader": int(bytes_before_header),
-                            "bytesUntilTail": int(bytes_until_tail),
-                            "readsUsed": int(reads_used),
-                            "chunkLen": int(chunk_len),
-                            "chunks": chunks,
-                            "expected": expected[:],
-                        }
-                        return frame_list, stats
+            while i + expected_len <= len(accum):
+                window = accum[i:i + expected_len]
+                if (window[0] == RESP_HEADER and window[-1] == RESP_TAIL
+                        and window[1:-1] == token_list):
+                    bytes_before_header = base_offset + i
+                    bytes_until_tail = base_offset + i + expected_len
+                    frame_list = window[:]
+                    handshake_start = max(0, i - SPI_DMA_HANDSHAKE_BYTES)
+                    handshake_bytes = accum[handshake_start:i]
+                    stats = {
+                        "bytesBeforeHeader": int(bytes_before_header),
+                        "bytesUntilTail": int(bytes_until_tail),
+                        "readsUsed": int(reads_used),
+                        "chunkLen": int(chunk_len),
+                        "chunks": chunks,
+                        "expected": expected[:],
+                        "handshakeBytes": [b & 0xFF for b in handshake_bytes],
+                    }
+                    return frame_list, stats
                 i = i + 1
 
             if settle_delay_s > 0:

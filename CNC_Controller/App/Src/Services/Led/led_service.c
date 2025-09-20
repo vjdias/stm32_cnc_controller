@@ -9,8 +9,8 @@
 
 LOG_SVC_DEFINE(LOG_SVC_LED, "led");
 
-#if LED_CTRL_CHANNEL_COUNT != 2u
-#error "LED service expects exactly two LED channels"
+#if LED_CTRL_CHANNEL_COUNT != 1u
+#error "LED service expects exactly one LED channel"
 #endif
 
 typedef struct {
@@ -25,10 +25,7 @@ typedef struct {
 
 static led_channel_state_t g_leds[LED_CTRL_CHANNEL_COUNT] = {
     { LED1_GPIO_PORT, LED1_GPIO_PIN, LED_MODE_OFF, 0u, 0u, 0u, 0u },
-    { LED2_GPIO_PORT, LED2_GPIO_PIN, LED_MODE_OFF, 0u, 0u, 0u, 0u },
 };
-
-static const char *const g_led_names[LED_CTRL_CHANNEL_COUNT] = { "LED1", "LED2" };
 
 static void led_push_response(uint8_t frame_id, uint8_t mask, uint8_t status) {
     uint8_t raw[7];
@@ -159,12 +156,12 @@ void led_on_led_ctrl(const uint8_t *frame, uint32_t len) {
     }
 
     const uint8_t requested_mask = req.ledMask;
-    const uint8_t valid_mask = (uint8_t)(LED_MASK_LED1 | LED_MASK_LED2);
+    const uint8_t valid_mask = LED_MASK_LED1;
     uint8_t ack_mask = 0u;
     uint8_t status = PROTO_OK;
 
     for (uint32_t i = 0; i < LED_CTRL_CHANNEL_COUNT; ++i) {
-        uint8_t mask_bit = (i == 0u) ? LED_MASK_LED1 : LED_MASK_LED2;
+        uint8_t mask_bit = LED_MASK_LED1;
         if ((requested_mask & mask_bit) == 0u) {
             continue;
         }
@@ -181,8 +178,7 @@ void led_on_led_ctrl(const uint8_t *frame, uint32_t len) {
     led_push_response(req.frameId, ack_mask, status);
 
     LOGA_THIS(LOG_STATE_APPLIED, status, "applied",
-              "reqMask=0x%02X ackMask=0x%02X %s(mode=%u,f=%uHz,on=%u) %s(mode=%u,f=%uHz,on=%u)",
+              "reqMask=0x%02X ackMask=0x%02X LED1(mode=%u,f=%uHz,on=%u)",
               (unsigned)requested_mask, (unsigned)ack_mask,
-              g_led_names[0], g_leds[0].mode, g_leds[0].frequency_hz, g_leds[0].is_on,
-              g_led_names[1], g_leds[1].mode, g_leds[1].frequency_hz, g_leds[1].is_on);
+              g_leds[0].mode, g_leds[0].frequency_hz, g_leds[0].is_on);
 }

@@ -12,9 +12,9 @@
 #define APP_SPI_HANDSHAKE_BITS     8u
 #define APP_SPI_HANDSHAKE_BYTES    (APP_SPI_HANDSHAKE_BITS / 8u)
 #define APP_SPI_DMA_BUF_LEN        (APP_SPI_MAX_REQUEST_LEN + APP_SPI_HANDSHAKE_BYTES)
-#define APP_SPI_RX_QUEUE_DEPTH     4u
-#define APP_SPI_STATUS_READY       0x5Au
-#define APP_SPI_STATUS_BUSY        0xA5u
+#define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
+#define APP_SPI_STATUS_READY       0xA5u
+#define APP_SPI_STATUS_BUSY        0x5Au
 /* Estados de handshake usam padrões alternados para evitar colisão com 0x00/0xFF. */
 #define APP_SPI_IDLE_FILL          0x00u
 
@@ -23,6 +23,9 @@
 #endif
 #if APP_SPI_HANDSHAKE_BYTES == 0
 #error "Handshake area must be at least one byte"
+#endif
+#if APP_SPI_DMA_BUF_LEN != 43u
+#error "SPI DMA buffer must remain 43 bytes (1 handshake + 42 payload)"
 #endif
 
 typedef struct {

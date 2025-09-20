@@ -1,14 +1,13 @@
 #include "Protocol/Requests/led_control_request.h"
 
-// A requisição LED_CTRL (dois LEDs) possui 12 bytes no total:
+// A requisição LED_CTRL (único LED) possui 9 bytes no total:
 // [0]=0xAA, [1]=0x07, [2]=frameId, [3]=ledMask,
 // [4]=LED1.mode, [5..6]=LED1.frequencyHz (BE16, frequência em Hz),
-// [7]=LED2.mode, [8..9]=LED2.frequencyHz (BE16, frequência em Hz),
-// [10]=paridade (XOR dos bytes 1..9), [11]=0x55
+// [7]=paridade (XOR dos bytes 1..6), [8]=0x55
 
-#define LED_CTRL_REQ_TOTAL_LEN 12u
-#define LED_CTRL_PARITY_LAST_INDEX 9u
-#define LED_CTRL_PARITY_INDEX 10u
+#define LED_CTRL_REQ_TOTAL_LEN 9u
+#define LED_CTRL_PARITY_LAST_INDEX 6u
+#define LED_CTRL_PARITY_INDEX 7u
 
 int led_ctrl_req_decoder(const uint8_t *raw, uint32_t len, led_ctrl_req_t *out) {
     if (!raw || !out)
@@ -20,24 +19,19 @@ int led_ctrl_req_decoder(const uint8_t *raw, uint32_t len, led_ctrl_req_t *out) 
     out->ledMask = raw[3];
     out->channel[0].mode = raw[4];
     out->channel[0].frequency = be16_read(raw + 5);
-    out->channel[1].mode = raw[7];
-    out->channel[1].frequency = be16_read(raw + 8);
     return PROTO_OK;
 }
 
 uint8_t led_ctrl_req_calc_parity(const led_ctrl_req_t *in) {
-    uint8_t bytes[9] = {
+    uint8_t bytes[6] = {
         REQ_LED_CTRL,
         in ? in->frameId : 0,
         in ? in->ledMask : 0,
         in ? in->channel[0].mode : 0,
         (uint8_t)((in ? in->channel[0].frequency : 0) >> 8),
-        (uint8_t)((in ? in->channel[0].frequency : 0) & 0xFFu),
-        in ? in->channel[1].mode : 0,
-        (uint8_t)((in ? in->channel[1].frequency : 0) >> 8),
-        (uint8_t)((in ? in->channel[1].frequency : 0) & 0xFFu)
+        (uint8_t)((in ? in->channel[0].frequency : 0) & 0xFFu)
     };
-    return xor_reduce_bytes(bytes, 9);
+    return xor_reduce_bytes(bytes, 6);
 }
 
 int led_ctrl_req_encoder(const led_ctrl_req_t *in, uint8_t *raw, uint32_t len) {
@@ -48,8 +42,6 @@ int led_ctrl_req_encoder(const led_ctrl_req_t *in, uint8_t *raw, uint32_t len) {
     raw[3] = in->ledMask;
     raw[4] = in->channel[0].mode;
     be16_write(raw + 5, in->channel[0].frequency);
-    raw[7] = in->channel[1].mode;
-    be16_write(raw + 8, in->channel[1].frequency);
     parity_set_byte_1N(raw, LED_CTRL_PARITY_LAST_INDEX, LED_CTRL_PARITY_INDEX);
     req_set_tail(raw, LED_CTRL_REQ_TOTAL_LEN - 1u);
     return PROTO_OK;
