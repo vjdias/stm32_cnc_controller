@@ -88,8 +88,6 @@ class CNCCommandExecutor:
             args.mask,
             args.led1_mode,
             args.led1_freq,
-            args.led2_mode,
-            args.led2_freq,
         )
         self._execute_request(REQ_LED_CTRL, request, args)
 
