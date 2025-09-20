@@ -3,14 +3,14 @@
 #include <stdint.h>
 
 // Mapeamento de GPIO para o LED discreto presente no controlador.
-// Os padrões seguem a placa B-L475E-IOT01A, onde o LED1 (verde) está no PA5.
-// Sobrescreva via definições de compilação ao direcionar para outra placa
-// ou ligação.
+// Os padrões seguem a placa B-L475E-IOT01A, onde o LED verde discreto (LD2)
+// está conectado ao PB14. Sobrescreva via definições de compilação ao
+// direcionar para outra placa ou ligação.
 #ifndef LED1_GPIO_PORT
-#define LED1_GPIO_PORT GPIOA
+#define LED1_GPIO_PORT GPIOB
 #endif
 #ifndef LED1_GPIO_PIN
-#define LED1_GPIO_PIN  GPIO_PIN_5
+#define LED1_GPIO_PIN  GPIO_PIN_14
 #endif
 
 // Nível lógico que acende o LED.

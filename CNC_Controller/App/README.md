@@ -26,7 +26,7 @@ Servico de Log (USART1 VCP)
 - Habilitacao: `LOG_ENABLE` (compile-time, padrao=1) e `log_set_enabled()` (runtime). Quando desabilitado em build-time, as funcoes viram no-ops e nao afetam a compilacao.
 - Padrao: inicia em modo VERBOSE (`LOG_DEFAULT_MODE=LOG_MODE_VERBOSE`). Pode alterar via compile-time ou `log_set_mode()`.
 
-Servico de LED — LED1 discreto
+Servico de LED — LED discreto
 - Arquivos: `Services/Led/led_service.h`, `Services/Led/led_service.c`.
 - O servico controla o LED verde discreto (LED1) presente na placa.
 - Mapeamento de pinos via macros (ajuste conforme sua placa/wiring):
@@ -36,8 +36,12 @@ Servico de LED — LED1 discreto
 - O pisca é mantido por interrupção de hardware (TIM15) com período de 1 ms; não há necessidade de *polling* na *main loop*.
 
 Pinos padrao (B-L475E-IOT01A)
-- `LED1_GPIO_PORT=GPIOA`, `LED1_GPIO_PIN=GPIO_PIN_5`  (LD1/verde)
+- `LED1_GPIO_PORT=GPIOB`, `LED1_GPIO_PIN=GPIO_PIN_14`  (LD2/verde)
 - `LED_ACTIVE_HIGH=1`
+
+> **Atenção:** O mapeamento anterior (PA5) conflita com o sinal SCK do SPI1.
+> Caso utilize uma fiação diferente, ajuste as macros via opções de
+> compilação para evitar sobrescrever os pinos do barramento SPI.
 
 Protocolo LED_CTRL (LED1)
 - Tipo: `REQ_LED_CTRL = 0x07`
