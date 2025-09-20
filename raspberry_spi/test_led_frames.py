@@ -10,7 +10,6 @@ if __package__:
         REQ_LED_CTRL,
         REQ_TAIL,
         SPI_DMA_FRAME_LEN,
-        SPI_DMA_MAX_PAYLOAD,
         parity_check_byte_1N,
     )
     from .cnc_requests import CNCRequestBuilder
@@ -23,7 +22,6 @@ else:
         REQ_LED_CTRL,
         REQ_TAIL,
         SPI_DMA_FRAME_LEN,
-        SPI_DMA_MAX_PAYLOAD,
         parity_check_byte_1N,
     )
     from cnc_requests import CNCRequestBuilder  # type: ignore
@@ -38,7 +36,7 @@ class LedFrameEncodingTests(unittest.TestCase):
         freq_hz = 25
         payload = CNCRequestBuilder.led_control(frame_id, mask, mode, freq_hz)
 
-        self.assertEqual(len(payload), SPI_DMA_MAX_PAYLOAD)
+        self.assertEqual(len(payload), 9)
         self.assertEqual(payload[0], REQ_HEADER)
         self.assertEqual(payload[1], REQ_LED_CTRL)
         self.assertEqual(payload[2], frame_id & 0xFF)
@@ -47,19 +45,16 @@ class LedFrameEncodingTests(unittest.TestCase):
         self.assertEqual(payload[5], (freq_hz >> 8) & 0xFF)
         self.assertEqual(payload[6], freq_hz & 0xFF)
         self.assertTrue(parity_check_byte_1N(payload, 6, 7))
-        self.assertTrue(all(b == 0 for b in payload[8:-1]))
-        core = payload[:8] + [payload[-1]]
-        self.assertEqual(core[0], REQ_HEADER)
-        self.assertEqual(core[-1], REQ_TAIL)
-        self.assertTrue(parity_check_byte_1N(core, 6, 7))
+        self.assertEqual(payload[-1], REQ_TAIL)
 
     def test_dma_frame_wrapper_preserves_payload(self) -> None:
         payload = CNCRequestBuilder.led_control(0x2A, 0x01, 0x01, 0)
         frame = _build_spi_dma_frame(payload)
 
         self.assertEqual(len(frame), SPI_DMA_FRAME_LEN)
-        self.assertEqual(frame[0], 0x00)
-        self.assertEqual(frame[1:], payload)
+        prefix_len = SPI_DMA_FRAME_LEN - len(payload)
+        self.assertEqual(frame[:prefix_len], [0x00] * prefix_len)
+        self.assertEqual(frame[prefix_len:], payload)
 
 
 if __name__ == "__main__":
