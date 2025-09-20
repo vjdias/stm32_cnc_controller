@@ -9,10 +9,13 @@ MODULE_DIR = Path(__file__).resolve().parent
 
 if __package__:
     from .cnc_protocol import (
+        REQ_HEADER,
+        REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_BYTES,
         SPI_DMA_HANDSHAKE_READY,
         SPI_DMA_MAX_PAYLOAD,
         bits_str,
@@ -22,10 +25,13 @@ else:
     if str(MODULE_DIR) not in sys.path:
         sys.path.insert(0, str(MODULE_DIR))
     from cnc_protocol import (  # type: ignore
+        REQ_HEADER,
+        REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_BYTES,
         SPI_DMA_HANDSHAKE_READY,
         SPI_DMA_MAX_PAYLOAD,
         bits_str,
@@ -104,6 +110,19 @@ class CNCClient:
             time.sleep(settle_delay_s)
         raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
 
+    @staticmethod
+    def _build_boot_poll_frame(chunk_len: int) -> List[int]:
+        if chunk_len <= 0:
+            return []
+        frame = [0x00] * chunk_len
+        if chunk_len > SPI_DMA_HANDSHAKE_BYTES:
+            header_idx = SPI_DMA_HANDSHAKE_BYTES
+            frame[header_idx] = REQ_HEADER
+            tail_idx = chunk_len - 1
+            if tail_idx > header_idx:
+                frame[tail_idx] = REQ_TAIL
+        return frame
+
     def _read_boot_token_info(self, token_bytes: bytes, tries: int, settle_delay_s: float,
                               chunk_len: int) -> Tuple[List[int], Dict[str, Any]]:
         if chunk_len <= 0:
@@ -115,8 +134,9 @@ class CNCClient:
         base_offset = 0
         chunks: List[List[int]] = []
         reads_used = 0
+        poll_frame = self._build_boot_poll_frame(chunk_len)
         for _ in range(max(1, tries)):
-            chunk = self._xfer([0x00] * chunk_len)
+            chunk = self._xfer(poll_frame)
             reads_used += 1
             chunks.append(chunk)
             accum.extend(chunk)
