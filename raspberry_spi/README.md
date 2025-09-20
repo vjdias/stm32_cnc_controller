@@ -30,8 +30,12 @@ Uso rápido
   `python3 cnc_spi_client.py home --frame-id 5 --axes 0x03 --dirs 0x01 --vhome 0x1234`
   `python3 cnc_spi_client.py probe-level --frame-id 6 --axes 0x04 --vprobe 0x0100`
 
+- Teste de eco "hello" via SPI:
+  `python3 cnc_spi_client.py hello --tries 5`
+  (envia `AA 68 65 6C 6C 6F 55` e aguarda `AB 68 65 6C 6C 6F 54`)
+
 - Frame de boot "hello":
-  `python3 cnc_spi_client.py hello --tries 10 --chunk-len 7`
+  `python3 cnc_spi_client.py boot-hello --tries 10 --chunk-len 7`
   (espera-se o frame `AB 68 65 6C 6C 6F 54` com header/tail válidos)
 
 - Lista resumida com exemplos (sem necessidade de SPI ativo):

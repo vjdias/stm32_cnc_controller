@@ -13,6 +13,7 @@ if __package__:
         REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
+        RESP_TEST_HELLO,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
         SPI_DMA_HANDSHAKE_BYTES,
@@ -29,6 +30,7 @@ else:
         REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
+        RESP_TEST_HELLO,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
         SPI_DMA_HANDSHAKE_BYTES,
@@ -180,7 +182,8 @@ class CNCClient:
 
     def read_boot_hello_info(self, tries: int = 16, settle_delay_s: float = 0.002,
                              chunk_len: int = 7) -> Tuple[List[int], Dict[str, Any]]:
-        return self._read_boot_token_info(b"hello", tries, settle_delay_s, chunk_len)
+        payload = bytes([RESP_TEST_HELLO]) + b"ello"
+        return self._read_boot_token_info(payload, tries, settle_delay_s, chunk_len)
 
     def read_boot_led(self, tries: int = 16, settle_delay_s: float = 0.002,
                       chunk_len: int = 7) -> List[int]:

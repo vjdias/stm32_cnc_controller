@@ -68,17 +68,21 @@ static void dispatch(router_t *r, const uint8_t *f, uint32_t len) {
 		if (handlers.on_move_end)
 			handlers.on_move_end(r, f, len);
 		break;
-	case REQ_LED_CTRL:
-		if (handlers.on_led_ctrl)
-			handlers.on_led_ctrl(r, f, len);
-		break;
-	case REQ_FPGA_STATUS:
-		if (handlers.on_fpga_status)
-			handlers.on_fpga_status(r, f, len);
-		break;
-	default:
-		break; // desconhecido
-	}
+        case REQ_LED_CTRL:
+                if (handlers.on_led_ctrl)
+                        handlers.on_led_ctrl(r, f, len);
+                break;
+        case REQ_FPGA_STATUS:
+                if (handlers.on_fpga_status)
+                        handlers.on_fpga_status(r, f, len);
+                break;
+        case REQ_TEST_HELLO:
+                if (handlers.on_test_hello)
+                        handlers.on_test_hello(r, f, len);
+                break;
+        default:
+                break; // desconhecido
+        }
 }
 
 void router_feed_bytes(router_t *r, const uint8_t *data, uint32_t len) {

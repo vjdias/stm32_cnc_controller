@@ -1,17 +1,18 @@
 #include "Protocol/Requests/led_control_request.h"
 
-// A requisição LED_CTRL (único LED) possui 9 bytes no total:
+// A requisição LED_CTRL (único LED) possui 9 bytes úteis no frame básico:
 // [0]=0xAA, [1]=0x07, [2]=frameId, [3]=ledMask,
 // [4]=LED1.mode, [5..6]=LED1.frequencyHz (BE16, frequência em Hz),
 // [7]=paridade (XOR dos bytes 1..6), [8]=0x55
 
-#define LED_CTRL_REQ_TOTAL_LEN 9u
 #define LED_CTRL_PARITY_LAST_INDEX 6u
 #define LED_CTRL_PARITY_INDEX 7u
 
 int led_ctrl_req_decoder(const uint8_t *raw, uint32_t len, led_ctrl_req_t *out) {
     if (!raw || !out)
         return PROTO_ERR_ARG;
+    if (len > LED_CTRL_REQ_PADDED_TOTAL_LEN)
+        return PROTO_ERR_RANGE;
     int st = frame_expect_req(raw, len, REQ_LED_CTRL, LED_CTRL_REQ_TOTAL_LEN);
     if (st != PROTO_OK)
         return st;
@@ -48,13 +49,15 @@ int led_ctrl_req_encoder(const led_ctrl_req_t *in, uint8_t *raw, uint32_t len) {
 }
 
 int led_ctrl_req_check_parity(const uint8_t *raw, uint32_t len) {
+    if (!raw || len > LED_CTRL_REQ_PADDED_TOTAL_LEN)
+        return 0;
     if (frame_expect_req(raw, len, REQ_LED_CTRL, LED_CTRL_REQ_TOTAL_LEN) != PROTO_OK)
         return 0;
     return parity_check_byte_1N(raw, LED_CTRL_PARITY_LAST_INDEX, LED_CTRL_PARITY_INDEX);
 }
 
 int led_ctrl_req_set_parity(uint8_t *raw, uint32_t len) {
-    if (!raw || len < LED_CTRL_REQ_TOTAL_LEN)
+    if (!raw || len < LED_CTRL_REQ_TOTAL_LEN || len > LED_CTRL_REQ_PADDED_TOTAL_LEN)
         return PROTO_ERR_ARG;
     return parity_set_byte_1N(raw, LED_CTRL_PARITY_LAST_INDEX, LED_CTRL_PARITY_INDEX);
 }

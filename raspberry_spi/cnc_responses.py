@@ -16,6 +16,7 @@ if __package__:
         REQ_MOVE_QUEUE_ADD,
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
+        REQ_TEST_HELLO,
         RESP_HEADER,
         RESP_HOME_STATUS,
         RESP_LED_CTRL,
@@ -25,6 +26,7 @@ if __package__:
         RESP_MOVE_QUEUE_ADD_ACK,
         RESP_MOVE_QUEUE_STATUS,
         RESP_START_MOVE,
+        RESP_TEST_HELLO,
         RESP_TAIL,
         parity_check_bit_1N,
         parity_check_byte_1N,
@@ -40,6 +42,7 @@ else:
         REQ_MOVE_QUEUE_ADD,
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
+        REQ_TEST_HELLO,
         RESP_HEADER,
         RESP_HOME_STATUS,
         RESP_LED_CTRL,
@@ -49,6 +52,7 @@ else:
         RESP_MOVE_QUEUE_ADD_ACK,
         RESP_MOVE_QUEUE_STATUS,
         RESP_START_MOVE,
+        RESP_TEST_HELLO,
         RESP_TAIL,
         parity_check_bit_1N,
         parity_check_byte_1N,
@@ -76,6 +80,17 @@ class CNCResponseDecoder:
         if raw[1] != RESP_LED_CTRL or not parity_check_byte_1N(raw, 4, 5):
             raise ValueError("LED response inválida/paridade")
         return {"type": raw[1], "frameId": raw[2], "ledMask": raw[3], "status": raw[4]}
+
+    @staticmethod
+    def hello(raw: List[int]) -> Dict[str, Any]:
+        CNCResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 7)
+        if raw[1] != RESP_TEST_HELLO:
+            raise ValueError("Hello response inválida")
+        suffix = [ord(c) for c in "ello"]
+        if raw[2 : 2 + len(suffix)] != suffix:
+            raise ValueError("Hello payload inválido")
+        payload = "".join([chr(raw[1])] + [chr(b) for b in raw[2:-1]])
+        return {"type": raw[1], "payload": payload}
 
     @staticmethod
     def queue_add_ack(raw: List[int]) -> Dict[str, Any]:
@@ -177,6 +192,7 @@ class CNCResponseDecoder:
         REQ_MOVE_HOME: ResponseSpec(RESP_MOVE_HOME, 8, move_home.__func__),
         REQ_MOVE_PROBE_LEVEL: ResponseSpec(RESP_MOVE_PROBE_LEVEL, 20, probe_level.__func__),
         REQ_MOVE_END: ResponseSpec(RESP_MOVE_END, 4, move_end.__func__),
+        REQ_TEST_HELLO: ResponseSpec(RESP_TEST_HELLO, 7, hello.__func__),
         # REQ_FPGA_STATUS: ResponseSpec(RESP_FPGA_STATUS, ?, decoder)  # não definido no firmware atual
     }
 
