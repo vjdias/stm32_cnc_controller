@@ -3,9 +3,12 @@
 #include <stdint.h>
 
 // Mapeamento de GPIO para o LED discreto presente no controlador.
-// Os padrões seguem a placa B-L475E-IOT01A, onde o LED verde discreto (LD2)
-// está conectado ao PB14. Sobrescreva via definições de compilação ao
-// direcionar para outra placa ou ligação.
+// Os padrões seguem a placa B-L475E-IOT01A. Conforme a UM2153 (tabela de
+// pinagem do kit), o LED do conector Arduino ("LED1") divide o pino PA5 com o
+// sinal SCK do SPI1. Para evitar que a inicialização do serviço reconfigure o
+// barramento SPI, adotamos o LED discreto LD2 soldado na placa, conectado ao
+// PB14. Sobrescreva via definições de compilação ao direcionar para outra
+// placa ou ligação.
 #ifndef LED1_GPIO_PORT
 #define LED1_GPIO_PORT GPIOB
 #endif
