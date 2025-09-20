@@ -115,12 +115,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     hello = sub.add_parser(
         "hello",
-        help="Ler frame de teste 'hello' do STM32 (enfileirado no boot)",
+        help="Enviar uma requisição 'hello' e aguardar a resposta do STM32",
     )
-    _common_args(hello, include_tries=True, default_tries=16)
-    hello.add_argument("--chunk-len", type=int, default=7)
-    hello.add_argument("--settle-delay", type=float, default=0.002)
-    hello.set_defaults(handler="boot_hello", needs_client=True)
+    _common_args(hello, include_tries=True)
+    hello.add_argument(
+        "--settle-delay",
+        type=float,
+        default=0.001,
+        help="Tempo (s) para aguardar entre tentativas de leitura",
+    )
+    hello.set_defaults(handler="hello", needs_client=True)
+
+    boot_hello = sub.add_parser(
+        "boot-hello",
+        help="Ler frame de teste 'hello' enfileirado automaticamente no boot",
+    )
+    _common_args(boot_hello, include_tries=True, default_tries=16)
+    boot_hello.add_argument("--chunk-len", type=int, default=7)
+    boot_hello.add_argument("--settle-delay", type=float, default=0.002)
+    boot_hello.set_defaults(handler="boot_hello", needs_client=True)
 
     led_boot = sub.add_parser(
         "led",
@@ -162,9 +175,10 @@ def print_examples(_: argparse.Namespace) -> None:
             "Probe level",
             f"{base_cmd} probe-level --frame-id 7 --axes 0x04 --vprobe 0x0100",
         ),
+        ("Requisição 'hello'", f"{base_cmd} hello --tries 5"),
         (
             "Frame de boot 'hello'",
-            f"{base_cmd} hello --tries 10 --chunk-len 7",
+            f"{base_cmd} boot-hello --tries 10 --chunk-len 7",
         ),
         (
             "Frame de boot 'led'",

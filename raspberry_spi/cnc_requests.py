@@ -17,6 +17,7 @@ if __package__:
         REQ_MOVE_QUEUE_ADD,
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
+        REQ_TEST_HELLO,
         REQ_TAIL,
         be16_bytes,
         be32_bytes,
@@ -37,6 +38,7 @@ else:
         REQ_MOVE_QUEUE_ADD,
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
+        REQ_TEST_HELLO,
         REQ_TAIL,
         be16_bytes,
         be32_bytes,
@@ -61,6 +63,12 @@ class CNCRequestBuilder:
         raw[5], raw[6] = f1_hi, f1_lo
         parity_set_byte_1N(raw, 6, 7)
         raw[8] = REQ_TAIL
+        return pad_request(raw)
+
+    @staticmethod
+    def hello() -> List[int]:
+        suffix = [ord(c) for c in "ello"]
+        raw = [REQ_HEADER, REQ_TEST_HELLO] + suffix + [REQ_TAIL]
         return pad_request(raw)
 
     @staticmethod

@@ -17,6 +17,7 @@ if __package__:
         REQ_MOVE_QUEUE_ADD,
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
+        REQ_TEST_HELLO,
         bits_str,
     )
     from .cnc_requests import CNCRequestBuilder
@@ -33,6 +34,7 @@ else:
         REQ_MOVE_QUEUE_ADD,
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
+        REQ_TEST_HELLO,
         bits_str,
     )
     from cnc_requests import CNCRequestBuilder  # type: ignore
@@ -141,6 +143,12 @@ class CNCCommandExecutor:
     def probe_level(self, args: argparse.Namespace) -> None:
         request = CNCRequestBuilder.probe_level(args.frame_id, args.axes, args.vprobe)
         self._execute_request(REQ_MOVE_PROBE_LEVEL, request, args)
+
+    def hello(self, args: argparse.Namespace) -> None:
+        request = CNCRequestBuilder.hello()
+        decoded = self._execute_request(REQ_TEST_HELLO, request, args)
+        if decoded:
+            print(decoded.get("payload"))
 
     def boot_hello(self, args: argparse.Namespace) -> None:
         frame, stats = self.client.read_boot_hello_info(

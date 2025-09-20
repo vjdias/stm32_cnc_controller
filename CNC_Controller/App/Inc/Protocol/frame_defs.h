@@ -13,23 +13,25 @@ typedef enum {
 	REQ_MOVE_QUEUE_STATUS = 0x02,
 	REQ_START_MOVE = 0x03,
 	REQ_MOVE_HOME = 0x04,
-	REQ_MOVE_PROBE_LEVEL = 0x05,
-	REQ_MOVE_END = 0x06,
-	REQ_LED_CTRL = 0x07,
-	REQ_FPGA_STATUS = 0x20,
+        REQ_MOVE_PROBE_LEVEL = 0x05,
+        REQ_MOVE_END = 0x06,
+        REQ_LED_CTRL = 0x07,
+        REQ_FPGA_STATUS = 0x20,
+        REQ_TEST_HELLO = 0x68,
 } req_msg_type_t;
 
 // Tipos de mensagens de resposta (STM32 envia)
 typedef enum {
-	RESP_MOVE_QUEUE_ADD_ACK = 0x01,
+        RESP_MOVE_QUEUE_ADD_ACK = 0x01,
 	RESP_MOVE_QUEUE_STATUS = 0x02,
 	RESP_START_MOVE = 0x03,
 	RESP_MOVE_HOME = 0x04,
-	RESP_MOVE_PROBE_LEVEL = 0x05,
-	RESP_MOVE_END = 0x06,
-	RESP_LED_CTRL = 0x07,
-	RESP_FPGA_STATUS = 0x20,
-	RESP_HOME_STATUS = 0x21,
+        RESP_MOVE_PROBE_LEVEL = 0x05,
+        RESP_MOVE_END = 0x06,
+        RESP_LED_CTRL = 0x07,
+        RESP_FPGA_STATUS = 0x20,
+        RESP_HOME_STATUS = 0x21,
+        RESP_TEST_HELLO = 0x68,
 } resp_msg_type_t;
 
 // =====================

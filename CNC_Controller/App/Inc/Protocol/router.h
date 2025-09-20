@@ -26,9 +26,10 @@ typedef struct {
 	req_handler_fn on_start_move;
 	req_handler_fn on_move_home;
 	req_handler_fn on_move_probe_level;
-	req_handler_fn on_move_end;
-	req_handler_fn on_led_ctrl;
-	req_handler_fn on_fpga_status;
+        req_handler_fn on_move_end;
+        req_handler_fn on_led_ctrl;
+        req_handler_fn on_fpga_status;
+        req_handler_fn on_test_hello;
 } router_handlers_t;
 
 void router_init(router_t *r, response_fifo_t *resp_fifo,

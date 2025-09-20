@@ -1,7 +1,10 @@
-// Requisição LED_CTRL (9 bytes) — 0x07
+// Requisição LED_CTRL (9 bytes úteis, 42 bytes com padding) — 0x07
 #pragma once
 #include <stdint.h>
 #include "../frame_defs.h"
+
+#define LED_CTRL_REQ_TOTAL_LEN 9u
+#define LED_CTRL_REQ_PADDED_TOTAL_LEN 42u
 
 #define LED_CTRL_CHANNEL_COUNT 1u
 
