@@ -26,7 +26,7 @@ Servico de Log (USART1 VCP)
 - Habilitacao: `LOG_ENABLE` (compile-time, padrao=1) e `log_set_enabled()` (runtime). Quando desabilitado em build-time, as funcoes viram no-ops e nao afetam a compilacao.
 - Padrao: inicia em modo VERBOSE (`LOG_DEFAULT_MODE=LOG_MODE_VERBOSE`). Pode alterar via compile-time ou `log_set_mode()`.
 
-Servico de LED — LED1 discreto
+Servico de LED — LED discreto
 - Arquivos: `Services/Led/led_service.h`, `Services/Led/led_service.c`.
 - O servico controla o LED verde discreto (LED1) presente na placa.
 - Mapeamento de pinos via macros (ajuste conforme sua placa/wiring):
@@ -36,8 +36,16 @@ Servico de LED — LED1 discreto
 - O pisca é mantido por interrupção de hardware (TIM15) com período de 1 ms; não há necessidade de *polling* na *main loop*.
 
 Pinos padrao (B-L475E-IOT01A)
-- `LED1_GPIO_PORT=GPIOA`, `LED1_GPIO_PIN=GPIO_PIN_5`  (LD1/verde)
+- `LED1_GPIO_PORT=GPIOB`, `LED1_GPIO_PIN=GPIO_PIN_14`  (LD2/verde — UM2153
+  identifica PB14 como LED2 dedicado, sem ligação ao barramento SPI1)
 - `LED_ACTIVE_HIGH=1`
+
+> **Atenção:** O mapeamento anterior (PA5) conflita com o sinal SCK do SPI1
+> (UM2153, tabela de *Pin assignments* — PA5 = SPI1_SCK/LED1/ARD.D13). Se
+> direcionar o serviço para outro LED, verifique a pinagem da placa para
+> garantir que PA4/PA5/PA6/PA7 não sejam reconfigurados por engano. As rotinas
+> atuais do firmware (board_config/app/services) não tocam nesses pinos além da
+> configuração feita pelo CubeMX para o SPI1.
 
 Protocolo LED_CTRL (LED1)
 - Tipo: `REQ_LED_CTRL = 0x07`
