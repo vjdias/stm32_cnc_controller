@@ -4,12 +4,18 @@
 """Cliente SPI para comunicação com o firmware CNC no STM32."""
 
 import argparse
+import sys
+from pathlib import Path
 from typing import List, Optional
+
+MODULE_DIR = Path(__file__).resolve().parent
 
 if __package__:
     from .cnc_client import CNCClient
     from .cnc_commands import CNCCommandExecutor
 else:  # execução direta do script a partir do diretório raspberry_spi
+    if str(MODULE_DIR) not in sys.path:
+        sys.path.insert(0, str(MODULE_DIR))
     from cnc_client import CNCClient
     from cnc_commands import CNCCommandExecutor
 
@@ -55,7 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--led2-freq", type=int, default=0,
         help="Frequência de pisca de LED2 em Hz (modo=2)",
     )
-    led_ctrl.set_defaults(handler="led_control")
+    led_ctrl.set_defaults(handler="led_control", needs_client=True)
 
     q_add = sub.add_parser("queue-add", help="Adicionar movimento à fila")
     _common_args(q_add)
@@ -71,22 +77,22 @@ def build_parser() -> argparse.ArgumentParser:
         q_add.add_argument(f"--kp-{axis}", type=int, default=0)
         q_add.add_argument(f"--ki-{axis}", type=int, default=0)
         q_add.add_argument(f"--kd-{axis}", type=int, default=0)
-    q_add.set_defaults(handler="queue_add")
+    q_add.set_defaults(handler="queue_add", needs_client=True)
 
     q_status = sub.add_parser("queue-status", help="Consultar status da fila")
     _common_args(q_status)
     q_status.add_argument("--frame-id", type=int, required=True)
-    q_status.set_defaults(handler="queue_status")
+    q_status.set_defaults(handler="queue_status", needs_client=True)
 
     start_move = sub.add_parser("start-move", help="Iniciar execução")
     _common_args(start_move)
     start_move.add_argument("--frame-id", type=int, required=True)
-    start_move.set_defaults(handler="start_move")
+    start_move.set_defaults(handler="start_move", needs_client=True)
 
     end_move = sub.add_parser("end-move", help="Finalizar execução")
     _common_args(end_move)
     end_move.add_argument("--frame-id", type=int, required=True)
-    end_move.set_defaults(handler="end_move")
+    end_move.set_defaults(handler="end_move", needs_client=True)
 
     home = sub.add_parser("home", help="Sequência de homing")
     _common_args(home)
@@ -94,14 +100,14 @@ def build_parser() -> argparse.ArgumentParser:
     home.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     home.add_argument("--dirs", type=lambda x: int(x, 0), required=True)
     home.add_argument("--vhome", type=lambda x: int(x, 0), required=True)
-    home.set_defaults(handler="home")
+    home.set_defaults(handler="home", needs_client=True)
 
     probe = sub.add_parser("probe-level", help="Sequência de probe level")
     _common_args(probe)
     probe.add_argument("--frame-id", type=int, required=True)
     probe.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     probe.add_argument("--vprobe", type=lambda x: int(x, 0), required=True)
-    probe.set_defaults(handler="probe_level")
+    probe.set_defaults(handler="probe_level", needs_client=True)
 
     hello = sub.add_parser(
         "hello",
@@ -111,7 +117,7 @@ def build_parser() -> argparse.ArgumentParser:
     hello.add_argument("--chunk-len", type=int, default=7)
     hello.add_argument("--tries", type=int, default=16)
     hello.add_argument("--settle-delay", type=float, default=0.002)
-    hello.set_defaults(handler="boot_hello")
+    hello.set_defaults(handler="boot_hello", needs_client=True)
 
     led_boot = sub.add_parser(
         "led",
@@ -121,27 +127,86 @@ def build_parser() -> argparse.ArgumentParser:
     led_boot.add_argument("--chunk-len", type=int, default=7)
     led_boot.add_argument("--tries", type=int, default=16)
     led_boot.add_argument("--settle-delay", type=float, default=0.002)
-    led_boot.set_defaults(handler="boot_led")
+    led_boot.set_defaults(handler="boot_led", needs_client=True)
+
+    examples = sub.add_parser(
+        "examples",
+        help="Listar os comandos disponíveis acompanhados de exemplos de uso",
+    )
+    examples.set_defaults(handler=print_examples, needs_client=False)
 
     return parser
+
+
+def print_examples(_: argparse.Namespace) -> None:
+    base_cmd = "python3 cnc_spi_client.py"
+    examples = [
+        (
+            "LED discretos",
+            f"{base_cmd} led-control --frame-id 1 --mask 0x03 --led1-mode 2 --led1-freq 5 --led2-mode 1",
+        ),
+        (
+            "Adicionar movimento à fila",
+            f"{base_cmd} queue-add --frame-id 2 --dir 0x03 --vx 1000 --sx 2000 --vy 1000 --sy 2000 --vz 500 --sz 800",
+        ),
+        ("Status da fila", f"{base_cmd} queue-status --frame-id 3"),
+        ("Iniciar execução", f"{base_cmd} start-move --frame-id 4"),
+        ("Finalizar execução", f"{base_cmd} end-move --frame-id 5"),
+        (
+            "Sequência de homing",
+            f"{base_cmd} home --frame-id 6 --axes 0x03 --dirs 0x01 --vhome 0x1200",
+        ),
+        (
+            "Probe level",
+            f"{base_cmd} probe-level --frame-id 7 --axes 0x04 --vprobe 0x0100",
+        ),
+        (
+            "Frame de boot 'hello'",
+            f"{base_cmd} hello --tries 10 --chunk-len 7",
+        ),
+        (
+            "Frame de boot 'led'",
+            f"{base_cmd} led --tries 10 --chunk-len 7",
+        ),
+    ]
+
+    print("Comandos disponíveis e exemplos:")
+    for title, command in examples:
+        print(f"- {title}:\n  {command}")
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    client = CNCClient(bus=args.bus, dev=args.dev, speed_hz=args.speed)
-    executor = CNCCommandExecutor(client)
+    handler = getattr(args, "handler", None)
+    if handler is None:
+        parser.error("Nenhum comando informado")
+
+    needs_client = getattr(args, "needs_client", True)
+
+    client: Optional[CNCClient] = None
+    executor: Optional[CNCCommandExecutor] = None
     try:
-        handler_name = getattr(args, "handler", None)
-        if not handler_name:
-            parser.error("Nenhum comando informado")
-        handler = getattr(executor, handler_name, None)
-        if handler is None:
-            parser.error(f"Handler desconhecido: {handler_name}")
-        handler(args)
+        if needs_client:
+            client = CNCClient(bus=args.bus, dev=args.dev, speed_hz=args.speed)
+            executor = CNCCommandExecutor(client)
+
+        if isinstance(handler, str):
+            if executor is None:
+                handler_fn = globals().get(handler)
+            else:
+                handler_fn = getattr(executor, handler, None)
+        else:
+            handler_fn = handler
+
+        if handler_fn is None:
+            parser.error("Handler desconhecido")
+
+        handler_fn(args)
     finally:
-        client.close()
+        if client is not None:
+            client.close()
 
     return 0
 

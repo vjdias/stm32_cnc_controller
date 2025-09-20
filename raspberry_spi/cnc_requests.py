@@ -1,24 +1,49 @@
 """Montagem de requisições para o protocolo CNC SPI."""
 
+import sys
+from pathlib import Path
 from typing import List
 
-from .cnc_protocol import (
-    REQ_FPGA_STATUS,
-    REQ_HEADER,
-    REQ_LED_CTRL,
-    REQ_MOVE_END,
-    REQ_MOVE_HOME,
-    REQ_MOVE_PROBE_LEVEL,
-    REQ_MOVE_QUEUE_ADD,
-    REQ_MOVE_QUEUE_STATUS,
-    REQ_START_MOVE,
-    REQ_TAIL,
-    be16_bytes,
-    be32_bytes,
-    pad_request,
-    parity_set_bit_1N,
-    parity_set_byte_1N,
-)
+MODULE_DIR = Path(__file__).resolve().parent
+
+if __package__:
+    from .cnc_protocol import (
+        REQ_FPGA_STATUS,
+        REQ_HEADER,
+        REQ_LED_CTRL,
+        REQ_MOVE_END,
+        REQ_MOVE_HOME,
+        REQ_MOVE_PROBE_LEVEL,
+        REQ_MOVE_QUEUE_ADD,
+        REQ_MOVE_QUEUE_STATUS,
+        REQ_START_MOVE,
+        REQ_TAIL,
+        be16_bytes,
+        be32_bytes,
+        pad_request,
+        parity_set_bit_1N,
+        parity_set_byte_1N,
+    )
+else:
+    if str(MODULE_DIR) not in sys.path:
+        sys.path.insert(0, str(MODULE_DIR))
+    from cnc_protocol import (  # type: ignore
+        REQ_FPGA_STATUS,
+        REQ_HEADER,
+        REQ_LED_CTRL,
+        REQ_MOVE_END,
+        REQ_MOVE_HOME,
+        REQ_MOVE_PROBE_LEVEL,
+        REQ_MOVE_QUEUE_ADD,
+        REQ_MOVE_QUEUE_STATUS,
+        REQ_START_MOVE,
+        REQ_TAIL,
+        be16_bytes,
+        be32_bytes,
+        pad_request,
+        parity_set_bit_1N,
+        parity_set_byte_1N,
+    )
 
 
 class CNCRequestBuilder:
