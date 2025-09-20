@@ -17,7 +17,7 @@ Fiação (Raspberry Pi → STM32 SPI1 Slave)
 
 Uso rápido
 - LED (configura LED1 piscando a 5 Hz e LED2 ligado, frameId=1):
-  `python3 cnc_spi_client.py led --frame-id 1 --mask 0x03 --led1-mode 2 --led1-freq 5 --led2-mode 1`
+  `python3 cnc_spi_client.py led-control --frame-id 1 --mask 0x03 --led1-mode 2 --led1-freq 5 --led2-mode 1`
 
 - Status da fila de movimentos:
   `python3 cnc_spi_client.py queue-status --frame-id 2`
@@ -29,6 +29,12 @@ Uso rápido
 - Home e Probe Level:
   `python3 cnc_spi_client.py home --frame-id 5 --axes 0x03 --dirs 0x01 --vhome 0x1234`
   `python3 cnc_spi_client.py probe-level --frame-id 6 --axes 0x04 --vprobe 0x0100`
+
+- Frame de boot "hello":
+  `python3 cnc_spi_client.py hello --tries 10 --chunk-len 7`
+
+- Lista resumida com exemplos (sem necessidade de SPI ativo):
+  `python3 cnc_spi_client.py examples`
 
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.
