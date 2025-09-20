@@ -88,16 +88,19 @@ def bits_str(bs: List[int]) -> str:
 
 
 def pad_request(raw: List[int], total_len: int = SPI_DMA_MAX_PAYLOAD) -> List[int]:
-    """Preenche a requisição com zeros até atingir ``total_len`` bytes."""
+    """Valida o tamanho da requisição sem adicionar zeros à direita.
+
+    O buffer DMA do STM32 opera com ``SPI_DMA_MAX_PAYLOAD`` bytes, porém os
+    frames efetivos podem ser menores. O empacotamento final insere zeros antes
+    do header automaticamente (vide ``_build_spi_dma_frame``). Portanto basta
+    garantir que a mensagem não exceda o limite e devolver uma cópia segura.
+    """
+
     if not raw:
         raise ValueError("Request vazia")
-    tail = raw[-1]
     if total_len < len(raw):
         raise ValueError(f"Request excede {total_len} bytes: {len(raw)}")
-    pad_len = total_len - len(raw)
-    if pad_len == 0:
-        return raw[:]
-    return raw[:-1] + [0x00] * pad_len + [tail]
+    return raw[:]
 
 
 __all__ = [

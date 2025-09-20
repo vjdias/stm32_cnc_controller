@@ -81,7 +81,19 @@ class CNCCommandExecutor:
         if settle_delay is not None:
             kwargs["settle_delay_s"] = settle_delay
 
-        frame = self.client.exchange(request_type, request, **kwargs)
+        try:
+            frame = self.client.exchange(request_type, request, **kwargs)
+        except TimeoutError as exc:
+            cmd_name = getattr(args, "command", f"0x{request_type:02X}")
+            request_hex = " ".join(f"{b & 0xFF:02X}" for b in request)
+            details = [
+                "Timeout ao aguardar resposta SPI (cnc_client.exchange).",
+                f"  comando: {cmd_name}",
+                f"  request_type: 0x{request_type:02X}",
+                f"  request_payload ({len(request)} bytes): {request_hex}",
+                f"  detalhe original: {exc}",
+            ]
+            raise TimeoutError("\n".join(details)) from exc
         print("Frame RX bits:", bits_str(frame))
         spec = CNCResponseDecoder.SPECS[request_type]
         try:
