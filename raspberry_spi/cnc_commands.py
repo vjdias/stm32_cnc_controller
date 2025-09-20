@@ -44,6 +44,15 @@ def print_boot_frame_info(frame: List[int], stats: Dict[str, Any]) -> None:
     print("Frame RX bits:", bits_str(frame))
     summary_keys = ("bytesBeforeHeader", "bytesUntilTail", "readsUsed", "chunkLen")
     print({k: stats[k] for k in summary_keys})
+    handshake_bytes = stats.get("handshakeBytes", [])
+    if handshake_bytes:
+        print(
+            "handshake:",
+            " ".join(f"{b:02X}" for b in handshake_bytes),
+            f"({bits_str(handshake_bytes)})",
+        )
+    else:
+        print("handshake: []")
     chunks = stats.get("chunks", [])
     print(f"chunks recebidos: {len(chunks)}")
     for idx, chunk in enumerate(chunks):

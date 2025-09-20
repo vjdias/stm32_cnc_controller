@@ -32,6 +32,7 @@ Uso rápido
 
 - Frame de boot "hello":
   `python3 cnc_spi_client.py hello --tries 10 --chunk-len 7`
+  (espera-se o frame `AB 68 65 6C 6C 6F 54` com header/tail válidos)
 
 - Lista resumida com exemplos (sem necessidade de SPI ativo):
   `python3 cnc_spi_client.py examples`
