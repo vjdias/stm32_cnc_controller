@@ -7,7 +7,6 @@ from cnc_protocol import (
     RESP_HEADER,
     RESP_TAIL,
     RESP_TEST_HELLO,
-    SPI_DMA_MAX_PAYLOAD,
 )
 from cnc_requests import CNCRequestBuilder
 from cnc_responses import CNCResponseDecoder
@@ -16,12 +15,9 @@ from cnc_responses import CNCResponseDecoder
 class HelloFrameTests(unittest.TestCase):
     def test_hello_request_layout(self) -> None:
         req = CNCRequestBuilder.hello()
-        self.assertEqual(len(req), SPI_DMA_MAX_PAYLOAD)
-        self.assertEqual(req[0], REQ_HEADER)
-        self.assertEqual(req[1], REQ_TEST_HELLO)
-        self.assertEqual(req[2:6], [ord(c) for c in "ello"])
-        self.assertTrue(all(b == 0x00 for b in req[6:-1]))
-        self.assertEqual(req[-1], REQ_TAIL)
+        suffix = [ord(c) for c in "ello"]
+        expected = [REQ_HEADER, REQ_TEST_HELLO] + suffix + [REQ_TAIL]
+        self.assertEqual(req, expected)
 
     def test_hello_response_decoder(self) -> None:
         resp = [RESP_HEADER, RESP_TEST_HELLO] + [ord(c) for c in "ello"] + [RESP_TAIL]

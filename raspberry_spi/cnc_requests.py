@@ -68,8 +68,8 @@ class CNCRequestBuilder:
     @staticmethod
     def hello() -> List[int]:
         suffix = [ord(c) for c in "ello"]
-        raw = [REQ_HEADER, REQ_TEST_HELLO] + suffix + [REQ_TAIL]
-        return pad_request(raw)
+        # Keep request unpadded; DMA frame builder adds the leading zeros before the header.
+        return [REQ_HEADER, REQ_TEST_HELLO] + suffix + [REQ_TAIL]
 
     @staticmethod
     def move_home(frame_id: int, axis_mask: int, dir_mask: int, vhome: int) -> List[int]:
