@@ -65,6 +65,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--led1-freq", type=int, default=0,
         help="Frequência de pisca de LED1 em Hz (modo=2)",
     )
+    led_ctrl.add_argument(
+        "--settle-delay",
+        type=float,
+        default=0.001,
+        help="Tempo (s) para aguardar entre tentativas de leitura",
+    )
     led_ctrl.set_defaults(handler="led_control", needs_client=True)
 
     q_add = sub.add_parser("queue-add", help="Adicionar movimento à fila")
