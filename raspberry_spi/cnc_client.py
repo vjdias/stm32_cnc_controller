@@ -144,6 +144,7 @@ class CNCClient:
         if settle_delay_s > 0:
             time.sleep(settle_delay_s)
 
+<<<<<<< HEAD
         poll_payload_len = max(1, len(request))
         poll_frame = _build_spi_dma_frame([0x00] * poll_payload_len)
         attempts = max(1, tries)
@@ -163,6 +164,25 @@ class CNCClient:
                 time.sleep(settle_delay_s)
         raise TimeoutError("Resposta SPI nao recebida/validada no prazo.")
 
+=======
+        poll_frame = [0x00] * SPI_DMA_FRAME_LEN
+        for _ in range(max(1, tries)):
+            rx = self._xfer(poll_frame)
+            if len(rx) < spec.length:
+                time.sleep(settle_delay_s)
+                continue
+
+            frame = rx[-spec.length :]
+            if (
+                frame[0] == RESP_HEADER
+                and frame[-1] == RESP_TAIL
+                and frame[1] == spec.response_type
+            ):
+                return frame
+
+            time.sleep(settle_delay_s)
+        raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
+>>>>>>> 281d3fe78040ea25dbe4a682c8c7cf7049026f73
 
     @staticmethod
     def _build_boot_poll_frame(chunk_len: int) -> List[int]:
