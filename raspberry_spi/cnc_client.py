@@ -141,17 +141,21 @@ class CNCClient:
         _validate_handshake_frame(dma_frame, rx_frame, len(request))
         time.sleep(settle_delay_s)
 
+        poll_frame = [0x00] * SPI_DMA_FRAME_LEN
         for _ in range(max(1, tries)):
-            rx = self._xfer([0x00] * spec.length)
-            try:
-                idx = rx.index(RESP_HEADER)
-            except ValueError:
+            rx = self._xfer(poll_frame)
+            if len(rx) < spec.length:
                 time.sleep(settle_delay_s)
                 continue
-            if idx + spec.length <= len(rx):
-                frame = rx[idx:idx + spec.length]
-                if frame[0] == RESP_HEADER and frame[-1] == RESP_TAIL and frame[1] == spec.response_type:
-                    return frame
+
+            frame = rx[-spec.length :]
+            if (
+                frame[0] == RESP_HEADER
+                and frame[-1] == RESP_TAIL
+                and frame[1] == spec.response_type
+            ):
+                return frame
+
             time.sleep(settle_delay_s)
         raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
 
