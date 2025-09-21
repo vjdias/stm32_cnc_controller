@@ -17,6 +17,7 @@ if __package__:
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
         SPI_DMA_HANDSHAKE_BYTES,
+        SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
@@ -35,6 +36,7 @@ else:
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
         SPI_DMA_HANDSHAKE_BYTES,
+        SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
@@ -93,6 +95,11 @@ def _validate_handshake_frame(
         )
         if status == SPI_DMA_HANDSHAKE_BUSY:
             raise BufferError(base_msg + " Aguarde e tente novamente.")
+        if status == SPI_DMA_HANDSHAKE_NO_COMM:
+            raise ConnectionError(
+                base_msg
+                + " Comunicação SPI não ocorreu (verifique alimentação, conexões e configuração)."
+            )
         raise RuntimeError(base_msg)
 
 
