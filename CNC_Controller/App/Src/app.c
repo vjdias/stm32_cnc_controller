@@ -191,12 +191,12 @@ static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *
         return -1;
     }
 
-    uint16_t start = 1u;
-    while (start < APP_SPI_DMA_BUF_LEN && buf[start] == APP_SPI_IDLE_FILL) {
+    uint16_t start = APP_SPI_HANDSHAKE_BYTES;
+    while (start < APP_SPI_DMA_BUF_LEN && buf[start] != REQ_HEADER) {
         ++start;
     }
 
-    if (start >= APP_SPI_DMA_BUF_LEN || buf[start] != REQ_HEADER) {
+    if (start >= APP_SPI_DMA_BUF_LEN) {
         return -1;
     }
 
