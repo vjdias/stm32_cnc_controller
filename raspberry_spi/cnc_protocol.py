@@ -33,10 +33,22 @@ RESP_TEST_HELLO = 0x68
 
 # SPI DMA framing (STM32 handshake + payload)
 SPI_DMA_MAX_PAYLOAD = 42
-SPI_DMA_HANDSHAKE_BYTES = 1
-SPI_DMA_FRAME_LEN = SPI_DMA_HANDSHAKE_BYTES + SPI_DMA_MAX_PAYLOAD
+SPI_DMA_HANDSHAKE_BYTES = 0
+SPI_DMA_FRAME_LEN = SPI_DMA_MAX_PAYLOAD
 SPI_DMA_HANDSHAKE_READY = 0xA5
 SPI_DMA_HANDSHAKE_BUSY = 0x5A
+
+# Handshake interpretation helpers (per-byte status echo from STM32)
+SPI_DMA_HANDSHAKE_STATUS_LABELS = {
+    SPI_DMA_HANDSHAKE_READY: "ok",
+    SPI_DMA_HANDSHAKE_BUSY: "fila cheia/busy",
+}
+
+
+def handshake_status_label(code: int) -> str:
+    """Retorna uma descrição curta para o status de handshake informado."""
+
+    return SPI_DMA_HANDSHAKE_STATUS_LABELS.get(code & 0xFF, "desconhecido")
 
 
 def xor_reduce_bytes(bs: List[int]) -> int:
@@ -132,6 +144,8 @@ __all__ = [
     "SPI_DMA_FRAME_LEN",
     "SPI_DMA_HANDSHAKE_READY",
     "SPI_DMA_HANDSHAKE_BUSY",
+    "SPI_DMA_HANDSHAKE_STATUS_LABELS",
+    "handshake_status_label",
     "xor_reduce_bytes",
     "xor_bit_reduce_bytes",
     "be16_bytes",

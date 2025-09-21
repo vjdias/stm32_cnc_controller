@@ -9,23 +9,14 @@
 #include "Services/Test/test_spi_service.h"
 
 #define APP_SPI_MAX_REQUEST_LEN    42u
-#define APP_SPI_HANDSHAKE_BITS     8u
-#define APP_SPI_HANDSHAKE_BYTES    (APP_SPI_HANDSHAKE_BITS / 8u)
-#define APP_SPI_DMA_BUF_LEN        (APP_SPI_MAX_REQUEST_LEN + APP_SPI_HANDSHAKE_BYTES)
+#define APP_SPI_DMA_BUF_LEN        APP_SPI_MAX_REQUEST_LEN
 #define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
 #define APP_SPI_STATUS_READY       0xA5u
 #define APP_SPI_STATUS_BUSY        0x5Au
 /* Estados de handshake usam padrões alternados para evitar colisão com 0x00/0xFF. */
-#define APP_SPI_IDLE_FILL          0x00u
 
-#if (APP_SPI_HANDSHAKE_BITS % 8u) != 0
-#error "APP_SPI_HANDSHAKE_BITS must be a multiple of 8"
-#endif
-#if APP_SPI_HANDSHAKE_BYTES == 0
-#error "Handshake area must be at least one byte"
-#endif
-#if APP_SPI_DMA_BUF_LEN != 43u
-#error "SPI DMA buffer must remain 43 bytes (1 handshake + 42 payload)"
+#if APP_SPI_DMA_BUF_LEN != 42u
+#error "SPI DMA buffer must remain 42 bytes (payload + handshake por byte)"
 #endif
 
 typedef struct {
@@ -114,7 +105,6 @@ void app_on_spi_txrx_half_complete(SPI_HandleTypeDef *h) {
     if (h && h->Instance == SPI1) {
         /* Reserva o handshake para sinalizar BUSY até concluir o tratamento atual */
         g_spi_next_status = APP_SPI_STATUS_BUSY;
-        g_spi_tx_dma_buf[0] = APP_SPI_STATUS_BUSY;
     }
 }
 
@@ -147,10 +137,7 @@ static void app_spi_queue_reset(void) {
 }
 
 static void app_spi_prime_tx_buffer(uint8_t status) {
-    g_spi_tx_dma_buf[0] = status;
-    if (APP_SPI_DMA_BUF_LEN > 1u) {
-        memset(&g_spi_tx_dma_buf[1], APP_SPI_IDLE_FILL, APP_SPI_DMA_BUF_LEN - 1u);
-    }
+    memset(g_spi_tx_dma_buf, status, APP_SPI_DMA_BUF_LEN);
 }
 
 static uint8_t app_spi_compute_status(void) {
@@ -191,7 +178,7 @@ static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *
         return -1;
     }
 
-    uint16_t start = APP_SPI_HANDSHAKE_BYTES;
+    uint16_t start = 0u;
     while (start < APP_SPI_DMA_BUF_LEN && buf[start] != REQ_HEADER) {
         ++start;
     }
