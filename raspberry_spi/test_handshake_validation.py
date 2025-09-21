@@ -12,6 +12,7 @@ if __package__:
         REQ_TAIL,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
     )
 else:
@@ -24,6 +25,7 @@ else:
         REQ_TAIL,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_BUSY,
+        SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
     )
 
@@ -59,6 +61,16 @@ class HandshakeValidationTests(unittest.TestCase):
         msg = str(ctx.exception)
         self.assertIn("preenchimento[0]", msg)
         self.assertIn("0xE1", msg)
+
+    def test_zero_handshake_raises_connection_error(self) -> None:
+        handshake = [SPI_DMA_HANDSHAKE_NO_COMM] * SPI_DMA_FRAME_LEN
+
+        with self.assertRaises(ConnectionError) as ctx:
+            _validate_handshake_frame(self.frame, handshake, len(self.payload))
+
+        msg = str(ctx.exception)
+        self.assertIn("0x00", msg)
+        self.assertIn("Comunicação SPI não ocorreu", msg)
 
 
 if __name__ == "__main__":
