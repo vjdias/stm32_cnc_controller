@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdint.h>
 #include "spi.h"
 #include "app.h"
 #include "Protocol/frame_defs.h"
@@ -33,6 +34,12 @@ static uint8_t g_spi_tx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint8_t g_spi_need_restart = 0;
 static volatile uint8_t g_spi_next_status = APP_SPI_STATUS_READY;
 
+#if defined(SCB_CleanDCache_by_Addr) || defined(SCB_InvalidateDCache_by_Addr)
+#define APP_SPI_DCACHE_LINE_SIZE    32u
+static void app_spi_clean_dcache(void *addr, uint32_t len);
+static void app_spi_invalidate_dcache(void *addr, uint32_t len);
+#endif
+
 static app_spi_frame_t g_spi_rx_queue[APP_SPI_RX_QUEUE_DEPTH];
 static volatile uint8_t g_spi_rx_queue_head = 0;
 static volatile uint8_t g_spi_rx_queue_tail = 0;
@@ -52,6 +59,56 @@ static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *
 static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len);
 static int app_spi_queue_pop(app_spi_frame_t *out);
 static void app_spi_handle_txrx_complete(void);
+
+#if defined(SCB_CleanDCache_by_Addr) || defined(SCB_InvalidateDCache_by_Addr)
+static uintptr_t app_spi_cache_align_down(uintptr_t addr);
+static uintptr_t app_spi_cache_align_up(uintptr_t addr);
+#endif
+
+#if defined(SCB_CleanDCache_by_Addr)
+static void app_spi_clean_dcache(void *addr, uint32_t len) {
+    if (((SCB->CCR & SCB_CCR_DC_Msk) == 0u) || len == 0u) {
+        return;
+    }
+
+    uintptr_t start = app_spi_cache_align_down((uintptr_t)addr);
+    uintptr_t end = app_spi_cache_align_up((uintptr_t)addr + (uintptr_t)len);
+    SCB_CleanDCache_by_Addr((uint32_t *)start, (int32_t)(end - start));
+}
+#else
+static void app_spi_clean_dcache(void *addr, uint32_t len) {
+    (void)addr;
+    (void)len;
+}
+#endif
+
+#if defined(SCB_InvalidateDCache_by_Addr)
+static void app_spi_invalidate_dcache(void *addr, uint32_t len) {
+    if (((SCB->CCR & SCB_CCR_DC_Msk) == 0u) || len == 0u) {
+        return;
+    }
+
+    uintptr_t start = app_spi_cache_align_down((uintptr_t)addr);
+    uintptr_t end = app_spi_cache_align_up((uintptr_t)addr + (uintptr_t)len);
+    SCB_InvalidateDCache_by_Addr((uint32_t *)start, (int32_t)(end - start));
+}
+#else
+static void app_spi_invalidate_dcache(void *addr, uint32_t len) {
+    (void)addr;
+    (void)len;
+}
+#endif
+
+#if defined(SCB_CleanDCache_by_Addr) || defined(SCB_InvalidateDCache_by_Addr)
+static uintptr_t app_spi_cache_align_down(uintptr_t addr) {
+    return addr & ~((uintptr_t)APP_SPI_DCACHE_LINE_SIZE - 1u);
+}
+
+static uintptr_t app_spi_cache_align_up(uintptr_t addr) {
+    return (addr + ((uintptr_t)APP_SPI_DCACHE_LINE_SIZE - 1u)) &
+           ~((uintptr_t)APP_SPI_DCACHE_LINE_SIZE - 1u);
+}
+#endif
 
 void app_init(void) {
     led_service_init();
@@ -138,6 +195,7 @@ static void app_spi_queue_reset(void) {
 
 static void app_spi_prime_tx_buffer(uint8_t status) {
     memset(g_spi_tx_dma_buf, status, APP_SPI_DMA_BUF_LEN);
+    app_spi_clean_dcache(g_spi_tx_dma_buf, APP_SPI_DMA_BUF_LEN);
 }
 
 static uint8_t app_spi_compute_status(void) {
@@ -236,6 +294,8 @@ static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;
     uint8_t armazenado = 0u;
+
+    app_spi_invalidate_dcache(g_spi_rx_dma_buf, APP_SPI_DMA_BUF_LEN);
 
     if (app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len) == 0) {
         if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) == 0) {
