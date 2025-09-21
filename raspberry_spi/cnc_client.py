@@ -19,6 +19,7 @@ if __package__:
         SPI_DMA_HANDSHAKE_BYTES,
         SPI_DMA_HANDSHAKE_READY,
         SPI_DMA_MAX_PAYLOAD,
+        handshake_status_label,
         bits_str,
     )
     from .cnc_responses import CNCResponseDecoder
@@ -36,6 +37,7 @@ else:
         SPI_DMA_HANDSHAKE_BYTES,
         SPI_DMA_HANDSHAKE_READY,
         SPI_DMA_MAX_PAYLOAD,
+        handshake_status_label,
         bits_str,
     )
     from cnc_responses import CNCResponseDecoder  # type: ignore
@@ -54,6 +56,44 @@ def _build_spi_dma_frame(payload: List[int]) -> List[int]:
     for idx, byte in enumerate(payload):
         frame[start + idx] = byte & 0xFF
     return frame
+
+
+def _validate_handshake_frame(
+    tx_frame: List[int], handshake_frame: List[int], payload_len: int
+) -> None:
+    if payload_len <= 0:
+        raise ValueError("payload_len deve ser positivo")
+    if len(tx_frame) != len(handshake_frame):
+        raise ValueError(
+            "Comprimento do handshake difere do frame transmitido: "
+            f"tx={len(tx_frame)} rx={len(handshake_frame)}"
+        )
+
+    prefix_len = len(tx_frame) - payload_len
+    if prefix_len < 0:
+        raise ValueError("payload_len maior que o frame transmitido")
+
+    for idx, (tx_byte, status) in enumerate(zip(tx_frame, handshake_frame)):
+        status &= 0xFF
+        if status == SPI_DMA_HANDSHAKE_READY:
+            continue
+
+        tx_byte &= 0xFF
+        if idx >= prefix_len:
+            payload_idx = idx - prefix_len
+            location = f"payload[{payload_idx}] (0x{tx_byte:02X})"
+        else:
+            location = f"preenchimento[{idx}] (0x{tx_byte:02X})"
+
+        label = handshake_status_label(status)
+        label_suffix = f" ({label})" if label and label != "desconhecido" else ""
+        base_msg = (
+            f"STM32 sinalizou erro de handshake no byte {idx} ({location}) "
+            f"com código 0x{status:02X}{label_suffix}."
+        )
+        if status == SPI_DMA_HANDSHAKE_BUSY:
+            raise BufferError(base_msg + " Aguarde e tente novamente.")
+        raise RuntimeError(base_msg)
 
 
 class CNCClient:
@@ -91,11 +131,7 @@ class CNCClient:
         spec = CNCResponseDecoder.SPECS[request_type]
         dma_frame = _build_spi_dma_frame(request)
         rx_frame = self._xfer(dma_frame)
-        handshake = rx_frame[0] & 0xFF
-        if handshake == SPI_DMA_HANDSHAKE_BUSY:
-            raise BufferError("STM32 sinalizou buffer cheio (handshake BUSY). Aguarde e tente novamente.")
-        if handshake != SPI_DMA_HANDSHAKE_READY:
-            print(f"Aviso: handshake inesperado 0x{handshake:02X}")
+        _validate_handshake_frame(dma_frame, rx_frame, len(request))
         time.sleep(settle_delay_s)
 
         for _ in range(max(1, tries)):
