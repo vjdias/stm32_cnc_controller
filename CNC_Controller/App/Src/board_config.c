@@ -61,40 +61,40 @@ static void configure_output(GPIO_TypeDef *port, uint32_t pins, uint32_t speed)
     init.Speed = speed;
     HAL_GPIO_Init(port, &init);
 }
-
-static void configure_spi_dma(DMA_HandleTypeDef *handle,
-                              DMA_Channel_TypeDef *instance,
-                              uint32_t request,
-                              uint32_t direction,
-                              uint32_t mode,
-                              uint32_t priority)
-{
-    if (!handle || !instance)
-    {
-        Error_Handler();
-    }
-
-    handle->Instance = instance;
-
-    if (HAL_DMA_DeInit(handle) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    handle->Init.Request = request;
-    handle->Init.Direction = direction;
-    handle->Init.PeriphInc = DMA_PINC_DISABLE;
-    handle->Init.MemInc = DMA_MINC_ENABLE;
-    handle->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    handle->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    handle->Init.Mode = mode;
-    handle->Init.Priority = priority;
-
-    if (HAL_DMA_Init(handle) != HAL_OK)
-    {
-        Error_Handler();
-    }
-}
+//
+//static void configure_spi_dma(DMA_HandleTypeDef *handle,
+//                              DMA_Channel_TypeDef *instance,
+//                              uint32_t request,
+//                              uint32_t direction,
+//                              uint32_t mode,
+//                              uint32_t priority)
+//{
+//    if (!handle || !instance)
+//    {
+//        Error_Handler();
+//    }
+//
+//    handle->Instance = instance;
+//
+//    if (HAL_DMA_DeInit(handle) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+//
+//    handle->Init.Request = request;
+//    handle->Init.Direction = direction;
+//    handle->Init.PeriphInc = DMA_PINC_DISABLE;
+//    handle->Init.MemInc = DMA_MINC_ENABLE;
+//    handle->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+//    handle->Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+//    handle->Init.Mode = mode;
+//    handle->Init.Priority = priority;
+//
+//    if (HAL_DMA_Init(handle) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+//}
 
 void board_config_apply_motion_gpio(void)
 {
@@ -186,23 +186,24 @@ void board_config_apply_interrupt_priorities(void)
     HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
 }
 
-void board_config_apply_spi_dma_profile(void)
-{
-    /* RX em modo normal: cada quadro AA..55 + handshakes byte a byte ocupa um slot */
-    configure_spi_dma(&hdma_spi1_rx,
-                      DMA1_Channel2,
-                      DMA_REQUEST_1,
-                      DMA_PERIPH_TO_MEMORY,
-                      DMA_NORMAL,
-                      DMA_PRIORITY_HIGH);
-    __HAL_LINKDMA(&hspi1, hdmarx, hdma_spi1_rx);
-
-    /* TX também em modo normal; buffers são preenchidos a cada transação */
-    configure_spi_dma(&hdma_spi1_tx,
-                      DMA1_Channel3,
-                      DMA_REQUEST_1,
-                      DMA_MEMORY_TO_PERIPH,
-                      DMA_NORMAL,
-                      DMA_PRIORITY_LOW);
-    __HAL_LINKDMA(&hspi1, hdmatx, hdma_spi1_tx);
-}
+//'hdma_spi1_rx' undeclared (first use in this function)	board_config.c	/CNC_Controller/App/Src	line 192	C/C++ Problem
+//void board_config_apply_spi_dma_profile(void)
+//{
+//    /* RX em modo normal: cada quadro AA..55 + handshakes byte a byte ocupa um slot */
+//    configure_spi_dma(&hdma_spi1_rx,
+//                      DMA1_Channel2,
+//                      DMA_REQUEST_1,
+//                      DMA_PERIPH_TO_MEMORY,
+//                      DMA_CIRCULAR,
+//                      DMA_PRIORITY_HIGH);
+//    __HAL_LINKDMA(&hspi1, hdmarx, hdma_spi1_rx);
+//
+//    /* TX também em modo normal; buffers são preenchidos a cada transação */
+//    configure_spi_dma(&hdma_spi1_tx,
+//                      DMA1_Channel3,
+//                      DMA_REQUEST_1,
+//                      DMA_MEMORY_TO_PERIPH,
+//					  DMA_CIRCULAR,
+//                      DMA_PRIORITY_LOW);
+//    __HAL_LINKDMA(&hspi1, hdmatx, hdma_spi1_tx);
+//}

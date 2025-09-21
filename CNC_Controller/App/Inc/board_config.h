@@ -55,7 +55,7 @@ void board_config_apply_interrupt_priorities(void);
  * use prioridade normal em modo *one-shot*, alinhada ao escoamento assíncrono
  * do `router` do aplicativo.
  */
-void board_config_apply_spi_dma_profile(void);
+//void board_config_apply_spi_dma_profile(void);
 
 #ifdef __cplusplus
 }

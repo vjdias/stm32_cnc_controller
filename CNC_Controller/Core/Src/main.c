@@ -100,15 +100,15 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM5_Init();
   MX_TIM7_Init();
-  MX_TIM15_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
+  MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
     board_config_apply_motion_gpio();
     board_config_remap_tim3_encoder_pins();
     board_config_force_encoder_quadrature();
     board_config_apply_interrupt_priorities();
-    board_config_apply_spi_dma_profile();
+    //board_config_apply_spi_dma_profile();
     app_init();
   /* USER CODE END 2 */
 

@@ -1,7 +1,6 @@
 ../App/Src/board_config.c:24:13:configure_encoder_timer	3
 ../App/Src/board_config.c:55:13:configure_output	1
-../App/Src/board_config.c:65:6:board_config_apply_motion_gpio	1
-../App/Src/board_config.c:93:6:board_config_force_encoder_quadrature	1
-../App/Src/board_config.c:100:6:board_config_remap_tim3_encoder_pins	1
-../App/Src/board_config.c:117:6:board_config_apply_interrupt_priorities	1
-../App/Src/board_config.c:155:6:board_config_apply_spi_dma_profile	5
+../App/Src/board_config.c:99:6:board_config_apply_motion_gpio	1
+../App/Src/board_config.c:127:6:board_config_force_encoder_quadrature	1
+../App/Src/board_config.c:134:6:board_config_remap_tim3_encoder_pins	1
+../App/Src/board_config.c:151:6:board_config_apply_interrupt_priorities	1
