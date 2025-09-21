@@ -188,7 +188,7 @@ void board_config_apply_interrupt_priorities(void)
 
 void board_config_apply_spi_dma_profile(void)
 {
-    /* RX em modo normal: cada quadro AA..55 + handshake ocupa um slot */
+    /* RX em modo normal: cada quadro AA..55 + handshakes byte a byte ocupa um slot */
     configure_spi_dma(&hdma_spi1_rx,
                       DMA1_Channel2,
                       DMA_REQUEST_1,
