@@ -68,7 +68,7 @@ static void led_apply_pwm(uint32_t period_ticks, uint32_t pulse_ticks) {
     uint32_t arr = (period_ticks > 0u) ? (period_ticks - 1u) : 0u;
     __HAL_TIM_SET_AUTORELOAD(&htim15, arr);
     __HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, pulse_ticks);
-    __HAL_TIM_GENERATE_EVENT(&htim15, TIM_EVENTSOURCE_UPDATE);
+    HAL_TIM_GenerateEvent(&htim15, TIM_EVENTSOURCE_UPDATE);
     htim15.Init.Period = arr;
 }
 
