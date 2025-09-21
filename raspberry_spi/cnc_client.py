@@ -134,26 +134,35 @@ class CNCClient:
         return rx
 
     def exchange(self, request_type: int, request: List[int],
-                 tries: int = 8, settle_delay_s: float = 0.001) -> List[int]:
+                 tries: int = 0, settle_delay_s: float = 0.001) -> List[int]:
+        if tries < 0:
+            raise ValueError("tries cannot be negative")
         spec = CNCResponseDecoder.SPECS[request_type]
         dma_frame = _build_spi_dma_frame(request)
         rx_frame = self._xfer(dma_frame)
         _validate_handshake_frame(dma_frame, rx_frame, len(request))
-        time.sleep(settle_delay_s)
+        if settle_delay_s > 0:
+            time.sleep(settle_delay_s)
 
-        for _ in range(max(1, tries)):
-            rx = self._xfer([0x00] * spec.length)
+        poll_payload_len = max(1, len(request))
+        poll_frame = _build_spi_dma_frame([0x00] * poll_payload_len)
+        attempts = max(1, tries)
+        for _ in range(attempts):
+            rx = self._xfer(poll_frame)
             try:
                 idx = rx.index(RESP_HEADER)
             except ValueError:
-                time.sleep(settle_delay_s)
+                if settle_delay_s > 0:
+                    time.sleep(settle_delay_s)
                 continue
             if idx + spec.length <= len(rx):
                 frame = rx[idx:idx + spec.length]
                 if frame[0] == RESP_HEADER and frame[-1] == RESP_TAIL and frame[1] == spec.response_type:
                     return frame
-            time.sleep(settle_delay_s)
-        raise TimeoutError("Resposta SPI não recebida/validada no prazo.")
+            if settle_delay_s > 0:
+                time.sleep(settle_delay_s)
+        raise TimeoutError("Resposta SPI nao recebida/validada no prazo.")
+
 
     @staticmethod
     def _build_boot_poll_frame(chunk_len: int) -> List[int]:
