@@ -5,6 +5,7 @@
 
 import argparse
 import sys
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import List, Optional
 
@@ -38,6 +39,27 @@ def _common_args(
         )
 
 
+def _parse_led_frequency(raw_value: str) -> int:
+    try:
+        value = Decimal(raw_value)
+    except InvalidOperation as exc:  # pragma: no cover - defensive path
+        raise argparse.ArgumentTypeError(
+            f"Frequência inválida: '{raw_value}'"
+        ) from exc
+
+    if value < 0:
+        raise argparse.ArgumentTypeError("A frequência deve ser não negativa")
+
+    quantized = value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    centi_hz = quantized * 100
+    if centi_hz > Decimal(0xFFFF):
+        raise argparse.ArgumentTypeError(
+            "Frequência máxima suportada é 655.35 Hz"
+        )
+
+    return int(centi_hz)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI1 Slave)",
@@ -62,8 +84,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="0=Off, 1=On, 2=Pisca",
     )
     led_ctrl.add_argument(
-        "--led1-freq", type=int, default=0,
-        help="Frequência de pisca de LED1 em Hz (modo=2)",
+        "--led1-freq",
+        type=_parse_led_frequency,
+        default=0,
+        help=(
+            "Frequência de pisca do LED1 em Hz (modo=2). "
+            "Aceita números com até duas casas decimais"
+        ),
     )
     led_ctrl.add_argument(
         "--settle-delay",
@@ -164,7 +191,7 @@ def print_examples(_: argparse.Namespace) -> None:
     examples = [
         (
             "LED discreto",
-            f"{base_cmd} led-control --frame-id 1 --mask 0x01 --led1-mode 2 --led1-freq 5",
+            f"{base_cmd} led-control --frame-id 1 --mask 0x01 --led1-mode 2 --led1-freq 0.5",
         ),
         (
             "Adicionar movimento à fila",

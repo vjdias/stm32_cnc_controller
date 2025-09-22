@@ -6,6 +6,7 @@
 #include "app.h"
 #include "Services/Log/log_service.h"
 #include <stdio.h>
+#include <stdint.h>
 
 LOG_SVC_DEFINE(LOG_SVC_LED, "led");
 
@@ -18,7 +19,7 @@ typedef struct {
     uint16_t pin;
     uint8_t mode;
     uint8_t is_on;
-    uint16_t frequency_hz;
+    uint16_t frequency_centi_hz;
 } led_channel_state_t;
 
 static led_channel_state_t g_leds[LED_CTRL_CHANNEL_COUNT] = {
@@ -48,15 +49,43 @@ static uint32_t led_timer_get_clock(void) {
     return clk;
 }
 
-static uint32_t led_compute_period_ticks(uint16_t freq_hz) {
-    if (!freq_hz)
+/*
+ * Converte a frequência de pisca (em centi-hertz) no período correspondente
+ * para o TIM15, levando em conta o prescaler configurado.
+ *
+ * freq_centi_hz carrega a frequência já multiplicada por 100. Para obter o
+ * período (ticks) precisamos multiplicar o clock efetivo do timer por 100 e
+ * dividir novamente por freq_centi_hz (isto é, clk_per_second / (freq/100)).
+ * A soma de freq_centi_hz/2 implementa arredondamento para o inteiro mais
+ * próximo, mantendo o cálculo puramente inteiro.
+ *
+ * Exemplos com o clock atual (80 MHz) e prescaler = 0 (divisor efetivo 1):
+ *   - 1,00 Hz → freq_centi_hz = 100 → ticks calculados = 80 000 000.
+ *   - 0,20 Hz → freq_centi_hz =  20 → ticks calculados = 400 000 000.
+ * Ambos excedem os 65 536 passos que o ARR de 16 bits suporta, portanto
+ * led_force_blink() satura o período em 0x10000 e o LED pisca de fato a
+ * ~1,22 kHz (80 MHz / 65 536). Para atingir frequências como 1 Hz ou 0,2 Hz
+ * é necessário reduzir o clock efetivo do TIM15 via prescaler (por exemplo,
+ * PSC = 7999 → divisor efetivo 8 000 → f_min ≈ 0,15 Hz).
+ */
+static uint32_t led_compute_period_ticks(uint16_t freq_centi_hz) {
+    if (freq_centi_hz == 0u)
         return 0u;
+
     uint32_t timer_clk = led_timer_get_clock();
     uint32_t prescaler = (uint32_t)htim15.Init.Prescaler + 1u;
     if (prescaler == 0u)
         return 0u;
-    uint32_t ticks = timer_clk / (prescaler * (uint32_t)freq_hz);
-    return ticks;
+
+    uint32_t clk_per_second = timer_clk / prescaler;
+    if (clk_per_second == 0u)
+        return 0u;
+
+    uint64_t scaled_clock = (uint64_t)clk_per_second * 100u;
+    uint64_t ticks = (scaled_clock + ((uint64_t)freq_centi_hz / 2u)) / (uint64_t)freq_centi_hz;
+    if (ticks > 0xFFFFFFFFu)
+        ticks = 0xFFFFFFFFu;
+    return (uint32_t)ticks;
 }
 
 static void led_apply_pwm(uint32_t period_ticks, uint32_t pulse_ticks) {
@@ -77,7 +106,7 @@ static void led_force_off(led_channel_state_t *led) {
         return;
     led_apply_pwm((uint32_t)htim15.Init.Period + 1u, 0u);
     led->mode = LED_MODE_OFF;
-    led->frequency_hz = 0u;
+    led->frequency_centi_hz = 0u;
     led->is_on = 0u;
 }
 
@@ -89,14 +118,14 @@ static void led_force_on(led_channel_state_t *led) {
         period = 10u;
     led_apply_pwm(period, period);
     led->mode = LED_MODE_ON;
-    led->frequency_hz = 0u;
+    led->frequency_centi_hz = 0u;
     led->is_on = 1u;
 }
 
-static void led_force_blink(led_channel_state_t *led, uint16_t freq_hz) {
-    if (!led || freq_hz == 0u)
+static void led_force_blink(led_channel_state_t *led, uint16_t freq_centi_hz) {
+    if (!led || freq_centi_hz == 0u)
         return;
-    uint32_t period_ticks = led_compute_period_ticks(freq_hz);
+    uint32_t period_ticks = led_compute_period_ticks(freq_centi_hz);
     if (period_ticks < 2u)
         period_ticks = 2u;
     if (period_ticks > (uint32_t)0x10000u)
@@ -105,11 +134,11 @@ static void led_force_blink(led_channel_state_t *led, uint16_t freq_hz) {
     uint32_t pulse_ticks = period_ticks / 2u;
     led_apply_pwm(period_ticks, pulse_ticks);
     led->mode = LED_MODE_BLINK;
-    led->frequency_hz = freq_hz;
+    led->frequency_centi_hz = freq_centi_hz;
     led->is_on = 0u;
 }
 
-static void led_apply_config(led_channel_state_t *led, uint8_t mode, uint16_t freq_hz) {
+static void led_apply_config(led_channel_state_t *led, uint8_t mode, uint16_t freq_centi_hz) {
     if (!led)
         return;
 
@@ -121,8 +150,8 @@ static void led_apply_config(led_channel_state_t *led, uint8_t mode, uint16_t fr
 
     if (mode == LED_MODE_ON) {
         led_force_on(led);
-    } else if (mode == LED_MODE_BLINK && freq_hz > 0u) {
-        led_force_blink(led, freq_hz);
+    } else if (mode == LED_MODE_BLINK && freq_centi_hz > 0u) {
+        led_force_blink(led, freq_centi_hz);
     } else {
         led_force_off(led);
     }
@@ -153,7 +182,7 @@ void led_service_init(void) {
         gi.Pin = g_leds[i].pin;
         HAL_GPIO_Init(g_leds[i].port, &gi);
         g_leds[i].mode = LED_MODE_OFF;
-        g_leds[i].frequency_hz = 0u;
+        g_leds[i].frequency_centi_hz = 0u;
         g_leds[i].is_on = 0u;
     }
 
@@ -230,9 +259,12 @@ void led_on_led_ctrl(const uint8_t *frame, uint32_t len) {
     led_push_response(req.frameId, ack_mask, status);
 
     LOGA_THIS(LOG_STATE_APPLIED, status, "applied",
-              "reqMask=0x%02X ackMask=0x%02X LED1(mode=%u,f=%uHz,on=%u,ARR=%lu,CCR=%lu)",
+              "reqMask=0x%02X ackMask=0x%02X LED1(mode=%u,f=%lu.%02luHz,on=%u,ARR=%lu,CCR=%lu)",
               (unsigned)requested_mask, (unsigned)ack_mask,
-              g_leds[0].mode, g_leds[0].frequency_hz, g_leds[0].is_on,
+              g_leds[0].mode,
+              (unsigned long)(g_leds[0].frequency_centi_hz / 100u),
+              (unsigned long)(g_leds[0].frequency_centi_hz % 100u),
+              g_leds[0].is_on,
               (unsigned long)(__HAL_TIM_GET_AUTORELOAD(&htim15) + 1u),
               (unsigned long)__HAL_TIM_GET_COMPARE(&htim15, TIM_CHANNEL_1));
 }

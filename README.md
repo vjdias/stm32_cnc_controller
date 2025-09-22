@@ -51,13 +51,21 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 
 **Timers**  
 - **TIM6 — Time Base 50 kHz (DDA/STEP)**: `PSC=79`, `ARR=19`, `Up`, **TRGO=Update** (opcional), **IRQ ON**.  
-- **TIM7 — Time Base 1 kHz (PI/PID)**: `PSC=7999`, `ARR=9`, `Up`, **IRQ ON**.  
-- **TIM2 — Encoder X (32b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFFFFFF`.  
-- **TIM5 — Encoder Y (32b)**: igual ao TIM2, `ARR=0xFFFFFFFF`.  
+- **TIM7 — Time Base 1 kHz (PI/PID)**: `PSC=7999`, `ARR=9`, `Up`, **IRQ ON**.
+- **TIM2 — Encoder X (32b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFFFFFF`.
+- **TIM5 — Encoder Y (32b)**: igual ao TIM2, `ARR=0xFFFFFFFF`.
 - **TIM3 — Encoder Z (16b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFF`.
+- **TIM15 — PWM do LED discreto**: `PSC=0`, `ARR=0xFFFF`. O serviço aceita frequências
+  em centi-hertz e calcula o período em ticks com arredondamento, mas o valor é
+  limitado a 65 536 passos por conta do ARR de 16 bits. Com o clock atual
+  (80 MHz) isso significa que pedidos de 1,00 Hz (`freq_centi_hz = 100`) ou
+  0,20 Hz (`freq_centi_hz = 20`) resultam em 80 M e 400 M ticks, respectivamente,
+  ambos saturados para 0x10000 → ~1,22 kHz efetivos. Para realmente piscar em
+  1 Hz ou 0,2 Hz é necessário reduzir o clock do TIM15 aumentando o prescaler
+  (por exemplo `PSC=7999` → divisor 8 000 → frequência mínima ≈ 0,15 Hz).
 
-**SPI1 (RPi↔STM32)**  
-- **Slave, 8-bit, MODE 3 (CPOL=High, CPHA=2nd)**, **NSS=Hardware Input** (PA4).  
+**SPI1 (RPi↔STM32)**
+- **Slave, 8-bit, MODE 3 (CPOL=High, CPHA=2nd)**, **NSS=Hardware Input** (PA4).
 - **DMA**: RX *Circular* (Byte/Byte, Priority High, inc mem ON), TX *Normal* (Byte/Byte).  
 - **NVIC**: habilite **DMA RX/TX** e **SPI1 global**.
 
