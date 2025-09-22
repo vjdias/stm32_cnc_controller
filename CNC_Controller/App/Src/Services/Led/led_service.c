@@ -51,11 +51,20 @@ static uint32_t led_timer_get_clock(void) {
 static uint32_t led_compute_period_ticks(uint16_t freq_hz) {
     if (!freq_hz)
         return 0u;
+
     uint32_t timer_clk = led_timer_get_clock();
-    uint32_t prescaler = (uint32_t)htim15.Init.Prescaler + 1u;
+    uint32_t prescaler = __HAL_TIM_GET_PRESCALER(&htim15) + 1u;
     if (prescaler == 0u)
         return 0u;
-    uint32_t ticks = timer_clk / (prescaler * (uint32_t)freq_hz);
+
+    uint64_t divisor = (uint64_t)prescaler * (uint64_t)freq_hz;
+    if (divisor == 0u)
+        return 0u;
+
+    uint64_t dividend = (uint64_t)timer_clk + (divisor / 2u);
+    uint32_t ticks = (uint32_t)(dividend / divisor);
+    if (ticks == 0u)
+        ticks = 1u;
     return ticks;
 }
 
