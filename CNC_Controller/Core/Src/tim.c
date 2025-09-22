@@ -22,6 +22,12 @@
 
 /* USER CODE BEGIN 0 */
 
+/* Divides the 80 MHz TIM15 clock by 256 so low blink frequencies fit in the
+ * 16-bit auto-reload register while keeping enough resolution for faster
+ * rates. */
+#define TIM15_LED_PRESCALER   (255u)
+#define TIM15_LED_PERIOD_MAX  (65535u)
+
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim2;
@@ -246,9 +252,9 @@ void MX_TIM15_Init(void)
 
   /* USER CODE END TIM15_Init 1 */
   htim15.Instance = TIM15;
-  htim15.Init.Prescaler = 0;
+  htim15.Init.Prescaler = TIM15_LED_PRESCALER;
   htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim15.Init.Period = 65535;
+  htim15.Init.Period = TIM15_LED_PERIOD_MAX;
   htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim15.Init.RepetitionCounter = 0;
   htim15.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
