@@ -2,7 +2,7 @@
 
 // A requisição LED_CTRL (único LED) possui 9 bytes úteis no frame básico:
 // [0]=0xAA, [1]=0x07, [2]=frameId, [3]=ledMask,
-// [4]=LED1.mode, [5..6]=LED1.frequencyHz (BE16, frequência em Hz),
+// [4]=LED1.mode, [5..6]=LED1.frequency (BE16, frequência em centi-Hz),
 // [7]=paridade (XOR dos bytes 1..6), [8]=0x55
 
 #define LED_CTRL_PARITY_LAST_INDEX 6u

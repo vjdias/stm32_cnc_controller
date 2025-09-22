@@ -10,7 +10,7 @@
 
 typedef struct {
     uint8_t mode;        // Valor conforme LED_MODE_*
-    uint16_t frequency;  // Frequência de pisca em Hz (ignorada salvo modo=BLINK)
+    uint16_t frequency;  // Frequência de pisca em centi-Hz (ignorada salvo modo=BLINK)
 } led_ctrl_channel_cfg_t;
 
 typedef struct {
