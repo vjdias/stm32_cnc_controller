@@ -17,14 +17,51 @@ LOG_SVC_DEFINE(LOG_SVC_LED, "led");
 typedef struct {
     GPIO_TypeDef *port;
     uint16_t pin;
+    uint32_t alternate;
     uint8_t mode;
     uint8_t is_on;
     uint16_t frequency_centi_hz;
 } led_channel_state_t;
 
 static led_channel_state_t g_leds[LED_CTRL_CHANNEL_COUNT] = {
-    { LED1_GPIO_PORT, LED1_GPIO_PIN, LED_MODE_OFF, 0u, 0u },
+    { LED1_GPIO_PORT, LED1_GPIO_PIN, LED1_GPIO_AF, LED_MODE_OFF, 0u, 0u },
 };
+
+static uint8_t g_pwm_running = 0u;
+
+#if LED_ACTIVE_HIGH
+#define LED_GPIO_ON_LEVEL  GPIO_PIN_SET
+#define LED_GPIO_OFF_LEVEL GPIO_PIN_RESET
+#else
+#define LED_GPIO_ON_LEVEL  GPIO_PIN_RESET
+#define LED_GPIO_OFF_LEVEL GPIO_PIN_SET
+#endif
+
+static void led_gpio_config_output(const led_channel_state_t *led) {
+    if (!led)
+        return;
+    GPIO_InitTypeDef gi = {0};
+    gi.Pin = led->pin;
+    gi.Mode = GPIO_MODE_OUTPUT_PP;
+    gi.Pull = GPIO_NOPULL;
+    gi.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(led->port, &gi);
+}
+
+static void led_gpio_config_pwm(const led_channel_state_t *led) {
+    if (!led)
+        return;
+    GPIO_InitTypeDef gi = {0};
+    gi.Pin = led->pin;
+    gi.Mode = GPIO_MODE_AF_PP;
+    gi.Pull = GPIO_NOPULL;
+    gi.Speed = GPIO_SPEED_FREQ_LOW;
+    gi.Alternate = led->alternate;
+    HAL_GPIO_Init(led->port, &gi);
+}
+
+static HAL_StatusTypeDef led_pwm_start(void);
+static HAL_StatusTypeDef led_pwm_stop(void);
 
 static void led_push_response(uint8_t frame_id, uint8_t mask, uint8_t status) {
     uint8_t raw[7];
@@ -68,6 +105,7 @@ static uint32_t led_timer_get_clock(void) {
  * é necessário reduzir o clock efetivo do TIM15 via prescaler (por exemplo,
  * PSC = 7999 → divisor efetivo 8 000 → f_min ≈ 0,15 Hz).
  */
+
 static uint32_t led_compute_period_ticks(uint16_t freq_centi_hz) {
     if (freq_centi_hz == 0u)
         return 0u;
@@ -104,7 +142,12 @@ static void led_apply_pwm(uint32_t period_ticks, uint32_t pulse_ticks) {
 static void led_force_off(led_channel_state_t *led) {
     if (!led)
         return;
-    led_apply_pwm((uint32_t)htim15.Init.Period + 1u, 0u);
+    HAL_StatusTypeDef st = led_pwm_stop();
+    if (st != HAL_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao parar PWM do TIM15 (%d)", (int)st);
+    }
+    led_gpio_config_output(led);
+    HAL_GPIO_WritePin(led->port, led->pin, LED_GPIO_OFF_LEVEL);
     led->mode = LED_MODE_OFF;
     led->frequency_centi_hz = 0u;
     led->is_on = 0u;
@@ -113,10 +156,12 @@ static void led_force_off(led_channel_state_t *led) {
 static void led_force_on(led_channel_state_t *led) {
     if (!led)
         return;
-    uint32_t period = (uint32_t)htim15.Init.Period + 1u;
-    if (period == 0u)
-        period = 10u;
-    led_apply_pwm(period, period);
+    HAL_StatusTypeDef st = led_pwm_stop();
+    if (st != HAL_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao parar PWM do TIM15 (%d)", (int)st);
+    }
+    led_gpio_config_output(led);
+    HAL_GPIO_WritePin(led->port, led->pin, LED_GPIO_ON_LEVEL);
     led->mode = LED_MODE_ON;
     led->frequency_centi_hz = 0u;
     led->is_on = 1u;
@@ -132,7 +177,13 @@ static void led_force_blink(led_channel_state_t *led, uint16_t freq_centi_hz) {
         period_ticks = 0x10000u;
 
     uint32_t pulse_ticks = period_ticks / 2u;
+    led_gpio_config_pwm(led);
     led_apply_pwm(period_ticks, pulse_ticks);
+    if (led_pwm_start() != HAL_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao iniciar PWM do TIM15");
+        led_force_off(led);
+        return;
+    }
     led->mode = LED_MODE_BLINK;
     led->frequency_centi_hz = freq_centi_hz;
     led->is_on = 0u;
@@ -162,25 +213,44 @@ static void led_apply_config(led_channel_state_t *led, uint8_t mode, uint16_t fr
 }
 
 static HAL_StatusTypeDef led_pwm_start(void) {
+    if (g_pwm_running)
+        return HAL_OK;
+
     HAL_StatusTypeDef st = HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
 #if defined(TIM_CHANNEL_1N)
     if (st == HAL_OK) {
         st = HAL_TIMEx_PWMN_Start(&htim15, TIM_CHANNEL_1);
     }
 #endif
+    if (st == HAL_OK) {
+        g_pwm_running = 1u;
+    }
+    return st;
+}
+
+static HAL_StatusTypeDef led_pwm_stop(void) {
+    if (!g_pwm_running)
+        return HAL_OK;
+
+    HAL_StatusTypeDef st = HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1);
+#if defined(TIM_CHANNEL_1N)
+    if (st == HAL_OK) {
+        st = HAL_TIMEx_PWMN_Stop(&htim15, TIM_CHANNEL_1);
+    }
+#endif
+    if (st == HAL_OK) {
+        __HAL_TIM_DISABLE(&htim15);
+        g_pwm_running = 0u;
+    }
     return st;
 }
 
 void led_service_init(void) {
-    GPIO_InitTypeDef gi = {0};
-    gi.Mode = GPIO_MODE_AF_PP;
-    gi.Pull = GPIO_NOPULL;
-    gi.Speed = GPIO_SPEED_FREQ_LOW;
-    gi.Alternate = GPIO_AF14_TIM15;
+    g_pwm_running = 0u;
 
     for (uint32_t i = 0; i < LED_CTRL_CHANNEL_COUNT; ++i) {
-        gi.Pin = g_leds[i].pin;
-        HAL_GPIO_Init(g_leds[i].port, &gi);
+        led_gpio_config_output(&g_leds[i]);
+        HAL_GPIO_WritePin(g_leds[i].port, g_leds[i].pin, LED_GPIO_OFF_LEVEL);
         g_leds[i].mode = LED_MODE_OFF;
         g_leds[i].frequency_centi_hz = 0u;
         g_leds[i].is_on = 0u;
@@ -211,11 +281,6 @@ void led_service_init(void) {
 
     if (HAL_TIM_PWM_ConfigChannel(&htim15, &oc, TIM_CHANNEL_1) != HAL_OK) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao configurar canal PWM do TIM15");
-        return;
-    }
-
-    if (led_pwm_start() != HAL_OK) {
-        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "timer", "falha ao iniciar PWM do TIM15");
         return;
     }
 
