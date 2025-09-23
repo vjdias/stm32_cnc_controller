@@ -1,4 +1,31 @@
 // Inicialização da aplicação: integra SPI DMA, roteador de protocolo e serviços
+
+/**
+ * @brief Visão geral do ciclo SPI → fila → serviços.
+ *
+ * 1) Fluxo do SPI com DMA — `app_init` arma o `HAL_SPI_TransmitReceive_DMA`
+ *    com um buffer inteiro preenchido pelo handshake atual (0xA5 pronto ou
+ *    0x5A ocupado). Os hooks `app_on_spi_txrx_half_complete` e
+ *    `app_on_spi_txrx_complete` mantêm esse preenchimento uniforme em cada
+ *    transação, garantindo que o mestre sempre receba um estado consistente
+ *    enquanto o DMA coleta o frame AA..55.
+ *
+ * 2) Durante a cópia para a fila interna — `app_on_spi_txrx_complete` roda
+ *    depois que o HAL derruba `RXDMAEN/TXDMAEN`. Somente nesse ponto os bytes
+ *    recém-recebidos são invalidados no cache e copiados para a fila circular,
+ *    protegendo o frame porque o DMA já não pode mais sobrescrever o buffer. Se
+ *    o mestre insistir em clockar outro pedido nesse intervalo, não há DMA
+ *    ligado para recebê-lo; esses bytes ficam do lado do mestre e serão
+ *    descartados na aplicação Raspberry assim que o handshake indicar BUSY.
+ *
+ * 3) Preparação da próxima recepção — assim que a cópia termina,
+ *    `app_on_spi_txrx_complete` decide o próximo handshake (READY ou BUSY) e
+ *    `app_on_spi_txrx_half_complete` garante que qualquer novo ciclo iniciado
+ *    antes da conclusão completa do processamento volte a sair com 0x5A. Isso
+ *    impede o STM32 de reler o mesmo buffer enquanto ainda há dados a mover e
+ *    sinaliza explicitamente ao Raspberry Pi que qualquer frame enviado nessa
+ *    janela será ignorado e deverá ser reenviado mais tarde.
+ */
 #pragma once
 
 // Declaração antecipada para evitar incluir os headers do HAL aqui
