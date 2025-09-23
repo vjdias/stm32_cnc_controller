@@ -16,6 +16,11 @@
 #define LED1_GPIO_PIN  GPIO_PIN_14
 #endif
 
+// Função alternativa utilizada pelo PWM do TIM15.
+#ifndef LED1_GPIO_AF
+#define LED1_GPIO_AF GPIO_AF14_TIM15
+#endif
+
 // Nível lógico que acende o LED.
 #ifndef LED_ACTIVE_HIGH
 #define LED_ACTIVE_HIGH 1
