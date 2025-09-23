@@ -65,15 +65,45 @@ def _validate_handshake_frame(
 ) -> None:
     if payload_len <= 0:
         raise ValueError("payload_len deve ser positivo")
+    if len(tx_frame) != SPI_DMA_FRAME_LEN:
+        raise ValueError(
+            "tx_frame deve ocupar exatamente o frame DMA de "
+            f"{SPI_DMA_FRAME_LEN} bytes"
+        )
     if len(tx_frame) != len(handshake_frame):
         raise ValueError(
             "Comprimento do handshake difere do frame transmitido: "
             f"tx={len(tx_frame)} rx={len(handshake_frame)}"
         )
+    if payload_len > SPI_DMA_FRAME_LEN:
+        raise ValueError(
+            "payload_len maior que o frame DMA: "
+            f"{payload_len} > {SPI_DMA_FRAME_LEN}"
+        )
 
     prefix_len = len(tx_frame) - payload_len
     if prefix_len < 0:
         raise ValueError("payload_len maior que o frame transmitido")
+
+    normalized_statuses = {status & 0xFF for status in handshake_frame}
+    if not normalized_statuses:
+        raise ValueError("handshake_frame vazio")
+
+    if normalized_statuses == {SPI_DMA_HANDSHAKE_READY}:
+        return
+
+    if normalized_statuses == {SPI_DMA_HANDSHAKE_BUSY}:
+        raise BufferError(
+            "STM32 respondeu BUSY (0x5A) para todo o frame DMA de "
+            f"{SPI_DMA_FRAME_LEN} bytes. Aguarde e tente novamente."
+        )
+
+    if normalized_statuses == {SPI_DMA_HANDSHAKE_NO_COMM}:
+        raise ConnectionError(
+            "STM32 respondeu 0x00 (sem comunicação) para todo o frame DMA de "
+            f"{SPI_DMA_FRAME_LEN} bytes. Comunicação SPI não ocorreu; "
+            "verifique alimentação, conexões e configuração."
+        )
 
     for idx, (tx_byte, status) in enumerate(zip(tx_frame, handshake_frame)):
         status &= 0xFF
@@ -101,6 +131,59 @@ def _validate_handshake_frame(
                 + " Comunicação SPI não ocorreu (verifique alimentação, conexões e configuração)."
             )
         raise RuntimeError(base_msg)
+
+
+def _extract_response_frame(
+    rx_frame: List[int], expected_len: int, expected_type: int
+) -> List[int] | None:
+    if expected_len <= 0:
+        raise ValueError("expected_len deve ser positivo")
+    if not rx_frame:
+        return None
+
+    normalized = [byte & 0xFF for byte in rx_frame]
+
+    try:
+        header_idx = normalized.index(RESP_HEADER)
+    except ValueError:
+        if SPI_DMA_HANDSHAKE_BUSY in normalized:
+            raise BufferError(
+                "STM32 respondeu BUSY (0x5A) durante o polling da resposta. "
+                "Aguarde antes de tentar ler novamente."
+            )
+        return None
+
+    busy_before = [idx for idx, val in enumerate(normalized[:header_idx]) if val == SPI_DMA_HANDSHAKE_BUSY]
+    if busy_before:
+        raise BufferError(
+            "STM32 sinalizou BUSY (0x5A) antes do header 0x"
+            f"{RESP_HEADER:02X} durante o polling da resposta (byte {busy_before[0]})."
+        )
+
+    end_idx = header_idx + expected_len
+    if end_idx > len(normalized):
+        return None
+
+    busy_after = [
+        idx for idx, val in enumerate(normalized[end_idx:], start=end_idx)
+        if val == SPI_DMA_HANDSHAKE_BUSY
+    ]
+    if busy_after:
+        raise BufferError(
+            "STM32 sinalizou BUSY (0x5A) após o tail 0x"
+            f"{RESP_TAIL:02X} durante o polling da resposta (byte {busy_after[0]})."
+        )
+
+    frame = normalized[header_idx:end_idx]
+    if (
+        len(frame) == expected_len
+        and frame[0] == RESP_HEADER
+        and frame[-1] == RESP_TAIL
+        and frame[1] == expected_type
+    ):
+        return frame
+
+    return None
 
 
 class CNCClient:
@@ -149,16 +232,9 @@ class CNCClient:
         attempts = max(1, tries)
         for _ in range(attempts):
             rx = self._xfer(poll_frame)
-            try:
-                idx = rx.index(RESP_HEADER)
-            except ValueError:
-                if settle_delay_s > 0:
-                    time.sleep(settle_delay_s)
-                continue
-            if idx + spec.length <= len(rx):
-                frame = rx[idx:idx + spec.length]
-                if frame[0] == RESP_HEADER and frame[-1] == RESP_TAIL and frame[1] == spec.response_type:
-                    return frame
+            frame = _extract_response_frame(rx, spec.length, spec.response_type)
+            if frame is not None:
+                return frame
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
         raise TimeoutError("Resposta SPI nao recebida/validada no prazo.")
