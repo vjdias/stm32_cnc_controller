@@ -59,6 +59,10 @@ void app_on_spi_txrx_half_complete(SPI_HandleTypeDef *h);
  */
 void app_on_spi_txrx_complete(SPI_HandleTypeDef *h);
 /**
- * @brief Hook para o callback de transmissão concluída do SPI (modo IT).
+ * @brief Hook legado do callback de transmissão concluída do SPI (modo IT).
+ *
+ * Mantido apenas por compatibilidade com o código gerado pelo CubeIDE; a
+ * transmissão das respostas utiliza o próprio buffer do DMA e não depende mais
+ * desse callback.
  */
 void app_on_spi_tx_complete(SPI_HandleTypeDef *h);

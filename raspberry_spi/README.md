@@ -31,7 +31,7 @@ Uso rápido
   `python3 cnc_spi_client.py probe-level --frame-id 6 --axes 0x04 --vprobe 0x0100`
 
 - Teste de eco "hello" via SPI:
-  `python3 cnc_spi_client.py hello --tries 5`
+  `python3 cnc_spi_client.py hello`
   (envia `AA 68 65 6C 6C 6F 55` e aguarda `AB 68 65 6C 6C 6F 54`)
 
 - Frame de boot "hello":
@@ -56,4 +56,7 @@ Notas de protocolo
 Limitações e dicas
 - O STM32 é escravo: para “ouvir” uma resposta é necessário gerar clock no master (RPi). O cliente já realiza uma leitura com clocks após enviar o request.
 - Caso o serviço no firmware ainda não publique respostas, um timeout pode ocorrer.
+- Comandos com resposta aguardam, por padrão, até 5 polls (`--tries`) com
+  atraso de 1 ms (`--settle-delay`). Se o firmware demorar mais para responder,
+  aumente uma ou ambas as opções para evitar timeouts.
 
