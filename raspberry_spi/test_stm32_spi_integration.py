@@ -1,3 +1,4 @@
+
 """Testes integrados para validar o fluxo STM32 ↔ Raspberry Pi via CLI.
 
 Este módulo reúne cenários de teste que exercitam diretamente o script
@@ -66,7 +67,7 @@ class TestSTM32SpiClient(unittest.TestCase):
 
     * ``test_hello_single_try`` – valida o enlace básico com ``--tries 1``.
     * ``test_hello_with_polling`` – força múltiplos ciclos de polling com
-      ``--tries 5`` e atraso configurado.
+    # ``--tries 5`` e atraso configurado.
     * ``test_led_control_static`` – aciona o LED no modo contínuo.
     * ``test_led_control_blink`` – programa o LED para piscar em 0,5 Hz.
 
