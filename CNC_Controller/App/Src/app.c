@@ -46,12 +46,14 @@ static volatile uint8_t g_spi_rx_queue_tail = 0;
 static volatile uint8_t g_spi_rx_queue_count = 0;
 static volatile uint8_t g_spi_rx_overflow = 0;
 
-static volatile int g_spi_tx_busy = 0;
+static uint8_t g_spi_tx_pending_buf[APP_SPI_DMA_BUF_LEN];
+static volatile uint16_t g_spi_tx_pending_len = 0u;
+static volatile uint8_t g_spi_tx_pending_ready = 0u;
 
 LOG_SVC_DEFINE(LOG_SVC_APP, "app");
 
 static void app_spi_queue_reset(void);
-static void app_spi_prime_tx_buffer(uint8_t status);
+static uint8_t app_spi_prime_tx_buffer(uint8_t status);
 static uint8_t app_spi_compute_status(void);
 static void app_spi_restart_dma(uint8_t status);
 static void app_spi_try_restart_dma(void);
@@ -123,7 +125,7 @@ void app_init(void) {
 
     app_spi_queue_reset();
     g_spi_next_status = APP_SPI_STATUS_READY;
-    app_spi_prime_tx_buffer(g_spi_next_status);
+    (void)app_spi_prime_tx_buffer(g_spi_next_status);
     if (HAL_SPI_TransmitReceive_DMA(&hspi1, g_spi_tx_dma_buf, g_spi_rx_dma_buf,
                                     (uint16_t)APP_SPI_DMA_BUF_LEN) != HAL_OK) {
         g_spi_need_restart = 1u;
@@ -142,13 +144,20 @@ void app_poll(void) {
 
     app_spi_try_restart_dma();
 
-    if (!g_spi_tx_busy && g_resp_fifo) {
-        uint8_t out[64];
+    if (g_resp_fifo && !g_spi_tx_pending_ready) {
+        uint8_t out[APP_SPI_DMA_BUF_LEN];
         int n = resp_fifo_pop(g_resp_fifo, out, sizeof out);
-        if (n > 0) {
-            if (HAL_SPI_Transmit_IT(&hspi1, out, (uint16_t)n) == HAL_OK) {
-                g_spi_tx_busy = 1;
+        if (n > 0 && n <= (int)APP_SPI_DMA_BUF_LEN) {
+            uint32_t primask = __get_PRIMASK();
+            __disable_irq();
+            memcpy(g_spi_tx_pending_buf, out, (uint32_t)n);
+            g_spi_tx_pending_len = (uint16_t)n;
+            g_spi_tx_pending_ready = 1u;
+            if (primask == 0u) {
+                __enable_irq();
             }
+        } else if (n == PROTO_ERR_RANGE) {
+            LOGT_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "spi_tx", "resp too large for dma frame");
         }
     }
 
@@ -172,9 +181,7 @@ void app_on_spi_txrx_complete(SPI_HandleTypeDef *h) {
 }
 
 void app_on_spi_tx_complete(SPI_HandleTypeDef *h) {
-    if (h && h->Instance == SPI1) {
-        g_spi_tx_busy = 0;
-    }
+    (void)h;
 }
 
 int app_resp_push(const uint8_t *frame, uint32_t len) {
@@ -193,9 +200,25 @@ static void app_spi_queue_reset(void) {
     __enable_irq();
 }
 
-static void app_spi_prime_tx_buffer(uint8_t status) {
+static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
+    uint8_t used_pending = 0u;
+
     memset(g_spi_tx_dma_buf, status, APP_SPI_DMA_BUF_LEN);
+
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+    uint8_t has_pending = g_spi_tx_pending_ready;
+    uint16_t pending_len = g_spi_tx_pending_len;
+    if (has_pending && pending_len > 0u && pending_len <= APP_SPI_DMA_BUF_LEN) {
+        memcpy(g_spi_tx_dma_buf, g_spi_tx_pending_buf, pending_len);
+        used_pending = 1u;
+    }
+    if (primask == 0u) {
+        __enable_irq();
+    }
+
     app_spi_clean_dcache(g_spi_tx_dma_buf, APP_SPI_DMA_BUF_LEN);
+    return used_pending;
 }
 
 static uint8_t app_spi_compute_status(void) {
@@ -211,10 +234,19 @@ static void app_spi_restart_dma(uint8_t status) {
     }
 
     g_spi_next_status = status;
-    app_spi_prime_tx_buffer(status);
+    uint8_t used_pending = app_spi_prime_tx_buffer(status);
     if (HAL_SPI_TransmitReceive_DMA(&hspi1, g_spi_tx_dma_buf, g_spi_rx_dma_buf,
                                     (uint16_t)APP_SPI_DMA_BUF_LEN) == HAL_OK) {
         g_spi_need_restart = 0u;
+        if (used_pending) {
+            uint32_t primask = __get_PRIMASK();
+            __disable_irq();
+            g_spi_tx_pending_ready = 0u;
+            g_spi_tx_pending_len = 0u;
+            if (primask == 0u) {
+                __enable_irq();
+            }
+        }
     } else {
         g_spi_need_restart = 1u;
     }

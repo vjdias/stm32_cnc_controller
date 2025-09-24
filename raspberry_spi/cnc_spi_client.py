@@ -25,7 +25,7 @@ def _common_args(
     p: argparse.ArgumentParser,
     *,
     include_tries: bool = False,
-    default_tries: int = 0,
+    default_tries: int = 5,
 ) -> None:
     p.add_argument("--bus", type=int, default=0)
     p.add_argument("--dev", type=int, default=0)
@@ -35,7 +35,10 @@ def _common_args(
             "--tries",
             type=int,
             default=default_tries,
-            help="Número máximo de leituras para validar a resposta",
+            help=(
+                "Número máximo de leituras para validar a resposta"
+                " (padrão: %(default)s)"
+            ),
         )
 
 
