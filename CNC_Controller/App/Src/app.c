@@ -60,6 +60,12 @@ static void app_spi_try_restart_dma(void);
 static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len);
 static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len);
 static int app_spi_queue_pop(app_spi_frame_t *out);
+/*
+ * Resumo: trata a conclusão de uma transferência SPI DMA verificando se o
+ *         buffer recebido contém um quadro válido, enfileirando-o para o
+ *         processamento da camada superior e preparando o status a ser
+ *         usado na próxima rodada de handshaking com o mestre.
+ */
 static void app_spi_handle_txrx_complete(void);
 
 #if defined(SCB_CleanDCache_by_Addr) || defined(SCB_InvalidateDCache_by_Addr)
@@ -200,6 +206,21 @@ static void app_spi_queue_reset(void) {
     __enable_irq();
 }
 
+/*
+ * Resume: prepara o quadro de transmissão do DMA preenchendo-o com o status
+ *         desejado e, quando existe uma resposta pendente válida, copia o
+ *         conteúdo dessa resposta para o buffer antes de iniciar a nova
+ *         transação SPI.
+ * Variáveis locais:
+ *  - used_pending: indica se uma resposta pendente foi aplicada ao buffer
+ *                  de transmissão nesta preparação.
+ *  - primask: guarda o valor atual do registrador PRIMASK para restaurar o
+ *             estado das interrupções ao final da seção crítica.
+ *  - has_pending: flag que sinaliza se há dados pendentes disponíveis para
+ *                 transmissão.
+ *  - pending_len: quantidade de bytes válidos armazenados no buffer pendente
+ *                 que podem ser copiados para o DMA.
+ */
 static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
     uint8_t used_pending = 0u;
 
@@ -221,12 +242,49 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
     return used_pending;
 }
 
+/*
+ * Resumo: avalia a ocupação da fila de recepção SPI para decidir qual
+ *         padrão de status deve ser devolvido ao mestre durante o próximo
+ *         ciclo de handshaking.
+ * Variáveis globais utilizadas:
+ *  - g_spi_rx_queue_count: total de quadros aguardando processamento.
+ * Constantes envolvidas:
+ *  - APP_SPI_RX_QUEUE_DEPTH: capacidade máxima da fila circular usada como
+ *    limite para sinalizar condição de lotação.
+ *  - APP_SPI_STATUS_BUSY / APP_SPI_STATUS_READY: códigos de status trocados
+ *    byte a byte com o mestre SPI.
+ * Fluxo geral:
+ *  1. Compara a quantidade de quadros pendentes com a profundidade máxima da
+ *     fila.
+ *  2. Retorna BUSY quando a fila está cheia para impedir novos envios do
+ *     mestre até que os dados sejam processados; caso contrário retorna READY.
+ */
 static uint8_t app_spi_compute_status(void) {
     return (g_spi_rx_queue_count >= APP_SPI_RX_QUEUE_DEPTH)
                ? APP_SPI_STATUS_BUSY
                : APP_SPI_STATUS_READY;
 }
 
+/*
+ * Resumo: reinicializa a transferência SPI por DMA configurando o buffer de
+ *         transmissão com o status desejado e, se possível, consumindo a
+ *         resposta pendente pronta para envio.
+ * Parâmetros:
+ *  - status: byte de handshake que deve preencher o buffer de TX quando não
+ *            houver payload disponível. Indica READY/BUSY ao mestre SPI.
+ * Variáveis locais:
+ *  - used_pending: indica se um frame armazenado previamente foi copiado para
+ *                  o buffer DMA nesta tentativa de reinício.
+ *  - primask: armazena o estado das interrupções antes de manipular flags
+ *             compartilhadas com o contexto principal.
+ * Validações executadas:
+ *  1. Confere se o periférico SPI está em estado READY antes de requisitar um
+ *     novo ciclo DMA; caso contrário, sinaliza a necessidade de tentar mais
+ *     tarde.
+ *  2. Após preparar o buffer, verifica o resultado de HAL_SPI_TransmitReceive_DMA
+ *     para distinguir sucesso (limpando indicadores pendentes) de falha
+ *     (marcando que outro restart será necessário).
+ */
 static void app_spi_restart_dma(uint8_t status) {
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
         g_spi_need_restart = 1u;
@@ -292,6 +350,27 @@ static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *
     return -1;
 }
 
+/*
+ * Resumo: copia um quadro recebido pelo DMA para a fila circular de
+ *         processamento enquanto estiver no contexto de interrupção,
+ *         desde que haja espaço disponível para armazená-lo.
+ * Parâmetros:
+ *  - frame: ponteiro para o início do quadro já localizado no buffer de
+ *           recepção, permitindo que o conteúdo seja duplicado na fila.
+ *  - len: tamanho efetivo do quadro a ser copiado, usado para validar o
+ *         limite e registrar o comprimento na fila.
+ * Variáveis locais:
+ *  - slot: aponta para a posição corrente de escrita na fila circular,
+ *          onde os dados e o tamanho do quadro são armazenados.
+ * Fluxo geral:
+ *  1. Valida argumentos de entrada e garante que o quadro caiba no limite
+ *     máximo aceito pela aplicação.
+ *  2. Verifica se a fila possui espaço livre; caso contrário, aborta com
+ *     erro para sinalizar overflow.
+ *  3. Copia os bytes do quadro para o slot atual da fila, registra o
+ *     comprimento recebido e atualiza os ponteiros circulares e o contador
+ *     de itens enfileirados.
+ */
 static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len) {
     if (!frame || len == 0u || len > APP_SPI_MAX_REQUEST_LEN) {
         return -1;
@@ -322,6 +401,28 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
     return rc;
 }
 
+/*
+ * Fluxo detalhado:
+ *  1. Invalida a linha de dados do cache referente ao buffer DMA para garantir
+ *     que a CPU leia os bytes recém recebidos pelo periférico.
+ *  2. Localiza um quadro válido dentro do buffer recebido. Esta validação
+ *     assegura que o framing esperado (handshake + tamanho) esteja presente
+ *     antes de continuar.
+ *  3. Caso o framing seja válido, tenta enfileirar o quadro para processamento
+ *     posterior. O retorno de erro desta etapa cobre a validação de limites da
+ *     fila circular (profundidade e comprimento máximo do quadro). Se a fila
+ *     estiver cheia ou o quadro for inválido, a flag de overflow é acionada.
+ *  4. Atualiza o status do handshake para READY quando há dados em fila, ou
+ *     mantém BUSY para forçar o mestre a repetir a leitura até que a fila
+ *     aceite um novo quadro.
+ *  5. Reinicia o DMA com o status apropriado para dar sequência ao ciclo de
+ *     comunicação SPI.
+ * Variáveis locais:
+ *  - offset: posição inicial do quadro válido dentro do buffer DMA.
+ *  - len: comprimento do quadro localizado; auxilia na validação de tamanho.
+ *  - armazenado: indica se o quadro foi efetivamente enfileirado, controlando
+ *                a escolha do status (READY/BUSY) pós-processamento.
+ */
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;

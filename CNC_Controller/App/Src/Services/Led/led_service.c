@@ -63,6 +63,29 @@ static void led_gpio_config_pwm(const led_channel_state_t *led) {
 static HAL_StatusTypeDef led_pwm_start(void);
 static HAL_StatusTypeDef led_pwm_stop(void);
 
+/*
+ * Resumo: monta e publica um quadro de resposta LED copiando-o para o buffer
+ *         de saída global, registrando falhas de codificação ou enfileiramento
+ *         caso qualquer etapa da rotina não suceda.
+ * Parâmetros:
+ *  - frame_id: identifica o comando original que está sendo respondido, para
+ *              que o host consiga correlacionar requisição e ACK.
+ *  - mask: bitmap de canais cujo estado foi alterado e que precisa ser
+ *          refletido no payload gerado pelo encoder do protocolo.
+ *  - status: código de resultado informado ao host (por exemplo, sucesso ou
+ *            erro de validação).
+ * Variáveis locais:
+ *  - raw: buffer automático de 7 bytes que recebe o quadro codificado antes de
+ *         ser enfileirado na FIFO de respostas.
+ *  - resp: estrutura tipada preenchida com os campos acima, repassada ao
+ *          encoder de respostas.
+ * Validações internas:
+ *  - Verifica se o encoder concluiu com PROTO_OK antes de tentar publicar a
+ *    resposta; em caso negativo, registra o erro e abandona o envio para evitar
+ *    inserir dados inválidos na fila.
+ *  - Após a codificação, confere o resultado de app_resp_push para sinalizar e
+ *    logar falhas na fila de saída (por exemplo, quando estiver cheia).
+ */
 static void led_push_response(uint8_t frame_id, uint8_t mask, uint8_t status) {
     uint8_t raw[7];
     led_ctrl_resp_t resp = { frame_id, mask, status };

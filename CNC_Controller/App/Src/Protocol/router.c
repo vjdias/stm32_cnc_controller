@@ -85,12 +85,32 @@ static void dispatch(router_t *r, const uint8_t *f, uint32_t len) {
         }
 }
 
+/*
+ * Resumo: consome um bloco de bytes recém-chegados do barramento e alimenta o
+ *         acumulador do roteador até identificar um frame completo, momento em
+ *         que o encaminha para o despachante adequado com base no tipo
+ *         codificado.
+ * Parâmetros:
+ *  - r: instância do roteador que mantém o buffer acumulador, índice atual e
+ *       ponteiro para a FIFO de respostas usada pelas rotinas de dispatch.
+ *  - data: sequência de bytes recebidos do SPI/UART que devem ser analisados e
+ *          agregados ao acumulador.
+ *  - len: quantidade de bytes válidos em data que precisam ser processados
+ *         nesta chamada.
+ * Variáveis e validações internas:
+ *  - i: índice do laço que percorre byte a byte o bloco recebido.
+ *  - r->idx: quando alcança o tamanho do acumulador, é zerado para evitar
+ *            overflow e reiniciar a captura a partir do próximo header.
+ *  - comp: resultado de is_req_complete; negativo sinaliza frame inválido
+ *          (reseta o índice), zero mantém a captura e positivo indica o número
+ *          de bytes que formam um frame completo pronto para dispatch.
+ */
 void router_feed_bytes(router_t *r, const uint8_t *data, uint32_t len) {
-	for (uint32_t i = 0; i < len; i++) {
-		if (r->idx >= sizeof(r->acc))
-			r->idx = 0; // evita overflow simples
-		r->acc[r->idx++] = data[i];
-		int comp = is_req_complete(r->acc, r->idx);
+        for (uint32_t i = 0; i < len; i++) {
+                if (r->idx >= sizeof(r->acc))
+                        r->idx = 0; // evita overflow simples
+                r->acc[r->idx++] = data[i];
+                int comp = is_req_complete(r->acc, r->idx);
 		if (comp < 0) {
 			r->idx = 0;
 			continue;
@@ -115,6 +135,46 @@ void resp_fifo_destroy(response_fifo_t *q) {
 	}
 	free(q);
 }
+/*
+ * Resumo: enfileira um quadro de resposta copiando seus bytes para um nó
+ *         alocado dinamicamente ao final da FIFO encadeada.
+ * Parâmetros:
+ *  - q: fila de respostas que receberá o quadro e terá ponteiros/contador
+ *       atualizados para refletir a nova entrada.
+ *  - frame: buffer de origem com o conteúdo a ser duplicado, preservando o
+ *           armazenamento original enquanto o roteador opera com uma cópia.
+ *  - len: quantidade de bytes válidos no quadro, usada tanto para validar a
+ *         chamada quanto para dimensionar a alocação do buffer privado.
+ * Validações internas:
+ *  - Garante que a fila, o ponteiro de dados e o tamanho sejam válidos antes
+ *    de iniciar qualquer alocação, retornando PROTO_ERR_ARG quando um requisito
+ *    básico não é atendido.
+ *  - Verifica o resultado de cada chamada a malloc e libera recursos
+ *    intermediários em caso de falha, sinalizando PROTO_ERR_ALLOC para evitar
+ *    vazamento e deixar claro o motivo do erro.
+ * Estrutura associada:
+ *  - response_fifo_s: mantém ponteiros head/tail para o primeiro e último nós
+ *    encadeados (node_t) e um contador de elementos. Durante o push a função
+ *    atualiza tail->next para apontar para o novo nó, ajusta head quando a fila
+ *    estava vazia e incrementa count para refletir a nova ocupação.
+ * Variáveis locais:
+ *  - n: nó recém-criado que mantém a cópia do quadro e os ponteiros de
+ *       encadeamento necessários para anexá-lo à lista.
+ * Exemplo prático:
+ *  - Fila recém-criada: head/tail = NULL e count = 0.
+ *  - Primeiro push ("ACK", len = 3): aloca n1, copia os bytes e como tail é
+ *    NULL o nó passa a ser head e tail. O contador sobe para 1.
+ *  - Segundo push ("ERR", len = 3): aloca n2 e encadeia em tail->next. A
+ *    cabeça permanece em n1, tail passa a apontar para n2 e count torna-se 2.
+ *  - Um pop subsequente retira n1, promovendo head para n2; quando todos os
+ *    nós forem removidos, head/tail voltam a NULL e count zera novamente.
+ * Fluxo geral:
+ *  1. Valida os argumentos recebidos.
+ *  2. Aloca o nó e o buffer dedicado para armazenar a cópia do quadro,
+ *     tratando eventuais falhas de memória.
+ *  3. Copia os dados, atualiza encadeamento e contador da fila e devolve
+ *     PROTO_OK indicando inserção bem-sucedida.
+ */
 int resp_fifo_push(response_fifo_t *q, const uint8_t *frame, uint32_t len) {
 	if (!q || !frame || len == 0)
 		return PROTO_ERR_ARG;
