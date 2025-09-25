@@ -189,7 +189,7 @@ void app_poll(void) {
             reason_label = "invalid_frame";
         }
 
-        LOGT_THIS(LOG_STATE_ERROR, PROTO_WARN, "spi_rx", "overflow reason=%s", reason_label);
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_WARN, "spi_rx", "overflow reason=%s", reason_label);
     }
 }
 
