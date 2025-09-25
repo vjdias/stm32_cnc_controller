@@ -1,5 +1,8 @@
 #include <string.h>
 #include <stdint.h>
+#if LOG_ENABLE
+#include <stdio.h>
+#endif
 #include "spi.h"
 #include "app.h"
 #include "Protocol/frame_defs.h"
