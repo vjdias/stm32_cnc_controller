@@ -17,6 +17,7 @@
 #define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
 #define APP_SPI_STATUS_READY       0xA5u
 #define APP_SPI_STATUS_BUSY        0x5Au
+#define APP_SPI_POLL_BYTE          0xF7u
 
 #define APP_SPI_RX_OVERFLOW_QUEUE_FULL   0x01u
 #define APP_SPI_RX_OVERFLOW_INVALID_FRAME 0x02u
@@ -439,9 +440,29 @@ static void app_spi_try_restart_dma(void) {
     app_spi_restart_dma(g_spi_next_status);
 }
 
+typedef enum {
+    APP_SPI_FRAME_NONE = -1,
+    APP_SPI_FRAME_OK = 0,
+    APP_SPI_FRAME_POLL = 1,
+} app_spi_locate_result_t;
+
 static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len) {
     if (!buf || !offset || !len || APP_SPI_DMA_BUF_LEN < 2u) {
-        return -1;
+        return APP_SPI_FRAME_NONE;
+    }
+
+    *offset = 0u;
+    *len = 0u;
+
+    uint16_t poll_matches = 0u;
+    for (uint16_t i = 0u; i < APP_SPI_DMA_BUF_LEN; ++i) {
+        if (buf[i] == APP_SPI_POLL_BYTE) {
+            poll_matches++;
+        }
+    }
+
+    if (poll_matches == APP_SPI_DMA_BUF_LEN) {
+        return APP_SPI_FRAME_POLL;
     }
 
     uint16_t start = 0u;
@@ -450,22 +471,22 @@ static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *
     }
 
     if (start >= APP_SPI_DMA_BUF_LEN) {
-        return -1;
+        return APP_SPI_FRAME_NONE;
     }
 
     for (uint16_t i = (uint16_t)(start + 1u); i < APP_SPI_DMA_BUF_LEN; ++i) {
         if (buf[i] == REQ_TAIL) {
             uint16_t frame_len = (uint16_t)(i - start + 1u);
             if (frame_len > APP_SPI_MAX_REQUEST_LEN) {
-                return -1;
+                return APP_SPI_FRAME_NONE;
             }
             *offset = start;
             *len = frame_len;
-            return 0;
+            return APP_SPI_FRAME_OK;
         }
     }
 
-    return -1;
+    return APP_SPI_FRAME_NONE;
 }
 
 /*
@@ -552,11 +573,13 @@ static void app_spi_handle_txrx_complete(void) {
 
     app_spi_invalidate_dcache(g_spi_rx_dma_buf, APP_SPI_DMA_BUF_LEN);
 
-    if (app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len) == 0) {
+    int locate_rc = app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len);
+    if (locate_rc == APP_SPI_FRAME_OK) {
         if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) != 0) {
             overflow_reason = APP_SPI_RX_OVERFLOW_QUEUE_FULL;
         }
-    } else if (memchr(g_spi_rx_dma_buf, REQ_HEADER, APP_SPI_DMA_BUF_LEN) != NULL) {
+    } else if (locate_rc == APP_SPI_FRAME_NONE &&
+               memchr(g_spi_rx_dma_buf, REQ_HEADER, APP_SPI_DMA_BUF_LEN) != NULL) {
         overflow_reason = APP_SPI_RX_OVERFLOW_INVALID_FRAME;
     }
 
