@@ -35,6 +35,37 @@ static router_t g_router;
 static router_handlers_t g_handlers;
 static response_fifo_t *g_resp_fifo;
 
+#if LOG_ENABLE
+struct node_s {
+    uint8_t *buf;
+    uint32_t len;
+    struct node_s *next;
+};
+
+struct response_fifo_s {
+    struct node_s *head;
+    struct node_s *tail;
+    int count;
+};
+
+static int app_resp_fifo_peek(const response_fifo_t *q, uint8_t *out, uint32_t max_len) {
+    if (!q || !out) {
+        return 0;
+    }
+
+    if (!q->head) {
+        return 0;
+    }
+
+    if (q->head->len > max_len) {
+        return PROTO_ERR_RANGE;
+    }
+
+    memcpy(out, q->head->buf, q->head->len);
+    return (int)q->head->len;
+}
+#endif
+
 static uint8_t g_spi_rx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static uint8_t g_spi_tx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint8_t g_spi_need_restart = 0;
@@ -263,7 +294,7 @@ static void app_spi_log_tx_snapshot(uint16_t pending_len) {
 
     int next_len = 0;
     if (g_resp_fifo) {
-        next_len = resp_fifo_peek(g_resp_fifo, next_buf, sizeof next_buf);
+        next_len = app_resp_fifo_peek(g_resp_fifo, next_buf, sizeof next_buf);
         if (next_len == PROTO_ERR_RANGE) {
             LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "spi_tx", "next resp exceeds dma frame");
             next_len = 0;
