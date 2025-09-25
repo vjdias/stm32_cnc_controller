@@ -8,12 +8,21 @@
 #include "Services/Led/led_service.h"
 #include "Services/Log/log_service.h"
 #include "Services/Test/test_spi_service.h"
+#include "app_spi_handshake.h"
 
-#define APP_SPI_MAX_REQUEST_LEN    42u
-#define APP_SPI_DMA_BUF_LEN        APP_SPI_MAX_REQUEST_LEN
 #define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
-#define APP_SPI_STATUS_READY       0xA5u
-#define APP_SPI_STATUS_BUSY        0x5Au
+typedef enum {
+    APP_SPI_RX_STATUS_NONE = 0u,
+    APP_SPI_RX_OVERFLOW_QUEUE_FULL = 0x01u,
+    APP_SPI_RX_OVERFLOW_INVALID_FRAME = 0x02u,
+} app_spi_rx_error_t;
+
+typedef enum {
+    APP_SPI_FRAME_NOT_FOUND = 0,
+    APP_SPI_FRAME_FOUND,
+    APP_SPI_FRAME_PARTIAL,
+    APP_SPI_FRAME_INVALID,
+} app_spi_frame_search_result_t;
 /* Estados de handshake usam padrões alternados para evitar colisão com 0x00/0xFF. */
 
 #if APP_SPI_DMA_BUF_LEN != 42u
@@ -44,7 +53,7 @@ static app_spi_frame_t g_spi_rx_queue[APP_SPI_RX_QUEUE_DEPTH];
 static volatile uint8_t g_spi_rx_queue_head = 0;
 static volatile uint8_t g_spi_rx_queue_tail = 0;
 static volatile uint8_t g_spi_rx_queue_count = 0;
-static volatile uint8_t g_spi_rx_overflow = 0;
+static volatile uint8_t g_spi_rx_error = APP_SPI_RX_STATUS_NONE;
 
 static uint8_t g_spi_tx_pending_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint16_t g_spi_tx_pending_len = 0u;
@@ -57,8 +66,11 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status);
 static uint8_t app_spi_compute_status(void);
 static void app_spi_restart_dma(uint8_t status);
 static void app_spi_try_restart_dma(void);
-static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len);
+static app_spi_frame_search_result_t app_spi_locate_frame(const uint8_t *buf,
+                                                          uint16_t *offset,
+                                                          uint16_t *len);
 static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len);
+static void app_spi_record_rx_error(app_spi_rx_error_t reason);
 static int app_spi_queue_pop(app_spi_frame_t *out);
 /*
  * Resumo: trata a conclusão de uma transferência SPI DMA verificando se o
@@ -167,9 +179,16 @@ void app_poll(void) {
         }
     }
 
-    if (g_spi_rx_overflow) {
-        g_spi_rx_overflow = 0u;
-        LOGT_THIS(LOG_STATE_ERROR, PROTO_WARN, "spi_rx", "overflow");
+    if (g_spi_rx_error != APP_SPI_RX_STATUS_NONE) {
+        uint8_t reason = g_spi_rx_error;
+        g_spi_rx_error = APP_SPI_RX_STATUS_NONE;
+        const char *tag = "overflow reason=invalid_frame";
+        if (reason == APP_SPI_RX_OVERFLOW_QUEUE_FULL) {
+            tag = "overflow reason=queue_full";
+        } else if (reason != APP_SPI_RX_OVERFLOW_INVALID_FRAME) {
+            tag = "overflow reason=unknown";
+        }
+        LOGT_THIS(LOG_STATE_ERROR, PROTO_WARN, "spi_rx", tag);
     }
 }
 
@@ -202,7 +221,7 @@ static void app_spi_queue_reset(void) {
     g_spi_rx_queue_head = 0u;
     g_spi_rx_queue_tail = 0u;
     g_spi_rx_queue_count = 0u;
-    g_spi_rx_overflow = 0u;
+    g_spi_rx_error = APP_SPI_RX_STATUS_NONE;
     __enable_irq();
 }
 
@@ -222,24 +241,34 @@ static void app_spi_queue_reset(void) {
  *                 que podem ser copiados para o DMA.
  */
 static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
-    uint8_t used_pending = 0u;
-
-    memset(g_spi_tx_dma_buf, status, APP_SPI_DMA_BUF_LEN);
+    uint8_t pending_copy[APP_SPI_DMA_BUF_LEN];
+    uint16_t pending_len = 0u;
+    uint8_t has_pending = 0u;
 
     uint32_t primask = __get_PRIMASK();
     __disable_irq();
-    uint8_t has_pending = g_spi_tx_pending_ready;
-    uint16_t pending_len = g_spi_tx_pending_len;
-    if (has_pending && pending_len > 0u && pending_len <= APP_SPI_DMA_BUF_LEN) {
-        memcpy(g_spi_tx_dma_buf, g_spi_tx_pending_buf, pending_len);
-        used_pending = 1u;
+    if (g_spi_tx_pending_ready && g_spi_tx_pending_len > 0u &&
+        g_spi_tx_pending_len <= APP_SPI_DMA_BUF_LEN) {
+        pending_len = g_spi_tx_pending_len;
+        memcpy(pending_copy, g_spi_tx_pending_buf, pending_len);
+        has_pending = 1u;
     }
     if (primask == 0u) {
         __enable_irq();
     }
 
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = status,
+        .tx_buf = g_spi_tx_dma_buf,
+        .tx_len = APP_SPI_DMA_BUF_LEN,
+        .response_buf = has_pending ? pending_copy : NULL,
+        .response_len = pending_len,
+    };
+
+    app_spi_handshake_prime_result_t result = app_spi_handshake_prime(&args);
+
     app_spi_clean_dcache(g_spi_tx_dma_buf, APP_SPI_DMA_BUF_LEN);
-    return used_pending;
+    return result.consumed_response;
 }
 
 /*
@@ -260,9 +289,8 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
  *     mestre até que os dados sejam processados; caso contrário retorna READY.
  */
 static uint8_t app_spi_compute_status(void) {
-    return (g_spi_rx_queue_count >= APP_SPI_RX_QUEUE_DEPTH)
-               ? APP_SPI_STATUS_BUSY
-               : APP_SPI_STATUS_READY;
+    return app_spi_handshake_compute_status(g_spi_rx_queue_count,
+                                            APP_SPI_RX_QUEUE_DEPTH);
 }
 
 /*
@@ -321,9 +349,11 @@ static void app_spi_try_restart_dma(void) {
     app_spi_restart_dma(g_spi_next_status);
 }
 
-static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *len) {
+static app_spi_frame_search_result_t app_spi_locate_frame(const uint8_t *buf,
+                                                          uint16_t *offset,
+                                                          uint16_t *len) {
     if (!buf || !offset || !len || APP_SPI_DMA_BUF_LEN < 2u) {
-        return -1;
+        return APP_SPI_FRAME_NOT_FOUND;
     }
 
     uint16_t start = 0u;
@@ -332,22 +362,22 @@ static int app_spi_locate_frame(const uint8_t *buf, uint16_t *offset, uint16_t *
     }
 
     if (start >= APP_SPI_DMA_BUF_LEN) {
-        return -1;
+        return APP_SPI_FRAME_NOT_FOUND;
     }
 
     for (uint16_t i = (uint16_t)(start + 1u); i < APP_SPI_DMA_BUF_LEN; ++i) {
         if (buf[i] == REQ_TAIL) {
             uint16_t frame_len = (uint16_t)(i - start + 1u);
             if (frame_len > APP_SPI_MAX_REQUEST_LEN) {
-                return -1;
+                return APP_SPI_FRAME_INVALID;
             }
             *offset = start;
             *len = frame_len;
-            return 0;
+            return APP_SPI_FRAME_FOUND;
         }
     }
 
-    return -1;
+    return APP_SPI_FRAME_PARTIAL;
 }
 
 /*
@@ -386,6 +416,15 @@ static int app_spi_queue_push_isr(const uint8_t *frame, uint16_t len) {
     return 0;
 }
 
+static void app_spi_record_rx_error(app_spi_rx_error_t reason) {
+    if (reason == APP_SPI_RX_STATUS_NONE) {
+        return;
+    }
+    if (g_spi_rx_error == APP_SPI_RX_STATUS_NONE) {
+        g_spi_rx_error = (uint8_t)reason;
+    }
+}
+
 static int app_spi_queue_pop(app_spi_frame_t *out) {
     int rc = -1;
     __disable_irq();
@@ -409,42 +448,53 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
  *     assegura que o framing esperado (handshake + tamanho) esteja presente
  *     antes de continuar.
  *  3. Caso o framing seja válido, tenta enfileirar o quadro para processamento
- *     posterior. O retorno de erro desta etapa cobre a validação de limites da
- *     fila circular (profundidade e comprimento máximo do quadro). Se a fila
- *     estiver cheia ou o quadro for inválido, a flag de overflow é acionada.
- *  4. Atualiza o status do handshake para READY quando há dados em fila, ou
- *     mantém BUSY para forçar o mestre a repetir a leitura até que a fila
- *     aceite um novo quadro.
+ *     posterior. Se a fila estiver cheia ou o quadro ultrapassar o limite
+ *     configurado, a rotina registra o motivo através de `app_spi_record_rx_error`
+ *     para que o laço principal reporte o evento.
+ *  4. A decisão do próximo handshake considera o resultado da etapa anterior:
+ *     - Quando um quadro entra na fila, `app_spi_compute_status` avalia a
+ *       ocupação para decidir entre READY/BUSY.
+ *     - Em situações de erro, forçamos BUSY para indicar ao mestre que o
+ *       pedido precisa ser reenviado.
+ *     - Caso nenhum quadro completo seja identificado, mantemos o status
+ *       baseado na ocupação atual da fila (normalmente READY).
  *  5. Reinicia o DMA com o status apropriado para dar sequência ao ciclo de
  *     comunicação SPI.
  * Variáveis locais:
  *  - offset: posição inicial do quadro válido dentro do buffer DMA.
  *  - len: comprimento do quadro localizado; auxilia na validação de tamanho.
- *  - armazenado: indica se o quadro foi efetivamente enfileirado, controlando
- *                a escolha do status (READY/BUSY) pós-processamento.
+ *  - search: resultado da inspeção do buffer (encontrado, parcial, inválido).
  */
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;
-    uint8_t armazenado = 0u;
 
     app_spi_invalidate_dcache(g_spi_rx_dma_buf, APP_SPI_DMA_BUF_LEN);
 
-    if (app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len) == 0) {
+    app_spi_frame_search_result_t search =
+        app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len);
+
+    uint8_t next_status = APP_SPI_STATUS_BUSY;
+
+    switch (search) {
+    case APP_SPI_FRAME_FOUND:
         if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) == 0) {
-            armazenado = 1u;
+            next_status = app_spi_compute_status();
         } else {
-            g_spi_rx_overflow = 1u;
+            app_spi_record_rx_error(APP_SPI_RX_OVERFLOW_QUEUE_FULL);
+            next_status = APP_SPI_STATUS_BUSY;
         }
-    } else {
-        g_spi_rx_overflow = 1u;
+        break;
+    case APP_SPI_FRAME_INVALID:
+        app_spi_record_rx_error(APP_SPI_RX_OVERFLOW_INVALID_FRAME);
+        next_status = APP_SPI_STATUS_BUSY;
+        break;
+    case APP_SPI_FRAME_PARTIAL:
+    case APP_SPI_FRAME_NOT_FOUND:
+    default:
+        next_status = app_spi_compute_status();
+        break;
     }
 
-    if (armazenado) {
-        g_spi_next_status = app_spi_compute_status();
-    } else {
-        g_spi_next_status = APP_SPI_STATUS_BUSY;
-    }
-
-    app_spi_restart_dma(g_spi_next_status);
+    app_spi_restart_dma(next_status);
 }

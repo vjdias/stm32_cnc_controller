@@ -8,6 +8,7 @@
 #include "Protocol/Requests/move_queue_add_request.h"
 #include "Protocol/Responses/move_queue_add_ack_response.h"
 #include "Protocol/router.h"
+#include "app_spi_handshake.h"
 
 static void test_move_home_req(void){
     move_home_req_t in = { .frameId=0xAA, .axisMask=0x03, .dirMask=0x01, .vhome=0x1234 };
@@ -89,11 +90,117 @@ static void test_response_fifo_basic(void){
     resp_fifo_destroy(q);
 }
 
+static void test_handshake_ready_state(void){
+    uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = APP_SPI_STATUS_READY,
+        .tx_buf = tx,
+        .tx_len = sizeof tx,
+        .response_buf = NULL,
+        .response_len = 0u,
+    };
+
+    app_spi_handshake_prime_result_t res = app_spi_handshake_prime(&args);
+    assert(res.state == APP_SPI_HANDSHAKE_STATE_READY);
+    assert(res.consumed_response == 0u);
+    for (size_t i = 0; i < sizeof tx; ++i) {
+        assert(tx[i] == APP_SPI_STATUS_READY);
+    }
+}
+
+static void test_handshake_busy_state(void){
+    uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = APP_SPI_STATUS_BUSY,
+        .tx_buf = tx,
+        .tx_len = sizeof tx,
+        .response_buf = NULL,
+        .response_len = 0u,
+    };
+
+    app_spi_handshake_prime_result_t res = app_spi_handshake_prime(&args);
+    assert(res.state == APP_SPI_HANDSHAKE_STATE_BUSY);
+    assert(res.consumed_response == 0u);
+    for (size_t i = 0; i < sizeof tx; ++i) {
+        assert(tx[i] == APP_SPI_STATUS_BUSY);
+    }
+}
+
+static void test_handshake_response_state(void){
+    uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
+    const uint8_t resp[] = { RESP_HEADER, RESP_MOVE_QUEUE_ADD_ACK, 0x10, 0x00, 0x00, RESP_TAIL };
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = APP_SPI_STATUS_READY,
+        .tx_buf = tx,
+        .tx_len = sizeof tx,
+        .response_buf = resp,
+        .response_len = sizeof resp,
+    };
+
+    app_spi_handshake_prime_result_t res = app_spi_handshake_prime(&args);
+    assert(res.state == APP_SPI_HANDSHAKE_STATE_RESPONSE);
+    assert(res.consumed_response == 1u);
+    assert(memcmp(tx, resp, sizeof resp) == 0);
+    for (size_t i = sizeof resp; i < sizeof tx; ++i) {
+        assert(tx[i] == APP_SPI_STATUS_READY);
+    }
+}
+
+static void test_handshake_unrecognized_status(void){
+    uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = 0x77u,
+        .tx_buf = tx,
+        .tx_len = sizeof tx,
+        .response_buf = NULL,
+        .response_len = 0u,
+    };
+
+    app_spi_handshake_prime_result_t res = app_spi_handshake_prime(&args);
+    assert(res.state == APP_SPI_HANDSHAKE_STATE_UNRECOGNIZED);
+    assert(res.consumed_response == 0u);
+    for (size_t i = 0; i < sizeof tx; ++i) {
+        assert(tx[i] == 0x77u);
+    }
+}
+
+static void test_handshake_invalid_response_len(void){
+    uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
+    uint8_t resp[APP_SPI_MAX_REQUEST_LEN + 4];
+    memset(resp, 0xAA, sizeof resp);
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = APP_SPI_STATUS_READY,
+        .tx_buf = tx,
+        .tx_len = sizeof tx,
+        .response_buf = resp,
+        .response_len = (uint16_t)sizeof resp,
+    };
+
+    app_spi_handshake_prime_result_t res = app_spi_handshake_prime(&args);
+    assert(res.state == APP_SPI_HANDSHAKE_STATE_UNRECOGNIZED);
+    assert(res.consumed_response == 0u);
+    for (size_t i = 0; i < sizeof tx; ++i) {
+        assert(tx[i] == APP_SPI_STATUS_READY);
+    }
+}
+
+static void test_handshake_compute_status(void){
+    assert(app_spi_handshake_compute_status(0u, APP_SPI_MAX_REQUEST_LEN) == APP_SPI_STATUS_READY);
+    assert(app_spi_handshake_compute_status(APP_SPI_MAX_REQUEST_LEN, APP_SPI_MAX_REQUEST_LEN) == APP_SPI_STATUS_BUSY);
+    assert(app_spi_handshake_compute_status(APP_SPI_MAX_REQUEST_LEN + 1u, APP_SPI_MAX_REQUEST_LEN) == APP_SPI_STATUS_BUSY);
+}
+
 int main(void){
     test_move_home_req();
     test_move_probe_level_req();
     test_move_queue_add_req_parity_and_roundtrip();
     test_response_fifo_basic();
+    test_handshake_ready_state();
+    test_handshake_busy_state();
+    test_handshake_response_state();
+    test_handshake_unrecognized_status();
+    test_handshake_invalid_response_len();
+    test_handshake_compute_status();
     printf("All tests passed.\n");
     return 0;
 }
