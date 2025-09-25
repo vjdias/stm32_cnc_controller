@@ -14,6 +14,9 @@
 #define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
 #define APP_SPI_STATUS_READY       0xA5u
 #define APP_SPI_STATUS_BUSY        0x5Au
+
+#define APP_SPI_RX_OVERFLOW_QUEUE_FULL   0x01u
+#define APP_SPI_RX_OVERFLOW_INVALID_FRAME 0x02u
 /* Estados de handshake usam padrões alternados para evitar colisão com 0x00/0xFF. */
 
 #if APP_SPI_DMA_BUF_LEN != 42u
@@ -176,8 +179,17 @@ void app_poll(void) {
     }
 
     if (g_spi_rx_overflow) {
+        uint8_t overflow_reason = g_spi_rx_overflow;
         g_spi_rx_overflow = 0u;
-        LOGT_THIS(LOG_STATE_ERROR, PROTO_WARN, "spi_rx", "overflow");
+
+        const char *reason_label = "unknown";
+        if (overflow_reason == APP_SPI_RX_OVERFLOW_QUEUE_FULL) {
+            reason_label = "queue_full";
+        } else if (overflow_reason == APP_SPI_RX_OVERFLOW_INVALID_FRAME) {
+            reason_label = "invalid_frame";
+        }
+
+        LOGT_THIS(LOG_STATE_ERROR, PROTO_WARN, "spi_rx", "overflow reason=%s", reason_label);
     }
 }
 
@@ -484,38 +496,41 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
  *     posterior. O retorno de erro desta etapa cobre a validação de limites da
  *     fila circular (profundidade e comprimento máximo do quadro). Se a fila
  *     estiver cheia ou o quadro for inválido, a flag de overflow é acionada.
- *  4. Atualiza o status do handshake para READY quando há dados em fila, ou
- *     mantém BUSY para forçar o mestre a repetir a leitura até que a fila
- *     aceite um novo quadro.
- *  5. Reinicia o DMA com o status apropriado para dar sequência ao ciclo de
+ *  4. Quando nenhum quadro válido é identificado, diferencia entre um ciclo de
+ *     handshake (ausência de header) — que apenas mantém o status calculado a
+ *     partir da ocupação atual da fila — e um frame inválido (header presente
+ *     sem tail), o qual é sinalizado como overflow para análise.
+ *  5. Atualiza o status do handshake: permanece em BUSY em caso de overflow ou
+ *     calcula dinamicamente (READY/BUSY) com base na ocupação da fila quando o
+ *     fluxo está consistente.
+ *  6. Reinicia o DMA com o status apropriado para dar sequência ao ciclo de
  *     comunicação SPI.
  * Variáveis locais:
  *  - offset: posição inicial do quadro válido dentro do buffer DMA.
  *  - len: comprimento do quadro localizado; auxilia na validação de tamanho.
- *  - armazenado: indica se o quadro foi efetivamente enfileirado, controlando
- *                a escolha do status (READY/BUSY) pós-processamento.
+ *  - overflow_reason: registra o motivo do overflow (fila cheia ou frame
+ *                     inválido) para repasse ao laço principal de logging.
  */
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;
-    uint8_t armazenado = 0u;
+    uint8_t overflow_reason = 0u;
 
     app_spi_invalidate_dcache(g_spi_rx_dma_buf, APP_SPI_DMA_BUF_LEN);
 
     if (app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len) == 0) {
-        if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) == 0) {
-            armazenado = 1u;
-        } else {
-            g_spi_rx_overflow = 1u;
+        if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) != 0) {
+            overflow_reason = APP_SPI_RX_OVERFLOW_QUEUE_FULL;
         }
-    } else {
-        g_spi_rx_overflow = 1u;
+    } else if (memchr(g_spi_rx_dma_buf, REQ_HEADER, APP_SPI_DMA_BUF_LEN) != NULL) {
+        overflow_reason = APP_SPI_RX_OVERFLOW_INVALID_FRAME;
     }
 
-    if (armazenado) {
-        g_spi_next_status = app_spi_compute_status();
-    } else {
+    if (overflow_reason != 0u) {
+        g_spi_rx_overflow = overflow_reason;
         g_spi_next_status = APP_SPI_STATUS_BUSY;
+    } else {
+        g_spi_next_status = app_spi_compute_status();
     }
 
     app_spi_restart_dma(g_spi_next_status);
