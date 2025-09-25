@@ -14,6 +14,7 @@ if __package__:
         RESP_TAIL,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_POLL_BYTE,
     )
     from .cnc_requests import CNCRequestBuilder
 else:
@@ -27,6 +28,7 @@ else:
         RESP_TAIL,
         SPI_DMA_FRAME_LEN,
         SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_POLL_BYTE,
     )
     from cnc_requests import CNCRequestBuilder  # type: ignore
 
@@ -96,7 +98,7 @@ class CNCClientExchangeTests(unittest.TestCase):
         self.assertEqual(len(spi.calls), 2)
         self.assertEqual(spi.calls[0], dma_frame)
         self.assertEqual(len(spi.calls[1]), SPI_DMA_FRAME_LEN)
-        self.assertTrue(all(b == 0x00 for b in spi.calls[1]))
+        self.assertTrue(all(b == SPI_DMA_POLL_BYTE for b in spi.calls[1]))
 
     def test_exchange_retries_until_response_is_available(self) -> None:
         request = CNCRequestBuilder.led_control(3, 0x01, 1, 0)
