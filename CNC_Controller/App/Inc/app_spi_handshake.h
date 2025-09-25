@@ -8,6 +8,11 @@
 
 #define APP_SPI_STATUS_READY 0xA5u
 #define APP_SPI_STATUS_BUSY  0x5Au
+/*
+ * Byte enviado pelo Raspberry Pi enquanto aguarda uma resposta do STM32.
+ * Diferencia o polling do handshaking READY/BUSY sem conflitar com header/tail.
+ */
+#define APP_SPI_CLIENT_POLL_BYTE 0x3Cu
 
 typedef enum {
     APP_SPI_HANDSHAKE_STATE_READY = 0,

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "Protocol/frame_defs.h"
 #include "Protocol/Requests/move_home_request.h"
 #include "Protocol/Requests/move_probe_level_request.h"
 #include "Protocol/Requests/move_queue_add_request.h"
@@ -164,6 +165,31 @@ static void test_handshake_unrecognized_status(void){
     }
 }
 
+static void test_handshake_client_poll_byte_uniqueness(void){
+    assert(APP_SPI_CLIENT_POLL_BYTE != APP_SPI_STATUS_READY);
+    assert(APP_SPI_CLIENT_POLL_BYTE != APP_SPI_STATUS_BUSY);
+    assert(APP_SPI_CLIENT_POLL_BYTE != REQ_HEADER);
+    assert(APP_SPI_CLIENT_POLL_BYTE != REQ_TAIL);
+}
+
+static void test_handshake_rejects_poll_as_status(void){
+    uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = APP_SPI_CLIENT_POLL_BYTE,
+        .tx_buf = tx,
+        .tx_len = sizeof tx,
+        .response_buf = NULL,
+        .response_len = 0u,
+    };
+
+    app_spi_handshake_prime_result_t res = app_spi_handshake_prime(&args);
+    assert(res.state == APP_SPI_HANDSHAKE_STATE_UNRECOGNIZED);
+    assert(res.consumed_response == 0u);
+    for (size_t i = 0; i < sizeof tx; ++i) {
+        assert(tx[i] == APP_SPI_CLIENT_POLL_BYTE);
+    }
+}
+
 static void test_handshake_invalid_response_len(void){
     uint8_t tx[APP_SPI_MAX_REQUEST_LEN] = {0};
     uint8_t resp[APP_SPI_MAX_REQUEST_LEN + 4];
@@ -199,6 +225,8 @@ int main(void){
     test_handshake_busy_state();
     test_handshake_response_state();
     test_handshake_unrecognized_status();
+    test_handshake_client_poll_byte_uniqueness();
+    test_handshake_rejects_poll_as_status();
     test_handshake_invalid_response_len();
     test_handshake_compute_status();
     printf("All tests passed.\n");

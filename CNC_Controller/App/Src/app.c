@@ -357,6 +357,8 @@ static app_spi_frame_search_result_t app_spi_locate_frame(const uint8_t *buf,
     }
 
     uint16_t start = 0u;
+    /* O mestre envia APP_SPI_CLIENT_POLL_BYTE durante o polling; aqui
+     * caminhamos até localizar de fato o header 0xAA ignorando esses bytes. */
     while (start < APP_SPI_DMA_BUF_LEN && buf[start] != REQ_HEADER) {
         ++start;
     }
