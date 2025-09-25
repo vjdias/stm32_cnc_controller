@@ -213,6 +213,15 @@ int resp_fifo_pop(response_fifo_t *q, uint8_t *out, uint32_t max_len) {
 	free(n);
 	return l;
 }
+int resp_fifo_peek(const response_fifo_t *q, uint8_t *out, uint32_t max_len) {
+	if (!q || !q->head || !out)
+		return 0;
+	if (q->head->len > max_len)
+		return PROTO_ERR_RANGE;
+	memcpy(out, q->head->buf, q->head->len);
+	return (int) q->head->len;
+}
+
 int resp_fifo_count(const response_fifo_t *q) {
 	return q ? q->count : 0;
 }

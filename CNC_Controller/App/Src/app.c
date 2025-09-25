@@ -52,6 +52,10 @@ static volatile uint8_t g_spi_tx_pending_ready = 0u;
 
 LOG_SVC_DEFINE(LOG_SVC_APP, "app");
 
+#if LOG_ENABLE
+static void app_spi_log_tx_snapshot(uint16_t pending_len);
+#endif
+
 static void app_spi_queue_reset(void);
 static uint8_t app_spi_prime_tx_buffer(uint8_t status);
 static uint8_t app_spi_compute_status(void);
@@ -154,14 +158,18 @@ void app_poll(void) {
         uint8_t out[APP_SPI_DMA_BUF_LEN];
         int n = resp_fifo_pop(g_resp_fifo, out, sizeof out);
         if (n > 0 && n <= (int)APP_SPI_DMA_BUF_LEN) {
+            uint16_t tx_len = (uint16_t)n;
             uint32_t primask = __get_PRIMASK();
             __disable_irq();
-            memcpy(g_spi_tx_pending_buf, out, (uint32_t)n);
-            g_spi_tx_pending_len = (uint16_t)n;
+            memcpy(g_spi_tx_pending_buf, out, (uint32_t)tx_len);
+            g_spi_tx_pending_len = tx_len;
             g_spi_tx_pending_ready = 1u;
             if (primask == 0u) {
                 __enable_irq();
             }
+#if LOG_ENABLE
+            app_spi_log_tx_snapshot(tx_len);
+#endif
         } else if (n == PROTO_ERR_RANGE) {
             LOGT_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "spi_tx", "resp too large for dma frame");
         }
@@ -196,6 +204,70 @@ int app_resp_push(const uint8_t *frame, uint32_t len) {
     }
     return resp_fifo_push(g_resp_fifo, frame, len);
 }
+
+#if LOG_ENABLE
+static void app_spi_format_hex(const uint8_t *buf, uint32_t len,
+                               char *dst, size_t dst_len) {
+    size_t pos = 0u;
+
+    if (dst_len == 0u) {
+        return;
+    }
+
+    dst[0] = '\0';
+
+    for (uint32_t i = 0u; i < len && (pos + 2u) < dst_len; ++i) {
+        int written = snprintf(&dst[pos], dst_len - pos, "%02X", (unsigned int)buf[i]);
+        if (written < 0) {
+            dst[0] = '\0';
+            return;
+        }
+        if ((size_t)written >= dst_len - pos) {
+            dst[dst_len - 1u] = '\0';
+            return;
+        }
+        pos += (size_t)written;
+        if ((i + 1u) < len && (pos + 1u) < dst_len) {
+            dst[pos++] = ' ';
+            dst[pos] = '\0';
+        }
+    }
+}
+
+static void app_spi_log_tx_snapshot(uint16_t pending_len) {
+    if (pending_len > APP_SPI_DMA_BUF_LEN) {
+        pending_len = APP_SPI_DMA_BUF_LEN;
+    }
+
+    uint8_t current_buf[APP_SPI_DMA_BUF_LEN];
+    memset(current_buf, APP_SPI_STATUS_READY, sizeof current_buf);
+    memcpy(current_buf, g_spi_tx_pending_buf, pending_len);
+
+    uint8_t next_buf[APP_SPI_DMA_BUF_LEN];
+    memset(next_buf, APP_SPI_STATUS_READY, sizeof next_buf);
+
+    int next_len = 0;
+    if (g_resp_fifo) {
+        next_len = resp_fifo_peek(g_resp_fifo, next_buf, sizeof next_buf);
+        if (next_len == PROTO_ERR_RANGE) {
+            LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "spi_tx", "next resp exceeds dma frame");
+            next_len = 0;
+        }
+    }
+
+    if (next_len > 0 && next_len < (int)APP_SPI_DMA_BUF_LEN) {
+        memset(&next_buf[next_len], APP_SPI_STATUS_READY,
+               (size_t)(APP_SPI_DMA_BUF_LEN - (uint32_t)next_len));
+    }
+
+    char current_hex[((size_t)APP_SPI_DMA_BUF_LEN * 3u) + 1u];
+    char next_hex[((size_t)APP_SPI_DMA_BUF_LEN * 3u) + 1u];
+    app_spi_format_hex(current_buf, APP_SPI_DMA_BUF_LEN, current_hex, sizeof current_hex);
+    app_spi_format_hex(next_buf, APP_SPI_DMA_BUF_LEN, next_hex, sizeof next_hex);
+
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "spi_tx", "now=%s next=%s", current_hex, next_hex);
+}
+#endif
 
 static void app_spi_queue_reset(void) {
     __disable_irq();
