@@ -44,6 +44,7 @@ void resp_fifo_destroy(response_fifo_t *q);
 int resp_fifo_push(response_fifo_t *q, const uint8_t *frame, uint32_t len);
 // Retira para transmissão (quem chama controla o buffer)
 int resp_fifo_pop(response_fifo_t *q, uint8_t *out, uint32_t max_len);
+int resp_fifo_peek(const response_fifo_t *q, uint8_t *out, uint32_t max_len);
 int resp_fifo_count(const response_fifo_t *q);
 
 #ifdef __cplusplus
