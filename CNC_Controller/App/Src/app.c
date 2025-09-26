@@ -10,6 +10,8 @@
 #include "Services/Test/test_spi_service.h"
 #include "app_spi_handshake.h"
 
+extern DMA_HandleTypeDef hdma_spi1_tx;
+
 #define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
 typedef enum {
     APP_SPI_RX_STATUS_NONE = 0u,
@@ -66,6 +68,7 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status);
 static uint8_t app_spi_compute_status(void);
 static void app_spi_restart_dma(uint8_t status);
 static void app_spi_try_restart_dma(void);
+static void app_spi_try_commit_pending_to_active(void);
 static app_spi_frame_search_result_t app_spi_locate_frame(const uint8_t *buf,
                                                           uint16_t *offset,
                                                           uint16_t *len);
@@ -153,6 +156,7 @@ void app_init(void) {
 }
 
 void app_poll(void) {
+    app_spi_try_commit_pending_to_active();
     app_spi_try_restart_dma();
 
     app_spi_frame_t frame;
@@ -160,6 +164,7 @@ void app_poll(void) {
         router_feed_bytes(&g_router, frame.data, frame.len);
     }
 
+    app_spi_try_commit_pending_to_active();
     app_spi_try_restart_dma();
 
     if (g_resp_fifo && !g_spi_tx_pending_ready) {
@@ -168,8 +173,10 @@ void app_poll(void) {
         if (n > 0 && n <= (int)APP_SPI_DMA_BUF_LEN) {
             uint32_t primask = __get_PRIMASK();
             __disable_irq();
-            memcpy(g_spi_tx_pending_buf, out, (uint32_t)n);
-            g_spi_tx_pending_len = (uint16_t)n;
+            memset(g_spi_tx_pending_buf, 0, APP_SPI_DMA_BUF_LEN);
+            uint16_t pad = (uint16_t)(APP_SPI_DMA_BUF_LEN - (uint16_t)n);
+            memcpy(&g_spi_tx_pending_buf[pad], out, (uint32_t)n);
+            g_spi_tx_pending_len = (uint16_t)APP_SPI_DMA_BUF_LEN;
             g_spi_tx_pending_ready = 1u;
             if (primask == 0u) {
                 __enable_irq();
@@ -178,6 +185,9 @@ void app_poll(void) {
             LOGT_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "spi_tx", "resp too large for dma frame");
         }
     }
+
+    app_spi_try_commit_pending_to_active();
+    app_spi_try_restart_dma();
 
     if (g_spi_rx_error != APP_SPI_RX_STATUS_NONE) {
         uint8_t reason = g_spi_rx_error;
@@ -291,6 +301,87 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
 static uint8_t app_spi_compute_status(void) {
     return app_spi_handshake_compute_status(g_spi_rx_queue_count,
                                             APP_SPI_RX_QUEUE_DEPTH);
+}
+
+/*
+ * Resumo: tenta aplicar uma resposta pendente diretamente ao quadro DMA
+ *         já preparado quando o canal de transmissão continua ocioso, de
+ *         modo que a próxima enquete do mestre receba imediatamente o
+ *         payload disponível.
+ * Etapas principais:
+ *  1. Confirma a existência de uma resposta válida aguardando envio.
+ *  2. Inspeciona o registrador CNDTR do canal de TX para garantir que nenhum
+ *     byte foi transmitido na rodada corrente; caso a transferência esteja
+ *     ativa, mantém o payload em espera para a próxima janela.
+ *  3. Copia os dados para o buffer DMA ativo preservando o byte de handshake
+ *     e higieniza o cache para que o periférico enxergue o conteúdo atualizado.
+ *  4. Se o canal estiver desabilitado, apenas sinaliza a necessidade de
+ *     reinício para que a rotina regular reprograme o DMA reutilizando o
+ *     payload pendente.
+ */
+static void app_spi_try_commit_pending_to_active(void) {
+    uint8_t pending_copy[APP_SPI_DMA_BUF_LEN];
+    uint16_t pending_len = 0u;
+    uint8_t should_commit = 0u;
+    uint8_t request_restart = 0u;
+
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+
+    DMA_Channel_TypeDef *tx_dma = hdma_spi1_tx.Instance;
+    uint8_t status_byte = g_spi_next_status;
+    if (g_spi_tx_pending_ready && g_spi_tx_pending_len > 0u &&
+        g_spi_tx_pending_len <= APP_SPI_DMA_BUF_LEN && tx_dma != NULL) {
+        uint32_t dma_enabled = tx_dma->CCR & DMA_CCR_EN;
+        if (dma_enabled == 0u) {
+            request_restart = 1u;
+        } else if (tx_dma->CNDTR == APP_SPI_DMA_BUF_LEN) {
+            should_commit = 1u;
+        }
+
+        if (should_commit) {
+            pending_len = g_spi_tx_pending_len;
+            memcpy(pending_copy, g_spi_tx_pending_buf, pending_len);
+            g_spi_tx_pending_ready = 0u;
+            g_spi_tx_pending_len = 0u;
+        }
+    }
+
+    if (!should_commit) {
+        if (primask == 0u) {
+            __enable_irq();
+        }
+        if (request_restart) {
+            g_spi_need_restart = 1u;
+        }
+        return;
+    }
+
+    app_spi_handshake_prime_args_t args = {
+        .status_byte = status_byte,
+        .tx_buf = g_spi_tx_dma_buf,
+        .tx_len = APP_SPI_DMA_BUF_LEN,
+        .response_buf = pending_copy,
+        .response_len = pending_len,
+    };
+
+    app_spi_handshake_prime_result_t result = app_spi_handshake_prime(&args);
+
+    if (result.consumed_response) {
+        app_spi_clean_dcache(g_spi_tx_dma_buf, APP_SPI_DMA_BUF_LEN);
+    } else {
+        memcpy(g_spi_tx_pending_buf, pending_copy, pending_len);
+        g_spi_tx_pending_len = pending_len;
+        g_spi_tx_pending_ready = 1u;
+    }
+
+    if (primask == 0u) {
+        __enable_irq();
+    }
+
+    if (request_restart) {
+        g_spi_need_restart = 1u;
+    }
 }
 
 /*
@@ -467,6 +558,18 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
  *  - len: comprimento do quadro localizado; auxilia na validação de tamanho.
  *  - search: resultado da inspeção do buffer (encontrado, parcial, inválido).
  */
+/*
+ * Integra regras de polling com 0x3C e respostas de serviços:
+ *  - Quando o mestre apenas consulta usando APP_SPI_CLIENT_POLL_BYTE sem um
+ *    quadro completo, consideramos que ele espera o próximo resultado dos
+ *    serviços. Nesse caso, devolvemos READY se não houver payload pronto, de
+ *    modo que o host entenda que nada novo foi produzido.
+ *  - Quando existe uma resposta pendente, ela já foi preparada com zeros à
+ *    esquerda (42 - len(msg)) garantindo que os bytes de status (READY/BUSY)
+ *    sejam completamente sobrescritos pelo conteúdo contextual do serviço.
+ *  - Nos demais cenários (quadro válido, inválido ou fila cheia) preservamos o
+ *    protocolo de handshake anterior para sinalizar necessidade de retry.
+ */
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;
@@ -477,6 +580,8 @@ static void app_spi_handle_txrx_complete(void) {
         app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len);
 
     uint8_t next_status = APP_SPI_STATUS_BUSY;
+    uint8_t first_byte = g_spi_rx_dma_buf[0];
+    uint8_t is_poll = (first_byte == APP_SPI_CLIENT_POLL_BYTE);
 
     switch (search) {
     case APP_SPI_FRAME_FOUND:
@@ -494,7 +599,7 @@ static void app_spi_handle_txrx_complete(void) {
     case APP_SPI_FRAME_PARTIAL:
     case APP_SPI_FRAME_NOT_FOUND:
     default:
-        next_status = app_spi_compute_status();
+        next_status = is_poll ? APP_SPI_STATUS_READY : app_spi_compute_status();
         break;
     }
 

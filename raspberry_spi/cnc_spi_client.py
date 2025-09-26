@@ -30,6 +30,15 @@ def _common_args(
     p.add_argument("--bus", type=int, default=0)
     p.add_argument("--dev", type=int, default=0)
     p.add_argument("--speed", type=int, default=1_000_000)
+    p.add_argument(
+        "--spi-log-format",
+        choices=("hex", "bin"),
+        default="hex",
+        help=(
+            "Formato usado para imprimir as trocas SPI (hex ou bin). "
+            "Padrão: %(default)s"
+        ),
+    )
     if include_tries:
         p.add_argument(
             "--tries",
@@ -241,7 +250,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     executor: Optional[CNCCommandExecutor] = None
     try:
         if needs_client:
-            client = CNCClient(bus=args.bus, dev=args.dev, speed_hz=args.speed)
+            log_format = getattr(args, "spi_log_format", "hex")
+            client = CNCClient(
+                bus=args.bus,
+                dev=args.dev,
+                speed_hz=args.speed,
+                log_format=log_format,
+            )
             executor = CNCCommandExecutor(client)
 
         if isinstance(handler, str):
