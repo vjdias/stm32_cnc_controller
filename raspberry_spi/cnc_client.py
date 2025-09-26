@@ -19,6 +19,7 @@ if __package__:
         SPI_DMA_HANDSHAKE_BYTES,
         SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_CLIENT_POLL_BYTE,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
         bits_str,
@@ -38,6 +39,7 @@ else:
         SPI_DMA_HANDSHAKE_BYTES,
         SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_CLIENT_POLL_BYTE,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
         bits_str,
@@ -50,10 +52,10 @@ except Exception as exc:  # pragma: no cover
     spidev = None
 
 
-def _build_spi_dma_frame(payload: List[int]) -> List[int]:
+def _build_spi_dma_frame(payload: List[int], filler: int = 0x00) -> List[int]:
     if len(payload) > SPI_DMA_MAX_PAYLOAD:
         raise ValueError(f"payload excede {SPI_DMA_MAX_PAYLOAD} bytes: {len(payload)}")
-    frame = [0x00] * SPI_DMA_FRAME_LEN
+    frame = [filler & 0xFF] * SPI_DMA_FRAME_LEN
     start = SPI_DMA_FRAME_LEN - len(payload)
     for idx, byte in enumerate(payload):
         frame[start + idx] = byte & 0xFF
@@ -228,7 +230,12 @@ class CNCClient:
             time.sleep(settle_delay_s)
 
         poll_payload_len = max(1, len(request))
-        poll_frame = _build_spi_dma_frame([0x00] * poll_payload_len)
+        # ``SPI_DMA_CLIENT_POLL_BYTE`` (0x3C) é o byte acordado com o firmware
+        # para clockar a resposta sem simular um novo header 0xAA.
+        poll_frame = _build_spi_dma_frame(
+            [SPI_DMA_CLIENT_POLL_BYTE] * poll_payload_len,
+            filler=SPI_DMA_CLIENT_POLL_BYTE,
+        )
         attempts = max(1, tries)
         for _ in range(attempts):
             rx = self._xfer(poll_frame)
@@ -244,7 +251,9 @@ class CNCClient:
     def _build_boot_poll_frame(chunk_len: int) -> List[int]:
         if chunk_len <= 0:
             return []
-        frame = [0x00] * chunk_len
+        # O polling de boot também reutiliza o byte combinado para evitar que
+        # leituras extras imitem um novo header de request.
+        frame = [SPI_DMA_CLIENT_POLL_BYTE] * chunk_len
         if chunk_len > SPI_DMA_HANDSHAKE_BYTES:
             header_idx = SPI_DMA_HANDSHAKE_BYTES
             frame[header_idx] = REQ_HEADER
@@ -327,11 +336,11 @@ class CNCClient:
                                         settle_delay_s: float = 0.0) -> None:
         saw_activity = False
         while True:
-            rx = self._xfer([0x00] * chunk_len)
+            rx = self._xfer([SPI_DMA_CLIENT_POLL_BYTE] * chunk_len)
             print(" ".join(f"{b:02X}" for b in rx))
-            if any(b != 0x00 for b in rx):
+            if any(b != SPI_DMA_CLIENT_POLL_BYTE for b in rx):
                 saw_activity = True
-            if saw_activity and any(b == 0x00 for b in rx):
+            if saw_activity and all(b == SPI_DMA_CLIENT_POLL_BYTE for b in rx):
                 break
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
