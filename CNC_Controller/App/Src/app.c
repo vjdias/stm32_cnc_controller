@@ -157,7 +157,6 @@ void app_init(void) {
 
 void app_poll(void) {
     app_spi_try_commit_pending_to_active();
-    app_spi_try_restart_dma();
 
     app_spi_frame_t frame;
     while (app_spi_queue_pop(&frame) == 0) {
@@ -165,8 +164,6 @@ void app_poll(void) {
     }
 
     app_spi_try_commit_pending_to_active();
-    app_spi_try_restart_dma();
-
     if (g_resp_fifo && !g_spi_tx_pending_ready) {
         uint8_t out[APP_SPI_DMA_BUF_LEN];
         int n = resp_fifo_pop(g_resp_fifo, out, sizeof out);
@@ -569,6 +566,10 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
  *    sejam completamente sobrescritos pelo conteúdo contextual do serviço.
  *  - Nos demais cenários (quadro válido, inválido ou fila cheia) preservamos o
  *    protocolo de handshake anterior para sinalizar necessidade de retry.
+ *  - Após decidir o próximo status, adiamos o reinício do DMA para o laço
+ *    principal (`app_poll`), permitindo que qualquer mensagem recém-enfileirada
+ *    pelos serviços seja aplicada ao buffer ativo antes que o Raspberry Pi
+ *    realize a próxima enquete.
  */
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
@@ -603,5 +604,14 @@ static void app_spi_handle_txrx_complete(void) {
         break;
     }
 
-    app_spi_restart_dma(next_status);
+    /*
+     * Com o tratamento do quadro concluído, armazenamos o próximo status para
+     * que o laço principal reprograme o DMA logo após processar a fila de
+     * serviços. Isso dá tempo para que qualquer resposta recém-gerada seja
+     * copiada para o buffer ativo antes do próximo polling do Raspberry Pi,
+     * garantindo que payloads pendentes substituam os bytes READY/BUSY na
+     * primeira transferência de enquete.
+     */
+    g_spi_next_status = next_status;
+    g_spi_need_restart = 1u;
 }

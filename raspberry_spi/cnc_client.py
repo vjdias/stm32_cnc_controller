@@ -60,6 +60,12 @@ def _build_spi_dma_frame(payload: List[int], filler: int = 0x00) -> List[int]:
     return frame
 
 
+# O handshake do STM32 agora reutiliza o mesmo buffer DMA de 42 bytes para
+# publicar respostas prontas. Isso significa que, dependendo do momento em que
+# o Raspberry fizer a leitura, o quadro de "handshake" pode conter apenas os
+# bytes preenchidos com ``0x00`` ou até mesmo a resposta completa já alinhada
+# à direita com zeros à esquerda. O validador abaixo trata esse cenário como
+# sucesso para evitar falsos positivos de erro de comunicação.
 def _validate_handshake_frame(
     tx_frame: List[int], handshake_frame: List[int], payload_len: int
 ) -> None:
@@ -85,29 +91,62 @@ def _validate_handshake_frame(
     if prefix_len < 0:
         raise ValueError("payload_len maior que o frame transmitido")
 
-    normalized_statuses = {status & 0xFF for status in handshake_frame}
+    normalized_statuses = [status & 0xFF for status in handshake_frame]
     if not normalized_statuses:
         raise ValueError("handshake_frame vazio")
 
-    if normalized_statuses == {SPI_DMA_HANDSHAKE_READY}:
+    if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_READY}:
         return
 
-    if normalized_statuses == {SPI_DMA_HANDSHAKE_BUSY}:
+    if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_BUSY}:
         raise BufferError(
             "STM32 respondeu BUSY (0x5A) para todo o frame DMA de "
             f"{SPI_DMA_FRAME_LEN} bytes. Aguarde e tente novamente."
         )
 
-    if normalized_statuses == {SPI_DMA_HANDSHAKE_NO_COMM}:
+    if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_NO_COMM}:
         raise ConnectionError(
             "STM32 respondeu 0x00 (sem comunicação) para todo o frame DMA de "
             f"{SPI_DMA_FRAME_LEN} bytes. Comunicação SPI não ocorreu; "
             "verifique alimentação, conexões e configuração."
         )
 
-    for idx, (tx_byte, status) in enumerate(zip(tx_frame, handshake_frame)):
+    # Caso os bytes recebidos formem uma resposta válida (ex.: ``AB ... 54``)
+    # alinhada à direita com zeros à esquerda, tratamos o quadro como um
+    # handshake bem-sucedido que já traz a carga útil aguardada.
+    header_idx = -1
+    tail_idx = -1
+    try:
+        header_idx = normalized_statuses.index(RESP_HEADER)
+        tail_idx = normalized_statuses.index(RESP_TAIL, header_idx + 1)
+    except ValueError:
+        header_idx = -1
+        tail_idx = -1
+
+    if header_idx >= 0 and tail_idx > header_idx:
+        busy_before = [
+            idx
+            for idx, status in enumerate(normalized_statuses[:header_idx])
+            if status == SPI_DMA_HANDSHAKE_BUSY
+        ]
+        if busy_before:
+            raise BufferError(
+                "STM32 sinalizou BUSY (0x5A) antes do header 0x"
+                f"{RESP_HEADER:02X} durante o handshake inicial (byte {busy_before[0]})."
+            )
+
+        # Permite zeros (padding) e quaisquer bytes da resposta propriamente
+        # dita; o polling subsequente irá confirmar o conteúdo detalhadamente.
+        return
+
+    for idx, (tx_byte, status) in enumerate(zip(tx_frame, normalized_statuses)):
         status &= 0xFF
         if status == SPI_DMA_HANDSHAKE_READY:
+            continue
+
+        if idx < prefix_len and status == SPI_DMA_HANDSHAKE_NO_COMM and tx_byte == 0:
+            # ``0x00`` no preenchimento indica apenas que o STM32 ainda não
+            # escreveu o eco do handshake naquele byte (padding).
             continue
 
         tx_byte &= 0xFF
