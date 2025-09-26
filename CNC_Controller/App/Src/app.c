@@ -157,12 +157,14 @@ void app_init(void) {
 
 void app_poll(void) {
     app_spi_try_commit_pending_to_active();
+
     app_spi_frame_t frame;
     while (app_spi_queue_pop(&frame) == 0) {
         router_feed_bytes(&g_router, frame.data, frame.len);
     }
 
     app_spi_try_commit_pending_to_active();
+
     if (g_resp_fifo && !g_spi_tx_pending_ready) {
         uint8_t out[APP_SPI_DMA_BUF_LEN];
         int n = resp_fifo_pop(g_resp_fifo, out, sizeof out);
@@ -183,6 +185,7 @@ void app_poll(void) {
     }
 
     app_spi_try_commit_pending_to_active();
+
     app_spi_try_restart_dma();
 
     if (g_spi_rx_error != APP_SPI_RX_STATUS_NONE) {
