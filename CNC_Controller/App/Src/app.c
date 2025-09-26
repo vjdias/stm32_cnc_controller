@@ -172,9 +172,8 @@ void app_poll(void) {
             uint32_t primask = __get_PRIMASK();
             __disable_irq();
             memset(g_spi_tx_pending_buf, 0, APP_SPI_DMA_BUF_LEN);
-            uint16_t pad = (uint16_t)(APP_SPI_DMA_BUF_LEN - (uint16_t)n);
-            memcpy(&g_spi_tx_pending_buf[pad], out, (uint32_t)n);
-            g_spi_tx_pending_len = (uint16_t)APP_SPI_DMA_BUF_LEN;
+            memcpy(g_spi_tx_pending_buf, out, (uint32_t)n);
+            g_spi_tx_pending_len = (uint16_t)n;
             g_spi_tx_pending_ready = 1u;
             if (primask == 0u) {
                 __enable_irq();
