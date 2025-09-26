@@ -266,8 +266,22 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
         __enable_irq();
     }
 
+    uint8_t primed_status = status;
+    if (has_pending && pending_len > 0u) {
+        /*
+         * Ao injetar um payload de resposta no quadro atual, o mestre espera
+         * encontrar imediatamente o header 0xAB ao iniciar a próxima enquete.
+         * Mesmo que o laço principal tenha reservado BUSY para o próximo
+         * ciclo (por exemplo, durante o half-transfer do DMA), o fato de já
+         * existir um frame pronto indica que estamos aptos a responder.
+         * Forçar READY evita que o byte 0 (preenchimento) herde 0x5A e o host
+         * interprete erroneamente a resposta como "ocupado" antes do header.
+         */
+        primed_status = APP_SPI_STATUS_READY;
+    }
+
     app_spi_handshake_prime_args_t args = {
-        .status_byte = status,
+        .status_byte = primed_status,
         .tx_buf = g_spi_tx_dma_buf,
         .tx_len = APP_SPI_DMA_BUF_LEN,
         .response_buf = has_pending ? pending_copy : NULL,
@@ -356,8 +370,19 @@ static void app_spi_try_commit_pending_to_active(void) {
         return;
     }
 
+    uint8_t primed_status = status_byte;
+    if (pending_len > 0u) {
+        /*
+         * O canal possui uma resposta pronta e ainda não transmitiu nenhum
+         * byte desta rodada. Ao sinalizar READY garantimos que o preenchimento
+         * no início do quadro seja zerado, impedindo que o mestre observe
+         * 0x5A (BUSY) antes do header 0xAB ao efetuar o polling.
+         */
+        primed_status = APP_SPI_STATUS_READY;
+    }
+
     app_spi_handshake_prime_args_t args = {
-        .status_byte = status_byte,
+        .status_byte = primed_status,
         .tx_buf = g_spi_tx_dma_buf,
         .tx_len = APP_SPI_DMA_BUF_LEN,
         .response_buf = pending_copy,
