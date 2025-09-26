@@ -13,6 +13,7 @@ if __package__:
     from .cnc_protocol import (
         REQ_HEADER,
         REQ_LED_CTRL,
+        REQ_TEST_HELLO,
         REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
@@ -34,6 +35,7 @@ else:
     from cnc_protocol import (  # type: ignore
         REQ_HEADER,
         REQ_LED_CTRL,
+        REQ_TEST_HELLO,
         REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
@@ -88,15 +90,48 @@ class HandshakeValidationTests(unittest.TestCase):
         self.assertIn("preenchimento[0]", msg)
         self.assertIn(f"0x{SPI_DMA_CLIENT_POLL_BYTE:02X}", msg)
 
-    def test_zero_handshake_raises_connection_error(self) -> None:
+    def test_zero_handshake_is_treated_as_padding(self) -> None:
         handshake = [SPI_DMA_HANDSHAKE_NO_COMM] * SPI_DMA_FRAME_LEN
 
-        with self.assertRaises(ConnectionError) as ctx:
-            _validate_handshake_frame(self.frame, handshake, len(self.payload))
+        # Quadro totalmente zerado indica apenas que o STM32 ainda não escreveu
+        # o eco do handshake; deve ser aceito para permitir que o polling
+        # subsequente capture a resposta que já pode estar enfileirada.
+        _validate_handshake_frame(self.frame, handshake, len(self.payload))
 
-        msg = str(ctx.exception)
-        self.assertIn("0x00", msg)
-        self.assertIn("Comunicação SPI não ocorreu", msg)
+    def test_inline_response_with_zero_padding_is_accepted(self) -> None:
+        spec = CNCResponseDecoder.SPECS[REQ_TEST_HELLO]
+        response = [
+            RESP_HEADER,
+            spec.response_type,
+            ord("e"),
+            ord("l"),
+            ord("l"),
+            ord("o"),
+            RESP_TAIL,
+        ]
+        padding_len = SPI_DMA_FRAME_LEN - len(response)
+        handshake = [0x00] * padding_len + response
+
+        # Não deve lançar exceção: o quadro contém uma resposta válida alinhada à direita.
+        _validate_handshake_frame(self.frame, handshake, len(self.payload))
+
+    def test_inline_response_with_leading_busy_byte_is_accepted(self) -> None:
+        spec = CNCResponseDecoder.SPECS[REQ_TEST_HELLO]
+        response = [
+            RESP_HEADER,
+            spec.response_type,
+            ord("e"),
+            ord("l"),
+            ord("l"),
+            ord("o"),
+            RESP_TAIL,
+        ]
+        padding_len = SPI_DMA_FRAME_LEN - len(response)
+        handshake = [SPI_DMA_HANDSHAKE_BUSY]
+        handshake += [0x00] * (padding_len - 1)
+        handshake += response
+
+        _validate_handshake_frame(self.frame, handshake, len(self.payload))
 
 
 class ResponsePollingValidationTests(unittest.TestCase):
