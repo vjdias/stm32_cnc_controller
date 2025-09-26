@@ -13,6 +13,7 @@ if __package__:
     from .cnc_protocol import (
         REQ_HEADER,
         REQ_LED_CTRL,
+        REQ_TEST_HELLO,
         REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
@@ -34,6 +35,7 @@ else:
     from cnc_protocol import (  # type: ignore
         REQ_HEADER,
         REQ_LED_CTRL,
+        REQ_TEST_HELLO,
         REQ_TAIL,
         RESP_HEADER,
         RESP_TAIL,
@@ -97,6 +99,23 @@ class HandshakeValidationTests(unittest.TestCase):
         msg = str(ctx.exception)
         self.assertIn("0x00", msg)
         self.assertIn("Comunicação SPI não ocorreu", msg)
+
+    def test_inline_response_with_zero_padding_is_accepted(self) -> None:
+        spec = CNCResponseDecoder.SPECS[REQ_TEST_HELLO]
+        response = [
+            RESP_HEADER,
+            spec.response_type,
+            ord("e"),
+            ord("l"),
+            ord("l"),
+            ord("o"),
+            RESP_TAIL,
+        ]
+        padding_len = SPI_DMA_FRAME_LEN - len(response)
+        handshake = [0x00] * padding_len + response
+
+        # Não deve lançar exceção: o quadro contém uma resposta válida alinhada à direita.
+        _validate_handshake_frame(self.frame, handshake, len(self.payload))
 
 
 class ResponsePollingValidationTests(unittest.TestCase):
