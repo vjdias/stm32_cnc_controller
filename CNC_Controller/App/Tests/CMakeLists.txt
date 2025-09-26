@@ -35,6 +35,7 @@ add_executable(unit_tests
     ${APP_SRC}/Protocol/Responses/start_move_response.c
 
     ${APP_SRC}/Protocol/router.c
+    ${APP_SRC}/app_spi_handshake.c
 )
 
 enable_testing()

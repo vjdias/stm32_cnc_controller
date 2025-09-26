@@ -20,6 +20,7 @@ if __package__:
         SPI_DMA_HANDSHAKE_BUSY,
         SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_CLIENT_POLL_BYTE,
     )
     from .cnc_responses import CNCResponseDecoder
 else:
@@ -40,6 +41,7 @@ else:
         SPI_DMA_HANDSHAKE_BUSY,
         SPI_DMA_HANDSHAKE_NO_COMM,
         SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_CLIENT_POLL_BYTE,
     )
     from cnc_responses import CNCResponseDecoder  # type: ignore
 
@@ -77,14 +79,14 @@ class HandshakeValidationTests(unittest.TestCase):
 
     def test_unknown_handshake_raises_runtime_error_on_padding(self) -> None:
         handshake = [SPI_DMA_HANDSHAKE_READY] * SPI_DMA_FRAME_LEN
-        handshake[0] = 0xE1
+        handshake[0] = SPI_DMA_CLIENT_POLL_BYTE
 
         with self.assertRaises(RuntimeError) as ctx:
             _validate_handshake_frame(self.frame, handshake, len(self.payload))
 
         msg = str(ctx.exception)
         self.assertIn("preenchimento[0]", msg)
-        self.assertIn("0xE1", msg)
+        self.assertIn(f"0x{SPI_DMA_CLIENT_POLL_BYTE:02X}", msg)
 
     def test_zero_handshake_raises_connection_error(self) -> None:
         handshake = [SPI_DMA_HANDSHAKE_NO_COMM] * SPI_DMA_FRAME_LEN

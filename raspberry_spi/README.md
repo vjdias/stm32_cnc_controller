@@ -54,7 +54,7 @@ Notas de protocolo
   - Start/End/Queue-Status-Req/FPGA-Status-Req não possuem campo de paridade (4 bytes)
 
 Limitações e dicas
-- O STM32 é escravo: para “ouvir” uma resposta é necessário gerar clock no master (RPi). O cliente já realiza uma leitura com clocks após enviar o request.
+- O STM32 é escravo: para “ouvir” uma resposta é necessário gerar clock no master (RPi). O cliente envia `0x3C` em todos os bytes durante esse polling, evitando colisão com o header `0xAA` dos requests.
 - Caso o serviço no firmware ainda não publique respostas, um timeout pode ocorrer.
 - Comandos com resposta aguardam, por padrão, até 5 polls (`--tries`) com
   atraso de 1 ms (`--settle-delay`). Se o firmware demorar mais para responder,

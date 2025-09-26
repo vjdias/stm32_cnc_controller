@@ -38,6 +38,7 @@ SPI_DMA_FRAME_LEN = SPI_DMA_MAX_PAYLOAD
 SPI_DMA_HANDSHAKE_READY = 0xA5
 SPI_DMA_HANDSHAKE_BUSY = 0x5A
 SPI_DMA_HANDSHAKE_NO_COMM = 0x00
+SPI_DMA_CLIENT_POLL_BYTE = 0x3C
 
 # Handshake interpretation helpers (per-byte status echo from STM32)
 SPI_DMA_HANDSHAKE_STATUS_LABELS = {
@@ -147,6 +148,7 @@ __all__ = [
     "SPI_DMA_HANDSHAKE_READY",
     "SPI_DMA_HANDSHAKE_BUSY",
     "SPI_DMA_HANDSHAKE_NO_COMM",
+    "SPI_DMA_CLIENT_POLL_BYTE",
     "SPI_DMA_HANDSHAKE_STATUS_LABELS",
     "handshake_status_label",
     "xor_reduce_bytes",
