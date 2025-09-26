@@ -22,7 +22,6 @@ if __package__:
         SPI_DMA_CLIENT_POLL_BYTE,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
-        bits_str,
     )
     from .cnc_responses import CNCResponseDecoder
 else:
@@ -42,7 +41,6 @@ else:
         SPI_DMA_CLIENT_POLL_BYTE,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
-        bits_str,
     )
     from cnc_responses import CNCResponseDecoder  # type: ignore
 
@@ -189,8 +187,15 @@ def _extract_response_frame(
 
 
 class CNCClient:
-    def __init__(self, bus: int = 0, dev: int = 0,
-                 speed_hz: int = 1_000_000, mode: int = 0b11) -> None:
+    def __init__(
+        self,
+        bus: int = 0,
+        dev: int = 0,
+        speed_hz: int = 1_000_000,
+        mode: int = 0b11,
+        *,
+        log_format: str = "hex",
+    ) -> None:
         if spidev is None:
             raise RuntimeError("spidev não disponível. Instale `python3-spidev` no Raspberry.")
         self.spi = spidev.SpiDev()
@@ -199,21 +204,33 @@ class CNCClient:
         self.spi.mode = mode  # MODE 3: 0b11
         self.spi.bits_per_word = 8
 
+        normalized_format = (log_format or "hex").strip().lower()
+        if normalized_format not in {"hex", "bin"}:
+            raise ValueError(
+                "log_format inválido. Utilize 'hex' ou 'bin' (padrão: 'hex')."
+            )
+        self._log_format = normalized_format
+
     def close(self) -> None:
         try:
             self.spi.close()
         except Exception:  # pragma: no cover - limpeza defensiva
             pass
 
+    def _format_bytes(self, data: List[int]) -> str:
+        if self._log_format == "hex":
+            return " ".join(f"{d & 0xFF:02X}" for d in data)
+        return " ".join(f"{d & 0xFF:08b}" for d in data)
+
     def _xfer(self, data: List[int]) -> List[int]:
         tx = [d & 0xFF for d in data]
         try:
-            print("SPI TX bits:", bits_str(tx))
+            print("SPI TX bits:", self._format_bytes(tx))
         except Exception:
             pass
         rx = self.spi.xfer2(tx)
         try:
-            print("SPI RX bits:", bits_str(rx))
+            print("SPI RX bits:", self._format_bytes(rx))
         except Exception:
             pass
         return rx

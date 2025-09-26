@@ -173,8 +173,10 @@ void app_poll(void) {
         if (n > 0 && n <= (int)APP_SPI_DMA_BUF_LEN) {
             uint32_t primask = __get_PRIMASK();
             __disable_irq();
-            memcpy(g_spi_tx_pending_buf, out, (uint32_t)n);
-            g_spi_tx_pending_len = (uint16_t)n;
+            memset(g_spi_tx_pending_buf, 0, APP_SPI_DMA_BUF_LEN);
+            uint16_t pad = (uint16_t)(APP_SPI_DMA_BUF_LEN - (uint16_t)n);
+            memcpy(&g_spi_tx_pending_buf[pad], out, (uint32_t)n);
+            g_spi_tx_pending_len = (uint16_t)APP_SPI_DMA_BUF_LEN;
             g_spi_tx_pending_ready = 1u;
             if (primask == 0u) {
                 __enable_irq();
@@ -556,6 +558,18 @@ static int app_spi_queue_pop(app_spi_frame_t *out) {
  *  - len: comprimento do quadro localizado; auxilia na validação de tamanho.
  *  - search: resultado da inspeção do buffer (encontrado, parcial, inválido).
  */
+/*
+ * Integra regras de polling com 0x3C e respostas de serviços:
+ *  - Quando o mestre apenas consulta usando APP_SPI_CLIENT_POLL_BYTE sem um
+ *    quadro completo, consideramos que ele espera o próximo resultado dos
+ *    serviços. Nesse caso, devolvemos READY se não houver payload pronto, de
+ *    modo que o host entenda que nada novo foi produzido.
+ *  - Quando existe uma resposta pendente, ela já foi preparada com zeros à
+ *    esquerda (42 - len(msg)) garantindo que os bytes de status (READY/BUSY)
+ *    sejam completamente sobrescritos pelo conteúdo contextual do serviço.
+ *  - Nos demais cenários (quadro válido, inválido ou fila cheia) preservamos o
+ *    protocolo de handshake anterior para sinalizar necessidade de retry.
+ */
 static void app_spi_handle_txrx_complete(void) {
     uint16_t offset = 0u;
     uint16_t len = 0u;
@@ -566,6 +580,8 @@ static void app_spi_handle_txrx_complete(void) {
         app_spi_locate_frame(g_spi_rx_dma_buf, &offset, &len);
 
     uint8_t next_status = APP_SPI_STATUS_BUSY;
+    uint8_t first_byte = g_spi_rx_dma_buf[0];
+    uint8_t is_poll = (first_byte == APP_SPI_CLIENT_POLL_BYTE);
 
     switch (search) {
     case APP_SPI_FRAME_FOUND:
@@ -583,7 +599,7 @@ static void app_spi_handle_txrx_complete(void) {
     case APP_SPI_FRAME_PARTIAL:
     case APP_SPI_FRAME_NOT_FOUND:
     default:
-        next_status = app_spi_compute_status();
+        next_status = is_poll ? APP_SPI_STATUS_READY : app_spi_compute_status();
         break;
     }
 
