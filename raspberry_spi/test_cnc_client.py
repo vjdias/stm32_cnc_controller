@@ -8,6 +8,7 @@ from cnc_protocol import (
     RESP_TAIL,
     SPI_DMA_FRAME_LEN,
     SPI_DMA_HANDSHAKE_READY,
+    SPI_DMA_CLIENT_POLL_BYTE,
 )
 from cnc_requests import CNCRequestBuilder
 
@@ -56,7 +57,7 @@ class CNCClientExchangeTests(unittest.TestCase):
 
         for poll_tx in fake_spi.calls[1:]:
             self.assertEqual(len(poll_tx), SPI_DMA_FRAME_LEN)
-            self.assertEqual(poll_tx[:prefix_len], [0x00] * prefix_len)
+            self.assertTrue(all(byte == SPI_DMA_CLIENT_POLL_BYTE for byte in poll_tx))
 
 
 if __name__ == "__main__":

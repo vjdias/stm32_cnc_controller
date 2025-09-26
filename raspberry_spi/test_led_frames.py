@@ -10,6 +10,7 @@ if __package__:
         REQ_LED_CTRL,
         REQ_TAIL,
         SPI_DMA_FRAME_LEN,
+        SPI_DMA_CLIENT_POLL_BYTE,
         parity_check_byte_1N,
     )
     from .cnc_requests import CNCRequestBuilder
@@ -22,6 +23,7 @@ else:
         REQ_LED_CTRL,
         REQ_TAIL,
         SPI_DMA_FRAME_LEN,
+        SPI_DMA_CLIENT_POLL_BYTE,
         parity_check_byte_1N,
     )
     from cnc_requests import CNCRequestBuilder  # type: ignore
@@ -55,6 +57,15 @@ class LedFrameEncodingTests(unittest.TestCase):
         prefix_len = SPI_DMA_FRAME_LEN - len(payload)
         self.assertEqual(frame[:prefix_len], [0x00] * prefix_len)
         self.assertEqual(frame[prefix_len:], payload)
+
+    def test_dma_poll_frame_uses_agreed_byte(self) -> None:
+        frame = _build_spi_dma_frame(
+            [SPI_DMA_CLIENT_POLL_BYTE] * 4,
+            filler=SPI_DMA_CLIENT_POLL_BYTE,
+        )
+
+        self.assertEqual(len(frame), SPI_DMA_FRAME_LEN)
+        self.assertTrue(all(byte == SPI_DMA_CLIENT_POLL_BYTE for byte in frame))
 
 
 if __name__ == "__main__":
