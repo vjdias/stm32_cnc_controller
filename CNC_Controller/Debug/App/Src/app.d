@@ -33,7 +33,8 @@ App/Src/app.o: ../App/Src/app.c ../Core/Inc/spi.h ../Core/Inc/main.h \
  ../App/Inc/Protocol/router.h ../App/Inc/Services/service_adapters.h \
  ../App/Inc/Services/Led/led_service.h \
  ../App/Inc/Services/Log/log_service.h \
- ../App/Inc/Services/Test/test_spi_service.h
+ ../App/Inc/Services/Test/test_spi_service.h \
+ ../App/Inc/app_spi_handshake.h
 ../Core/Inc/spi.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
@@ -73,3 +74,4 @@ App/Src/app.o: ../App/Src/app.c ../Core/Inc/spi.h ../Core/Inc/main.h \
 ../App/Inc/Services/Led/led_service.h:
 ../App/Inc/Services/Log/log_service.h:
 ../App/Inc/Services/Test/test_spi_service.h:
+../App/Inc/app_spi_handshake.h:

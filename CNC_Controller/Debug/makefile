@@ -72,8 +72,8 @@ all: main-build
 main-build: CNC_Controller.elf secondary-outputs
 
 # Tool invocations
-CNC_Controller.elf CNC_Controller.map: $(OBJS) $(USER_OBJS) C:\Users\Valdir\Documents\Develop\stm32\CNC_Controller\STM32L475VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CNC_Controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Valdir\Documents\Develop\stm32\CNC_Controller\STM32L475VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CNC_Controller.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+CNC_Controller.elf CNC_Controller.map: $(OBJS) $(USER_OBJS) C:\Users\Valdir\Documents\Develop\cnc\stm32_cnc_controller\CNC_Controller\STM32L475VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "CNC_Controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Valdir\Documents\Develop\cnc\stm32_cnc_controller\CNC_Controller\STM32L475VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CNC_Controller.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -6,14 +6,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../App/Src/app.c \
+../App/Src/app_spi_handshake.c \
 ../App/Src/board_config.c 
 
 OBJS += \
 ./App/Src/app.o \
+./App/Src/app_spi_handshake.o \
 ./App/Src/board_config.o 
 
 C_DEPS += \
 ./App/Src/app.d \
+./App/Src/app_spi_handshake.d \
 ./App/Src/board_config.d 
 
 
@@ -24,7 +27,7 @@ App/Src/%.o App/Src/%.su App/Src/%.cyclo: ../App/Src/%.c App/Src/subdir.mk
 clean: clean-App-2f-Src
 
 clean-App-2f-Src:
-	-$(RM) ./App/Src/app.cyclo ./App/Src/app.d ./App/Src/app.o ./App/Src/app.su ./App/Src/board_config.cyclo ./App/Src/board_config.d ./App/Src/board_config.o ./App/Src/board_config.su
+	-$(RM) ./App/Src/app.cyclo ./App/Src/app.d ./App/Src/app.o ./App/Src/app.su ./App/Src/app_spi_handshake.cyclo ./App/Src/app_spi_handshake.d ./App/Src/app_spi_handshake.o ./App/Src/app_spi_handshake.su ./App/Src/board_config.cyclo ./App/Src/board_config.d ./App/Src/board_config.o ./App/Src/board_config.su
 
 .PHONY: clean-App-2f-Src
 
