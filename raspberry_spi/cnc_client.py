@@ -22,7 +22,6 @@ if __package__:
         SPI_DMA_CLIENT_POLL_BYTE,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
-        bits_str,
     )
     from .cnc_responses import CNCResponseDecoder
 else:
@@ -42,7 +41,6 @@ else:
         SPI_DMA_CLIENT_POLL_BYTE,
         SPI_DMA_MAX_PAYLOAD,
         handshake_status_label,
-        bits_str,
     )
     from cnc_responses import CNCResponseDecoder  # type: ignore
 
@@ -62,6 +60,12 @@ def _build_spi_dma_frame(payload: List[int], filler: int = 0x00) -> List[int]:
     return frame
 
 
+# O handshake do STM32 agora reutiliza o mesmo buffer DMA de 42 bytes para
+# publicar respostas prontas. Isso significa que, dependendo do momento em que
+# o Raspberry fizer a leitura, o quadro de "handshake" pode conter apenas os
+# bytes preenchidos com ``0x00`` ou até mesmo a resposta completa já alinhada
+# à direita com zeros à esquerda. O validador abaixo trata esse cenário como
+# sucesso para evitar falsos positivos de erro de comunicação.
 def _validate_handshake_frame(
     tx_frame: List[int], handshake_frame: List[int], payload_len: int
 ) -> None:
@@ -87,29 +91,81 @@ def _validate_handshake_frame(
     if prefix_len < 0:
         raise ValueError("payload_len maior que o frame transmitido")
 
-    normalized_statuses = {status & 0xFF for status in handshake_frame}
+    normalized_statuses = [status & 0xFF for status in handshake_frame]
     if not normalized_statuses:
         raise ValueError("handshake_frame vazio")
 
-    if normalized_statuses == {SPI_DMA_HANDSHAKE_READY}:
+    if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_READY}:
         return
 
-    if normalized_statuses == {SPI_DMA_HANDSHAKE_BUSY}:
+    if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_BUSY}:
         raise BufferError(
             "STM32 respondeu BUSY (0x5A) para todo o frame DMA de "
             f"{SPI_DMA_FRAME_LEN} bytes. Aguarde e tente novamente."
         )
 
-    if normalized_statuses == {SPI_DMA_HANDSHAKE_NO_COMM}:
-        raise ConnectionError(
-            "STM32 respondeu 0x00 (sem comunicação) para todo o frame DMA de "
-            f"{SPI_DMA_FRAME_LEN} bytes. Comunicação SPI não ocorreu; "
-            "verifique alimentação, conexões e configuração."
-        )
+    if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_NO_COMM}:
+        # O firmware passou a reutilizar o mesmo quadro de handshake para
+        # publicar respostas pendentes, o que significa que nem sempre haverá
+        # tempo hábil para preencher cada byte com READY/BUSY antes da leitura
+        # do Raspberry Pi. Quando todo o quadro vem zerado, não tratamos mais
+        # como falha de comunicação: assumimos que o STM32 apenas ainda não
+        # escreveu o eco do handshake neste ciclo e seguimos para o polling.
+        return
 
-    for idx, (tx_byte, status) in enumerate(zip(tx_frame, handshake_frame)):
+    # Caso os bytes recebidos formem uma resposta válida (ex.: ``AB ... 54``)
+    # alinhada à direita com zeros à esquerda, tratamos o quadro como um
+    # handshake bem-sucedido que já traz a carga útil aguardada.
+    header_idx = -1
+    tail_idx = -1
+    try:
+        header_idx = normalized_statuses.index(RESP_HEADER)
+        tail_idx = normalized_statuses.index(RESP_TAIL, header_idx + 1)
+    except ValueError:
+        header_idx = -1
+        tail_idx = -1
+
+    if header_idx >= 0 and tail_idx > header_idx:
+        prefix = normalized_statuses[:header_idx]
+        allowed_prefix_statuses = {
+            SPI_DMA_HANDSHAKE_READY,
+            SPI_DMA_HANDSHAKE_BUSY,
+            SPI_DMA_HANDSHAKE_NO_COMM,
+            0x00,
+        }
+        unexpected = [
+            (idx, status)
+            for idx, status in enumerate(prefix)
+            if status not in allowed_prefix_statuses
+        ]
+        if unexpected:
+            idx, status = unexpected[0]
+            label = handshake_status_label(status)
+            label_suffix = f" ({label})" if label and label != "desconhecido" else ""
+            raise RuntimeError(
+                "STM32 retornou byte inesperado antes do header 0x"
+                f"{RESP_HEADER:02X} durante o handshake inicial (offset {idx}, "
+                f"valor 0x{status:02X}{label_suffix})."
+            )
+
+        if prefix and all(status == SPI_DMA_HANDSHAKE_BUSY for status in prefix):
+            raise BufferError(
+                "STM32 sinalizou BUSY (0x5A) antes do header 0x"
+                f"{RESP_HEADER:02X} durante o handshake inicial."
+            )
+
+        # Permite zeros (padding) e quaisquer bytes da resposta propriamente
+        # dita; o polling subsequente irá confirmar o conteúdo detalhadamente.
+        return
+
+    for idx, (tx_byte, status) in enumerate(zip(tx_frame, normalized_statuses)):
         status &= 0xFF
         if status == SPI_DMA_HANDSHAKE_READY:
+            continue
+
+        if idx < prefix_len and status == SPI_DMA_HANDSHAKE_NO_COMM and tx_byte == 0:
+            # ``0x00`` no preenchimento indica apenas que o STM32 ainda não
+            # escreveu o eco do handshake naquele byte (padding).
             continue
 
         tx_byte &= 0xFF
@@ -189,8 +245,15 @@ def _extract_response_frame(
 
 
 class CNCClient:
-    def __init__(self, bus: int = 0, dev: int = 0,
-                 speed_hz: int = 1_000_000, mode: int = 0b11) -> None:
+    def __init__(
+        self,
+        bus: int = 0,
+        dev: int = 0,
+        speed_hz: int = 1_000_000,
+        mode: int = 0b11,
+        *,
+        log_format: str = "hex",
+    ) -> None:
         if spidev is None:
             raise RuntimeError("spidev não disponível. Instale `python3-spidev` no Raspberry.")
         self.spi = spidev.SpiDev()
@@ -199,21 +262,33 @@ class CNCClient:
         self.spi.mode = mode  # MODE 3: 0b11
         self.spi.bits_per_word = 8
 
+        normalized_format = (log_format or "hex").strip().lower()
+        if normalized_format not in {"hex", "bin"}:
+            raise ValueError(
+                "log_format inválido. Utilize 'hex' ou 'bin' (padrão: 'hex')."
+            )
+        self._log_format = normalized_format
+
     def close(self) -> None:
         try:
             self.spi.close()
         except Exception:  # pragma: no cover - limpeza defensiva
             pass
 
+    def _format_bytes(self, data: List[int]) -> str:
+        if self._log_format == "hex":
+            return " ".join(f"{d & 0xFF:02X}" for d in data)
+        return " ".join(f"{d & 0xFF:08b}" for d in data)
+
     def _xfer(self, data: List[int]) -> List[int]:
         tx = [d & 0xFF for d in data]
         try:
-            print("SPI TX bits:", bits_str(tx))
+            print("SPI TX bits:", self._format_bytes(tx))
         except Exception:
             pass
         rx = self.spi.xfer2(tx)
         try:
-            print("SPI RX bits:", bits_str(rx))
+            print("SPI RX bits:", self._format_bytes(rx))
         except Exception:
             pass
         return rx
