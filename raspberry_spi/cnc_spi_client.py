@@ -35,19 +35,9 @@ def _parse_byte(value: str) -> int:
     return byte_val
 
 
-def _add_disable_poll_argument(p: argparse.ArgumentParser) -> None:
-    p.add_argument(
-        "--disable-poll",
-        action="store_true",
-        help="Não enviar polling após o handshake inicial (usa apenas o handshake)."
-    )
-
-
-
 def _common_args(
     p: argparse.ArgumentParser,
     *,
-    include_disable_poll: bool = False,
     include_tries: bool = False,
     default_tries: int = 5,
 ) -> None:
@@ -72,8 +62,11 @@ def _common_args(
             "o comportamento atual ou informe outro valor."
         ),
     )
-    if include_disable_poll:
-        _add_disable_poll_argument(p)
+    p.add_argument(
+        "--disable-poll",
+        action="store_true",
+        help="Não enviar polling após o handshake inicial (usa apenas o handshake).",
+    )
     if include_tries:
         p.add_argument(
             "--tries",
@@ -111,7 +104,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI1 Slave)",
     )
-    _common_args(parser, include_disable_poll=True)
     sub = parser.add_subparsers(dest="command", required=True)
 
     led_ctrl = sub.add_parser(
@@ -120,7 +112,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Controle do LED discreto (LED1)",
     )
     _common_args(led_ctrl, include_tries=True)
-    _add_disable_poll_argument(led_ctrl)
     led_ctrl.add_argument("--frame-id", type=int, required=True)
     led_ctrl.add_argument(
         "--mask",
@@ -150,7 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     led_ctrl.set_defaults(handler="led_control", needs_client=True)
 
     q_add = sub.add_parser("queue-add", help="Adicionar movimento à fila")
-    _common_args(q_add, include_disable_poll=True, include_tries=True)
+    _common_args(q_add, include_tries=True)
     q_add.add_argument("--frame-id", type=int, required=True)
     q_add.add_argument("--dir", type=lambda x: int(x, 0), required=True)
     q_add.add_argument("--vx", type=int, required=True)
@@ -166,22 +157,22 @@ def build_parser() -> argparse.ArgumentParser:
     q_add.set_defaults(handler="queue_add", needs_client=True)
 
     q_status = sub.add_parser("queue-status", help="Consultar status da fila")
-    _common_args(q_status, include_disable_poll=True, include_tries=True)
+    _common_args(q_status, include_tries=True)
     q_status.add_argument("--frame-id", type=int, required=True)
     q_status.set_defaults(handler="queue_status", needs_client=True)
 
     start_move = sub.add_parser("start-move", help="Iniciar execução")
-    _common_args(start_move, include_disable_poll=True, include_tries=True)
+    _common_args(start_move, include_tries=True)
     start_move.add_argument("--frame-id", type=int, required=True)
     start_move.set_defaults(handler="start_move", needs_client=True)
 
     end_move = sub.add_parser("end-move", help="Finalizar execução")
-    _common_args(end_move, include_disable_poll=True, include_tries=True)
+    _common_args(end_move, include_tries=True)
     end_move.add_argument("--frame-id", type=int, required=True)
     end_move.set_defaults(handler="end_move", needs_client=True)
 
     home = sub.add_parser("home", help="Sequência de homing")
-    _common_args(home, include_disable_poll=True, include_tries=True)
+    _common_args(home, include_tries=True)
     home.add_argument("--frame-id", type=int, required=True)
     home.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     home.add_argument("--dirs", type=lambda x: int(x, 0), required=True)
@@ -189,7 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
     home.set_defaults(handler="home", needs_client=True)
 
     probe = sub.add_parser("probe-level", help="Sequência de probe level")
-    _common_args(probe, include_disable_poll=True, include_tries=True)
+    _common_args(probe, include_tries=True)
     probe.add_argument("--frame-id", type=int, required=True)
     probe.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     probe.add_argument("--vprobe", type=lambda x: int(x, 0), required=True)
@@ -199,7 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
         "hello",
         help="Enviar uma requisição 'hello' e aguardar a resposta do STM32",
     )
-    _common_args(hello, include_disable_poll=True, include_tries=True)
+    _common_args(hello, include_tries=True)
     hello.add_argument(
         "--settle-delay",
         type=float,
@@ -215,7 +206,7 @@ def build_parser() -> argparse.ArgumentParser:
             "(quando habilitado no firmware)"
         ),
     )
-    _common_args(boot_hello, include_disable_poll=True, include_tries=True, default_tries=16)
+    _common_args(boot_hello, include_tries=True, default_tries=16)
     boot_hello.add_argument("--chunk-len", type=int, default=7)
     boot_hello.add_argument("--settle-delay", type=float, default=0.002)
     boot_hello.set_defaults(handler="boot_hello", needs_client=True)
@@ -227,7 +218,7 @@ def build_parser() -> argparse.ArgumentParser:
             "habilitado)"
         ),
     )
-    _common_args(led_boot, include_disable_poll=True, include_tries=True, default_tries=16)
+    _common_args(led_boot, include_tries=True, default_tries=16)
     led_boot.add_argument("--chunk-len", type=int, default=7)
     led_boot.add_argument("--settle-delay", type=float, default=0.002)
     led_boot.set_defaults(handler="boot_led", needs_client=True)
