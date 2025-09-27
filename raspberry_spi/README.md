@@ -34,9 +34,11 @@ Uso rápido
   `python3 cnc_spi_client.py hello`
   (envia `AA 68 65 6C 6C 6F 55` e aguarda `AB 68 65 6C 6C 6F 54`)
 
-- Frame de boot "hello":
+- (Opcional) Frame de boot "hello" — disponível apenas quando o firmware é
+  compilado com `APP_ENABLE_BOOT_TEST_RESPONSES=1`:
   `python3 cnc_spi_client.py boot-hello --tries 10 --chunk-len 7`
-  (espera-se o frame `AB 68 65 6C 6C 6F 54` com header/tail válidos)
+  (por padrão o firmware não enfileira mais esse frame automaticamente para
+  evitar que respostas reais sejam precedidas por dados de teste)
 
 - Lista resumida com exemplos (sem necessidade de SPI ativo):
   `python3 cnc_spi_client.py examples`
