@@ -35,6 +35,9 @@ typedef enum {
 #error "SPI DMA buffer must remain 42 bytes (payload + handshake por byte)"
 #endif
 
+/* Concede pelo menos um ciclo de app_poll para que a resposta seja preparada */
+#define APP_SPI_RESTART_DEFER_MAX 1u
+
 typedef struct {
     uint8_t data[APP_SPI_MAX_REQUEST_LEN];
     uint16_t len;
@@ -64,6 +67,15 @@ static volatile uint8_t g_spi_rx_error = APP_SPI_RX_STATUS_NONE;
 static uint8_t g_spi_tx_pending_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint16_t g_spi_tx_pending_len = 0u;
 static volatile uint8_t g_spi_tx_pending_ready = 0u;
+/*
+ * Quando recebemos uma requisição completa queremos dar uma chance para que o
+ * serviço produza a resposta antes de iniciar o próximo ciclo de polling. As
+ * flags abaixo sinalizam essa janela de "defer" para que o DMA só seja
+ * reativado depois que o payload estiver pronto (ou após um pequeno timeout),
+ * evitando a rodada extra de 42 bytes contendo apenas 0xA5.
+ */
+static volatile uint8_t g_spi_restart_defer = 0u;
+static volatile uint8_t g_spi_restart_defer_ticks = 0u;
 
 LOG_SVC_DEFINE(LOG_SVC_APP, "app");
 
@@ -189,6 +201,8 @@ void app_poll(void) {
             memcpy(&g_spi_tx_pending_buf[pad], out, (uint32_t)n);
             g_spi_tx_pending_len = (uint16_t)APP_SPI_DMA_BUF_LEN;
             g_spi_tx_pending_ready = 1u;
+            g_spi_restart_defer = 0u;
+            g_spi_restart_defer_ticks = 0u;
             if (primask == 0u) {
                 __enable_irq();
             }
@@ -470,6 +484,16 @@ static void app_spi_try_restart_dma(void) {
     if (!g_spi_need_restart) {
         return;
     }
+
+    if (g_spi_restart_defer && !g_spi_tx_pending_ready) {
+        if (g_spi_restart_defer_ticks < APP_SPI_RESTART_DEFER_MAX) {
+            g_spi_restart_defer_ticks++;
+            return;
+        }
+        g_spi_restart_defer = 0u;
+    }
+
+    g_spi_restart_defer_ticks = 0u;
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
         return;
     }
@@ -628,6 +652,8 @@ static void app_spi_handle_txrx_complete(void) {
     case APP_SPI_FRAME_FOUND:
         if (app_spi_queue_push_isr(&g_spi_rx_dma_buf[offset], len) == 0) {
             next_status = app_spi_compute_status();
+            g_spi_restart_defer = 1u;
+            g_spi_restart_defer_ticks = 0u;
         } else {
             app_spi_record_rx_error(APP_SPI_RX_OVERFLOW_QUEUE_FULL);
             next_status = APP_SPI_STATUS_BUSY;
