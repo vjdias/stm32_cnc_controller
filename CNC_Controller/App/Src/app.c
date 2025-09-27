@@ -67,6 +67,7 @@ static volatile uint8_t g_spi_rx_error = APP_SPI_RX_STATUS_NONE;
 static uint8_t g_spi_tx_pending_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint16_t g_spi_tx_pending_len = 0u;
 static volatile uint8_t g_spi_tx_pending_ready = 0u;
+static volatile uint8_t g_spi_tx_pending_inflight = 0u;
 /*
  * Quando recebemos uma requisição completa queremos dar uma chance para que o
  * serviço produza a resposta antes de iniciar o próximo ciclo de polling. As
@@ -190,7 +191,7 @@ void app_poll(void) {
 
     app_spi_try_commit_pending_to_active();
 
-    if (g_resp_fifo && !g_spi_tx_pending_ready) {
+    if (g_resp_fifo && !g_spi_tx_pending_ready && !g_spi_tx_pending_inflight) {
         uint8_t out[APP_SPI_DMA_BUF_LEN];
         int n = resp_fifo_pop(g_resp_fifo, out, sizeof out);
         if (n > 0 && n <= (int)APP_SPI_DMA_BUF_LEN) {
@@ -277,17 +278,17 @@ static void app_spi_queue_reset(void) {
  *                 que podem ser copiados para o DMA.
  */
 static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
-    uint8_t pending_copy[APP_SPI_DMA_BUF_LEN];
     uint16_t pending_len = 0u;
     uint8_t has_pending = 0u;
 
     uint32_t primask = __get_PRIMASK();
     __disable_irq();
     if (g_spi_tx_pending_ready && g_spi_tx_pending_len > 0u &&
-        g_spi_tx_pending_len <= APP_SPI_DMA_BUF_LEN) {
+        g_spi_tx_pending_len <= APP_SPI_DMA_BUF_LEN &&
+        !g_spi_tx_pending_inflight) {
         pending_len = g_spi_tx_pending_len;
-        memcpy(pending_copy, g_spi_tx_pending_buf, pending_len);
         has_pending = 1u;
+        g_spi_tx_pending_inflight = 1u;
     }
     if (primask == 0u) {
         __enable_irq();
@@ -311,13 +312,20 @@ static uint8_t app_spi_prime_tx_buffer(uint8_t status) {
         .status_byte = primed_status,
         .tx_buf = g_spi_tx_dma_buf,
         .tx_len = APP_SPI_DMA_BUF_LEN,
-        .response_buf = has_pending ? pending_copy : NULL,
+        .response_buf = has_pending ? g_spi_tx_pending_buf : NULL,
         .response_len = pending_len,
     };
 
     app_spi_handshake_prime_result_t result = app_spi_handshake_prime(&args);
 
     app_spi_clean_dcache(g_spi_tx_dma_buf, APP_SPI_DMA_BUF_LEN);
+
+    uint32_t primask_after = __get_PRIMASK();
+    __disable_irq();
+    g_spi_tx_pending_inflight = 0u;
+    if (primask_after == 0u) {
+        __enable_irq();
+    }
     return result.consumed_response;
 }
 
@@ -360,7 +368,6 @@ static uint8_t app_spi_compute_status(void) {
  *     payload pendente.
  */
 static void app_spi_try_commit_pending_to_active(void) {
-    uint8_t pending_copy[APP_SPI_DMA_BUF_LEN];
     uint16_t pending_len = 0u;
     uint8_t should_commit = 0u;
     uint8_t request_restart = 0u;
@@ -371,7 +378,8 @@ static void app_spi_try_commit_pending_to_active(void) {
     DMA_Channel_TypeDef *tx_dma = hdma_spi1_tx.Instance;
     uint8_t status_byte = g_spi_next_status;
     if (g_spi_tx_pending_ready && g_spi_tx_pending_len > 0u &&
-        g_spi_tx_pending_len <= APP_SPI_DMA_BUF_LEN && tx_dma != NULL) {
+        g_spi_tx_pending_len <= APP_SPI_DMA_BUF_LEN && tx_dma != NULL &&
+        !g_spi_tx_pending_inflight) {
         uint32_t dma_enabled = tx_dma->CCR & DMA_CCR_EN;
         if (dma_enabled == 0u) {
             request_restart = 1u;
@@ -381,9 +389,7 @@ static void app_spi_try_commit_pending_to_active(void) {
 
         if (should_commit) {
             pending_len = g_spi_tx_pending_len;
-            memcpy(pending_copy, g_spi_tx_pending_buf, pending_len);
-            g_spi_tx_pending_ready = 0u;
-            g_spi_tx_pending_len = 0u;
+            g_spi_tx_pending_inflight = 1u;
         }
     }
 
@@ -412,7 +418,7 @@ static void app_spi_try_commit_pending_to_active(void) {
         .status_byte = primed_status,
         .tx_buf = g_spi_tx_dma_buf,
         .tx_len = APP_SPI_DMA_BUF_LEN,
-        .response_buf = pending_copy,
+        .response_buf = g_spi_tx_pending_buf,
         .response_len = pending_len,
     };
 
@@ -420,11 +426,11 @@ static void app_spi_try_commit_pending_to_active(void) {
 
     if (result.consumed_response) {
         app_spi_clean_dcache(g_spi_tx_dma_buf, APP_SPI_DMA_BUF_LEN);
-    } else {
-        memcpy(g_spi_tx_pending_buf, pending_copy, pending_len);
-        g_spi_tx_pending_len = pending_len;
-        g_spi_tx_pending_ready = 1u;
+        g_spi_tx_pending_ready = 0u;
+        g_spi_tx_pending_len = 0u;
     }
+
+    g_spi_tx_pending_inflight = 0u;
 
     if (primask == 0u) {
         __enable_irq();
