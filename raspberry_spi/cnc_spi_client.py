@@ -173,7 +173,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     boot_hello = sub.add_parser(
         "boot-hello",
-        help="Ler frame de teste 'hello' enfileirado automaticamente no boot",
+        help=(
+            "Ler frame de teste 'hello' enfileirado automaticamente no boot "
+            "(quando habilitado no firmware)"
+        ),
     )
     _common_args(boot_hello, include_tries=True, default_tries=16)
     boot_hello.add_argument("--chunk-len", type=int, default=7)
@@ -182,7 +185,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     led_boot = sub.add_parser(
         "led",
-        help="Ler frame de teste 'led' do STM32 (enfileirado no boot)",
+        help=(
+            "Ler frame de teste 'led' do STM32 (enfileirado no boot quando "
+            "habilitado)"
+        ),
     )
     _common_args(led_boot, include_tries=True, default_tries=16)
     led_boot.add_argument("--chunk-len", type=int, default=7)
@@ -222,11 +228,11 @@ def print_examples(_: argparse.Namespace) -> None:
         ),
         ("Requisição 'hello'", f"{base_cmd} hello --tries 5"),
         (
-            "Frame de boot 'hello'",
+            "Frame de boot 'hello' (requer firmware com boot-test habilitado)",
             f"{base_cmd} boot-hello --tries 10 --chunk-len 7",
         ),
         (
-            "Frame de boot 'led'",
+            "Frame de boot 'led' (requer firmware com boot-test habilitado)",
             f"{base_cmd} led --tries 10 --chunk-len 7",
         ),
     ]

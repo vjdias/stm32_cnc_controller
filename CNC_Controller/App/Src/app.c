@@ -10,6 +10,10 @@
 #include "Services/Test/test_spi_service.h"
 #include "app_spi_handshake.h"
 
+#ifndef APP_ENABLE_BOOT_TEST_RESPONSES
+#define APP_ENABLE_BOOT_TEST_RESPONSES 0
+#endif
+
 extern DMA_HandleTypeDef hdma_spi1_tx;
 
 #define APP_SPI_RX_QUEUE_DEPTH     APP_SPI_DMA_BUF_LEN
@@ -152,7 +156,16 @@ void app_init(void) {
         g_spi_need_restart = 1u;
     }
 
+#if APP_ENABLE_BOOT_TEST_RESPONSES
+    /*
+     * Opcionalmente publica o frame de teste "hello" ao inicializar para
+     * depuração do enlace.  Mantemos o envio desabilitado por padrão para não
+     * interferir nas primeiras respostas reais do protocolo (por exemplo,
+     * "led-control"), já que o mestre interpreta qualquer byte diferente de
+     * 0xA5 como início de payload.
+     */
     (void)test_spi_send_hello();
+#endif
 }
 
 void app_poll(void) {
