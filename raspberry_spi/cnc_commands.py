@@ -80,6 +80,12 @@ class CNCCommandExecutor:
         settle_delay = getattr(args, "settle_delay", None)
         if settle_delay is not None:
             kwargs["settle_delay_s"] = settle_delay
+        poll_byte = getattr(args, "poll_byte", None)
+        disable_poll = getattr(args, "disable_poll", False)
+        if disable_poll:
+            kwargs["poll_byte"] = None
+        elif poll_byte is not None:
+            kwargs["poll_byte"] = poll_byte
 
         try:
             frame = self.client.exchange(request_type, request, **kwargs)
@@ -163,19 +169,33 @@ class CNCCommandExecutor:
             print(decoded.get("payload"))
 
     def boot_hello(self, args: argparse.Namespace) -> None:
-        frame, stats = self.client.read_boot_hello_info(
-            tries=args.tries,
-            settle_delay_s=args.settle_delay,
-            chunk_len=args.chunk_len,
-        )
+        try:
+            frame, stats = self.client.read_boot_hello_info(
+                tries=args.tries,
+                settle_delay_s=args.settle_delay,
+                chunk_len=args.chunk_len,
+            )
+        except TimeoutError:
+            print(
+                "Frame 'hello' não encontrado. Ative APP_ENABLE_BOOT_TEST_RESPONSES "
+                "no firmware ou utilize o comando 'hello'."
+            )
+            return
         print_boot_frame_info(frame, stats)
 
     def boot_led(self, args: argparse.Namespace) -> None:
-        frame, stats = self.client.read_boot_led_info(
-            tries=args.tries,
-            settle_delay_s=args.settle_delay,
-            chunk_len=args.chunk_len,
-        )
+        try:
+            frame, stats = self.client.read_boot_led_info(
+                tries=args.tries,
+                settle_delay_s=args.settle_delay,
+                chunk_len=args.chunk_len,
+            )
+        except TimeoutError:
+            print(
+                "Frame 'led' não encontrado. Certifique-se de que o firmware "
+                "publica esse frame de boot antes de usar este comando."
+            )
+            return
         print_boot_frame_info(frame, stats)
 
 

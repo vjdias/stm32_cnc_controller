@@ -21,6 +21,20 @@ else:  # execução direta do script a partir do diretório raspberry_spi
     from cnc_commands import CNCCommandExecutor
 
 
+def _parse_byte(value: str) -> int:
+    try:
+        byte_val = int(value, 0)
+    except ValueError as exc:  # pragma: no cover - defensive path
+        raise argparse.ArgumentTypeError(
+            f"Valor de byte inválido: '{value}'"
+        ) from exc
+    if not 0 <= byte_val <= 0xFF:
+        raise argparse.ArgumentTypeError(
+            "Informe um byte entre 0 e 255 (ex.: 0x3C)"
+        )
+    return byte_val
+
+
 def _common_args(
     p: argparse.ArgumentParser,
     *,
@@ -38,6 +52,20 @@ def _common_args(
             "Formato usado para imprimir as trocas SPI (hex ou bin). "
             "Padrão: %(default)s"
         ),
+    )
+    p.add_argument(
+        "--poll-byte",
+        type=_parse_byte,
+        default=None,
+        help=(
+            "Byte utilizado pelo polling do cliente. Utilize 0x3C para manter "
+            "o comportamento atual ou informe outro valor."
+        ),
+    )
+    p.add_argument(
+        "--disable-poll",
+        action="store_true",
+        help="Não enviar polling após o handshake inicial (usa apenas o handshake).",
     )
     if include_tries:
         p.add_argument(
@@ -173,7 +201,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     boot_hello = sub.add_parser(
         "boot-hello",
-        help="Ler frame de teste 'hello' enfileirado automaticamente no boot",
+        help=(
+            "Ler frame de teste 'hello' enfileirado automaticamente no boot "
+            "(quando habilitado no firmware)"
+        ),
     )
     _common_args(boot_hello, include_tries=True, default_tries=16)
     boot_hello.add_argument("--chunk-len", type=int, default=7)
@@ -182,7 +213,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     led_boot = sub.add_parser(
         "led",
-        help="Ler frame de teste 'led' do STM32 (enfileirado no boot)",
+        help=(
+            "Ler frame de teste 'led' do STM32 (enfileirado no boot quando "
+            "habilitado)"
+        ),
     )
     _common_args(led_boot, include_tries=True, default_tries=16)
     led_boot.add_argument("--chunk-len", type=int, default=7)
@@ -222,11 +256,11 @@ def print_examples(_: argparse.Namespace) -> None:
         ),
         ("Requisição 'hello'", f"{base_cmd} hello --tries 5"),
         (
-            "Frame de boot 'hello'",
+            "Frame de boot 'hello' (requer firmware com boot-test habilitado)",
             f"{base_cmd} boot-hello --tries 10 --chunk-len 7",
         ),
         (
-            "Frame de boot 'led'",
+            "Frame de boot 'led' (requer firmware com boot-test habilitado)",
             f"{base_cmd} led --tries 10 --chunk-len 7",
         ),
     ]
