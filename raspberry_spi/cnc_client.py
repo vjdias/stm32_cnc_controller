@@ -293,23 +293,40 @@ class CNCClient:
             pass
         return rx
 
-    def exchange(self, request_type: int, request: List[int],
-                 tries: int = 0, settle_delay_s: float = 0.001) -> List[int]:
+    def exchange(
+        self,
+        request_type: int,
+        request: List[int],
+        tries: int = 0,
+        settle_delay_s: float = 0.001,
+        poll_byte: int | None = SPI_DMA_CLIENT_POLL_BYTE,
+    ) -> List[int]:
         if tries < 0:
             raise ValueError("tries cannot be negative")
         spec = CNCResponseDecoder.SPECS[request_type]
         dma_frame = _build_spi_dma_frame(request)
         rx_frame = self._xfer(dma_frame)
         _validate_handshake_frame(dma_frame, rx_frame, len(request))
+        handshake_response = _extract_response_frame(
+            rx_frame, spec.length, spec.response_type
+        )
+        if handshake_response is not None:
+            return handshake_response
         if settle_delay_s > 0:
             time.sleep(settle_delay_s)
 
+        if poll_byte is None:
+            raise TimeoutError(
+                "Polling desabilitado e resposta não estava presente no handshake."
+            )
+
         poll_payload_len = max(1, len(request))
-        # ``SPI_DMA_CLIENT_POLL_BYTE`` (0x3C) é o byte acordado com o firmware
-        # para clockar a resposta sem simular um novo header 0xAA.
+        # ``poll_byte`` (padrão 0x3C) é o byte acordado com o firmware para
+        # clockar a resposta sem simular um novo header 0xAA. Ele pode ser
+        # ajustado via CLI conforme necessário.
         poll_frame = _build_spi_dma_frame(
-            [SPI_DMA_CLIENT_POLL_BYTE] * poll_payload_len,
-            filler=SPI_DMA_CLIENT_POLL_BYTE,
+            [poll_byte] * poll_payload_len,
+            filler=poll_byte,
         )
         attempts = max(1, tries)
         for _ in range(attempts):

@@ -21,6 +21,20 @@ else:  # execução direta do script a partir do diretório raspberry_spi
     from cnc_commands import CNCCommandExecutor
 
 
+def _parse_byte(value: str) -> int:
+    try:
+        byte_val = int(value, 0)
+    except ValueError as exc:  # pragma: no cover - defensive path
+        raise argparse.ArgumentTypeError(
+            f"Valor de byte inválido: '{value}'"
+        ) from exc
+    if not 0 <= byte_val <= 0xFF:
+        raise argparse.ArgumentTypeError(
+            "Informe um byte entre 0 e 255 (ex.: 0x3C)"
+        )
+    return byte_val
+
+
 def _common_args(
     p: argparse.ArgumentParser,
     *,
@@ -38,6 +52,20 @@ def _common_args(
             "Formato usado para imprimir as trocas SPI (hex ou bin). "
             "Padrão: %(default)s"
         ),
+    )
+    p.add_argument(
+        "--poll-byte",
+        type=_parse_byte,
+        default=None,
+        help=(
+            "Byte utilizado pelo polling do cliente. Utilize 0x3C para manter "
+            "o comportamento atual ou informe outro valor."
+        ),
+    )
+    p.add_argument(
+        "--disable-poll",
+        action="store_true",
+        help="Não enviar polling após o handshake inicial (usa apenas o handshake).",
     )
     if include_tries:
         p.add_argument(

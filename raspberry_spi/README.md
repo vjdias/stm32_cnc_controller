@@ -46,6 +46,8 @@ Uso rápido
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.
 - `--speed` em Hz (padrão 1_000_000).
+- `--poll-byte` altera o byte usado durante o polling (padrão 0x3C). Use `--disable-poll`
+  para confiar apenas no frame de handshake (útil para testes específicos).
 
 Notas de protocolo
 - Requests: header `0xAA`, tail `0x55`.
@@ -56,7 +58,9 @@ Notas de protocolo
   - Start/End/Queue-Status-Req/FPGA-Status-Req não possuem campo de paridade (4 bytes)
 
 Limitações e dicas
-- O STM32 é escravo: para “ouvir” uma resposta é necessário gerar clock no master (RPi). O cliente envia `0x3C` em todos os bytes durante esse polling, evitando colisão com o header `0xAA` dos requests.
+- O STM32 é escravo: para “ouvir” uma resposta é necessário gerar clock no master (RPi).
+  Por padrão, o cliente envia `0x3C` em todos os bytes durante esse polling (configurável
+  via `--poll-byte`), evitando colisão com o header `0xAA` dos requests.
 - Caso o serviço no firmware ainda não publique respostas, um timeout pode ocorrer.
 - Comandos com resposta aguardam, por padrão, até 5 polls (`--tries`) com
   atraso de 1 ms (`--settle-delay`). Se o firmware demorar mais para responder,

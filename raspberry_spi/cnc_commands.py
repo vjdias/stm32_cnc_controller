@@ -80,6 +80,12 @@ class CNCCommandExecutor:
         settle_delay = getattr(args, "settle_delay", None)
         if settle_delay is not None:
             kwargs["settle_delay_s"] = settle_delay
+        poll_byte = getattr(args, "poll_byte", None)
+        disable_poll = getattr(args, "disable_poll", False)
+        if disable_poll:
+            kwargs["poll_byte"] = None
+        elif poll_byte is not None:
+            kwargs["poll_byte"] = poll_byte
 
         try:
             frame = self.client.exchange(request_type, request, **kwargs)
