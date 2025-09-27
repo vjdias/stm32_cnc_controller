@@ -35,12 +35,16 @@ def _parse_byte(value: str) -> int:
     return byte_val
 
 
-def _build_common_parent() -> argparse.ArgumentParser:
-    parent = argparse.ArgumentParser(add_help=False)
-    parent.add_argument("--bus", type=int, default=0)
-    parent.add_argument("--dev", type=int, default=0)
-    parent.add_argument("--speed", type=int, default=1_000_000)
-    parent.add_argument(
+def _common_args(
+    p: argparse.ArgumentParser,
+    *,
+    include_tries: bool = False,
+    default_tries: int = 5,
+) -> None:
+    p.add_argument("--bus", type=int, default=0)
+    p.add_argument("--dev", type=int, default=0)
+    p.add_argument("--speed", type=int, default=1_000_000)
+    p.add_argument(
         "--spi-log-format",
         choices=("hex", "bin"),
         default="hex",
@@ -49,7 +53,7 @@ def _build_common_parent() -> argparse.ArgumentParser:
             "Padrão: %(default)s"
         ),
     )
-    parent.add_argument(
+    p.add_argument(
         "--poll-byte",
         type=_parse_byte,
         default=None,
@@ -58,28 +62,21 @@ def _build_common_parent() -> argparse.ArgumentParser:
             "o comportamento atual ou informe outro valor."
         ),
     )
-    parent.add_argument(
+    p.add_argument(
         "--disable-poll",
         action="store_true",
         help="Não enviar polling após o handshake inicial (usa apenas o handshake).",
     )
-    return parent
-
-
-def _attach_retry_args(
-    p: argparse.ArgumentParser,
-    *,
-    default_tries: int = 5,
-) -> None:
-    p.add_argument(
-        "--tries",
-        type=int,
-        default=default_tries,
-        help=(
-            "Número máximo de leituras para validar a resposta"
-            " (padrão: %(default)s)"
-        ),
-    )
+    if include_tries:
+        p.add_argument(
+            "--tries",
+            type=int,
+            default=default_tries,
+            help=(
+                "Número máximo de leituras para validar a resposta"
+                " (padrão: %(default)s)"
+            ),
+        )
 
 
 def _parse_led_frequency(raw_value: str) -> int:
@@ -104,20 +101,18 @@ def _parse_led_frequency(raw_value: str) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    common_parent = _build_common_parent()
     parser = argparse.ArgumentParser(
         description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI1 Slave)",
-        parents=[common_parent],
     )
+    _common_args(parser)
     sub = parser.add_subparsers(dest="command", required=True)
 
     led_ctrl = sub.add_parser(
         "led-control",
         aliases=["led-ctrl"],
         help="Controle do LED discreto (LED1)",
-        parents=[common_parent],
     )
-    _attach_retry_args(led_ctrl)
+    _common_args(led_ctrl, include_tries=True)
     led_ctrl.add_argument("--frame-id", type=int, required=True)
     led_ctrl.add_argument(
         "--mask",
@@ -146,12 +141,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     led_ctrl.set_defaults(handler="led_control", needs_client=True)
 
-    q_add = sub.add_parser(
-        "queue-add",
-        help="Adicionar movimento à fila",
-        parents=[common_parent],
-    )
-    _attach_retry_args(q_add)
+    q_add = sub.add_parser("queue-add", help="Adicionar movimento à fila")
+    _common_args(q_add, include_tries=True)
     q_add.add_argument("--frame-id", type=int, required=True)
     q_add.add_argument("--dir", type=lambda x: int(x, 0), required=True)
     q_add.add_argument("--vx", type=int, required=True)
@@ -166,51 +157,31 @@ def build_parser() -> argparse.ArgumentParser:
         q_add.add_argument(f"--kd-{axis}", type=int, default=0)
     q_add.set_defaults(handler="queue_add", needs_client=True)
 
-    q_status = sub.add_parser(
-        "queue-status",
-        help="Consultar status da fila",
-        parents=[common_parent],
-    )
-    _attach_retry_args(q_status)
+    q_status = sub.add_parser("queue-status", help="Consultar status da fila")
+    _common_args(q_status, include_tries=True)
     q_status.add_argument("--frame-id", type=int, required=True)
     q_status.set_defaults(handler="queue_status", needs_client=True)
 
-    start_move = sub.add_parser(
-        "start-move",
-        help="Iniciar execução",
-        parents=[common_parent],
-    )
-    _attach_retry_args(start_move)
+    start_move = sub.add_parser("start-move", help="Iniciar execução")
+    _common_args(start_move, include_tries=True)
     start_move.add_argument("--frame-id", type=int, required=True)
     start_move.set_defaults(handler="start_move", needs_client=True)
 
-    end_move = sub.add_parser(
-        "end-move",
-        help="Finalizar execução",
-        parents=[common_parent],
-    )
-    _attach_retry_args(end_move)
+    end_move = sub.add_parser("end-move", help="Finalizar execução")
+    _common_args(end_move, include_tries=True)
     end_move.add_argument("--frame-id", type=int, required=True)
     end_move.set_defaults(handler="end_move", needs_client=True)
 
-    home = sub.add_parser(
-        "home",
-        help="Sequência de homing",
-        parents=[common_parent],
-    )
-    _attach_retry_args(home)
+    home = sub.add_parser("home", help="Sequência de homing")
+    _common_args(home, include_tries=True)
     home.add_argument("--frame-id", type=int, required=True)
     home.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     home.add_argument("--dirs", type=lambda x: int(x, 0), required=True)
     home.add_argument("--vhome", type=lambda x: int(x, 0), required=True)
     home.set_defaults(handler="home", needs_client=True)
 
-    probe = sub.add_parser(
-        "probe-level",
-        help="Sequência de probe level",
-        parents=[common_parent],
-    )
-    _attach_retry_args(probe)
+    probe = sub.add_parser("probe-level", help="Sequência de probe level")
+    _common_args(probe, include_tries=True)
     probe.add_argument("--frame-id", type=int, required=True)
     probe.add_argument("--axes", type=lambda x: int(x, 0), required=True)
     probe.add_argument("--vprobe", type=lambda x: int(x, 0), required=True)
@@ -219,9 +190,8 @@ def build_parser() -> argparse.ArgumentParser:
     hello = sub.add_parser(
         "hello",
         help="Enviar uma requisição 'hello' e aguardar a resposta do STM32",
-        parents=[common_parent],
     )
-    _attach_retry_args(hello)
+    _common_args(hello, include_tries=True)
     hello.add_argument(
         "--settle-delay",
         type=float,
@@ -236,9 +206,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Ler frame de teste 'hello' enfileirado automaticamente no boot "
             "(quando habilitado no firmware)"
         ),
-        parents=[common_parent],
     )
-    _attach_retry_args(boot_hello, default_tries=16)
+    _common_args(boot_hello, include_tries=True, default_tries=16)
     boot_hello.add_argument("--chunk-len", type=int, default=7)
     boot_hello.add_argument("--settle-delay", type=float, default=0.002)
     boot_hello.set_defaults(handler="boot_hello", needs_client=True)
@@ -249,9 +218,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Ler frame de teste 'led' do STM32 (enfileirado no boot quando "
             "habilitado)"
         ),
-        parents=[common_parent],
     )
-    _attach_retry_args(led_boot, default_tries=16)
+    _common_args(led_boot, include_tries=True, default_tries=16)
     led_boot.add_argument("--chunk-len", type=int, default=7)
     led_boot.add_argument("--settle-delay", type=float, default=0.002)
     led_boot.set_defaults(handler="boot_led", needs_client=True)
