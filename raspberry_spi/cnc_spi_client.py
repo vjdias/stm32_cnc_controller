@@ -53,7 +53,8 @@ def _common_args(
             "Padrão: %(default)s"
         ),
     )
-    p.add_argument(
+    poll_group = p.add_mutually_exclusive_group()
+    poll_group.add_argument(
         "--poll-byte",
         type=_parse_byte,
         default=None,
@@ -62,10 +63,10 @@ def _common_args(
             "o comportamento atual ou informe outro valor."
         ),
     )
-    p.add_argument(
+    poll_group.add_argument(
         "--disable-poll",
         action="store_true",
-        help="Não enviar polling após o handshake inicial (usa apenas o handshake).",
+        help="Não enviar polling após o handshake inicial (usa apenas o handshake)."
     )
     if include_tries:
         p.add_argument(
