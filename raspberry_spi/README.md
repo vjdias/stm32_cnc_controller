@@ -59,10 +59,58 @@ Notas de protocolo
 
 Limitações e dicas
 - O STM32 é escravo: para “ouvir” uma resposta é necessário gerar clock no master (RPi).
-  Por padrão, o cliente envia `0x3C` em todos os bytes durante esse polling (configurável
-  via `--poll-byte`), evitando colisão com o header `0xAA` dos requests.
+  Quem decide quando disparar um novo *poll* é o método
+  `CNCClient.exchange()` do cliente Python. Ele valida o handshake e só
+  continua se `_extract_response_frame()` **não** encontrar `0xAB ... 0x54` no
+  primeiro retorno do DMA. Essa condição (handshake composto apenas por
+  `0xA5/0x00`, ou qualquer sequência que não satisfaça o decoder) dispara o
+  próximo poll. Quando o frame de handshake já traz um payload completo, a
+  função encerra imediatamente, sem polls extras. O loop também termina se o
+  limite imposto por `--tries` for atingido sem uma resposta válida. Por padrão,
+  o cliente envia `0x3C` em todos os bytes durante esse polling (configurável
+  via `--poll-byte`), evitando colisão com o header `0xAA` dos requests.【F:raspberry_spi/cnc_client.py†L310-L339】
 - Caso o serviço no firmware ainda não publique respostas, um timeout pode ocorrer.
 - Comandos com resposta aguardam, por padrão, até 5 polls (`--tries`) com
-  atraso de 1 ms (`--settle-delay`). Se o firmware demorar mais para responder,
-  aumente uma ou ambas as opções para evitar timeouts.
+  atraso de 1 ms (`--settle-delay`). Esses parâmetros apenas controlam quanto
+  tempo o cliente insiste antes de desistir: eles **não** eliminam o terceiro
+  ciclo observado no início da sessão porque o firmware STM32 sempre segura um
+  reinício do DMA por pelo menos uma iteração do laço principal. Esse atraso é
+  implementado em `CNC_Controller/App/Src/app.c` via `APP_SPI_RESTART_DEFER_MAX`
+  e a flag `g_spi_restart_defer`, garantindo que o roteador tenha tempo de
+  decodificar o pedido e gerar uma resposta antes de disponibilizar um novo
+  quadro de 42 bytes.【F:CNC_Controller/App/Src/app.c†L44-L76】【F:CNC_Controller/App/Src/app.c†L326-L404】【F:CNC_Controller/App/Src/app.c†L596-L683】
+  Enquanto `g_spi_tx_pending_ready` permanece limpo, `app_spi_try_restart_dma`
+  posterga o reinício e, quando o timeout interno expira, o canal volta a
+  transmitir apenas o padrão `0xA5`. Por isso, mesmo com `--settle-delay`
+  elevado, o segundo poll ainda coleta somente o handshake; o payload real só
+  aparece no ciclo seguinte, depois que o serviço publica a resposta no FIFO e
+  o buffer DMA é rearmado.
+- Para experimentar uma troca em dois ciclos (handshake + 1 poll) é necessário
+  alterar o firmware: reduzir `APP_SPI_RESTART_DEFER_MAX` para `0` elimina a
+  espera obrigatória, mas isso reabre a possibilidade do mestre capturar apenas
+  `0xA5` caso a resposta demore mais que o intervalo entre polls. Outra opção é
+  aumentar o valor da constante para conceder mais iterações ao laço principal
+  antes do timeout e observar, via os logs do SPI, se o segundo ciclo já passa
+  a carregar `0xAB ... 0x54`. Em qualquer caso, os parâmetros do cliente Python
+  continuam apenas como proteção contra timeouts.
+- Handshake inicial `0xA5`: quando o primeiro frame recebido contém somente `0xA5`
+  (READY) ou `0x00`, isso indica apenas que o firmware aceitou o request, mas ainda está
+  preparando a resposta. O cliente então executa polls adicionais usando o byte
+  configurado (ex.: `0x3C`) até encontrar `0xAB ... 0x54`. É comum a resposta aparecer
+  apenas no segundo ou terceiro poll, especialmente quando o firmware precisa atualizar
+  registradores antes de publicar o frame.
+- Exemplificando um ciclo completo de LED Control (`--frame-id 1 --mask 0x01`):
+  ```
+  SPI TX bits: ... AA 07 01 01 01 00 00 06 55
+  SPI RX bits: ... A5 A5 A5 A5 A5 A5 A5 A5 A5
+  SPI TX bits: ... 3C 3C 3C 3C 3C 3C 3C 3C 3C
+  SPI RX bits: ... A5 A5 A5 A5 A5 A5 A5 A5 A5
+  SPI TX bits: ... 3C 3C 3C 3C 3C 3C 3C 3C 3C
+  SPI RX bits: ... AB 07 01 01 00 07 54
+  ```
+  Na primeira leitura vemos apenas `0xA5` (READY). O segundo poll ainda não contém a
+  resposta porque o DMA foi religado apenas com o padrão de handshake; o payload só
+  aparece no terceiro ciclo depois que o firmware finaliza o processamento interno e
+  publica o ACK no FIFO. Modificar `APP_SPI_RESTART_DEFER_MAX` no firmware é o caminho
+  correto para experimentar uma troca em apenas dois ciclos.
 
