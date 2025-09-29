@@ -1,6 +1,7 @@
 #include <string.h>
 #include "Services/service_adapters.h"
 #include "app.h"
+#include "stm32l4xx_hal_spi_ex.h"
 
 // Handle gerado pelo CubeMX (ajuste o nome se necessário)
 extern SPI_HandleTypeDef hspi1;
@@ -73,8 +74,11 @@ static void prepare_next_tx(void) {
 
 
 // Reinicia uma transação DMA (não bloqueante)
+static void        spi_rx_fifo_drain(SPI_HandleTypeDef *hspi);
+static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi);
+
 static void restart_spi_dma(void) {
-    // >>> NOVO: garanta FIFO RX limpo antes da nova rodada (anti-deslocamento)
+    // Antes de iniciar uma nova rodada DMA, garanta que o FIFO RX esteja limpo.
     spi_post_dma_rx_fifo_sanity(&hspi1);
 
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
@@ -142,7 +146,7 @@ void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi) {
     if (!hspi) return;
     if (hspi->Instance != APP_SPI_INSTANCE) return;
 
-    // >>> NOVO: saneamento pós-DMA (limpa RX FIFO se sobrou algo)
+    // Saneia o FIFO RX assim que o DMA sinalizar término para evitar deslocamentos.
     spi_post_dma_rx_fifo_sanity(hspi);
 
     // Sinaliza para o loop principal processar RX->router e TX->DMA
@@ -160,30 +164,43 @@ int app_resp_push(const uint8_t *frame, uint32_t len) {
     return resp_fifo_push(g_resp_fifo, frame, len);
 }
 
-/* ===========================  NOVO: Guardas de FIFO  ===========================
+/* ===========================  Proteções do FIFO RX  ===========================
 
-   Problema que estamos tratando:
-   - Em full-duplex com DMA em “normal mode”, prioridades/underruns pontuais
-     podem deixar bytes residuais no RX FIFO ao término do DMA (deslocando
-     o frame da próxima rodada).
+   Problema tratado:
+   - Em modo full-duplex com DMA (normal mode), underruns pontuais podem deixar
+     bytes residuais no FIFO RX após o término da transação, deslocando o frame
+     da rodada seguinte.
 
    Estratégia:
-   - Assim que o DMA termina (callback), verificar se há dado no RX FIFO.
-     Se houver, drenar lendo DR até RXNE limpar (e limpar OVR se setado).
-   - Opcionalmente, repetir o saneamento antes de iniciar um novo DMA.
+    - Ao término do DMA (callback) verificamos se ainda há bytes no FIFO RX
+      (via FRLVL nos L4 ou RXNE em núcleos sem FIFO) e, em caso positivo,
+      esvaziamos o DR e limpamos OVR.
+    - Repetimos o mesmo saneamento imediatamente antes de disparar uma nova
+      rodada, garantindo que o início do próximo frame esteja alinhado.
 
-   Observações:
-   - Este código assume DataSize = 8 bits (buffers uint8_t). Se usar 16 bits,
-     faça leitura em 16 bits do DR.
+   Observação:
+   - Código assume DataSize = 8 bits; ajuste a leitura caso utilize 16 bits.
    ============================================================================ */
 
 static void spi_rx_fifo_drain(SPI_HandleTypeDef *hspi) {
+    if (!hspi) {
+        return;
+    }
+
+#if defined(HAL_SPI_MODULE_ENABLED)
+    if (HAL_SPIEx_FlushRxFifo(hspi) != HAL_OK) {
+        uint32_t guard = 0u;
+        while (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE) && guard++ < 64u) {
+            (void)*(__IO uint8_t *)&hspi->Instance->DR;
+        }
+    }
+#else
     uint32_t guard = 0u;
-    // Drena enquanto houver dados visíveis (RXNE = 1); limite de segurança evita loop infinito
     while (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE) && guard++ < 64u) {
         (void)*(__IO uint8_t *)&hspi->Instance->DR;
     }
-    // Se houve overrun, limpe a flag adequadamente
+#endif
+
 #ifdef SPI_SR_OVR
     if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR)) {
         __HAL_SPI_CLEAR_OVRFLAG(hspi);
@@ -192,7 +209,13 @@ static void spi_rx_fifo_drain(SPI_HandleTypeDef *hspi) {
 }
 
 static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi) {
+#if defined(SPI_SR_FRLVL)
+    if ((hspi->Instance->SR & SPI_SR_FRLVL) != SPI_FRLVL_EMPTY) {
+        spi_rx_fifo_drain(hspi);
+    }
+#else
     if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE)) {
         spi_rx_fifo_drain(hspi);
     }
+#endif
 }
