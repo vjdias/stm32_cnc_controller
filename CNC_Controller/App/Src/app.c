@@ -2,7 +2,6 @@
 #include "Services/service_adapters.h"
 #include "app.h"
 #include "stm32l4xx_hal_spi_ex.h"
-#include "stm32l4xx_hal_dma.h"
 
 // Handle gerado pelo CubeMX (ajuste o nome se necessário)
 extern SPI_HandleTypeDef hspi1;
@@ -76,11 +75,11 @@ static void prepare_next_tx(void) {
 
 // Reinicia uma transação DMA (não bloqueante)
 static void        spi_rx_fifo_drain(SPI_HandleTypeDef *hspi);
-static void        spi_dma_channel_reset(DMA_HandleTypeDef *hdma);
+static uint32_t    spi_rx_fifo_level(SPI_HandleTypeDef *hspi);
 static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi);
 
 static void restart_spi_dma(void) {
-    // Antes de iniciar uma nova rodada DMA, garanta que o FIFO RX esteja limpo.
+    // Antes de iniciar uma nova rodada DMA, drene qualquer byte residual do FIFO RX.
     spi_post_dma_rx_fifo_sanity(&hspi1);
 
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
@@ -174,13 +173,12 @@ int app_resp_push(const uint8_t *frame, uint32_t len) {
      da rodada seguinte.
 
    Estratégia:
-    - Ao término do DMA (callback) desabilitamos as requisições RX/TX, aguardamos
-      o periférico ficar ocioso (BSY=0) e limpamos as flags do DMA.
-    - Em seguida drenamos incondicionalmente o FIFO RX, o que remove bytes
-      residuais mesmo quando FRLVL/RXNE reportam vazio.
-    - Repetimos o mesmo saneamento imediatamente antes de disparar uma nova
-      rodada, garantindo que o início do próximo frame esteja alinhado e que os
-      canais DMA voltem a operar sem TCIF pendentes (conforme a nota do blog).
+    - Ao término do DMA (callback) inspecionamos o nível do FIFO RX (FRLVL/RXNE).
+    - Se houver resíduos, executamos leituras fictícias para limpar o FIFO e
+      descartamos um eventual OVR.
+    - Repetimos a verificação imediatamente antes de disparar uma nova rodada,
+      garantindo que o próximo frame comece alinhado, conforme recomendado no
+      artigo.
 
    Observação:
    - Código assume DataSize = 8 bits; ajuste a leitura caso utilize 16 bits.
@@ -212,28 +210,22 @@ static void spi_rx_fifo_drain(SPI_HandleTypeDef *hspi) {
 #endif
 }
 
-static void spi_dma_channel_reset(DMA_HandleTypeDef *hdma) {
-    if (!hdma) {
-        return;
+static uint32_t spi_rx_fifo_level(SPI_HandleTypeDef *hspi) {
+    if (!hspi) {
+        return 0u;
     }
 
-    uint32_t guard = 0u;
-    if ((hdma->Instance->CCR & DMA_CCR_EN) != 0u) {
-        __HAL_DMA_DISABLE(hdma);
-        while ((hdma->Instance->CCR & DMA_CCR_EN) != 0u && guard++ < 1024u) {
-            /* aguarda desativação */
-        }
+    uint32_t level = 0u;
+#if defined(SPI_SR_FRLVL)
+    if (READ_BIT(hspi->Instance->SR, SPI_SR_FRLVL) != SPI_FRLVL_EMPTY) {
+        level = 1u;
     }
-
-    __HAL_DMA_CLEAR_FLAG(hdma, __HAL_DMA_GET_TC_FLAG_INDEX(hdma));
-    __HAL_DMA_CLEAR_FLAG(hdma, __HAL_DMA_GET_HT_FLAG_INDEX(hdma));
-    __HAL_DMA_CLEAR_FLAG(hdma, __HAL_DMA_GET_TE_FLAG_INDEX(hdma));
-#if defined(DMA_CCR_DMEIE)
-    __HAL_DMA_CLEAR_FLAG(hdma, __HAL_DMA_GET_DME_FLAG_INDEX(hdma));
+#elif defined(SPI_SR_RXNE)
+    level = (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE) ? 1u : 0u);
+#else
+    level = 0u;
 #endif
-#if defined(DMA_CCR_FEIE)
-    __HAL_DMA_CLEAR_FLAG(hdma, __HAL_DMA_GET_FE_FLAG_INDEX(hdma));
-#endif
+    return level;
 }
 
 static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi) {
@@ -241,29 +233,11 @@ static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi) {
         return;
     }
 
-    // Desabilita as requisições de DMA no periférico antes de mexer nos FIFOs.
-    CLEAR_BIT(hspi->Instance->CR2, SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
-
-    // Sequência sugerida na nota de aplicação: garantir que os canais DMA
-    // estejam realmente parados e com flags limpos antes da próxima rodada.
-    spi_dma_channel_reset(hspi->hdmarx);
-    spi_dma_channel_reset(hspi->hdmatx);
-
-    // Aguarda o SPI ficar ocioso (BSY=0) antes de inspecionar os buffers.
-    uint32_t guard = 0u;
-    while (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_BSY) && guard++ < 1024u) {
-        /* espera o host finalizar a batelada atual */
+    // Evita leituras desnecessárias quando o FIFO já está vazio.
+    if (spi_rx_fifo_level(hspi) == 0u) {
+        return;
     }
 
-#ifdef SPI_SR_FTLVL
-    guard = 0u;
-    while ((__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_FTLVL) != SPI_FTLVL_EMPTY) && guard++ < 64u) {
-        /* drena qualquer byte preso no FIFO de TX do periférico */
-    }
-#endif
-
-    // Mesmo que os indicadores de nível reportem "vazio", algumas rodadas DMA
-    // terminam com bytes residuais. Limpar incondicionalmente o RX evita que
-    // esses resíduos contaminem o próximo frame.
+    // Leituras fictícias descartam bytes residuais indicados pelo FRLVL/RXNE.
     spi_rx_fifo_drain(hspi);
 }
