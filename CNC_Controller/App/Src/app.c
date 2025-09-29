@@ -172,9 +172,8 @@ int app_resp_push(const uint8_t *frame, uint32_t len) {
      da rodada seguinte.
 
    Estratégia:
-    - Ao término do DMA (callback) verificamos se ainda há bytes no FIFO RX
-      (via FRLVL nos L4 ou RXNE em núcleos sem FIFO) e, em caso positivo,
-      esvaziamos o DR e limpamos OVR.
+    - Ao término do DMA (callback) drenamos incondicionalmente o FIFO RX, o
+      que remove bytes residuais mesmo quando FRLVL/RXNE reportam vazio.
     - Repetimos o mesmo saneamento imediatamente antes de disparar uma nova
       rodada, garantindo que o início do próximo frame esteja alinhado.
 
@@ -209,13 +208,8 @@ static void spi_rx_fifo_drain(SPI_HandleTypeDef *hspi) {
 }
 
 static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi) {
-#if defined(SPI_SR_FRLVL)
-    if ((hspi->Instance->SR & SPI_SR_FRLVL) != SPI_FRLVL_EMPTY) {
-        spi_rx_fifo_drain(hspi);
-    }
-#else
-    if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE)) {
-        spi_rx_fifo_drain(hspi);
-    }
-#endif
+    // Mesmo que os indicadores de nível do FIFO reportem "vazio", algumas
+    // rodadas DMA terminam com bytes residuais. Limpar incondicionalmente o
+    // RX evita que esses resíduos contaminem o próximo frame.
+    spi_rx_fifo_drain(hspi);
 }
