@@ -35,26 +35,26 @@ static void h_led_ctrl(router_t *r, const uint8_t *f, uint32_t l) {
 	led_on_led_ctrl(f, l);
 }
 static void h_fpga_status(router_t *r, const uint8_t *f, uint32_t l) {
-        (void) r;
-        (void) f;
-        (void) l; /* opcional */
+	(void) r;
+	(void) f;
+	(void) l; /* opcional */
 }
 
 static void h_test_hello(router_t *r, const uint8_t *f, uint32_t l) {
-        (void) r;
-        test_spi_on_hello(f, l);
+	(void) r;
+	//test_spi_on_hello(f, l);
 }
 
 void services_register_handlers(router_handlers_t *h) {
-        if (!h)
-                return;
-        h->on_move_queue_add = h_move_queue_add;
+	if (!h)
+		return;
+	h->on_move_queue_add = h_move_queue_add;
 	h->on_move_queue_status = h_move_queue_status;
 	h->on_start_move = h_start_move;
 	h->on_move_home = h_move_home;
-        h->on_move_probe_level = h_move_probe_level;
-        h->on_move_end = h_move_end;
-        h->on_led_ctrl = h_led_ctrl;
-        h->on_fpga_status = h_fpga_status;
-        h->on_test_hello = h_test_hello;
+	h->on_move_probe_level = h_move_probe_level;
+	h->on_move_end = h_move_end;
+	h->on_led_ctrl = h_led_ctrl;
+	h->on_fpga_status = h_fpga_status;
+	h->on_test_hello = h_test_hello;
 }

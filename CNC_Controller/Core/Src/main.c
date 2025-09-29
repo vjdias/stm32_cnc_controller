@@ -176,20 +176,11 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_SPI_TxRxHalfCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  app_on_spi_txrx_half_complete(hspi);
-}
-
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  app_on_spi_txrx_complete(hspi);
+    app_spi_isr_txrx_done(hspi);
 }
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  app_on_spi_tx_complete(hspi);
-}
 /* USER CODE END 4 */
 
 /**
