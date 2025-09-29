@@ -2,9 +2,11 @@
 ../App/Src/app.c:30:12:find_frame	6
 ../App/Src/app.c:48:13:prepare_next_tx	3
 ../App/Src/app.c:76:13:restart_spi_dma	3
-../App/Src/app.c:92:6:app_init	1
-../App/Src/app.c:107:6:app_poll	4
-../App/Src/app.c:133:17:app_spi_get_state	1
-../App/Src/app.c:134:17:app_spi_get_error	1
-../App/Src/app.c:138:6:app_spi_isr_txrx_done	3
-../App/Src/app.c:145:5:app_resp_push	5
+../App/Src/app.c:95:6:app_init	1
+../App/Src/app.c:110:6:app_poll	4
+../App/Src/app.c:136:17:app_spi_get_state	1
+../App/Src/app.c:137:17:app_spi_get_error	1
+../App/Src/app.c:141:6:app_spi_isr_txrx_done	3
+../App/Src/app.c:152:5:app_resp_push	5
+../App/Src/app.c:180:13:spi_rx_fifo_drain	4
+../App/Src/app.c:194:20:spi_post_dma_rx_fifo_sanity	2

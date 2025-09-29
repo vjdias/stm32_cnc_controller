@@ -74,6 +74,9 @@ static void prepare_next_tx(void) {
 
 // Reinicia uma transação DMA (não bloqueante)
 static void restart_spi_dma(void) {
+    // >>> NOVO: garanta FIFO RX limpo antes da nova rodada (anti-deslocamento)
+    spi_post_dma_rx_fifo_sanity(&hspi1);
+
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
         g_spi_error_flag = 1u;
         return;
@@ -138,6 +141,10 @@ uint8_t         app_spi_get_error(void) { return g_spi_error_flag; }
 void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi) {
     if (!hspi) return;
     if (hspi->Instance != APP_SPI_INSTANCE) return;
+
+    // >>> NOVO: saneamento pós-DMA (limpa RX FIFO se sobrou algo)
+    spi_post_dma_rx_fifo_sanity(hspi);
+
     // Sinaliza para o loop principal processar RX->router e TX->DMA
     g_spi_round_done = 1u;
 }
@@ -151,4 +158,41 @@ int app_resp_push(const uint8_t *frame, uint32_t len) {
         return PROTO_ERR_RANGE;
     }
     return resp_fifo_push(g_resp_fifo, frame, len);
+}
+
+/* ===========================  NOVO: Guardas de FIFO  ===========================
+
+   Problema que estamos tratando:
+   - Em full-duplex com DMA em “normal mode”, prioridades/underruns pontuais
+     podem deixar bytes residuais no RX FIFO ao término do DMA (deslocando
+     o frame da próxima rodada).
+
+   Estratégia:
+   - Assim que o DMA termina (callback), verificar se há dado no RX FIFO.
+     Se houver, drenar lendo DR até RXNE limpar (e limpar OVR se setado).
+   - Opcionalmente, repetir o saneamento antes de iniciar um novo DMA.
+
+   Observações:
+   - Este código assume DataSize = 8 bits (buffers uint8_t). Se usar 16 bits,
+     faça leitura em 16 bits do DR.
+   ============================================================================ */
+
+static void spi_rx_fifo_drain(SPI_HandleTypeDef *hspi) {
+    uint32_t guard = 0u;
+    // Drena enquanto houver dados visíveis (RXNE = 1); limite de segurança evita loop infinito
+    while (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE) && guard++ < 64u) {
+        (void)*(__IO uint8_t *)&hspi->Instance->DR;
+    }
+    // Se houve overrun, limpe a flag adequadamente
+#ifdef SPI_SR_OVR
+    if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR)) {
+        __HAL_SPI_CLEAR_OVRFLAG(hspi);
+    }
+#endif
+}
+
+static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi) {
+    if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE)) {
+        spi_rx_fifo_drain(hspi);
+    }
 }
