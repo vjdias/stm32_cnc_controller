@@ -55,8 +55,8 @@ uint8_t         app_spi_get_error(void);
 // ---- Chamadas a partir dos callbacks do HAL no main.c ----
 // Dentro do seu HAL_SPI_TxRxCpltCallback() chame isto:
 void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi);
+void app_spi_isr_error(SPI_HandleTypeDef *hspi);
 
 int app_resp_push(const uint8_t *frame, uint32_t len);
-static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi);
 
 

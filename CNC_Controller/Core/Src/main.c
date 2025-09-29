@@ -181,6 +181,11 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
     app_spi_isr_txrx_done(hspi);
 }
 
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    app_spi_isr_error(hspi);
+}
+
 /* USER CODE END 4 */
 
 /**
