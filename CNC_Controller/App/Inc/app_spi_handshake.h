@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #define APP_SPI_MAX_REQUEST_LEN 42u
+#define APP_SPI_MAX_RESPONSE_LEN 20u
 #define APP_SPI_DMA_BUF_LEN   APP_SPI_MAX_REQUEST_LEN
 
 #define APP_SPI_STATUS_READY 0xA5u
