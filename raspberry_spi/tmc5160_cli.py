@@ -93,7 +93,7 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Configura o driver TMC5160 através do barramento SPI do Raspberry Pi",
     )
     parser.add_argument("--bus", type=int, default=1, help="Barramento SPI (default: 1)")
-    parser.add_argument("--dev", type=int, default=0, help="Dispositivo SPI (default: 0)")
+    parser.add_argument("--dev", type=int, default=1, help="Dispositivo SPI (default: 1)")
     parser.add_argument(
         "--speed",
         type=int,

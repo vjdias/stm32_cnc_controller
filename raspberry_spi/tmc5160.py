@@ -57,7 +57,7 @@ class TMC5160Configurator:
         self,
         *,
         bus: int = 1,
-        device: int = 0,
+        device: int = 1,
         speed_hz: int = 4_000_000,
         register_preset: TMC5160RegisterPreset | None = None,
         spi_device_factory=None,
