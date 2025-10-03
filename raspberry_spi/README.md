@@ -49,6 +49,88 @@ Parâmetros comuns
 - `--poll-byte` altera o byte usado durante o polling (padrão 0x3C). Use `--disable-poll`
   para confiar apenas no frame de handshake (útil para testes específicos).
 
+Configuração do driver TMC5160 a partir do Raspberry Pi
+-------------------------------------------------------
+- O módulo `tmc5160.py` expõe a classe `TMC5160Configurator`, pensada para o barramento
+  `/dev/spidev0.1` (bus=0, device=1) utilizado na placa intermediária do projeto. Ela
+  encapsula a sequência de registradores essenciais para deixar o driver pronto para
+  receber pulsos STEP/DIR.
+- Pré-requisitos no Raspberry Pi:
+  - Ativar o SPI em `raspi-config` (menu Interfaces → SPI) e garantir que a sobreposição
+    (`dtoverlay`) para o barramento esteja habilitada no `config.txt`. O overlay padrão
+    `dtparam=spi=on` cria `/dev/spidev0.0` / `/dev/spidev0.1`, ligados ao **controlador SPI0**
+    do BCM2711 e compatíveis com o cabeamento atual (STM32 em `/dev/spidev0.0`, TMC5160 em
+    `/dev/spidev0.1`). Caso utilize o SPI1 em futuras revisões, habilite `dtoverlay=spi1-3cs`
+    para expor `/dev/spidev1.0` / `/dev/spidev1.1` / `/dev/spidev1.2`.
+  - Instalar `python3-spidev` ou `pip install spidev`.
+  - Ligar os sinais: SCK ↔ CLK do TMC5160, MOSI ↔ SDI, MISO ↔ SDO, CE0 ↔ CSN. Alimente
+    a lógica em 3V3 e compartilhe o GND.
+- Uso rápido em Python:
+  ```python
+  from raspberry_spi.tmc5160 import TMC5160Configurator
+
+  with TMC5160Configurator(bus=0, device=1, speed_hz=4_000_000) as driver:
+      driver.configure()  # escreve GSTAT, GCONF, IHOLD_IRUN, etc. com o preset padrão
+
+      # Opcional: sobrescreva algum registrador específico
+      driver.write_register(0x10, 0x00071F0A)  # Ex.: aumenta o tempo de ramp down
+  ```
+- Interface de terminal (`tmc5160_cli.py`):
+  ```bash
+  # Aplica o preset padrão usando /dev/spidev0.1 (bus=0, dev=1)
+  python3 tmc5160_cli.py
+
+  # Ajusta registradores adicionais (endereços em decimal/hex ou aliases)
+  python3 tmc5160_cli.py --gconf 0x00000005 --write 0x20=0x12345678
+
+  # Executa apenas as escritas informadas, sem preset padrão
+  python3 tmc5160_cli.py --no-defaults --write chopconf=0x10410150 --write pwmconf=0xC10D0024
+
+  # Consulta o status atual dos registradores principais
+  python3 tmc5160_cli.py status
+
+  # Lê apenas registradores específicos (aliases ou endereços)
+  python3 tmc5160_cli.py status --register gconf --register 0x6C
+  ```
+  O comando aceita `--bus`, `--dev` e `--speed` para apontar outro dispositivo SPI
+  e expõe flags para sobrescrever rapidamente os registradores do preset
+  (`--gconf`, `--gstat`, `--ihold-irun`, etc.) ou listas extras de escrita via
+  `--write`. Caso nenhuma flag seja passada, o preset padrão é aplicado e o driver
+  fica pronto para receber pulsos STEP/DIR.
+  Após cada transferência o utilitário exibe a resposta bruta em hexadecimal
+  (5 bytes) seguida de uma interpretação em português do byte de status (SG,
+  OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
+  32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
+  execução é encerrada com erro explicando quais flags foram ativadas. O comando
+  `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
+  retorno útil) com a tradução dos flags e o valor atual de cada registrador
+  consultado. Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN,
+  TPOWERDOWN, TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o
+  datasheet — por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal,
+  bits ativos de `GCONF`, microstepping (`MRES`) e configuração de StealthChop,
+  facilitando entender rapidamente o estado real do driver.
+- O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
+  limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
+  parâmetros de chopper/pwm adequados para microstepping de 1/16.
+- Para ajustes finos, crie um preset próprio:
+  ```python
+  from raspberry_spi.tmc5160 import TMC5160RegisterPreset, TMC5160Configurator
+
+  silent_preset = TMC5160RegisterPreset(
+      writes=((0x01, 0x07), (0x00, 0x04), (0x10, 0x00050708), (0x70, 0xC10D0010))
+  )
+
+  cfg = TMC5160Configurator(register_preset=silent_preset)
+  cfg.configure()
+  cfg.close()
+  ```
+- Em modo contexto (`with ...`), o driver é aberto automaticamente e fechado ao final.
+  Fora dele, chame `close()` manualmente após terminar a configuração.
+- Se precisar disparar sequências adicionais (ex.: corrente dinâmica durante manutenção),
+  use `apply_registers()` com uma lista de pares `(endereço, valor)`.
+- Antes de iniciar movimentos, garanta que o EN do TMC5160 esteja em nível ativo e que o
+  STM32 esteja pronto para gerar pulsos STEP/DIR usando os parâmetros acordados.
+
 Notas de protocolo
 - Requests: header `0xAA`, tail `0x55`.
 - Responses: header `0xAB`, tail `0x54`.
