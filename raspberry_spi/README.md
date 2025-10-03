@@ -49,6 +49,50 @@ Parâmetros comuns
 - `--poll-byte` altera o byte usado durante o polling (padrão 0x3C). Use `--disable-poll`
   para confiar apenas no frame de handshake (útil para testes específicos).
 
+Configuração do driver TMC5160 a partir do Raspberry Pi
+-------------------------------------------------------
+- O módulo `tmc5160.py` expõe a classe `TMC5160Configurator`, pensada para o barramento
+  `/dev/spidev2.0` (bus=2, device=0) utilizado na placa intermediária do projeto. Ela
+  encapsula a sequência de registradores essenciais para deixar o driver pronto para
+  receber pulsos STEP/DIR.
+- Pré-requisitos no Raspberry Pi:
+  - Ativar o SPI2 em `raspi-config` (menu Interfaces → SPI) e garantir que a sobreposição
+    (`dtoverlay`) para o barramento esteja habilitada no `config.txt`.
+  - Instalar `python3-spidev` ou `pip install spidev`.
+  - Ligar os sinais: SCK ↔ CLK do TMC5160, MOSI ↔ SDI, MISO ↔ SDO, CE0 ↔ CSN. Alimente
+    a lógica em 3V3 e compartilhe o GND.
+- Uso rápido em Python:
+  ```python
+  from raspberry_spi.tmc5160 import TMC5160Configurator
+
+  with TMC5160Configurator(bus=2, device=0, speed_hz=4_000_000) as driver:
+      driver.configure()  # escreve GSTAT, GCONF, IHOLD_IRUN, etc. com o preset padrão
+
+      # Opcional: sobrescreva algum registrador específico
+      driver.write_register(0x10, 0x00071F0A)  # Ex.: aumenta o tempo de ramp down
+  ```
+- O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
+  limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
+  parâmetros de chopper/pwm adequados para microstepping de 1/16.
+- Para ajustes finos, crie um preset próprio:
+  ```python
+  from raspberry_spi.tmc5160 import TMC5160RegisterPreset, TMC5160Configurator
+
+  silent_preset = TMC5160RegisterPreset(
+      writes=((0x01, 0x07), (0x00, 0x04), (0x10, 0x00050708), (0x70, 0xC10D0010))
+  )
+
+  cfg = TMC5160Configurator(register_preset=silent_preset)
+  cfg.configure()
+  cfg.close()
+  ```
+- Em modo contexto (`with ...`), o driver é aberto automaticamente e fechado ao final.
+  Fora dele, chame `close()` manualmente após terminar a configuração.
+- Se precisar disparar sequências adicionais (ex.: corrente dinâmica durante manutenção),
+  use `apply_registers()` com uma lista de pares `(endereço, valor)`.
+- Antes de iniciar movimentos, garanta que o EN do TMC5160 esteja em nível ativo e que o
+  STM32 esteja pronto para gerar pulsos STEP/DIR usando os parâmetros acordados.
+
 Notas de protocolo
 - Requests: header `0xAA`, tail `0x55`.
 - Responses: header `0xAB`, tail `0x54`.
