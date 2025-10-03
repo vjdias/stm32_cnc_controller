@@ -18,6 +18,7 @@ if __package__:
         REG_TPOWERDOWN,
         REG_TPWMTHRS,
         TMC5160Configurator,
+        TMC5160ReadResult,
         TMC5160RegisterPreset,
         TMC5160TransferResult,
     )
@@ -33,6 +34,7 @@ else:  # execução direta dos testes/script
         REG_TPOWERDOWN,
         REG_TPWMTHRS,
         TMC5160Configurator,
+        TMC5160ReadResult,
         TMC5160RegisterPreset,
         TMC5160TransferResult,
     )
@@ -47,6 +49,26 @@ REGISTER_ALIASES = {
     "chopconf": REG_CHOPCONF,
     "pwmconf": REG_PWMCONF,
 }
+
+REGISTER_NAMES = {
+    REG_GSTAT: "GSTAT",
+    REG_GCONF: "GCONF",
+    REG_IHOLD_IRUN: "IHOLD_IRUN",
+    REG_TPOWERDOWN: "TPOWERDOWN",
+    REG_TPWMTHRS: "TPWMTHRS",
+    REG_CHOPCONF: "CHOPCONF",
+    REG_PWMCONF: "PWMCONF",
+}
+
+DEFAULT_STATUS_REGISTERS = (
+    REG_GSTAT,
+    REG_GCONF,
+    REG_IHOLD_IRUN,
+    REG_TPOWERDOWN,
+    REG_TPWMTHRS,
+    REG_CHOPCONF,
+    REG_PWMCONF,
+)
 
 
 class CLIError(Exception):
@@ -74,6 +96,26 @@ def _format_response(result: TMC5160TransferResult) -> str:
         f"  Status 0x{status.raw:02X}: {stall_text} {faults_text}",
         f"  Dado retornado (comando anterior): 0x{result.previous_data:08X}",
     ]
+    return "\n".join(lines)
+
+
+def _format_read_result(result: TMC5160ReadResult) -> str:
+    name = REGISTER_NAMES.get(result.address, f"0x{result.address:02X}")
+    status_request = result.request.status
+    status_reply = result.reply.status
+    lines = [
+        f"- {name} (0x{result.address:02X}) => 0x{result.value:08X}",
+        f"  Requisição  : status=0x{status_request.raw:02X}, resposta={result.request.raw_hex}",
+        f"  Resposta útil: status=0x{status_reply.raw:02X}, resposta={result.reply.raw_hex}",
+    ]
+    if status_request.raw == status_reply.raw:
+        lines.append(f"  Diagnóstico : {status_reply.summary()}")
+    else:
+        lines.append(
+            "  Diagnóstico : {} / {}".format(
+                status_request.summary(), status_reply.summary()
+            )
+        )
     return "\n".join(lines)
 
 
@@ -114,10 +156,24 @@ def _parse_register_assignment(raw: str) -> Tuple[int, int]:
     return address, value
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Configura o driver TMC5160 através do barramento SPI do Raspberry Pi",
-    )
+def _parse_register_name(raw: str) -> int:
+    key = raw.strip().lower()
+    if not key:
+        raise CLIError("Informe o nome ou endereço do registrador a consultar")
+    if key in REGISTER_ALIASES:
+        return REGISTER_ALIASES[key]
+    try:
+        address = int(key, 0)
+    except ValueError as exc:  # pragma: no cover - defensivo
+        raise CLIError(
+            f"Registrador desconhecido '{raw}'. Utilize um alias conhecido ou um endereço numérico."
+        ) from exc
+    if not 0 <= address <= 0x7F:
+        raise CLIError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+    return address
+
+
+def _add_common_spi_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--bus", type=int, default=0, help="Barramento SPI (default: 0)")
     parser.add_argument("--dev", type=int, default=1, help="Dispositivo SPI (default: 1)")
     parser.add_argument(
@@ -126,6 +182,13 @@ def _build_parser() -> argparse.ArgumentParser:
         default=4_000_000,
         help="Velocidade SPI em Hz (default: 4_000_000)",
     )
+
+
+def _build_configure_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Configura o driver TMC5160 através do barramento SPI do Raspberry Pi",
+    )
+    _add_common_spi_arguments(parser)
     parser.add_argument(
         "--no-defaults",
         action="store_true",
@@ -164,6 +227,24 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _build_status_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Consulta os registradores do TMC5160 sem alterar a configuração",
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument(
+        "--register",
+        action="append",
+        default=[],
+        metavar="REG",
+        help=(
+            "Lista de registradores a serem lidos (pode ser repetido). "
+            "Aceita aliases conhecidos (gconf, gstat, ...) ou endereços numéricos."
+        ),
+    )
+    return parser
+
+
 def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     overrides: List[Tuple[int, int]] = []
 
@@ -188,14 +269,81 @@ def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     return overrides
 
 
-def run(
-    argv: Optional[Sequence[str]] = None,
-    *,
-    configurator_factory=TMC5160Configurator,
-    device_finder=lambda: sorted(Path("/dev").glob("spidev*")),
+def _collect_status_registers(args: argparse.Namespace) -> List[int]:
+    if args.register:
+        return [_parse_register_name(item) for item in args.register]
+    return list(DEFAULT_STATUS_REGISTERS)
+
+
+def _report_missing_device(
+    args: argparse.Namespace, spi_node: str, device_finder
 ) -> int:
-    parser = _build_parser()
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    available = [str(path) for path in device_finder()]
+    if available:
+        available_hint = "Dispositivos disponíveis: {}. ".format(
+            ", ".join(sorted(available))
+        )
+    else:
+        available_hint = "Nenhum dispositivo /dev/spidev* encontrado no sistema. "
+
+    if args.bus == 0:
+        overlay_hint = "dtparam=spi=on"
+    elif args.bus == 1:
+        overlay_hint = "dtoverlay=spi1-3cs"
+    else:
+        overlay_hint = f"dtoverlay=spi{args.bus}-1cs"
+
+    print(
+        (
+            "Erro: dispositivo SPI '{spi}' não encontrado. {available}" "Habilite o overlay SPI "
+            "correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
+        ).format(spi=spi_node, available=available_hint, overlay=overlay_hint),
+        file=sys.stderr,
+    )
+    return 2
+
+
+def _report_permission_denied(spi_node: str) -> int:
+    print(
+        "Erro: permissão negada ao acessar '{spi}'. Execute o comando com sudo ou ajuste as "
+        "regras de acesso (ex.: grupo 'spi').".format(spi=spi_node),
+        file=sys.stderr,
+    )
+    return 3
+
+
+def _run_spi_operation(
+    args: argparse.Namespace,
+    configurator,
+    device_finder,
+    *,
+    success_message: str,
+    operation,
+) -> int:
+    spi_node = f"/dev/spidev{args.bus}.{args.dev}"
+    try:
+        with configurator as driver:  # type: ignore[assignment]
+            operation(driver)
+    except FileNotFoundError:
+        return _report_missing_device(args, spi_node, device_finder)
+    except PermissionError:
+        return _report_permission_denied(spi_node)
+    except RuntimeError as exc:
+        print(f"Erro: {exc}", file=sys.stderr)
+        return 4
+
+    print(success_message)
+    return 0
+
+
+def _run_configure(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_configure_parser()
+    args = parser.parse_args(list(argv))
 
     overrides = _collect_overrides(args)
 
@@ -212,68 +360,110 @@ def run(
         register_preset=preset,
     )
 
-    spi_node = f"/dev/spidev{args.bus}.{args.dev}"
-
-    try:
-        with configurator as driver:  # type: ignore[assignment]
-            print(
-                f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
-            )
-            responses: List[TMC5160TransferResult] = []
-            if not args.no_defaults:
-                count = len(preset.writes)
-                print(f"Aplicando preset padrão ({count} registradores)")
-                responses.extend(driver.configure())
-            if overrides:
-                print("Aplicando ajustes adicionais:")
-                for address, value in overrides:
-                    print(f" - 0x{address:02X} = 0x{value:08X}")
-                responses.extend(driver.apply_registers(overrides))
-            else:
-                print("Nenhum ajuste adicional informado; mantendo preset padrão.")
-
-            if responses:
-                print("Respostas do TMC5160:")
-                for result in responses:
-                    print(_format_response(result))
-                    result.raise_on_faults()
-    except FileNotFoundError:
-        available = [str(path) for path in device_finder()]
-        if available:
-            available_hint = "Dispositivos disponíveis: {}. ".format(
-                ", ".join(sorted(available))
-            )
-        else:
-            available_hint = "Nenhum dispositivo /dev/spidev* encontrado no sistema. "
-
-        if args.bus == 0:
-            overlay_hint = "dtparam=spi=on"
-        elif args.bus == 1:
-            overlay_hint = "dtoverlay=spi1-3cs"
-        else:
-            overlay_hint = f"dtoverlay=spi{args.bus}-1cs"
-
+    def _operation(driver):
         print(
-            (
-                "Erro: dispositivo SPI '{spi}' não encontrado. {available}" "Habilite o overlay SPI "
-                "correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
-            ).format(spi=spi_node, available=available_hint, overlay=overlay_hint),
-            file=sys.stderr,
+            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
         )
-        return 2
-    except PermissionError:
-        print(
-            "Erro: permissão negada ao acessar '{spi}'. Execute o comando com sudo ou ajuste as "
-            "regras de acesso (ex.: grupo 'spi').".format(spi=spi_node),
-            file=sys.stderr,
-        )
-        return 3
-    except RuntimeError as exc:
-        print(f"Erro: {exc}", file=sys.stderr)
-        return 4
+        responses: List[TMC5160TransferResult] = []
+        if not args.no_defaults:
+            count = len(preset.writes)
+            print(f"Aplicando preset padrão ({count} registradores)")
+            responses.extend(driver.configure())
+        if overrides:
+            print("Aplicando ajustes adicionais:")
+            for address, value in overrides:
+                print(f" - 0x{address:02X} = 0x{value:08X}")
+            responses.extend(driver.apply_registers(overrides))
+        else:
+            print("Nenhum ajuste adicional informado; mantendo preset padrão.")
 
-    print("Configuração concluída.")
-    return 0
+        if responses:
+            print("Respostas do TMC5160:")
+            for result in responses:
+                print(_format_response(result))
+                result.raise_on_faults()
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Configuração concluída.",
+        operation=_operation,
+    )
+
+
+def _run_status(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_status_parser()
+    args = parser.parse_args(list(argv))
+
+    registers = _collect_status_registers(args)
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset.default(),
+    )
+
+    register_list = ", ".join(
+        REGISTER_NAMES.get(addr, f"0x{addr:02X}") for addr in registers
+    )
+
+    def _operation(driver):
+        print(
+            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160"
+        )
+        if registers:
+            print(f"Consultando registradores: {register_list}")
+        else:
+            print("Nenhum registrador informado; nada será lido.")
+            return
+
+        results = driver.read_registers(registers)
+        print("Respostas do TMC5160:")
+        for result in results:
+            print(_format_read_result(result))
+            result.raise_on_faults()
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Consulta concluída.",
+        operation=_operation,
+    )
+
+
+def run(
+    argv: Optional[Sequence[str]] = None,
+    *,
+    configurator_factory=TMC5160Configurator,
+    device_finder=lambda: sorted(Path("/dev").glob("spidev*")),
+) -> int:
+    if argv is None:
+        argv_list: List[str] = sys.argv[1:]
+    else:
+        argv_list = list(argv)
+
+    if argv_list and argv_list[0] == "status":
+        return _run_status(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "configure":
+        argv_list = argv_list[1:]
+
+    return _run_configure(
+        argv_list,
+        configurator_factory=configurator_factory,
+        device_finder=device_finder,
+    )
 
 
 def main() -> int:  # pragma: no cover - camada fina de execução

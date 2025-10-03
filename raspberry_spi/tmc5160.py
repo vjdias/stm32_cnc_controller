@@ -144,6 +144,33 @@ class TMC5160TransferResult:
             )
 
 
+@dataclass(frozen=True)
+class TMC5160ReadResult:
+    """Resultado de uma leitura de registrador do TMC5160."""
+
+    address: int
+    request: TMC5160TransferResult
+    reply: TMC5160TransferResult
+
+    @property
+    def value(self) -> int:
+        """Retorna o valor efetivo do registrador solicitado."""
+
+        return self.reply.previous_data
+
+    @property
+    def raw_hex(self) -> str:
+        """Concatena os 5 bytes recebidos na resposta útil."""
+
+        return self.reply.raw_hex
+
+    def raise_on_faults(self) -> None:
+        """Propaga qualquer alerta sinalizado pelo driver."""
+
+        self.request.raise_on_faults()
+        self.reply.raise_on_faults()
+
+
 class TMC5160Configurator:
     """Configura um driver TMC5160 ligado ao barramento SPI do Raspberry Pi."""
 
@@ -204,19 +231,25 @@ class TMC5160Configurator:
         self.close()
 
     @staticmethod
-    def _build_frame(address: int, value: int) -> List[int]:
-        if not 0 <= address <= 0x7F:
-            raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+    def _build_frame(address: int, value: int, *, raw: bool = False) -> List[int]:
         if not 0 <= value <= 0xFFFFFFFF:
             raise ValueError("Valor de registrador deve caber em 32 bits")
-        frame = [address & 0x7F]
+        if raw:
+            if not 0 <= address <= 0xFF:
+                raise ValueError("Endereço bruto deve caber em 8 bits")
+            first_byte = address & 0xFF
+        else:
+            if not 0 <= address <= 0x7F:
+                raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+            first_byte = address & 0x7F
+        frame = [first_byte]
         for shift in (24, 16, 8, 0):
             frame.append((value >> shift) & 0xFF)
         return frame
 
-    def _transfer(self, address: int, value: int) -> TMC5160TransferResult:
+    def _transfer(self, address: int, value: int, *, raw: bool = False) -> TMC5160TransferResult:
         spi = self._ensure_spi()
-        frame = self._build_frame(address, value)
+        frame = self._build_frame(address, value, raw=raw)
         response = spi.xfer2(frame)
         if len(response) != 5:
             raise RuntimeError(
@@ -241,6 +274,21 @@ class TMC5160Configurator:
             results.append(self._transfer(address, value))
         return results
 
+    def read_register(self, address: int) -> TMC5160ReadResult:
+        """Realiza uma leitura de registrador seguindo o protocolo de duas etapas."""
+
+        if not 0 <= address <= 0x7F:
+            raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+
+        request = self._transfer(0x80 | address, 0x00000000, raw=True)
+        reply = self._transfer(0x00, 0x00000000, raw=True)
+        return TMC5160ReadResult(address, request, reply)
+
+    def read_registers(self, addresses: Iterable[int]) -> List[TMC5160ReadResult]:
+        """Lê múltiplos registradores retornando os resultados individuais."""
+
+        return [self.read_register(address) for address in addresses]
+
 
 __all__ = [
     "REG_GCONF",
@@ -253,6 +301,7 @@ __all__ = [
     "STATUS_FLAG_DESCRIPTIONS",
     "TMC5160Status",
     "TMC5160TransferResult",
+    "TMC5160ReadResult",
     "TMC5160RegisterPreset",
     "TMC5160Configurator",
 ]

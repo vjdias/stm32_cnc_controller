@@ -85,6 +85,12 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
 
   # Executa apenas as escritas informadas, sem preset padrão
   python3 tmc5160_cli.py --no-defaults --write chopconf=0x10410150 --write pwmconf=0xC10D0024
+
+  # Consulta o status atual dos registradores principais
+  python3 tmc5160_cli.py status
+
+  # Lê apenas registradores específicos (aliases ou endereços)
+  python3 tmc5160_cli.py status --register gconf --register 0x6C
   ```
   O comando aceita `--bus`, `--dev` e `--speed` para apontar outro dispositivo SPI
   e expõe flags para sobrescrever rapidamente os registradores do preset
@@ -95,7 +101,10 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   (5 bytes) seguida de uma interpretação em português do byte de status (SG,
   OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
   32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
-  execução é encerrada com erro explicando quais flags foram ativadas.
+  execução é encerrada com erro explicando quais flags foram ativadas. O comando
+  `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
+  retorno útil) com a tradução dos flags e o valor atual de cada registrador
+  consultado.
 - O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
   limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
   parâmetros de chopper/pwm adequados para microstepping de 1/16.

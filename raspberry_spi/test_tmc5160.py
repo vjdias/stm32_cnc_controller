@@ -19,6 +19,7 @@ from tmc5160 import (
     REG_TPOWERDOWN,
     REG_TPWMTHRS,
     TMC5160Configurator,
+    TMC5160ReadResult,
     TMC5160RegisterPreset,
     TMC5160Status,
     TMC5160TransferResult,
@@ -177,6 +178,25 @@ def test_transfer_result_flags_and_validation():
     assert "status=0x41" in str(exc.value)
 
 
+def test_read_register_performs_two_transfers_and_returns_value():
+    configurator = TMC5160Configurator(spi_device_factory=dummy_factory)
+    spi = configurator._ensure_spi()  # type: ignore[attr-defined]
+    assert isinstance(spi, DummySpi)
+
+    spi.queue_response([0x00, 0, 0, 0, 0])
+    spi.queue_response([0x00, 0x11, 0x22, 0x33, 0x44])
+
+    result = configurator.read_register(REG_CHOPCONF)
+
+    assert isinstance(result, TMC5160ReadResult)
+    assert spi.frames == [
+        [0x80 | REG_CHOPCONF, 0x00, 0x00, 0x00, 0x00],
+        [0x00, 0x00, 0x00, 0x00, 0x00],
+    ]
+    assert result.value == 0x11223344
+    assert result.raw_hex == "0x00 0x11 0x22 0x33 0x44"
+
+
 def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
     created = []
 
@@ -193,6 +213,7 @@ def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
                 TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
                 for address, value in register_preset.writes
             ]
+            self.read_requests = []
 
         def __enter__(self):
             return self
@@ -210,6 +231,10 @@ def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
                 TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
                 for address, value in writes
             ]
+
+        def read_registers(self, addresses):
+            self.read_requests.append(list(addresses))
+            return []
 
     def factory(**kwargs):
         cfg = RecordingConfigurator(**kwargs)
@@ -294,6 +319,66 @@ def test_cli_accepts_overrides_and_skips_defaults(capsys):
     assert "0x00000005" in captured.out
     assert "0x12345678" in captured.out
     assert "Resposta bruta" in captured.out
+
+
+def test_cli_status_lists_registers_and_values(capsys):
+    created = []
+
+    class RecordingConfigurator:
+        def __init__(self, *, bus, device, speed_hz, register_preset):
+            self.bus = bus
+            self.device = device
+            self.speed_hz = speed_hz
+            self.register_preset = register_preset
+            self.closed = False
+            self.read_requests: list[list[int]] = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            self.closed = True
+
+        def read_registers(self, addresses):
+            self.read_requests.append(list(addresses))
+            results = []
+            for idx, address in enumerate(addresses):
+                value = 0x11111111 * (idx + 1)
+                request = TMC5160TransferResult(0x80 | address, 0, (0, 0, 0, 0, 0))
+                b1 = (value >> 24) & 0xFF
+                b2 = (value >> 16) & 0xFF
+                b3 = (value >> 8) & 0xFF
+                b4 = value & 0xFF
+                reply = TMC5160TransferResult(0x00, 0, (0, b1, b2, b3, b4))
+                results.append(TMC5160ReadResult(address, request, reply))
+            return results
+
+        def configure(self):
+            raise AssertionError("configure não deve ser chamado em status")
+
+        def apply_registers(self, writes):
+            raise AssertionError("apply_registers não deve ser chamado em status")
+
+    def factory(**kwargs):
+        cfg = RecordingConfigurator(**kwargs)
+        created.append(cfg)
+        return cfg
+
+    exit_code = tmc_cli_run(["status"], configurator_factory=factory)
+
+    assert exit_code == 0
+    assert len(created) == 1
+    cfg = created[0]
+    assert cfg.read_requests == [
+        [REG_GSTAT, REG_GCONF, REG_IHOLD_IRUN, REG_TPOWERDOWN, REG_TPWMTHRS, REG_CHOPCONF, REG_PWMCONF]
+    ]
+    assert cfg.closed is True
+
+    captured = capsys.readouterr()
+    assert "Consultando registradores" in captured.out
+    assert "Respostas do TMC5160" in captured.out
+    assert "Resposta útil" in captured.out
+    assert "0x11111111" in captured.out
 
 
 def test_cli_reports_missing_spi_device(capsys):
