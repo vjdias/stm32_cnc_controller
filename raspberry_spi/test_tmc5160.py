@@ -21,6 +21,7 @@ from tmc5160 import (
     TMC5160Configurator,
     TMC5160RegisterPreset,
 )
+from tmc5160_cli import run as tmc_cli_run
 
 
 class DummySpi:
@@ -121,3 +122,103 @@ def test_context_manager_closes_spi():
         assert isinstance(spi, DummySpi)
         assert spi.closed is False
     assert spi.closed is True
+
+
+def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
+    created = []
+
+    class RecordingConfigurator:
+        def __init__(self, *, bus, device, speed_hz, register_preset):
+            self.bus = bus
+            self.device = device
+            self.speed_hz = speed_hz
+            self.register_preset = register_preset
+            self.configure_calls = 0
+            self.applied: list[list[tuple[int, int]]] = []
+            self.closed = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            self.closed = True
+
+        def configure(self):
+            self.configure_calls += 1
+
+        def apply_registers(self, writes):
+            self.applied.append(list(writes))
+
+    def factory(**kwargs):
+        cfg = RecordingConfigurator(**kwargs)
+        created.append(cfg)
+        return cfg
+
+    exit_code = tmc_cli_run([], configurator_factory=factory)
+
+    assert exit_code == 0
+    assert len(created) == 1
+    cfg = created[0]
+    assert cfg.configure_calls == 1
+    assert cfg.applied == []
+    assert cfg.closed is True
+
+    captured = capsys.readouterr()
+    assert "preset padrão" in captured.out
+    assert "Nenhum ajuste adicional" in captured.out
+
+
+def test_cli_accepts_overrides_and_skips_defaults(capsys):
+    created = []
+
+    class RecordingConfigurator:
+        def __init__(self, *, bus, device, speed_hz, register_preset):
+            self.bus = bus
+            self.device = device
+            self.speed_hz = speed_hz
+            self.register_preset = register_preset
+            self.configure_calls = 0
+            self.applied: list[list[tuple[int, int]]] = []
+            self.closed = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            self.closed = True
+
+        def configure(self):
+            self.configure_calls += 1
+
+        def apply_registers(self, writes):
+            self.applied.append(list(writes))
+
+    def factory(**kwargs):
+        cfg = RecordingConfigurator(**kwargs)
+        created.append(cfg)
+        return cfg
+
+    args = [
+        "--no-defaults",
+        "--gconf",
+        "0x05",
+        "--write",
+        "0x20=0x12345678",
+    ]
+
+    exit_code = tmc_cli_run(args, configurator_factory=factory)
+
+    assert exit_code == 0
+    assert len(created) == 1
+    cfg = created[0]
+    assert cfg.configure_calls == 0
+    assert cfg.register_preset.writes == ()
+    assert cfg.applied == [[(REG_GCONF, 0x05), (0x20, 0x12345678)]]
+    assert cfg.closed is True
+
+    captured = capsys.readouterr()
+    assert "Aplicando ajustes adicionais" in captured.out
+    assert "0x00000005" in captured.out
+    assert "0x12345678" in captured.out
+
+
