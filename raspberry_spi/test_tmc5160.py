@@ -233,11 +233,16 @@ def test_cli_reports_missing_spi_device(capsys):
         def __exit__(self, exc_type, exc, tb):
             return False
 
-    exit_code = tmc_cli_run([], configurator_factory=lambda **kwargs: FailingConfigurator())
+    exit_code = tmc_cli_run(
+        [],
+        configurator_factory=lambda **kwargs: FailingConfigurator(),
+        device_finder=lambda: [Path("/dev/spidev1.0")],
+    )
 
     assert exit_code == 2
     captured = capsys.readouterr()
     assert "dispositivo SPI" in captured.err
+    assert "/dev/spidev1.0" in captured.err
     assert "spi1-3cs" in captured.err
 
 

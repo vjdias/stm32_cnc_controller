@@ -166,6 +166,7 @@ def run(
     argv: Optional[Sequence[str]] = None,
     *,
     configurator_factory=TMC5160Configurator,
+    device_finder=lambda: sorted(Path("/dev").glob("spidev*")),
 ) -> int:
     parser = _build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
@@ -204,11 +205,26 @@ def run(
             else:
                 print("Nenhum ajuste adicional informado; mantendo preset padrão.")
     except FileNotFoundError:
+        available = [str(path) for path in device_finder()]
+        if available:
+            available_hint = "Dispositivos disponíveis: {}. ".format(
+                ", ".join(sorted(available))
+            )
+        else:
+            available_hint = "Nenhum dispositivo /dev/spidev* encontrado no sistema. "
+
+        if args.bus == 0:
+            overlay_hint = "dtparam=spi=on"
+        elif args.bus == 1:
+            overlay_hint = "dtoverlay=spi1-3cs"
+        else:
+            overlay_hint = f"dtoverlay=spi{args.bus}-1cs"
+
         print(
-            "Erro: dispositivo SPI '{spi}' não encontrado. Habilite o overlay SPI correspondente "
-            "(ex.: dtparam=spi=on ou dtoverlay=spi1-3cs) ou ajuste --bus/--dev.".format(
-                spi=spi_node
-            ),
+            (
+                "Erro: dispositivo SPI '{spi}' não encontrado. {available}" "Habilite o overlay SPI "
+                "correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
+            ).format(spi=spi_node, available=available_hint, overlay=overlay_hint),
             file=sys.stderr,
         )
         return 2
