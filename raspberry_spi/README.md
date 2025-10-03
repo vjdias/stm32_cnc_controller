@@ -52,17 +52,16 @@ Parâmetros comuns
 Configuração do driver TMC5160 a partir do Raspberry Pi
 -------------------------------------------------------
 - O módulo `tmc5160.py` expõe a classe `TMC5160Configurator`, pensada para o barramento
-  `/dev/spidev1.1` (bus=1, device=1) utilizado na placa intermediária do projeto. Ela
+  `/dev/spidev0.1` (bus=0, device=1) utilizado na placa intermediária do projeto. Ela
   encapsula a sequência de registradores essenciais para deixar o driver pronto para
   receber pulsos STEP/DIR.
 - Pré-requisitos no Raspberry Pi:
   - Ativar o SPI em `raspi-config` (menu Interfaces → SPI) e garantir que a sobreposição
-    (`dtoverlay`) para o barramento esteja habilitada no `config.txt` — ex.: `dtoverlay=spi1-3cs`
-    para expor `/dev/spidev1.0` / `/dev/spidev1.1` / `/dev/spidev1.2` (todas ligadas ao
-    **controlador SPI1** do BCM2711). O overlay padrão `dtparam=spi=on` continua criando
-    `/dev/spidev0.0` / `/dev/spidev0.1`, que pertencem ao **controlador SPI0**. Escolha
-    o par bus/device conforme o cabeamento: no cenário atual o STM32 permanece no SPI0
-    (`/dev/spidev0.0`) e o TMC5160 usa o SPI1 (`/dev/spidev1.1`).
+    (`dtoverlay`) para o barramento esteja habilitada no `config.txt`. O overlay padrão
+    `dtparam=spi=on` cria `/dev/spidev0.0` / `/dev/spidev0.1`, ligados ao **controlador SPI0**
+    do BCM2711 e compatíveis com o cabeamento atual (STM32 em `/dev/spidev0.0`, TMC5160 em
+    `/dev/spidev0.1`). Caso utilize o SPI1 em futuras revisões, habilite `dtoverlay=spi1-3cs`
+    para expor `/dev/spidev1.0` / `/dev/spidev1.1` / `/dev/spidev1.2`.
   - Instalar `python3-spidev` ou `pip install spidev`.
   - Ligar os sinais: SCK ↔ CLK do TMC5160, MOSI ↔ SDI, MISO ↔ SDO, CE0 ↔ CSN. Alimente
     a lógica em 3V3 e compartilhe o GND.
@@ -70,7 +69,7 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   ```python
   from raspberry_spi.tmc5160 import TMC5160Configurator
 
-  with TMC5160Configurator(bus=1, device=1, speed_hz=4_000_000) as driver:
+  with TMC5160Configurator(bus=0, device=1, speed_hz=4_000_000) as driver:
       driver.configure()  # escreve GSTAT, GCONF, IHOLD_IRUN, etc. com o preset padrão
 
       # Opcional: sobrescreva algum registrador específico
@@ -78,7 +77,7 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   ```
 - Interface de terminal (`tmc5160_cli.py`):
   ```bash
-  # Aplica o preset padrão usando /dev/spidev1.1 (bus=1, dev=1)
+  # Aplica o preset padrão usando /dev/spidev0.1 (bus=0, dev=1)
   python3 tmc5160_cli.py
 
   # Ajusta registradores adicionais (endereços em decimal/hex ou aliases)
