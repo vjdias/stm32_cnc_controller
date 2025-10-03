@@ -2,35 +2,77 @@
 #include "Services/service_adapters.h"
 #include "app.h"
 
-// Handle gerado pelo CubeMX (ajuste o nome se necessário)
+/*==============================================================================
+ *  SPI (Slave) + DMA – TX/RX de 42 bytes
+ *  Layout fixo do frame de TX:
+ *    - [0..21] (22 bytes): sempre 0x00
+ *    - [22..41] (20 bytes): payload alinhado à direita
+ *      - COM resposta: toda a janela é zerada e o payload é copiado à direita
+ *      - SEM resposta (poll): janela preenchida com SPI_FILL_BYTE (ex.: 0xA5)
+ *==============================================================================*/
+
+/* --- Handle gerado pelo CubeMX --------------- */
 extern SPI_HandleTypeDef hspi1;
 
-// ----------------- Estado e buffers -----------------
-static router_t            g_router;
-static router_handlers_t   g_handlers;
-static response_fifo_t    *g_resp_fifo = NULL;
+/* --- Estado e buffers ------------------------------------------------------- */
+static router_t             g_router;
+static router_handlers_t    g_handlers;
+static response_fifo_t     *g_resp_fifo = NULL;
 
 static uint8_t g_spi_rx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static uint8_t g_spi_tx_dma_buf[APP_SPI_DMA_BUF_LEN];
 
-static volatile uint8_t        g_spi_round_done = 0u;
-static volatile uint8_t        g_spi_error_flag = 0u;
-static volatile app_spi_state_t g_state         = APP_SPI_READY;
+static volatile uint8_t         g_spi_round_done = 0u;
+static volatile uint8_t         g_spi_error_flag = 0u;
+static volatile app_spi_state_t g_state          = APP_SPI_READY;
 
-// ----------------- Helpers mínimos -----------------
+/*==============================================================================
+ *  Layout fixo do TX (42 = 22 + 20)
+ *==============================================================================*/
+#define RESP_LEFT_PAD_LEN   22u   /* bytes [0..21]  = 0x00                    */
+#define RESP_RIGHT_LEN      20u   /* bytes [22..41] = payload (até 20 bytes)  */
 
-// Verifica se todo o buffer é preenchido por "val" (ex.: 42×0x3C)
-static int is_fill42(const uint8_t *buf, uint8_t val) {
+
+/**
+ * @brief Preenche o buffer de TX com 22×0x00 à esquerda e 20×SPI_FILL_BYTE à direita.
+ * @param dst Ponteiro para o buffer de TX (tamanho = 42).
+ */
+static inline void tx_fill_left_zero_right_filler(uint8_t *dst)
+{
+    memset(&dst[0],                 0x00,           RESP_LEFT_PAD_LEN); /* 22×0x00  */
+    memset(&dst[RESP_LEFT_PAD_LEN], SPI_FILL_BYTE,  RESP_RIGHT_LEN);    /* 20×filler */
+}
+
+/*==============================================================================
+ *  Helpers mínimos
+ *==============================================================================*/
+
+/**
+ * @brief Verifica se todo o buffer tem o mesmo valor.
+ * @param buf Buffer de entrada (tamanho = 42).
+ * @param val Valor esperado em todos os bytes.
+ * @return 1 se todos os bytes são 'val', 0 caso contrário.
+ */
+static int is_fill42(const uint8_t *buf, uint8_t val)
+{
     for (uint32_t i = 0; i < APP_SPI_DMA_BUF_LEN; ++i)
         if (buf[i] != val) return 0;
     return 1;
 }
 
-// Localiza um quadro [0xAA ... 0x55] dentro do buffer
-static int find_frame(const uint8_t *buf, uint16_t *off, uint16_t *len) {
+/**
+ * @brief Localiza um quadro bem formado [REQ_HEADER ... REQ_TAIL] no RX.
+ * @param buf  Buffer de entrada (tamanho = 42).
+ * @param off  (out) Offset de início do quadro (REQ_HEADER).
+ * @param len  (out) Comprimento do quadro (inclui REQ_TAIL).
+ * @return 1 se encontrou, 0 caso contrário.
+ */
+static int find_frame(const uint8_t *buf, uint16_t *off, uint16_t *len)
+{
     uint16_t i = 0;
     while (i < APP_SPI_DMA_BUF_LEN && buf[i] != REQ_HEADER) i++;
     if (i >= APP_SPI_DMA_BUF_LEN) return 0;
+
     for (uint16_t j = (uint16_t)(i + 1); j < APP_SPI_DMA_BUF_LEN; ++j) {
         if (buf[j] == REQ_TAIL) {
             *off = i;
@@ -41,158 +83,180 @@ static int find_frame(const uint8_t *buf, uint16_t *off, uint16_t *len) {
     return 0;
 }
 
-// Prepara TX para o próximo round: copia resposta (se houver) ou 42×A5
-// Prepara TX para o próximo round:
-// - Se houver resposta (n > 0): zera o quadro e alinha a resposta à direita.
-// - Se não houver: 42×A5 (filler/poll sem payload).
-static void prepare_next_tx(void) {
+/*==============================================================================
+ *  Preparação do TX
+ *==============================================================================*/
+
+/**
+ * @brief Prepara o buffer de TX para a próxima rodada de DMA.
+ *
+ * Regras:
+ *  - COM resposta (n > 0):
+ *      * Zera TODO o frame (garante que não haja filler visível);
+ *      * Copia o payload alinhado à direita dentro dos últimos 20 bytes.
+ *      * Se n > 20, trunca para os 20 últimos bytes.
+ *  - SEM resposta:
+ *      * 22×0x00 + 20×SPI_FILL_BYTE (poll).
+ */
+static void prepare_next_tx(void)
+{
     uint8_t tmp[APP_SPI_DMA_BUF_LEN];
     int n = 0;
 
     if (!g_resp_fifo) {
-        // Sem fila -> filler A5
-        memset(g_spi_tx_dma_buf, SPI_FILL_BYTE, APP_SPI_DMA_BUF_LEN);
+        /* Sem fila -> 22×0x00 + 20×filler */
+        tx_fill_left_zero_right_filler(g_spi_tx_dma_buf);
         g_state = APP_SPI_READY;
         return;
     }
 
     n = resp_fifo_pop(g_resp_fifo, tmp, (int)APP_SPI_DMA_BUF_LEN);
     if (n > 0) {
-        // >>> comportamento desejado <<<
-        // zeros à esquerda + payload encodado (com 0xAB no começo) à direita
+        /* Zera TODO o frame para evitar A5 antes do payload */
         memset(g_spi_tx_dma_buf, 0x00, APP_SPI_DMA_BUF_LEN);
-        uint16_t off = (uint16_t)(APP_SPI_DMA_BUF_LEN - (uint16_t)n);
-        memcpy(&g_spi_tx_dma_buf[off], tmp, (size_t)n);
+
+        /* Copia o payload alinhado à direita (trunca se necessário) */
+        uint16_t to_copy = (uint16_t)((n > (int)RESP_RIGHT_LEN) ? RESP_RIGHT_LEN : n);
+        uint16_t dst_off = (uint16_t)(APP_SPI_DMA_BUF_LEN - to_copy); /* 42 - to_copy */
+        uint16_t src_off = (uint16_t)(n - to_copy);                   /* últimos 'to_copy' bytes */
+
+        memcpy(&g_spi_tx_dma_buf[dst_off], &tmp[src_off], to_copy);
         g_state = APP_SPI_PENDING;
     } else {
-        // sem resposta -> 42 × A5
-        memset(g_spi_tx_dma_buf, SPI_FILL_BYTE, APP_SPI_DMA_BUF_LEN);
+        /* Sem resposta -> mantém contrato visual: 22×0x00 + 20×filler */
+        tx_fill_left_zero_right_filler(g_spi_tx_dma_buf);
         g_state = APP_SPI_READY;
     }
 }
 
+/*==============================================================================
+ *  DMA restart
+ *==============================================================================*/
 
-// Reinicia uma transação DMA (não bloqueante)
-static void restart_spi_dma(void) {
-    // >>> NOVO: garanta FIFO RX limpo antes da nova rodada (anti-deslocamento)
-    spi_post_dma_rx_fifo_sanity(&hspi1);
-
+/**
+ * @brief Reinicia uma transação SPI por DMA (não bloqueante).
+ * Seta g_state=BUSY em caso de sucesso; seta g_spi_error_flag em erro.
+ */
+static void restart_spi_dma(void)
+{
     if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
         g_spi_error_flag = 1u;
         return;
     }
+
     if (HAL_SPI_TransmitReceive_DMA(&hspi1,
             g_spi_tx_dma_buf, g_spi_rx_dma_buf,
             (uint16_t)APP_SPI_DMA_BUF_LEN) != HAL_OK) {
         g_spi_error_flag = 1u;
         return;
     }
+
     g_state = APP_SPI_BUSY;
 }
 
-// ----------------- API -----------------
+/*==============================================================================
+ *  API pública
+ *==============================================================================*/
 
-void app_init(void) {
-    // Registra serviços no router (seu projeto já deve prover isso)
+/**
+ * @brief Inicializa roteador, fila de respostas e a primeira rodada DMA.
+ * Preenche o primeiro TX como 22×0x00 + 20×filler.
+ */
+void app_init(void)
+{
+    /* Registra serviços no router (o projeto deve prover os handlers) */
     memset(&g_handlers, 0, sizeof g_handlers);
-    // Se você usa adapters de serviços, registre aqui:
     services_register_handlers(&g_handlers);
 
     g_resp_fifo = resp_fifo_create();
     router_init(&g_router, g_resp_fifo, &g_handlers);
 
-    // Primeiro frame: apenas filler
-    memset(g_spi_tx_dma_buf, SPI_FILL_BYTE, APP_SPI_DMA_BUF_LEN);
+    /* Primeiro frame: 22×0x00 + 20×filler (evita A5 no início quando não há resposta) */
+    tx_fill_left_zero_right_filler(g_spi_tx_dma_buf);
+
     restart_spi_dma();
     g_state = APP_SPI_READY;
 }
 
-void app_poll(void) {
-    // Só processa quando um round DMA foi concluído pelo HAL
+/**
+ * @brief Loop de serviço: processa RX (quando há rodada concluída),
+ *        prepara o próximo TX e rearma o DMA.
+ */
+void app_poll(void)
+{
+    /* Só processa quando um round DMA foi concluído pelo HAL */
     if (!g_spi_round_done) return;
     g_spi_round_done = 0u;
 
-    // 1) Interpretar o RX atual
+    /* 1) Interpretar o RX atual */
     if (is_fill42(g_spi_rx_dma_buf, SPI_POLL_BYTE)) {
-        // 42×0x3C => cliente apenas leu respostas; não alimenta router
+        /* 42×0x3C => cliente apenas leu respostas; não alimenta router */
     } else {
-        // Tenta extrair [0xAA ... 0x55] e empurrar para o router
+        /* Tenta extrair [REQ_HEADER ... REQ_TAIL] e empurra para o router */
         uint16_t off = 0, len = 0;
         if (find_frame(g_spi_rx_dma_buf, &off, &len)) {
             router_feed_bytes(&g_router, &g_spi_rx_dma_buf[off], len);
         } else {
-            // quadro inválido/parcial ou outro padrão -> marca erro
+            /* Quadro inválido/parcial ou outro padrão -> marca erro leve */
             g_spi_error_flag = 1u;
         }
     }
 
-    // 2) Preparar TX (resposta ou 42×A5)
+    /* 2) Preparar TX (resposta à direita ou 22×0x00 + 20×filler) */
     prepare_next_tx();
 
-    // 3) Reiniciar o DMA para o próximo round
+    /* 3) Reiniciar DMA para o próximo round */
     restart_spi_dma();
 }
 
-app_spi_state_t app_spi_get_state(void) { return g_state; }
-uint8_t         app_spi_get_error(void) { return g_spi_error_flag; }
+/**
+ * @brief Retorna o estado atual do SPI app.
+ */
+app_spi_state_t app_spi_get_state(void)
+{
+    return g_state;
+}
 
-// ----------------- Chamadas a partir dos callbacks do HAL -----------------
+/**
+ * @brief Retorna o flag de erro (1 se houve erro desde o último clear externo).
+ */
+uint8_t app_spi_get_error(void)
+{
+    return g_spi_error_flag;
+}
 
-void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi) {
+/*==============================================================================
+ *  Callbacks do HAL (chamados em ISR)
+ *==============================================================================*/
+
+/**
+ * @brief Callback para “transfer complete” do SPI+DMA.
+ * Apenas sinaliza o loop principal (app_poll) via g_spi_round_done.
+ */
+void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi)
+{
     if (!hspi) return;
     if (hspi->Instance != APP_SPI_INSTANCE) return;
-
-    // >>> NOVO: saneamento pós-DMA (limpa RX FIFO se sobrou algo)
-    spi_post_dma_rx_fifo_sanity(hspi);
-
-    // Sinaliza para o loop principal processar RX->router e TX->DMA
     g_spi_round_done = 1u;
 }
 
-int app_resp_push(const uint8_t *frame, uint32_t len) {
+/*==============================================================================
+ *  Fila de respostas (API do protocolo)
+ *==============================================================================*/
+
+/**
+ * @brief Empurra um frame de resposta para a fila de transmissão.
+ * @param frame Buffer com a resposta (número de bytes = len).
+ * @param len   Tamanho da resposta (até 20 bytes). >20 retorna erro.
+ * @return 0 em sucesso; PROTO_ERR_ARG ou PROTO_ERR_RANGE em erro.
+ */
+int app_resp_push(const uint8_t *frame, uint32_t len)
+{
     if (!g_resp_fifo || !frame || len == 0u) {
         return PROTO_ERR_ARG;
     }
-    // opcional: proteger contra resposta maior que o quadro DMA
-    if (len > APP_SPI_DMA_BUF_LEN) {
-        return PROTO_ERR_RANGE;
+    if (len > RESP_RIGHT_LEN) {
+        return PROTO_ERR_RANGE; /* impede >20 bytes */
     }
     return resp_fifo_push(g_resp_fifo, frame, len);
-}
-
-/* ===========================  NOVO: Guardas de FIFO  ===========================
-
-   Problema que estamos tratando:
-   - Em full-duplex com DMA em “normal mode”, prioridades/underruns pontuais
-     podem deixar bytes residuais no RX FIFO ao término do DMA (deslocando
-     o frame da próxima rodada).
-
-   Estratégia:
-   - Assim que o DMA termina (callback), verificar se há dado no RX FIFO.
-     Se houver, drenar lendo DR até RXNE limpar (e limpar OVR se setado).
-   - Opcionalmente, repetir o saneamento antes de iniciar um novo DMA.
-
-   Observações:
-   - Este código assume DataSize = 8 bits (buffers uint8_t). Se usar 16 bits,
-     faça leitura em 16 bits do DR.
-   ============================================================================ */
-
-static void spi_rx_fifo_drain(SPI_HandleTypeDef *hspi) {
-    uint32_t guard = 0u;
-    // Drena enquanto houver dados visíveis (RXNE = 1); limite de segurança evita loop infinito
-    while (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE) && guard++ < 64u) {
-        (void)*(__IO uint8_t *)&hspi->Instance->DR;
-    }
-    // Se houve overrun, limpe a flag adequadamente
-#ifdef SPI_SR_OVR
-    if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR)) {
-        __HAL_SPI_CLEAR_OVRFLAG(hspi);
-    }
-#endif
-}
-
-static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi) {
-    if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE)) {
-        spi_rx_fifo_drain(hspi);
-    }
 }
