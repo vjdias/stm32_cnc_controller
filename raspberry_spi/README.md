@@ -58,7 +58,11 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
 - Pré-requisitos no Raspberry Pi:
   - Ativar o SPI em `raspi-config` (menu Interfaces → SPI) e garantir que a sobreposição
     (`dtoverlay`) para o barramento esteja habilitada no `config.txt` — ex.: `dtoverlay=spi1-3cs`
-    para expor `/dev/spidev1.0` / `/dev/spidev1.1` / `/dev/spidev1.2` (STM32 no SPI0, TMC5160 no SPI1).
+    para expor `/dev/spidev1.0` / `/dev/spidev1.1` / `/dev/spidev1.2` (todas ligadas ao
+    **controlador SPI1** do BCM2711). O overlay padrão `dtparam=spi=on` continua criando
+    `/dev/spidev0.0` / `/dev/spidev0.1`, que pertencem ao **controlador SPI0**. Escolha
+    o par bus/device conforme o cabeamento: no cenário atual o STM32 permanece no SPI0
+    (`/dev/spidev0.0`) e o TMC5160 usa o SPI1 (`/dev/spidev1.0`).
   - Instalar `python3-spidev` ou `pip install spidev`.
   - Ligar os sinais: SCK ↔ CLK do TMC5160, MOSI ↔ SDI, MISO ↔ SDO, CE0 ↔ CSN. Alimente
     a lógica em 3V3 e compartilhe o GND.
