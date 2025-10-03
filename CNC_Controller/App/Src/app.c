@@ -1,5 +1,7 @@
 #include <string.h>
 #include "Services/service_adapters.h"
+#include "Services/Log/log_service.h"
+#include "Services/Motion/motion_service.h"
 #include "app.h"
 
 /*==============================================================================
@@ -164,6 +166,9 @@ static void restart_spi_dma(void)
  */
 void app_init(void)
 {
+    log_service_init();
+    motion_service_init();
+
     /* Registra serviços no router (o projeto deve prover os handlers) */
     memset(&g_handlers, 0, sizeof g_handlers);
     services_register_handlers(&g_handlers);
