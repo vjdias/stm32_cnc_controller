@@ -20,6 +20,8 @@ from tmc5160 import (
     REG_TPWMTHRS,
     TMC5160Configurator,
     TMC5160RegisterPreset,
+    TMC5160Status,
+    TMC5160TransferResult,
 )
 from tmc5160_cli import run as tmc_cli_run
 
@@ -34,6 +36,7 @@ class DummySpi:
         self.lsbfirst = None
         self.cshigh = None
         self.frames = []
+        self.response_queue: list[list[int]] = []
 
     def open(self, bus, dev):
         self.open_args.append((bus, dev))
@@ -43,7 +46,12 @@ class DummySpi:
 
     def xfer2(self, frame):
         self.frames.append(frame)
+        if self.response_queue:
+            return self.response_queue.pop(0)
         return [0] * len(frame)
+
+    def queue_response(self, response):
+        self.response_queue.append(response)
 
 
 def dummy_factory():
@@ -58,7 +66,7 @@ def test_configure_uses_default_preset_and_spi_settings():
         spi_device_factory=dummy_factory,
     )
 
-    configurator.configure()
+    results = configurator.configure()
 
     spi = configurator._spi  # type: ignore[attr-defined]
     assert isinstance(spi, DummySpi)
@@ -79,6 +87,10 @@ def test_configure_uses_default_preset_and_spi_settings():
         [REG_PWMCONF, 0xC1, 0x0D, 0x00, 0x24],
     ]
     assert spi.frames == expected_frames
+    assert [res.response for res in results] == [
+        (0, 0, 0, 0, 0)
+        for _ in expected_frames
+    ]
 
 
 def test_write_register_validates_inputs():
@@ -93,6 +105,34 @@ def test_write_register_validates_inputs():
         configurator.write_register(0x01, 0x1_0000_0000)
 
 
+def test_write_register_returns_result_and_validates_response():
+    configurator = TMC5160Configurator(
+        spi_device_factory=dummy_factory,
+    )
+
+    spi = configurator._ensure_spi()  # type: ignore[attr-defined]
+    assert isinstance(spi, DummySpi)
+    spi.queue_response([0x00, 0xAA, 0xBB, 0xCC, 0xDD])
+    result = configurator.write_register(0x05, 0x12345678)
+    assert result.address == 0x05
+    assert result.value == 0x12345678
+    assert result.raw_hex == "0x00 0xAA 0xBB 0xCC 0xDD"
+    assert result.previous_data == 0xAABBCCDD
+
+
+def test_write_register_detects_invalid_response_length():
+    configurator = TMC5160Configurator(
+        spi_device_factory=dummy_factory,
+    )
+
+    spi = configurator._ensure_spi()  # type: ignore[attr-defined]
+    assert isinstance(spi, DummySpi)
+    spi.queue_response([0x00])
+    with pytest.raises(RuntimeError) as exc:
+        configurator.write_register(0x02, 0x0)
+    assert "esperado 5 bytes" in str(exc.value)
+
+
 def test_apply_custom_registers_sequence():
     custom_preset = TMC5160RegisterPreset(
         writes=((0x20, 0x12345678),)
@@ -102,16 +142,18 @@ def test_apply_custom_registers_sequence():
         spi_device_factory=dummy_factory,
     )
 
-    configurator.configure()
+    results = configurator.configure()
 
     spi = configurator._spi  # type: ignore[attr-defined]
     assert spi.frames == [[0x20, 0x12, 0x34, 0x56, 0x78]]
+    assert [res.response for res in results] == [(0, 0, 0, 0, 0)]
 
-    configurator.apply_registers(((0x21, 0x0ABCDEF0),))
+    more = configurator.apply_registers(((0x21, 0x0ABCDEF0),))
     assert spi.frames == [
         [0x20, 0x12, 0x34, 0x56, 0x78],
         [0x21, 0x0A, 0xBC, 0xDE, 0xF0],
     ]
+    assert [res.response for res in more] == [(0, 0, 0, 0, 0)]
 
 
 def test_context_manager_closes_spi():
@@ -122,6 +164,17 @@ def test_context_manager_closes_spi():
         assert isinstance(spi, DummySpi)
         assert spi.closed is False
     assert spi.closed is True
+
+
+def test_transfer_result_flags_and_validation():
+    status = TMC5160Status(0b1100_0011)
+    assert status.stallguard is True
+    assert "Sobretemperatura" in status.summary()
+    result = TMC5160TransferResult(0x00, 0x0, (0b0100_0001, 0, 0, 0, 0))
+    with pytest.raises(RuntimeError) as exc:
+        result.raise_on_faults()
+    assert "Sobretemperatura" in str(exc.value)
+    assert "status=0x41" in str(exc.value)
 
 
 def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
@@ -136,6 +189,10 @@ def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
             self.configure_calls = 0
             self.applied: list[list[tuple[int, int]]] = []
             self.closed = False
+            self.configure_results = [
+                TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
+                for address, value in register_preset.writes
+            ]
 
         def __enter__(self):
             return self
@@ -145,9 +202,14 @@ def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
 
         def configure(self):
             self.configure_calls += 1
+            return self.configure_results
 
         def apply_registers(self, writes):
             self.applied.append(list(writes))
+            return [
+                TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
+                for address, value in writes
+            ]
 
     def factory(**kwargs):
         cfg = RecordingConfigurator(**kwargs)
@@ -166,6 +228,8 @@ def test_cli_with_defaults_executes_preset_and_no_overrides(capsys):
     captured = capsys.readouterr()
     assert "preset padrão" in captured.out
     assert "Nenhum ajuste adicional" in captured.out
+    assert "Respostas do TMC5160" in captured.out
+    assert "Resposta bruta" in captured.out
 
 
 def test_cli_accepts_overrides_and_skips_defaults(capsys):
@@ -180,6 +244,10 @@ def test_cli_accepts_overrides_and_skips_defaults(capsys):
             self.configure_calls = 0
             self.applied: list[list[tuple[int, int]]] = []
             self.closed = False
+            self.configure_results = [
+                TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
+                for address, value in register_preset.writes
+            ]
 
         def __enter__(self):
             return self
@@ -189,9 +257,14 @@ def test_cli_accepts_overrides_and_skips_defaults(capsys):
 
         def configure(self):
             self.configure_calls += 1
+            return self.configure_results
 
         def apply_registers(self, writes):
             self.applied.append(list(writes))
+            return [
+                TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
+                for address, value in writes
+            ]
 
     def factory(**kwargs):
         cfg = RecordingConfigurator(**kwargs)
@@ -220,6 +293,7 @@ def test_cli_accepts_overrides_and_skips_defaults(capsys):
     assert "Aplicando ajustes adicionais" in captured.out
     assert "0x00000005" in captured.out
     assert "0x12345678" in captured.out
+    assert "Resposta bruta" in captured.out
 
 
 def test_cli_reports_missing_spi_device(capsys):

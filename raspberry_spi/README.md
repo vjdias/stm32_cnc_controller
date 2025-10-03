@@ -91,6 +91,11 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   (`--gconf`, `--gstat`, `--ihold-irun`, etc.) ou listas extras de escrita via
   `--write`. Caso nenhuma flag seja passada, o preset padrão é aplicado e o driver
   fica pronto para receber pulsos STEP/DIR.
+  Após cada transferência o utilitário exibe a resposta bruta em hexadecimal
+  (5 bytes) seguida de uma interpretação em português do byte de status (SG,
+  OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
+  32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
+  execução é encerrada com erro explicando quais flags foram ativadas.
 - O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
   limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
   parâmetros de chopper/pwm adequados para microstepping de 1/16.

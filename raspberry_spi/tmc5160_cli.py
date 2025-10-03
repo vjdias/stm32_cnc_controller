@@ -19,6 +19,7 @@ if __package__:
         REG_TPWMTHRS,
         TMC5160Configurator,
         TMC5160RegisterPreset,
+        TMC5160TransferResult,
     )
 else:  # execução direta dos testes/script
     if str(MODULE_DIR) not in sys.path:
@@ -33,6 +34,7 @@ else:  # execução direta dos testes/script
         REG_TPWMTHRS,
         TMC5160Configurator,
         TMC5160RegisterPreset,
+        TMC5160TransferResult,
     )
 
 REGISTER_ALIASES = {
@@ -49,6 +51,30 @@ REGISTER_ALIASES = {
 
 class CLIError(Exception):
     """Erro de validação dos parâmetros da CLI."""
+
+
+def _format_response(result: TMC5160TransferResult) -> str:
+    status = result.status
+    stall_text = (
+        "StallGuard detectado (SG=1)."
+        if status.stallguard
+        else "StallGuard inativo (SG=0)."
+    )
+    faults = status.active_faults()
+    if faults:
+        faults_text = "Alertas: {}.".format(", ".join(faults))
+    else:
+        faults_text = (
+            "Alertas: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
+        )
+
+    lines = [
+        f"- 0x{result.address:02X} <= 0x{result.value:08X}",
+        f"  Resposta bruta: {result.raw_hex}",
+        f"  Status 0x{status.raw:02X}: {stall_text} {faults_text}",
+        f"  Dado retornado (comando anterior): 0x{result.previous_data:08X}",
+    ]
+    return "\n".join(lines)
 
 
 def _parse_register_assignment(raw: str) -> Tuple[int, int]:
@@ -193,17 +219,24 @@ def run(
             print(
                 f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
             )
+            responses: List[TMC5160TransferResult] = []
             if not args.no_defaults:
                 count = len(preset.writes)
                 print(f"Aplicando preset padrão ({count} registradores)")
-                driver.configure()
+                responses.extend(driver.configure())
             if overrides:
                 print("Aplicando ajustes adicionais:")
                 for address, value in overrides:
                     print(f" - 0x{address:02X} = 0x{value:08X}")
-                driver.apply_registers(overrides)
+                responses.extend(driver.apply_registers(overrides))
             else:
                 print("Nenhum ajuste adicional informado; mantendo preset padrão.")
+
+            if responses:
+                print("Respostas do TMC5160:")
+                for result in responses:
+                    print(_format_response(result))
+                    result.raise_on_faults()
     except FileNotFoundError:
         available = [str(path) for path in device_finder()]
         if available:

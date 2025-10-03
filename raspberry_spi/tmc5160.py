@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Tuple
 
 try:  # pragma: no cover - dependência externa
     import spidev  # type: ignore
@@ -18,6 +18,20 @@ REG_TPOWERDOWN = 0x11
 REG_TPWMTHRS = 0x13
 REG_CHOPCONF = 0x6C
 REG_PWMCONF = 0x70
+
+
+STATUS_FLAG_DESCRIPTIONS = {
+    7: ("stallguard", "StallGuard detectado"),
+    6: ("ot", "Sobretemperatura (OT)"),
+    5: ("otpw", "Pré-aviso de sobretemperatura (OTPW)"),
+    4: ("s2ga", "Curto à terra na fase A (S2GA)"),
+    3: ("s2gb", "Curto à terra na fase B (S2GB)"),
+    2: ("s2vsa", "Curto à alimentação na fase A (S2VSA)"),
+    1: ("s2vsb", "Curto à alimentação na fase B (S2VSB)"),
+    0: ("uv_cp", "Subtensão do charge pump (UV_CP)"),
+}
+
+FAULT_BITS = (6, 5, 4, 3, 2, 1, 0)
 
 
 @dataclass(frozen=True)
@@ -48,6 +62,86 @@ class TMC5160RegisterPreset:
                 (REG_PWMCONF, 0xC10D0024),
             )
         )
+
+
+@dataclass(frozen=True)
+class TMC5160Status:
+    """Representa o byte de status retornado pelo TMC5160."""
+
+    raw: int
+
+    def flag(self, bit: int) -> bool:
+        return bool(self.raw & (1 << bit))
+
+    @property
+    def stallguard(self) -> bool:
+        return self.flag(7)
+
+    def active_faults(self) -> List[str]:
+        return [
+            STATUS_FLAG_DESCRIPTIONS[bit][1]
+            for bit in FAULT_BITS
+            if self.flag(bit)
+        ]
+
+    def has_fault(self) -> bool:
+        return bool(self.active_faults())
+
+    def summary(self) -> str:
+        stall_text = (
+            "StallGuard detectado (SG=1)."
+            if self.stallguard
+            else "StallGuard inativo (SG=0)."
+        )
+        faults = self.active_faults()
+        if faults:
+            fault_text = "Alertas ativos: {}.".format(
+                ", ".join(faults)
+            )
+        else:
+            fault_text = (
+                "Alertas ativos: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
+            )
+        return f"{stall_text} {fault_text}"
+
+
+@dataclass(frozen=True)
+class TMC5160TransferResult:
+    """Resultado de uma transferência SPI com o TMC5160."""
+
+    address: int
+    value: int
+    response: Tuple[int, int, int, int, int]
+
+    def __post_init__(self) -> None:
+        if len(self.response) != 5:
+            raise ValueError("Resposta do TMC5160 deve conter 5 bytes")
+
+    @property
+    def status(self) -> TMC5160Status:
+        return TMC5160Status(self.response[0])
+
+    @property
+    def previous_data(self) -> int:
+        _, b1, b2, b3, b4 = self.response
+        return (b1 << 24) | (b2 << 16) | (b3 << 8) | b4
+
+    @property
+    def raw_hex(self) -> str:
+        return " ".join(f"0x{byte:02X}" for byte in self.response)
+
+    def raise_on_faults(self) -> None:
+        faults = self.status.active_faults()
+        if faults:
+            fault_list = ", ".join(faults)
+            raise RuntimeError(
+                "Driver TMC5160 sinalizou alertas: {faults} (status=0x{status:02X}, "
+                "resposta={raw})".format(
+                    faults=fault_list,
+                    status=self.status.raw,
+                    raw=self.raw_hex,
+                )
+            )
 
 
 class TMC5160Configurator:
@@ -120,20 +214,32 @@ class TMC5160Configurator:
             frame.append((value >> shift) & 0xFF)
         return frame
 
-    def write_register(self, address: int, value: int) -> Sequence[int]:
+    def _transfer(self, address: int, value: int) -> TMC5160TransferResult:
         spi = self._ensure_spi()
         frame = self._build_frame(address, value)
-        return spi.xfer2(frame)
+        response = spi.xfer2(frame)
+        if len(response) != 5:
+            raise RuntimeError(
+                "Resposta SPI inválida do TMC5160: esperado 5 bytes, recebido {}".format(
+                    len(response)
+                )
+            )
+        return TMC5160TransferResult(address, value, tuple(response))
 
-    def configure(self) -> None:
-        spi = self._ensure_spi()
+    def write_register(self, address: int, value: int) -> TMC5160TransferResult:
+        return self._transfer(address, value)
+
+    def configure(self) -> List[TMC5160TransferResult]:
+        results: List[TMC5160TransferResult] = []
         for address, value in self._registers.writes:
-            spi.xfer2(self._build_frame(address, value))
+            results.append(self._transfer(address, value))
+        return results
 
-    def apply_registers(self, writes: Iterable[Tuple[int, int]]) -> None:
-        spi = self._ensure_spi()
+    def apply_registers(self, writes: Iterable[Tuple[int, int]]) -> List[TMC5160TransferResult]:
+        results: List[TMC5160TransferResult] = []
         for address, value in writes:
-            spi.xfer2(self._build_frame(address, value))
+            results.append(self._transfer(address, value))
+        return results
 
 
 __all__ = [
@@ -144,6 +250,9 @@ __all__ = [
     "REG_TPWMTHRS",
     "REG_CHOPCONF",
     "REG_PWMCONF",
+    "STATUS_FLAG_DESCRIPTIONS",
+    "TMC5160Status",
+    "TMC5160TransferResult",
     "TMC5160RegisterPreset",
     "TMC5160Configurator",
 ]
