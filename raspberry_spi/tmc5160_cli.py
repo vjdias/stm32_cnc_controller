@@ -185,21 +185,43 @@ def run(
         register_preset=preset,
     )
 
-    with configurator as driver:  # type: ignore[assignment]
+    spi_node = f"/dev/spidev{args.bus}.{args.dev}"
+
+    try:
+        with configurator as driver:  # type: ignore[assignment]
+            print(
+                f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
+            )
+            if not args.no_defaults:
+                count = len(preset.writes)
+                print(f"Aplicando preset padrão ({count} registradores)")
+                driver.configure()
+            if overrides:
+                print("Aplicando ajustes adicionais:")
+                for address, value in overrides:
+                    print(f" - 0x{address:02X} = 0x{value:08X}")
+                driver.apply_registers(overrides)
+            else:
+                print("Nenhum ajuste adicional informado; mantendo preset padrão.")
+    except FileNotFoundError:
         print(
-            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
+            "Erro: dispositivo SPI '{spi}' não encontrado. Habilite o overlay SPI correspondente "
+            "(ex.: dtparam=spi=on ou dtoverlay=spi2-1cs) ou ajuste --bus/--dev.".format(
+                spi=spi_node
+            ),
+            file=sys.stderr,
         )
-        if not args.no_defaults:
-            count = len(preset.writes)
-            print(f"Aplicando preset padrão ({count} registradores)")
-            driver.configure()
-        if overrides:
-            print("Aplicando ajustes adicionais:")
-            for address, value in overrides:
-                print(f" - 0x{address:02X} = 0x{value:08X}")
-            driver.apply_registers(overrides)
-        else:
-            print("Nenhum ajuste adicional informado; mantendo preset padrão.")
+        return 2
+    except PermissionError:
+        print(
+            "Erro: permissão negada ao acessar '{spi}'. Execute o comando com sudo ou ajuste as "
+            "regras de acesso (ex.: grupo 'spi').".format(spi=spi_node),
+            file=sys.stderr,
+        )
+        return 3
+    except RuntimeError as exc:
+        print(f"Erro: {exc}", file=sys.stderr)
+        return 4
 
     print("Configuração concluída.")
     return 0

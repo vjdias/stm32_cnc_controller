@@ -222,3 +222,22 @@ def test_cli_accepts_overrides_and_skips_defaults(capsys):
     assert "0x12345678" in captured.out
 
 
+def test_cli_reports_missing_spi_device(capsys):
+    class FailingConfigurator:
+        def __init__(self, **_):
+            pass
+
+        def __enter__(self):
+            raise FileNotFoundError("No such file")
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    exit_code = tmc_cli_run([], configurator_factory=lambda **kwargs: FailingConfigurator())
+
+    assert exit_code == 2
+    captured = capsys.readouterr()
+    assert "dispositivo SPI" in captured.err
+    assert "spi2-1cs" in captured.err
+
+
