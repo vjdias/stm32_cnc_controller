@@ -21,6 +21,7 @@ if __package__:
         TMC5160ReadResult,
         TMC5160RegisterPreset,
         TMC5160TransferResult,
+        decode_register_value,
     )
 else:  # execução direta dos testes/script
     if str(MODULE_DIR) not in sys.path:
@@ -37,6 +38,7 @@ else:  # execução direta dos testes/script
         TMC5160ReadResult,
         TMC5160RegisterPreset,
         TMC5160TransferResult,
+        decode_register_value,
     )
 
 REGISTER_ALIASES = {
@@ -116,6 +118,11 @@ def _format_read_result(result: TMC5160ReadResult) -> str:
                 status_request.summary(), status_reply.summary()
             )
         )
+    decoded = decode_register_value(result.address, result.value)
+    if decoded:
+        lines.append("  Tradução    :")
+        for item in decoded:
+            lines.append(f"    - {item}")
     return "\n".join(lines)
 
 

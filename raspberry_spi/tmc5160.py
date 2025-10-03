@@ -33,6 +33,35 @@ STATUS_FLAG_DESCRIPTIONS = {
 
 FAULT_BITS = (6, 5, 4, 3, 2, 1, 0)
 
+GSTAT_FLAGS = {
+    0: "RESET: driver foi resetado desde a última leitura (limpe escrevendo 1).",
+    1: (
+        "DRV_ERR: falha de driver (sobretemperatura ou curto nas saídas). "
+        "Escreva 1 para limpar após resolver a causa."
+    ),
+    2: "UV_CP: subtensão no charge pump detectada (verifique alimentação/EN).",
+}
+
+GCONF_FLAGS = {
+    0: "I_SCALE_ANALOG=1 → corrente definida pelo pino VREF (0=controle digital).",
+    1: "INTERNAL_RSENSE=1 → resistores de sense internos habilitados.",
+    2: "EN_PWM_MODE=1 → StealthChop habilitado (Step/Dir silencioso).",
+    3: "ENC_COMMUTATION=1 → comutação via encoder ativada.",
+    4: "SHAFT=1 → inversão do sentido do motor.",
+    5: "DIAG0_ERROR=1 → falhas de driver no pino DIAG0.",
+    6: "DIAG0_OTPW=1 → aviso de sobretemperatura no DIAG0.",
+    7: "DIAG0_STALL=1 → StallGuard no DIAG0.",
+    8: "DIAG1_STALL/INDEX=1 → DIAG1 sinaliza stall/index (conforme modo).",
+    9: "DIAG1_ONSTATE=1 → DIAG1 indica estado ON do power stage.",
+    10: "DIAG1_STEPS_SKIPPED=1 → DIAG1 sinaliza passos perdidos.",
+    11: "DIAG0_INT_PUSHPULL=1 → saída DIAG0 em push-pull interno.",
+    12: "DIAG1_PUSHPULL=1 → saída DIAG1 em push-pull.",
+    13: "SMALL_HYSTERESIS=1 → histerese reduzida no comparador de corrente.",
+    14: "STOP_ENABLE=1 → entrada stop ativa.",
+    15: "DIRECT_MODE=1 → controle direto (bypass do interpolador).",
+    16: "TEST_MODE=1 → modo de teste interno (usar somente conforme datasheet).",
+}
+
 
 @dataclass(frozen=True)
 class TMC5160RegisterPreset:
@@ -171,6 +200,155 @@ class TMC5160ReadResult:
         self.reply.raise_on_faults()
 
 
+def _decode_flag_bits(mapping, value: int) -> List[str]:
+    details = [desc for bit, desc in sorted(mapping.items()) if value & (1 << bit)]
+    if not details:
+        return ["Nenhum bit relevante ativo."]
+    return details
+
+
+def _percent_of_fullscale(raw: int) -> int:
+    if raw <= 0:
+        return 0
+    return int(round(raw * 100 / 31))
+
+
+def decode_register_value(address: int, value: int) -> List[str]:
+    """Traduz valores de registradores conhecidos do TMC5160."""
+
+    if address == REG_GSTAT:
+        return _decode_flag_bits(GSTAT_FLAGS, value)
+
+    if address == REG_GCONF:
+        active = [
+            desc for bit, desc in sorted(GCONF_FLAGS.items()) if value & (1 << bit)
+        ]
+        if not active:
+            active.append(
+                "Todos os bits conhecidos limpos → modo básico SpreadCycle/Step-DIR."
+            )
+        return active
+
+    if address == REG_IHOLD_IRUN:
+        ihold = value & 0x1F
+        irun = (value >> 8) & 0x1F
+        iholddelay = (value >> 16) & 0x0F
+        return [
+            f"IHOLD={ihold} (~{_percent_of_fullscale(ihold)}% da corrente nominal).",
+            f"IRUN={irun} (~{_percent_of_fullscale(irun)}% da corrente nominal).",
+            (
+                "IHOLDDELAY={delay} (rampa de corrente hold→run em {delay}×8 ciclos de PWM)."
+            ).format(delay=iholddelay),
+        ]
+
+    if address == REG_TPOWERDOWN:
+        delay_cycles = value & 0xFF
+        if delay_cycles:
+            seconds = delay_cycles * (2**18) / 12_000_000
+            ms = seconds * 1000
+            return [
+                f"TPOWERDOWN={delay_cycles} (~{ms:.1f} ms até reduzir corrente após parada, fCLK=12 MHz)."
+            ]
+        return ["TPOWERDOWN=0 (redução imediata da corrente em standstill)."]
+
+    if address == REG_TPWMTHRS:
+        threshold = value & 0xFFFFF
+        if threshold:
+            microsteps_per_s = int(round(12_000_000 * 256 / threshold))
+            return [
+                (
+                    "TPWMTHRS={val} → transição StealthChop→SpreadCycle quando a velocidade "
+                    "exceder ~{spd} micropassos/s (fCLK=12 MHz)."
+                ).format(val=threshold, spd=microsteps_per_s)
+            ]
+        return ["TPWMTHRS=0 (StealthChop sempre ativo; sem comutação automática)."]
+
+    if address == REG_CHOPCONF:
+        toff = value & 0x0F
+        hstrt = (value >> 4) & 0x07
+        hend = (value >> 7) & 0x0F
+        tbl = (value >> 15) & 0x03
+        vsense = (value >> 17) & 0x01
+        mres = (value >> 24) & 0x0F
+        intpol = (value >> 28) & 0x01
+        dedge = (value >> 29) & 0x01
+        diss2g = (value >> 30) & 0x01
+        diss2vs = (value >> 31) & 0x01
+        microsteps = 1 << (8 - mres) if 0 <= mres <= 8 else None
+        details = [
+            f"TOFF={toff} (tempo off do chopper; 0 desativa PWM).",
+            f"HSTRT={hstrt} / HEND={hend} (ajuste de fast/slow decay).",
+            f"TBL={tbl} (tempo mínimo de blanking).",
+            (
+                "VSENSE={} → {}".format(
+                    vsense,
+                    "0.18 V drop nos resistores de sense" if vsense else "0.325 V drop",
+                )
+            ),
+        ]
+        if microsteps:
+            details.append(
+                f"MRES={mres} → {microsteps} micropassos por passo completo."
+            )
+        else:
+            details.append("MRES={} (valor reservado)".format(mres))
+        details.append(
+            "INTPOL={} → interpolação de micropassos {}.".format(
+                intpol, "ativa" if intpol else "desativada"
+            )
+        )
+        details.append(
+            "DEDGE={} → pulsos STEP amostrados em {} borda(s).".format(
+                dedge, "ambas" if dedge else "bordas de subida"
+            )
+        )
+        if diss2g:
+            details.append("DISS2G=1 → proteção short-to-ground desabilitada.")
+        if diss2vs:
+            details.append("DISS2VS=1 → proteção short-to-supply desabilitada.")
+        if not diss2g and not diss2vs:
+            details.append("Proteções S2G/S2VS ativas.")
+        return details
+
+    if address == REG_PWMCONF:
+        pwm_ofs = value & 0xFF
+        pwm_grad = (value >> 8) & 0xFF
+        pwm_freq = (value >> 16) & 0x03
+        autoscale = (value >> 18) & 0x01
+        autograd = (value >> 19) & 0x01
+        freewheel = (value >> 20) & 0x03
+        pwm_reg = (value >> 22) & 0x03
+        pwm_lim = (value >> 24) & 0x03
+        freq_desc = {
+            0: "fPWM=2/1024·fCLK",
+            1: "fPWM=2/683·fCLK",
+            2: "fPWM=2/512·fCLK",
+            3: "fPWM=2/410·fCLK",
+        }.get(pwm_freq, "Frequência PWM reservada")
+        freewheel_desc = {
+            0: "normal",
+            1: "passive short break",
+            2: "passive fast decay",
+            3: "freewheeling",
+        }.get(freewheel, "modo reservado")
+        return [
+            f"PWM_OFS={pwm_ofs} (offset de corrente).",
+            f"PWM_GRAD={pwm_grad} (gradiente de corrente).",
+            f"PWM_FREQ={pwm_freq} ({freq_desc}).",
+            "PWM_AUTOSCALE={} → ajuste automático de corrente {}.".format(
+                autoscale, "ativo" if autoscale else "desabilitado"
+            ),
+            "PWM_AUTOGRAD={} → gradiente automático {}.".format(
+                autograd, "ativo" if autograd else "desabilitado"
+            ),
+            f"PWM_FREEWHEEL={freewheel} (modo {freewheel_desc}).",
+            f"PWM_REG={pwm_reg} (limite de regulação StealthChop).",
+            f"PWM_LIM={pwm_lim} (limite de regulação extra).",
+        ]
+
+    return []
+
+
 class TMC5160Configurator:
     """Configura um driver TMC5160 ligado ao barramento SPI do Raspberry Pi."""
 
@@ -304,4 +482,5 @@ __all__ = [
     "TMC5160ReadResult",
     "TMC5160RegisterPreset",
     "TMC5160Configurator",
+    "decode_register_value",
 ]

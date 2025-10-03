@@ -104,7 +104,11 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   execução é encerrada com erro explicando quais flags foram ativadas. O comando
   `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
   retorno útil) com a tradução dos flags e o valor atual de cada registrador
-  consultado.
+  consultado. Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN,
+  TPOWERDOWN, TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o
+  datasheet — por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal,
+  bits ativos de `GCONF`, microstepping (`MRES`) e configuração de StealthChop,
+  facilitando entender rapidamente o estado real do driver.
 - O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
   limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
   parâmetros de chopper/pwm adequados para microstepping de 1/16.

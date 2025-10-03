@@ -23,6 +23,7 @@ from tmc5160 import (
     TMC5160RegisterPreset,
     TMC5160Status,
     TMC5160TransferResult,
+    decode_register_value,
 )
 from tmc5160_cli import run as tmc_cli_run
 
@@ -378,7 +379,24 @@ def test_cli_status_lists_registers_and_values(capsys):
     assert "Consultando registradores" in captured.out
     assert "Respostas do TMC5160" in captured.out
     assert "Resposta útil" in captured.out
+    assert "Tradução" in captured.out
     assert "0x11111111" in captured.out
+
+
+@pytest.mark.parametrize(
+    "address,value,expected",
+    [
+        (REG_GSTAT, 0x00, "Nenhum bit relevante ativo."),
+        (REG_GSTAT, 0x05, "RESET"),
+        (REG_GCONF, 0x00000004, "StealthChop"),
+        (REG_IHOLD_IRUN, 0x00061F0A, "IHOLD=10"),
+        (REG_CHOPCONF, 0x10410150, "TOFF"),
+        (REG_PWMCONF, 0xC10D0024, "PWM_OFS"),
+    ],
+)
+def test_decode_register_value_produces_human_readable_text(address, value, expected):
+    details = decode_register_value(address, value)
+    assert any(expected in item for item in details)
 
 
 def test_cli_reports_missing_spi_device(capsys):
