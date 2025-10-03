@@ -238,6 +238,6 @@ def test_cli_reports_missing_spi_device(capsys):
     assert exit_code == 2
     captured = capsys.readouterr()
     assert "dispositivo SPI" in captured.err
-    assert "spi2-1cs" in captured.err
+    assert "spi1-3cs" in captured.err
 
 

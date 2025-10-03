@@ -56,7 +56,7 @@ class TMC5160Configurator:
     def __init__(
         self,
         *,
-        bus: int = 2,
+        bus: int = 1,
         device: int = 0,
         speed_hz: int = 4_000_000,
         register_preset: TMC5160RegisterPreset | None = None,

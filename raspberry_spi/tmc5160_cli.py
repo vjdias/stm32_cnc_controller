@@ -92,7 +92,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Configura o driver TMC5160 através do barramento SPI do Raspberry Pi",
     )
-    parser.add_argument("--bus", type=int, default=2, help="Barramento SPI (default: 2)")
+    parser.add_argument("--bus", type=int, default=1, help="Barramento SPI (default: 1)")
     parser.add_argument("--dev", type=int, default=0, help="Dispositivo SPI (default: 0)")
     parser.add_argument(
         "--speed",
@@ -206,7 +206,7 @@ def run(
     except FileNotFoundError:
         print(
             "Erro: dispositivo SPI '{spi}' não encontrado. Habilite o overlay SPI correspondente "
-            "(ex.: dtparam=spi=on ou dtoverlay=spi2-1cs) ou ajuste --bus/--dev.".format(
+            "(ex.: dtparam=spi=on ou dtoverlay=spi1-3cs) ou ajuste --bus/--dev.".format(
                 spi=spi_node
             ),
             file=sys.stderr,
