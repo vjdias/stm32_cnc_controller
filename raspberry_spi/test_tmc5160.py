@@ -60,6 +60,34 @@ def dummy_factory():
     return DummySpi()
 
 
+class ModeErrorSpi:
+    def __init__(self) -> None:
+        self.open_args = []
+        self.closed = False
+        self.max_speed_hz = None
+        self._mode = None
+        self.bits_per_word = None
+        self.lsbfirst = None
+        self.cshigh = None
+
+    def open(self, bus, dev):
+        self.open_args.append((bus, dev))
+
+    def close(self):
+        self.closed = True
+
+    def xfer2(self, frame):
+        raise AssertionError("Modo SPI não deveria permitir transferências ao falhar")
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        raise OSError(22, "Invalid argument")
+
+
 def test_configure_uses_default_preset_and_spi_settings():
     configurator = TMC5160Configurator(
         bus=1,
@@ -93,6 +121,22 @@ def test_configure_uses_default_preset_and_spi_settings():
         (0, 0, 0, 0, 0)
         for _ in expected_frames
     ]
+
+
+def test_mode_configuration_error_is_reported_with_hint():
+    configurator = TMC5160Configurator(
+        bus=1,
+        device=1,
+        spi_device_factory=ModeErrorSpi,
+    )
+
+    with pytest.raises(RuntimeError) as excinfo:
+        configurator.configure()
+
+    message = str(excinfo.value)
+    assert "/dev/spidev1.1" in message
+    assert "modo SPI 3" in message
+    assert "Invalid argument" in message
 
 
 def test_write_register_validates_inputs():
@@ -381,6 +425,60 @@ def test_cli_status_lists_registers_and_values(capsys):
     assert "Resposta útil" in captured.out
     assert "Tradução" in captured.out
     assert "0x11111111" in captured.out
+
+
+def test_cli_loop_test_repeats_specified_iterations_and_can_be_quiet(capsys):
+    created = []
+
+    class RecordingConfigurator:
+        def __init__(self, *, bus, device, speed_hz, register_preset):
+            self.bus = bus
+            self.device = device
+            self.speed_hz = speed_hz
+            self.register_preset = register_preset
+            self.closed = False
+            self.write_calls: list[tuple[int, int]] = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            self.closed = True
+
+        def write_register(self, address, value):
+            self.write_calls.append((address, value))
+            return TMC5160TransferResult(address, value, (0, 0, 0, 0, 0))
+
+    def factory(**kwargs):
+        cfg = RecordingConfigurator(**kwargs)
+        created.append(cfg)
+        return cfg
+
+    exit_code = tmc_cli_run(
+        [
+            "loop-test",
+            "--iterations",
+            "3",
+            "--interval",
+            "0",
+            "--quiet",
+            "--address",
+            "gconf",
+            "--value",
+            "0x4",
+        ],
+        configurator_factory=factory,
+    )
+
+    assert exit_code == 0
+    assert len(created) == 1
+    cfg = created[0]
+    assert cfg.write_calls == [(REG_GCONF, 0x4)] * 3
+    assert cfg.closed is True
+
+    captured = capsys.readouterr()
+    assert "Loop concluído" in captured.out
+    assert "status=" not in captured.out
 
 
 @pytest.mark.parametrize(

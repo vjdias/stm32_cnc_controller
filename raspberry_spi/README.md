@@ -49,6 +49,44 @@ Parâmetros comuns
 - `--poll-byte` altera o byte usado durante o polling (padrão 0x3C). Use `--disable-poll`
   para confiar apenas no frame de handshake (útil para testes específicos).
 
+Solucionando rejeição ao modo SPI 3 (CPOL=1, CPHA=1)
+---------------------------------------------------
+- O TMC5160 exige clock inativo alto (CPOL=1) e amostragem na segunda transição
+  (CPHA=1). Se o kernel devolver `OSError: [Errno 22] Invalid argument` ao
+  ajustar `spi_dev.mode = 0b11`, significa que o driver do barramento indicado
+  não expôs suporte ao modo 3. Os passos abaixo costumam resolver o problema:
+  1. **Verifique qual controlador está ativo.** Rode
+     `ls -l /sys/bus/spi/devices/spi*.*/driver` e confirme que o link aponta
+     para `spi-bcm2835` (SPI0) ou `spi-bcm2835aux` (SPI1). Esses drivers da
+     Raspberry Pi aceitam os quatro modos.
+  2. **Garanta que o overlay libere um nó `spidev`.** Em `/boot/config.txt`,
+     habilite `dtparam=spi=on` para o barramento 0 ou utilize um dos overlays
+     documentados em `dtoverlay -h spi1-3cs` para o barramento 1. Exemplo:
+     ```ini
+     # SPI0 → /dev/spidev0.0 e /dev/spidev0.1
+     dtparam=spi=on
+
+     # SPI1 com três chip-selects expostos como spidev
+     dtoverlay=spi1-3cs,cs0-spidev=on,cs1-spidev=on,cs2-spidev=on
+     ```
+     Após salvar, execute `sudo reboot` para aplicar.
+  3. **Defina CPOL/CPHA na árvore de dispositivos quando necessário.** Alguns
+     overlays fixam o modo padrão em 0. Acrescente as flags `spi-cpol` e
+     `spi-cpha` na mesma linha do `dtoverlay` correspondente quando quiser que o
+     nó já nasça em modo 3, por exemplo:
+     ```ini
+     dtoverlay=spi1-1cs,cs0-spidev=on,spi-cpol,spi-cpha
+     ```
+     Isso garante que chamadas subsequentes a `spidev` aceitem `mode = 0b11`.
+  4. **Troque de barramento/CS caso o driver esteja bloqueado.** Se outra
+     sobreposição (por exemplo, de um display) já tiver reivindicado o mesmo
+     chip-select, escolha outro par `--bus/--dev` ou remova o overlay conflitante.
+  5. **Reabra o dispositivo após a alteração.** Desconecte a aplicação Python
+     antes de editar os arquivos e abra novamente para forçar a renegociação do
+     modo.
+  Seguindo essa sequência, o `/dev/spidevX.Y` voltará a aceitar CPOL=1/CPHA=1 e
+  a CLI poderá configurar o TMC5160 normalmente.
+
 Configuração do driver TMC5160 a partir do Raspberry Pi
 -------------------------------------------------------
 - O módulo `tmc5160.py` expõe a classe `TMC5160Configurator`, pensada para o barramento

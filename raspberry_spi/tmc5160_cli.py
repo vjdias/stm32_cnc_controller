@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys
+import time
 from typing import List, Optional, Sequence, Tuple
 
 MODULE_DIR = Path(__file__).resolve().parent
@@ -252,6 +253,57 @@ def _build_status_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _build_loop_test_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Gera um padrão repetitivo de escrita SPI para observar o barramento "
+            "com instrumentos como osciloscópio ou analisador lógico."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument(
+        "--address",
+        type=_parse_register_name,
+        default=REG_GCONF,
+        help=(
+            "Registrador a ser escrito (alias conhecido ou endereço numérico, "
+            "default: gconf)."
+        ),
+    )
+    parser.add_argument(
+        "--value",
+        type=lambda x: int(x, 0),
+        default=0x00000004,
+        help=(
+            "Valor de 32 bits a ser enviado em todas as mensagens (default: 0x00000004)."
+        ),
+    )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=0.01,
+        help=(
+            "Tempo em segundos entre mensagens consecutivas (default: 0.01). "
+            "Utilize 0 para repetir o mais rápido possível."
+        ),
+    )
+    parser.add_argument(
+        "--iterations",
+        type=int,
+        default=0,
+        help=(
+            "Número de repetições antes de encerrar automaticamente (0 = infinito, "
+            "pressione Ctrl+C para parar)."
+        ),
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Não imprimir cada resposta, apenas o resumo inicial e final.",
+    )
+    return parser
+
+
 def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     overrides: List[Tuple[int, int]] = []
 
@@ -330,7 +382,7 @@ def _run_spi_operation(
     spi_node = f"/dev/spidev{args.bus}.{args.dev}"
     try:
         with configurator as driver:  # type: ignore[assignment]
-            operation(driver)
+            completed = operation(driver)
     except FileNotFoundError:
         return _report_missing_device(args, spi_node, device_finder)
     except PermissionError:
@@ -338,6 +390,9 @@ def _run_spi_operation(
     except RuntimeError as exc:
         print(f"Erro: {exc}", file=sys.stderr)
         return 4
+
+    if completed is False:
+        return 130
 
     print(success_message)
     return 0
@@ -445,6 +500,84 @@ def _run_status(
     )
 
 
+def _run_loop_test(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_loop_test_parser()
+    args = parser.parse_args(list(argv))
+
+    if not 0 <= args.value <= 0xFFFFFFFF:
+        raise CLIError("O valor informado precisa caber em 32 bits (0x00000000-0xFFFFFFFF)")
+    if args.interval < 0:
+        raise CLIError("O intervalo entre mensagens deve ser maior ou igual a zero")
+    if args.iterations < 0:
+        raise CLIError("O número de repetições deve ser zero (infinito) ou positivo")
+
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset.default(),
+    )
+
+    register_name = REGISTER_NAMES.get(args.address, f"0x{args.address:02X}")
+
+    def _operation(driver):
+        print(
+            "Abrindo SPI bus={bus} dev={dev} a {speed} Hz para gerar padrão de teste".format(
+                bus=args.bus, dev=args.dev, speed=args.speed
+            )
+        )
+        if args.iterations:
+            print(f"Repetições solicitadas: {args.iterations}")
+        else:
+            print("Repetições solicitadas: infinito (interrompa com Ctrl+C)")
+        if args.interval > 0:
+            print(f"Intervalo entre mensagens: {args.interval:.6f} s")
+        else:
+            print("Intervalo entre mensagens: sem pausa (taxa máxima permitida pela SPI)")
+
+        print(
+            "Registrador {name} (0x{addr:02X}) <= 0x{value:08X}".format(
+                name=register_name, addr=args.address, value=args.value
+            )
+        )
+
+        count = 0
+        try:
+            while args.iterations == 0 or count < args.iterations:
+                result = driver.write_register(args.address, args.value)
+                count += 1
+                if not args.quiet:
+                    print(
+                        "[{count}] status=0x{status:02X} resposta={raw}".format(
+                            count=count,
+                            status=result.status.raw,
+                            raw=result.raw_hex,
+                        )
+                    )
+                result.raise_on_faults()
+                if args.interval > 0:
+                    time.sleep(args.interval)
+        except KeyboardInterrupt:
+            print(f"Loop interrompido pelo usuário após {count} iterações.")
+            return False
+
+        print(f"Loop concluído após {count} iterações.")
+        return True
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Padrão de teste finalizado.",
+        operation=_operation,
+    )
+
+
 def run(
     argv: Optional[Sequence[str]] = None,
     *,
@@ -458,6 +591,13 @@ def run(
 
     if argv_list and argv_list[0] == "status":
         return _run_status(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "loop-test":
+        return _run_loop_test(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,

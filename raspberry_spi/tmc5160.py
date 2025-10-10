@@ -383,7 +383,20 @@ class TMC5160Configurator:
         spi_dev = factory()
         spi_dev.open(self._bus, self._device)
         spi_dev.max_speed_hz = self._speed_hz
-        spi_dev.mode = 0b11  # MODE 3: CPOL=1, CPHA=1 (2nd edge)
+        try:
+            spi_dev.mode = 0b11  # MODE 3: CPOL=1, CPHA=1 (2nd edge)
+        except OSError as exc:
+            close = getattr(spi_dev, "close", None)
+            if callable(close):
+                close()
+            raise RuntimeError(
+                (
+                    "Não foi possível configurar o modo SPI 3 (CPOL=1, CPHA=1) em "
+                    "/dev/spidev{bus}.{dev}: {error}. Verifique se o overlay/driver SPI "
+                    "habilitado para esse barramento suporta modo 3 e se o dispositivo "
+                    "está livre. Ajuste --bus/--dev ou reconfigure o dtoverlay correspondente."
+                ).format(bus=self._bus, dev=self._device, error=exc)
+            ) from exc
         spi_dev.bits_per_word = 8
         if hasattr(spi_dev, "lsbfirst"):
             spi_dev.lsbfirst = False
