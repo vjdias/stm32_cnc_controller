@@ -81,12 +81,23 @@ def _common_args(
         )
     if include_settle_delay:
         option_name = "--settle-delay"
-        existing_action = next(
-            (action for action in p._actions if option_name in action.option_strings),
-            None,
-        )
+
+        def _find_action(parser: argparse.ArgumentParser) -> Optional[argparse.Action]:
+            for container in (
+                getattr(parser, "_actions", []),
+                getattr(getattr(parser, "_optionals", None), "_actions", []),
+            ):
+                for action in container or []:
+                    if option_name in getattr(action, "option_strings", ()):  # pragma: no cover - defensive
+                        return action
+            return None
+
+        existing_action = getattr(p, "_settle_delay_action", None)
         if existing_action is None:
-            p.add_argument(
+            existing_action = _find_action(p)
+
+        if existing_action is None:
+            existing_action = p.add_argument(
                 option_name,
                 type=float,
                 default=default_settle_delay,
@@ -97,7 +108,10 @@ def _common_args(
             )
         else:
             existing_action.default = default_settle_delay
-            p.set_defaults(settle_delay=default_settle_delay)
+
+        setattr(p, "_settle_delay_action", existing_action)
+        p.set_defaults(settle_delay=default_settle_delay)
+
 
 def _parse_led_frequency(raw_value: str) -> int:
     try:
