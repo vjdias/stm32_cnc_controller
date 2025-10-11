@@ -118,6 +118,9 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   # Aplica o preset padrão usando /dev/spidev0.1 (bus=0, dev=1)
   python3 tmc5160_cli.py
 
+  # Aplica o preset padrão em outro chip-select (ex.: /dev/spidev0.2)
+  python3 tmc5160_cli.py --bus 0 --dev 2
+
   # Ajusta registradores adicionais (endereços em decimal/hex ou aliases)
   python3 tmc5160_cli.py --gconf 0x00000005 --write 0x20=0x12345678
 
@@ -138,15 +141,47 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   Após cada transferência o utilitário exibe a resposta bruta em hexadecimal
   (5 bytes) seguida de uma interpretação em português do byte de status (SG,
   OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
-  32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
-  execução é encerrada com erro explicando quais flags foram ativadas. O comando
-  `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
-  retorno útil) com a tradução dos flags e o valor atual de cada registrador
-  consultado. Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN,
-  TPOWERDOWN, TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o
-  datasheet — por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal,
-  bits ativos de `GCONF`, microstepping (`MRES`) e configuração de StealthChop,
-  facilitando entender rapidamente o estado real do driver.
+  32 bits devolvido pelo comando anterior. A chamada `python3 tmc5160_cli.py --bus 0 --dev 2`
+  segue exatamente esse fluxo: ela ainda está no modo de configuração, portanto
+  apenas realiza escritas (preset padrão) e apresenta os dados retornados pelo
+  driver para cada transferência. Se qualquer alerta for indicado, a execução é
+  encerrada com erro explicando quais flags foram ativadas. O comando `status`
+  segue o mesmo padrão, apresentando duas respostas por leitura (pedido e retorno
+  útil) com a tradução dos flags e o valor atual de cada registrador consultado.
+  Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN, TPOWERDOWN,
+  TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o datasheet —
+  por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal, bits ativos de
+  `GCONF`, microstepping (`MRES`) e configuração de StealthChop, facilitando
+  entender rapidamente o estado real do driver.
+
+  **Referência completa dos comandos**
+
+  O `tmc5160_cli.py` possui três subcomandos. Invocar o script sem argumentos
+  equivale a `tmc5160_cli.py configure`.
+
+  | Subcomando | Função | Opções específicas |
+  |-----------|--------|--------------------|
+  | `configure` | Escreve o preset padrão (a menos que `--no-defaults` seja usado) e aplica sobrescritas adicionais. | `--no-defaults` pula o preset padrão; `--write REG=VAL` adiciona quantas escritas extras forem necessárias; flags curtas por registrador (`--gconf`, `--gstat`, `--ihold-irun`, `--tpowerdown`, `--tpwmthrs`, `--chopconf`, `--pwmconf`) aceitam valores em decimal ou hexadecimal e são convertidas para os respectivos endereços. |
+  | `status` | Faz leituras sem alterar o estado atual. Os endereços são lidos usando o fluxo 2-step descrito na seção 4.4 do datasheet. | `--register REG` (repetível) define exatamente quais registradores consultar; se omitido, a CLI usa a lista padrão `GSTAT`, `GCONF`, `IHOLD_IRUN`, `TPOWERDOWN`, `TPWMTHRS`, `CHOPCONF` e `PWMCONF`. |
+  | `loop-test` | Gera um padrão repetitivo de escrita para análise em osciloscópio/analisador lógico. | `--address` escolhe o registrador (alias ou endereço numérico, default `gconf`); `--value` define o payload de 32 bits; `--interval` impõe atraso entre escritas (0 = o mais rápido possível); `--iterations` limita a quantidade de repetições (0 = infinito); `--quiet` suprime o log de cada transferência individual, mostrando apenas o resumo inicial/final. |
+
+  As opções comuns listadas no topo do `--help` (`--bus`, `--dev`, `--speed`) se
+  aplicam a todos os subcomandos, pois determinam qual nó `/dev/spidevX.Y`
+  será utilizado e a frequência do barramento. Em caso de erro durante a
+  abertura (`FileNotFoundError`, `PermissionError` ou falhas reportadas pelo
+  driver), a CLI informa o overlay sugerido para habilitar o SPI, recomenda o uso
+  de `sudo` quando necessário e encerra com um código de status diferente de zero.
+
+  Quando o objetivo for apenas ler valores sem alterar a configuração atual,
+  utilize `status` ou `status --register ...`. Internamente a rotina `read_register`
+  envia primeiro o endereço com o bit de leitura (MSB) ativado e, em seguida, um
+  frame NOP (`0x00 00 00 00 00`) para coletar os 32 bits do registrador latched
+  na borda anterior, exatamente como descrito na Seção 4.4 do datasheet oficial.
+  Não é necessário "limpar" os registradores antes da leitura: apenas o
+  registrador `GSTAT` possui bits de falha que são zerados escrevendo 1. O preset
+  padrão já faz essa limpeza inicial (`0x00000007`) para assegurar que alertas
+  antigos não contaminem as próximas leituras e que apenas eventos novos sejam
+  reportados.
 - O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
   limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
   parâmetros de chopper/pwm adequados para microstepping de 1/16.
@@ -163,6 +198,62 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   cfg.close()
   ```
 - Em modo contexto (`with ...`), o driver é aberto automaticamente e fechado ao final.
+
+Fluxo completo: preparar três eixos e executar movimentos de teste
+------------------------------------------------------------------
+1. **Configure cada TMC5160 dedicado aos eixos X/Y/Z.** Ajuste `--bus`/`--dev`
+   conforme o chip-select de cada driver. No exemplo abaixo os três TMC5160
+   estão no barramento SPI1 exposto pelo overlay `spi1-3cs` (`/dev/spidev1.0`,
+   `/dev/spidev1.1` e `/dev/spidev1.2`):
+   ```bash
+   python3 tmc5160_cli.py configure --bus 1 --dev 0 --speed 4000000
+   python3 tmc5160_cli.py configure --bus 1 --dev 1 --speed 4000000
+   python3 tmc5160_cli.py configure --bus 1 --dev 2 --speed 4000000
+   ```
+   Cada execução mantém o preset padrão (`configure`) e imprime as trocas SPI
+   realizadas. Para cada registrador escrito o utilitário mostra os cinco bytes
+   devolvidos (`AB … 54`) e traduz os bits de status (SG, OT/OTPW, S2G/S2VS,
+   UV_CP) juntamente com o valor de 32 bits lido na volta, confirmando que o
+   driver está pronto para receber pulsos STEP/DIR.
+
+2. **Enfileire um movimento de teste para cada eixo no STM32.** O comando
+   `queue-add` aceita máscaras de direção (`--dir`) em que o bit 0 corresponde
+   ao eixo X, o bit 1 ao eixo Y e o bit 2 ao eixo Z. Use velocidades (`--v*`)
+   e passos (`--s*`) não nulos apenas para o eixo que deve se mover em cada
+   requisição:
+   ```bash
+   # Movimento apenas no eixo X (bit0 da máscara de direção ativo)
+   python3 cnc_spi_client.py queue-add --frame-id 10 --dir 0x01 \
+       --vx 1500 --sx 20000 --vy 0 --sy 0 --vz 0 --sz 0
+
+   # Movimento apenas no eixo Y (bit1 da máscara de direção ativo)
+   python3 cnc_spi_client.py queue-add --frame-id 11 --dir 0x02 \
+       --vx 0 --sx 0 --vy 1500 --sy 20000 --vz 0 --sz 0
+
+   # Movimento apenas no eixo Z (bit2 da máscara de direção ativo)
+   python3 cnc_spi_client.py queue-add --frame-id 12 --dir 0x04 \
+       --vx 0 --sx 0 --vy 0 --sy 0 --vz 1200 --sz 12000
+   ```
+   Cada chamada retorna um ACK do tipo `RESP_MOVE_QUEUE_ADD_ACK` contendo o
+   `frameId` informado e um `status` (0 = sucesso).
+
+3. **Dispare a execução e acompanhe os retornos do firmware.**
+   ```bash
+   python3 cnc_spi_client.py start-move --frame-id 20
+   python3 cnc_spi_client.py queue-status --frame-id 21
+   python3 cnc_spi_client.py end-move --frame-id 22
+   ```
+   - `start-move` devolve apenas o `frameId` para confirmar que o STM32 mudou
+     para o estado de execução (`RESP_START_MOVE`).
+   - `queue-status` traz o mapa de erros PID (`pidErrX/Y/Z`) e a porcentagem de
+     preenchimento da fila (`pctX/Y/Z`) reportada pelo firmware
+     (`RESP_MOVE_QUEUE_STATUS`).
+   - `end-move` confirma o término do ciclo de execução com um frame
+     `RESP_MOVE_END` ecoando o `frameId` enviado.
+
+   Em caso de timeout, a CLI imprime o payload transmitido e o comando
+   associado, facilitando a depuração do motivo de a resposta não ter sido
+   validada a tempo.
   Fora dele, chame `close()` manualmente após terminar a configuração.
 - Se precisar disparar sequências adicionais (ex.: corrente dinâmica durante manutenção),
   use `apply_registers()` com uma lista de pares `(endereço, valor)`.
