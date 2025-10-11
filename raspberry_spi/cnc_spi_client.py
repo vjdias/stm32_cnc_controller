@@ -84,7 +84,10 @@ def _common_args(
             "--settle-delay",
             type=float,
             default=default_settle_delay,
-            help="Tempo (s) para aguardar entre tentativas de leitura",
+            help=(
+                "Tempo (s) para aguardar entre tentativas de leitura (ex.: 0.002 "
+                "para 2 ms)."
+            ),
         )
 
 
@@ -254,7 +257,8 @@ def print_examples(_: argparse.Namespace) -> None:
         ),
         (
             "Adicionar movimento à fila",
-            f"{base_cmd} queue-add --frame-id 2 --dir 0x03 --vx 1000 --sx 2000 --vy 1000 --sy 2000 --vz 500 --sz 800",
+            f"{base_cmd} queue-add --frame-id 2 --dir 0x03 --vx 1000 --sx 2000 "
+            "--vy 1000 --sy 2000 --vz 500 --sz 800 --settle-delay 0.002",
         ),
         ("Status da fila", f"{base_cmd} queue-status --frame-id 3"),
         ("Iniciar execução", f"{base_cmd} start-move --frame-id 4"),
