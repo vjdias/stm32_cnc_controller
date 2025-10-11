@@ -271,11 +271,13 @@ def tmc_status(args: argparse.Namespace) -> None:
         {
             "status": f"0x{gstat_reply.status:02X}",
             "prev_value": f"0x{gstat_reply.value:08X}",
+            "bytes": [f"0x{byte:02X}" for byte in gstat_reply.raw_bytes],
         },
     )
     decoded = asdict(drv_status)
     decoded["status_byte"] = f"0x{drv_status.status_byte:02X}"
     decoded["raw"] = f"0x{drv_status.raw:08X}"
+    decoded["raw_bytes"] = [f"0x{byte:02X}" for byte in drv_status.raw_bytes]
     print("DRV_STATUS:", decoded)
 
 

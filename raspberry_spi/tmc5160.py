@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Tuple
 
 try:  # pragma: no cover - dependência externa
     import spidev  # type: ignore
@@ -24,6 +24,7 @@ class TMC5160Reply:
 
     status: int
     value: int
+    raw_bytes: Tuple[int, ...]
 
 
 @dataclass
@@ -32,6 +33,7 @@ class TMC5160DrvStatus:
 
     status_byte: int
     raw: int
+    raw_bytes: Tuple[int, ...]
     sg_result: int
     fsactive: bool
     s2ga: bool
@@ -112,7 +114,11 @@ class TMC5160Spi:
         resp = self._xfer(frame)
         status = resp[0] & 0xFF
         prev_value = self._unpack_value(resp[1:])
-        return TMC5160Reply(status=status, value=prev_value)
+        return TMC5160Reply(
+            status=status,
+            value=prev_value,
+            raw_bytes=tuple(resp),
+        )
 
     def read_register(self, address: int) -> TMC5160Reply:
         if not 0 <= address <= _TMC5160_ADDR_MASK:
@@ -123,7 +129,11 @@ class TMC5160Spi:
         resp = self._xfer([0x00] * _TMC5160_FRAME_BYTES)
         status = resp[0] & 0xFF
         value = self._unpack_value(resp[1:])
-        return TMC5160Reply(status=status, value=value)
+        return TMC5160Reply(
+            status=status,
+            value=value,
+            raw_bytes=tuple(resp),
+        )
 
     def clear_gstat(self) -> TMC5160Reply:
         """Zera GSTAT (bits latched de erro)."""
@@ -138,6 +148,7 @@ class TMC5160Spi:
         return TMC5160DrvStatus(
             status_byte=reply.status,
             raw=raw,
+            raw_bytes=reply.raw_bytes,
             sg_result=(raw >> 24) & 0xFF,
             fsactive=bool((raw >> 23) & 0x1),
             s2ga=bool((raw >> 22) & 0x1),

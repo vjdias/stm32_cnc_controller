@@ -62,6 +62,7 @@ class TMC5160SpiTests(unittest.TestCase):
         self.assertEqual(spi.calls, [[0x01, 0x00, 0x00, 0x00, 0x07]])
         self.assertEqual(reply.status, 0x80)
         self.assertEqual(reply.value, 0)
+        self.assertEqual(reply.raw_bytes, (0x80, 0x00, 0x00, 0x00, 0x00))
 
     def test_read_register_pipeline(self) -> None:
         responses = [
@@ -81,6 +82,7 @@ class TMC5160SpiTests(unittest.TestCase):
         )
         self.assertEqual(reply.status, 0xC0)
         self.assertEqual(reply.value, 0x12345678)
+        self.assertEqual(reply.raw_bytes, (0xC0, 0x12, 0x34, 0x56, 0x78))
 
     def test_read_drv_status_decodes_flags(self) -> None:
         raw = (0x55 << 24)
@@ -102,6 +104,16 @@ class TMC5160SpiTests(unittest.TestCase):
 
         self.assertEqual(status.status_byte, 0x90)
         self.assertEqual(status.raw, raw & 0xFFFFFFFF)
+        self.assertEqual(
+            status.raw_bytes,
+            (
+                0x90,
+                (raw >> 24) & 0xFF,
+                (raw >> 16) & 0xFF,
+                (raw >> 8) & 0xFF,
+                raw & 0xFF,
+            ),
+        )
         self.assertEqual(status.sg_result, 0x55)
         self.assertTrue(status.fsactive)
         self.assertTrue(status.s2ga)

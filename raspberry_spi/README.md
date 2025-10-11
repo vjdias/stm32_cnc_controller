@@ -58,7 +58,8 @@ Uso rápido
   `python3 cnc_spi_client.py tmc-status --tmc-index 3 --flush-pipeline`
   (garante que o Raspberry Pi descarte flags antigos com `GSTAT=0x07` antes de
   ler o status mais recente `DRV_STATUS (0x6F)`; `--tmc-index` escolhe o CS do
-  SPI0 para falar com o driver correto)
+  SPI0 para falar com o driver correto e a saída lista todos os cinco bytes
+  recebidos em cada resposta do driver)
 
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.

@@ -12,10 +12,15 @@ class TmcStatusCliTests(unittest.TestCase):
         parser = build_parser()
         args = parser.parse_args(["tmc-status", "--tmc-index", "4"])
 
-        fake_gstat = TMC5160Reply(status=0x80, value=0x00000007)
+        fake_gstat = TMC5160Reply(
+            status=0x80,
+            value=0x00000007,
+            raw_bytes=(0x80, 0x00, 0x00, 0x00, 0x00),
+        )
         fake_drv = TMC5160DrvStatus(
             status_byte=0x91,
             raw=0x12345678,
+            raw_bytes=(0x91, 0x12, 0x34, 0x56, 0x78),
             sg_result=0x12,
             fsactive=False,
             s2ga=False,
@@ -44,6 +49,10 @@ class TmcStatusCliTests(unittest.TestCase):
         mock_spi.assert_called_once_with(bus=0, dev=4, speed_hz=1_000_000)
         driver.clear_gstat.assert_called_once_with()
         driver.read_drv_status.assert_called_once_with()
+
+        output = buf.getvalue()
+        self.assertIn("'bytes': ['0x80', '0x00', '0x00', '0x00', '0x00']", output)
+        self.assertIn("'raw_bytes': ['0x91', '0x12', '0x34', '0x56', '0x78']", output)
 
 
 if __name__ == "__main__":  # pragma: no cover
