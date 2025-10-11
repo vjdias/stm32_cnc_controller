@@ -15,6 +15,19 @@ Fiação (Raspberry Pi → STM32 SPI1 Slave)
 - Modo SPI: MODE 3 (CPOL=1, CPHA=1 no Linux). 8 bits, MSB first.
 - Velocidade sugerida inicial: 1 MHz (ajustável). O firmware usa RX DMA circular.
 
+Seletores de escravos (Chip Select)
+- **SPI0** (padrão nos cabeçalhos de 40 pinos do Raspberry Pi)
+  - **CE0** → GPIO8 (pino físico 24)
+  - **CE1** → GPIO7 (pino físico 26)
+  - Dispositivos `spidev`: `/dev/spidev0.0` e `/dev/spidev0.1`.
+- **SPI1** (pinos alternativos, úteis quando SPI0 está em uso por outro periférico)
+  - **CE0** → GPIO18 (pino físico 12)
+  - **CE1** → GPIO17 (pino físico 11)
+  - **CE2** → GPIO16 (pino físico 36)
+  - Dispositivos `spidev`: `/dev/spidev1.0`, `/dev/spidev1.1` e `/dev/spidev1.2`.
+
+Selecione o valor de `--bus`/`--dev` condizente com o chip-select que pretende usar ao inicializar o cliente SPI.
+
 Uso rápido
 - LED (configura LED1 piscando a 0,50 Hz, frameId=1):
   `python3 cnc_spi_client.py led-control --frame-id 1 --mask 0x01 --led1-mode 2 --led1-freq 0.5`
@@ -40,6 +53,11 @@ Uso rápido
 
 - Lista resumida com exemplos (sem necessidade de SPI ativo):
   `python3 cnc_spi_client.py examples`
+
+- Diagnóstico do TMC5160 (limpa `GSTAT` e lê `DRV_STATUS`):
+  `python3 cnc_spi_client.py tmc-status --bus 1 --dev 2 --flush-pipeline`
+  (garante que o Raspberry Pi descarte flags antigos com `GSTAT=0x07` antes de
+  ler o status mais recente `DRV_STATUS (0x6F)`)
 
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.

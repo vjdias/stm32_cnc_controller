@@ -30,6 +30,9 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 
 ## 2) Mapa de Pinos (sugestão segura)
 
+> **Configuração atual do CubeMX**: consulte [Docs/pin_assignments.md](Docs/pin_assignments.md)
+> para a lista completa dos pinos já atribuídos no firmware gerado.
+
 | Função | Pino(s) | Observações |
 |---|---|---|
 | **Encoder X (TIM2)** | **PA15=CH1**, **PB3=CH2** | Desative SWO; **Debug=SWD** |
@@ -39,10 +42,15 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 | **USART1 (VCP)** | **PB6=TX**, **PB7=RX** | USB do ST-LINK |
 | **STEP** | PB4 (X), PB0 (Y), PB1 (Z) | GPIO Out, Very High |
 | **DIR** | PA3 (X), PB2 (Y), PA2 (Z) | GPIO Out, Very High |
-| **EN** | PC4 (X), PC5 (Y), PA8 (Z) | GPIO Out |
+| **EN** | PC4 (X), PC5 (Y), PE1 (Z) | GPIO Out *(PE1/D2 reservado para EN_Z)* |
 | **EXTI** | PC0/PC1/PC2 (PROX_X/Y/Z), PC13 (E-STOP) | ISR **só-flag** |
 
 ---
+
+> **Nota**: `PC7` segue ligado ao `TIM3_CH2` para leitura do encoder do eixo Z via
+> `board_config_remap_tim3_encoder_pins()`. Utilize `PE1/D2` como enable do eixo Z
+> para manter o encoder funcional, conforme os pinos digitais indicados na
+> Tabela 11 do manual da B-L475E-IOT01A.
 
 ## 3) CubeMX — Seleções Principais
 
