@@ -14,11 +14,13 @@ MODULE_DIR = Path(__file__).resolve().parent
 if __package__:
     from .cnc_client import CNCClient
     from .cnc_commands import CNCCommandExecutor
+    from .tmc5160 import TMC5160Spi
 else:  # execução direta do script a partir do diretório raspberry_spi
     if str(MODULE_DIR) not in sys.path:
         sys.path.insert(0, str(MODULE_DIR))
     from cnc_client import CNCClient
     from cnc_commands import CNCCommandExecutor
+    from tmc5160 import TMC5160Spi
 
 
 def _common_args(
@@ -186,6 +188,30 @@ def build_parser() -> argparse.ArgumentParser:
     )
     examples.set_defaults(handler=print_examples, needs_client=False)
 
+    tmc_status = sub.add_parser(
+        "tmc-status",
+        help=(
+            "Limpa GSTAT (0x01=0x07) e lê DRV_STATUS (0x6F) do TMC5160 "
+            "para obter o diagnóstico atualizado."
+        ),
+    )
+    _common_args(tmc_status)
+    tmc_status.add_argument(
+        "--tmc-index",
+        type=int,
+        choices=range(5),
+        help=(
+            "Selecione qual driver TMC5160 está ligado ao SPI0 (CS0..CS4). "
+            "Sobrescreve --dev ao ser informado."
+        ),
+    )
+    tmc_status.add_argument(
+        "--flush-pipeline",
+        action="store_true",
+        help="Envia um frame NOP antes das leituras para descartar dados antigos",
+    )
+    tmc_status.set_defaults(handler="tmc_status", needs_client=False)
+
     return parser
 
 
@@ -225,6 +251,34 @@ def print_examples(_: argparse.Namespace) -> None:
     print("Comandos disponíveis e exemplos:")
     for title, command in examples:
         print(f"- {title}:\n  {command}")
+
+
+def tmc_status(args: argparse.Namespace) -> None:
+    from dataclasses import asdict
+
+    dev = args.dev
+    if getattr(args, "tmc_index", None) is not None:
+        dev = args.tmc_index
+
+    with TMC5160Spi(bus=args.bus, dev=dev, speed_hz=args.speed) as driver:
+        if args.flush_pipeline:
+            driver.flush_pipeline()
+        gstat_reply = driver.clear_gstat()
+        drv_status = driver.read_drv_status()
+
+    print(
+        "GSTAT clear reply:",
+        {
+            "status": f"0x{gstat_reply.status:02X}",
+            "prev_value": f"0x{gstat_reply.value:08X}",
+            "bytes": [f"0x{byte:02X}" for byte in gstat_reply.raw_bytes],
+        },
+    )
+    decoded = asdict(drv_status)
+    decoded["status_byte"] = f"0x{drv_status.status_byte:02X}"
+    decoded["raw"] = f"0x{drv_status.raw:08X}"
+    decoded["raw_bytes"] = [f"0x{byte:02X}" for byte in drv_status.raw_bytes]
+    print("DRV_STATUS:", decoded)
 
 
 def main(argv: Optional[List[str]] = None) -> int:

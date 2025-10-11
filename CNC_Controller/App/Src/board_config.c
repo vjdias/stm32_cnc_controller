@@ -105,13 +105,13 @@ void board_config_apply_motion_gpio(void)
     configure_output(GPIOB, GPIO_PIN_2, GPIO_SPEED_FREQ_VERY_HIGH);
     configure_output(GPIOA, GPIO_PIN_3 | GPIO_PIN_2, GPIO_SPEED_FREQ_VERY_HIGH);
     configure_output(GPIOC, GPIO_PIN_4 | GPIO_PIN_5, GPIO_SPEED_FREQ_LOW);
-    configure_output(GPIOA, GPIO_PIN_8, GPIO_SPEED_FREQ_LOW);
+    configure_output(GPIOE, GPIO_PIN_1, GPIO_SPEED_FREQ_LOW);
 
     /* Estados seguros antes de habilitar drivers: ENA alto, STEP/DIR baixos */
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4 | GPIO_PIN_2 | GPIO_PIN_0 | GPIO_PIN_1, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3 | GPIO_PIN_2, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4 | GPIO_PIN_5, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);
 
     /* Entradas de segurança em *pull-up* com detecção de bordas de ambos os sentidos */
     init.Mode = GPIO_MODE_IT_RISING_FALLING;
