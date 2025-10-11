@@ -1,3 +1,4 @@
+import argparse
 import sys
 import unittest
 from pathlib import Path
@@ -5,11 +6,12 @@ from pathlib import Path
 MODULE_DIR = Path(__file__).resolve().parent
 
 if __package__:
-    from .cnc_spi_client import build_parser
+    from .cnc_spi_client import _common_args, build_parser
 else:
     if str(MODULE_DIR) not in sys.path:
         sys.path.insert(0, str(MODULE_DIR))
-    from cnc_spi_client import build_parser  # type: ignore
+    from cnc_spi_client import _common_args, build_parser  # type: ignore
+
 
 
 class CNCSPICLITests(unittest.TestCase):
@@ -60,6 +62,18 @@ class CNCSPICLITests(unittest.TestCase):
         args = self.parser.parse_args(["hello", "--tries", "1", "--settle-delay", "0.1"])
         self.assertEqual(args.command, "hello")
         self.assertAlmostEqual(args.settle_delay, 0.1)
+
+    def test_common_args_can_update_settle_delay_default(self) -> None:
+        parser = argparse.ArgumentParser(prog="test")
+        parser.add_argument("--settle-delay", type=float, default=0.001)
+
+        _common_args(parser, include_settle_delay=True, default_settle_delay=0.123)
+
+        args = parser.parse_args([])
+        self.assertAlmostEqual(args.settle_delay, 0.123)
+
+        args = parser.parse_args(["--settle-delay", "0.5"])
+        self.assertAlmostEqual(args.settle_delay, 0.5)
 
 
 if __name__ == "__main__":

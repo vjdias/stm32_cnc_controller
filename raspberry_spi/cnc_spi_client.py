@@ -80,16 +80,24 @@ def _common_args(
             ),
         )
     if include_settle_delay:
-        p.add_argument(
-            "--settle-delay",
-            type=float,
-            default=default_settle_delay,
-            help=(
-                "Tempo (s) para aguardar entre tentativas de leitura (ex.: 0.002 "
-                "para 2 ms)."
-            ),
+        option_name = "--settle-delay"
+        existing_action = next(
+            (action for action in p._actions if option_name in action.option_strings),
+            None,
         )
-
+        if existing_action is None:
+            p.add_argument(
+                option_name,
+                type=float,
+                default=default_settle_delay,
+                help=(
+                    "Tempo (s) para aguardar entre tentativas de leitura (ex.: 0.002 "
+                    "para 2 ms)."
+                ),
+            )
+        else:
+            existing_action.default = default_settle_delay
+            p.set_defaults(settle_delay=default_settle_delay)
 
 def _parse_led_frequency(raw_value: str) -> int:
     try:
