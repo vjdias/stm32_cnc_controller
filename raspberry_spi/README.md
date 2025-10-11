@@ -154,6 +154,24 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   `GCONF`, microstepping (`MRES`) e configuração de StealthChop, facilitando
   entender rapidamente o estado real do driver.
 
+  **Referência completa dos comandos**
+
+  O `tmc5160_cli.py` possui três subcomandos. Invocar o script sem argumentos
+  equivale a `tmc5160_cli.py configure`.
+
+  | Subcomando | Função | Opções específicas |
+  |-----------|--------|--------------------|
+  | `configure` | Escreve o preset padrão (a menos que `--no-defaults` seja usado) e aplica sobrescritas adicionais. | `--no-defaults` pula o preset padrão; `--write REG=VAL` adiciona quantas escritas extras forem necessárias; flags curtas por registrador (`--gconf`, `--gstat`, `--ihold-irun`, `--tpowerdown`, `--tpwmthrs`, `--chopconf`, `--pwmconf`) aceitam valores em decimal ou hexadecimal e são convertidas para os respectivos endereços. |
+  | `status` | Faz leituras sem alterar o estado atual. Os endereços são lidos usando o fluxo 2-step descrito na seção 4.4 do datasheet. | `--register REG` (repetível) define exatamente quais registradores consultar; se omitido, a CLI usa a lista padrão `GSTAT`, `GCONF`, `IHOLD_IRUN`, `TPOWERDOWN`, `TPWMTHRS`, `CHOPCONF` e `PWMCONF`. |
+  | `loop-test` | Gera um padrão repetitivo de escrita para análise em osciloscópio/analisador lógico. | `--address` escolhe o registrador (alias ou endereço numérico, default `gconf`); `--value` define o payload de 32 bits; `--interval` impõe atraso entre escritas (0 = o mais rápido possível); `--iterations` limita a quantidade de repetições (0 = infinito); `--quiet` suprime o log de cada transferência individual, mostrando apenas o resumo inicial/final. |
+
+  As opções comuns listadas no topo do `--help` (`--bus`, `--dev`, `--speed`) se
+  aplicam a todos os subcomandos, pois determinam qual nó `/dev/spidevX.Y`
+  será utilizado e a frequência do barramento. Em caso de erro durante a
+  abertura (`FileNotFoundError`, `PermissionError` ou falhas reportadas pelo
+  driver), a CLI informa o overlay sugerido para habilitar o SPI, recomenda o uso
+  de `sudo` quando necessário e encerra com um código de status diferente de zero.
+
   Quando o objetivo for apenas ler valores sem alterar a configuração atual,
   utilize `status` ou `status --register ...`. Internamente a rotina `read_register`
   envia primeiro o endereço com o bit de leitura (MSB) ativado e, em seguida, um
