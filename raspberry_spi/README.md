@@ -55,12 +55,15 @@ Uso rápido
   `python3 cnc_spi_client.py examples`
 
 - Diagnóstico do TMC5160 (limpa `GSTAT` e lê `DRV_STATUS`):
-  `python3 cnc_spi_client.py tmc-status --bus 1 --dev 2 --flush-pipeline`
+  `python3 cnc_spi_client.py tmc-status --tmc-index 3 --flush-pipeline`
   (garante que o Raspberry Pi descarte flags antigos com `GSTAT=0x07` antes de
-  ler o status mais recente `DRV_STATUS (0x6F)`)
+  ler o status mais recente `DRV_STATUS (0x6F)`; `--tmc-index` escolhe o CS do
+  SPI0 para falar com o driver correto)
 
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.
+- `--tmc-index` (0–4) troca o chip-select do SPI0 ao diagnosticar múltiplos
+  TMC5160; quando usado, substitui o valor de `--dev`.
 - `--speed` em Hz (padrão 1_000_000).
 
 Notas de protocolo

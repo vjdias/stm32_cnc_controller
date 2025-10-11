@@ -197,6 +197,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _common_args(tmc_status)
     tmc_status.add_argument(
+        "--tmc-index",
+        type=int,
+        choices=range(5),
+        help=(
+            "Selecione qual driver TMC5160 está ligado ao SPI0 (CS0..CS4). "
+            "Sobrescreve --dev ao ser informado."
+        ),
+    )
+    tmc_status.add_argument(
         "--flush-pipeline",
         action="store_true",
         help="Envia um frame NOP antes das leituras para descartar dados antigos",
@@ -247,7 +256,11 @@ def print_examples(_: argparse.Namespace) -> None:
 def tmc_status(args: argparse.Namespace) -> None:
     from dataclasses import asdict
 
-    with TMC5160Spi(bus=args.bus, dev=args.dev, speed_hz=args.speed) as driver:
+    dev = args.dev
+    if getattr(args, "tmc_index", None) is not None:
+        dev = args.tmc_index
+
+    with TMC5160Spi(bus=args.bus, dev=dev, speed_hz=args.speed) as driver:
         if args.flush_pipeline:
             driver.flush_pipeline()
         gstat_reply = driver.clear_gstat()
