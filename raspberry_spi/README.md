@@ -118,6 +118,9 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   # Aplica o preset padrão usando /dev/spidev0.1 (bus=0, dev=1)
   python3 tmc5160_cli.py
 
+  # Aplica o preset padrão em outro chip-select (ex.: /dev/spidev0.2)
+  python3 tmc5160_cli.py --bus 0 --dev 2
+
   # Ajusta registradores adicionais (endereços em decimal/hex ou aliases)
   python3 tmc5160_cli.py --gconf 0x00000005 --write 0x20=0x12345678
 
@@ -138,15 +141,29 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   Após cada transferência o utilitário exibe a resposta bruta em hexadecimal
   (5 bytes) seguida de uma interpretação em português do byte de status (SG,
   OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
-  32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
-  execução é encerrada com erro explicando quais flags foram ativadas. O comando
-  `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
-  retorno útil) com a tradução dos flags e o valor atual de cada registrador
-  consultado. Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN,
-  TPOWERDOWN, TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o
-  datasheet — por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal,
-  bits ativos de `GCONF`, microstepping (`MRES`) e configuração de StealthChop,
-  facilitando entender rapidamente o estado real do driver.
+  32 bits devolvido pelo comando anterior. A chamada `python3 tmc5160_cli.py --bus 0 --dev 2`
+  segue exatamente esse fluxo: ela ainda está no modo de configuração, portanto
+  apenas realiza escritas (preset padrão) e apresenta os dados retornados pelo
+  driver para cada transferência. Se qualquer alerta for indicado, a execução é
+  encerrada com erro explicando quais flags foram ativadas. O comando `status`
+  segue o mesmo padrão, apresentando duas respostas por leitura (pedido e retorno
+  útil) com a tradução dos flags e o valor atual de cada registrador consultado.
+  Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN, TPOWERDOWN,
+  TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o datasheet —
+  por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal, bits ativos de
+  `GCONF`, microstepping (`MRES`) e configuração de StealthChop, facilitando
+  entender rapidamente o estado real do driver.
+
+  Quando o objetivo for apenas ler valores sem alterar a configuração atual,
+  utilize `status` ou `status --register ...`. Internamente a rotina `read_register`
+  envia primeiro o endereço com o bit de leitura (MSB) ativado e, em seguida, um
+  frame NOP (`0x00 00 00 00 00`) para coletar os 32 bits do registrador latched
+  na borda anterior, exatamente como descrito na Seção 4.4 do datasheet oficial.
+  Não é necessário "limpar" os registradores antes da leitura: apenas o
+  registrador `GSTAT` possui bits de falha que são zerados escrevendo 1. O preset
+  padrão já faz essa limpeza inicial (`0x00000007`) para assegurar que alertas
+  antigos não contaminem as próximas leituras e que apenas eventos novos sejam
+  reportados.
 - O método `configure()` aplica o preset padrão (`TMC5160RegisterPreset.default()`), que
   limpa falhas (`GSTAT`), ativa modo Step/Dir (`GCONF`), define correntes de hold/run e
   parâmetros de chopper/pwm adequados para microstepping de 1/16.
