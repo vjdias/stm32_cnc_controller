@@ -99,7 +99,6 @@ def _common_args(
             existing_action.default = default_settle_delay
             p.set_defaults(settle_delay=default_settle_delay)
 
-
 def _parse_led_frequency(raw_value: str) -> int:
     try:
         value = Decimal(raw_value)
@@ -169,6 +168,12 @@ def build_parser() -> argparse.ArgumentParser:
         q_add.add_argument(f"--kp-{axis}", type=int, default=0)
         q_add.add_argument(f"--ki-{axis}", type=int, default=0)
         q_add.add_argument(f"--kd-{axis}", type=int, default=0)
+    q_add.add_argument(
+        "--settle-delay",
+        type=float,
+        default=0.001,
+        help="Tempo (s) para aguardar entre tentativas de leitura",
+    )
     q_add.set_defaults(handler="queue_add", needs_client=True)
 
     q_status = sub.add_parser("queue-status", help="Consultar status da fila")

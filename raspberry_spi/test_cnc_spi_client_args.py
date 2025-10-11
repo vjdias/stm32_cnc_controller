@@ -13,6 +13,7 @@ else:
     from cnc_spi_client import _common_args, build_parser  # type: ignore
 
 
+
 class CNCSPICLITests(unittest.TestCase):
     def setUp(self) -> None:
         self.parser = build_parser()
