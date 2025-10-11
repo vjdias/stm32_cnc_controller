@@ -198,6 +198,62 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   cfg.close()
   ```
 - Em modo contexto (`with ...`), o driver é aberto automaticamente e fechado ao final.
+
+Fluxo completo: preparar três eixos e executar movimentos de teste
+------------------------------------------------------------------
+1. **Configure cada TMC5160 dedicado aos eixos X/Y/Z.** Ajuste `--bus`/`--dev`
+   conforme o chip-select de cada driver. No exemplo abaixo os três TMC5160
+   estão no barramento SPI1 exposto pelo overlay `spi1-3cs` (`/dev/spidev1.0`,
+   `/dev/spidev1.1` e `/dev/spidev1.2`):
+   ```bash
+   python3 tmc5160_cli.py configure --bus 1 --dev 0 --speed 4000000
+   python3 tmc5160_cli.py configure --bus 1 --dev 1 --speed 4000000
+   python3 tmc5160_cli.py configure --bus 1 --dev 2 --speed 4000000
+   ```
+   Cada execução mantém o preset padrão (`configure`) e imprime as trocas SPI
+   realizadas. Para cada registrador escrito o utilitário mostra os cinco bytes
+   devolvidos (`AB … 54`) e traduz os bits de status (SG, OT/OTPW, S2G/S2VS,
+   UV_CP) juntamente com o valor de 32 bits lido na volta, confirmando que o
+   driver está pronto para receber pulsos STEP/DIR.
+
+2. **Enfileire um movimento de teste para cada eixo no STM32.** O comando
+   `queue-add` aceita máscaras de direção (`--dir`) em que o bit 0 corresponde
+   ao eixo X, o bit 1 ao eixo Y e o bit 2 ao eixo Z. Use velocidades (`--v*`)
+   e passos (`--s*`) não nulos apenas para o eixo que deve se mover em cada
+   requisição:
+   ```bash
+   # Movimento apenas no eixo X (bit0 da máscara de direção ativo)
+   python3 cnc_spi_client.py queue-add --frame-id 10 --dir 0x01 \
+       --vx 1500 --sx 20000 --vy 0 --sy 0 --vz 0 --sz 0
+
+   # Movimento apenas no eixo Y (bit1 da máscara de direção ativo)
+   python3 cnc_spi_client.py queue-add --frame-id 11 --dir 0x02 \
+       --vx 0 --sx 0 --vy 1500 --sy 20000 --vz 0 --sz 0
+
+   # Movimento apenas no eixo Z (bit2 da máscara de direção ativo)
+   python3 cnc_spi_client.py queue-add --frame-id 12 --dir 0x04 \
+       --vx 0 --sx 0 --vy 0 --sy 0 --vz 1200 --sz 12000
+   ```
+   Cada chamada retorna um ACK do tipo `RESP_MOVE_QUEUE_ADD_ACK` contendo o
+   `frameId` informado e um `status` (0 = sucesso).
+
+3. **Dispare a execução e acompanhe os retornos do firmware.**
+   ```bash
+   python3 cnc_spi_client.py start-move --frame-id 20
+   python3 cnc_spi_client.py queue-status --frame-id 21
+   python3 cnc_spi_client.py end-move --frame-id 22
+   ```
+   - `start-move` devolve apenas o `frameId` para confirmar que o STM32 mudou
+     para o estado de execução (`RESP_START_MOVE`).
+   - `queue-status` traz o mapa de erros PID (`pidErrX/Y/Z`) e a porcentagem de
+     preenchimento da fila (`pctX/Y/Z`) reportada pelo firmware
+     (`RESP_MOVE_QUEUE_STATUS`).
+   - `end-move` confirma o término do ciclo de execução com um frame
+     `RESP_MOVE_END` ecoando o `frameId` enviado.
+
+   Em caso de timeout, a CLI imprime o payload transmitido e o comando
+   associado, facilitando a depuração do motivo de a resposta não ter sido
+   validada a tempo.
   Fora dele, chame `close()` manualmente após terminar a configuração.
 - Se precisar disparar sequências adicionais (ex.: corrente dinâmica durante manutenção),
   use `apply_registers()` com uma lista de pares `(endereço, valor)`.
