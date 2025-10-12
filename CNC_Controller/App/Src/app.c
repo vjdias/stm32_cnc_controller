@@ -1,5 +1,11 @@
 #include <string.h>
 #include "Services/service_adapters.h"
+#include "Services/Log/log_service.h"
+#include "Services/Led/led_service.h"
+#include "Services/Home/home_service.h"
+#include "Services/Probe/probe_service.h"
+#include "Services/Safety/safety_service.h"
+#include "Services/Motion/motion_service.h"
 #include "app.h"
 
 /*==============================================================================
@@ -167,6 +173,16 @@ void app_init(void)
     /* Registra serviços no router (o projeto deve prover os handlers) */
     memset(&g_handlers, 0, sizeof g_handlers);
     services_register_handlers(&g_handlers);
+
+    /* Inicializa serviços (ordem: log/diag, safety, periféricos simples, motion) */
+#if LOG_ENABLE
+    log_service_init();
+#endif
+    safety_service_init();
+    led_service_init();
+    home_service_init();
+    probe_service_init();
+    motion_service_init();
 
     g_resp_fifo = resp_fifo_create();
     router_init(&g_router, g_resp_fifo, &g_handlers);
