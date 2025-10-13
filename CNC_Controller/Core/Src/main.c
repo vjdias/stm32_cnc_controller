@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app.h"
+#include "Services/Motion/motion_service.h"
 #include "board_config.h"
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
@@ -110,6 +111,9 @@ int main(void)
     board_config_apply_interrupt_priorities();
     //board_config_apply_spi_dma_profile();
     app_init();
+    // Inicia laços de temporização do serviço de movimento
+    (void)HAL_TIM_Base_Start_IT(&htim6);
+    (void)HAL_TIM_Base_Start_IT(&htim7);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -182,6 +186,17 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 }
 
 /* USER CODE END 4 */
+
+// Callback de temporização para TIM6/TIM7 -> alimenta serviço de movimento
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (!htim) return;
+    if (htim->Instance == TIM6) {
+        motion_on_tim6_tick();
+    } else if (htim->Instance == TIM7) {
+        motion_on_tim7_tick();
+    }
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

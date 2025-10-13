@@ -1,2 +1,2 @@
 ../App/Src/app_spi_handshake.c:5:9:app_spi_handshake_compute_status	2
-../App/Src/app_spi_handshake.c:27:1:app_spi_handshake_prime	12
+../App/Src/app_spi_handshake.c:28:1:app_spi_handshake_prime	13
