@@ -233,6 +233,14 @@ def _build_status_parser() -> argparse.ArgumentParser:
     )
     _add_common_spi_arguments(parser)
     parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help=(
+            "Executa: leitura dummy, ler GSTAT, limpar GSTAT (0x07), ",
+            "ler GSTAT novamente e ler DRV_STATUS (0x6F) antes das leituras."
+        ),
+    )
+    parser.add_argument(
         "--register",
         action="append",
         default=[],
