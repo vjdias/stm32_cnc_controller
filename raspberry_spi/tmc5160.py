@@ -484,7 +484,8 @@ class TMC5160Configurator:
         return TMC5160TransferResult(address, value, tuple(response))
 
     def write_register(self, address: int, value: int) -> TMC5160TransferResult:
-        return self._transfer(address, value)
+        # Bit 7 precisa estar em 1 para indicar escrita no barramento SPI.
+        return self._transfer(address | 0x80, value, raw=True)
 
     def configure(self) -> List[TMC5160TransferResult]:
         results: List[TMC5160TransferResult] = []
@@ -504,7 +505,9 @@ class TMC5160Configurator:
         if not 0 <= address <= 0x7F:
             raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
 
-        request = self._transfer(0x80 | address, 0x00000000, raw=True)
+        # Primeiro quadro requisita a leitura (bit 7 limpo).
+        request = self._transfer(address, 0x00000000)
+        # Segundo quadro retorna os dados requisitados; envia NOP (0x00).
         reply = self._transfer(0x00, 0x00000000, raw=True)
         return TMC5160ReadResult(address, request, reply)
 

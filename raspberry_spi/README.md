@@ -53,6 +53,11 @@ Comandos para o TMC5160 (Raspberry Pi)
   - Executa: leitura dummy → ler `GSTAT` → escrever `GSTAT=0x07` → ler `GSTAT` → ler `DRV_STATUS`.
   - Depois, pode-se ler registradores adicionais com `--register` (ex.: `--register drv_status`).
 
+Nota de correcao (framing SPI do TMC5160)
+- Corrigido em `raspberry_spi/tmc5160.py` o frame de escrita: o bit 7 do primeiro byte agora sobe (`0x80 | endereco`), permitindo que o TMC5160 aceite as configuracoes enviadas.
+- Corrigida a leitura: o pedido inicial passa a usar o endereco com bit 7 limpo e o segundo ciclo envia um NOP (`0x00`), evitando que o registrador seja zerado antes da resposta.
+- Em instalacoes antigas, atualize este arquivo ou aplique o patch manualmente; com o bug original, nenhuma escrita persistia e as leituras retornavam valores incorretos.
+
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.
 - `--speed` em Hz (padrão 1_000_000).
