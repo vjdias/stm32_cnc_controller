@@ -490,13 +490,13 @@ class TMC5160Configurator:
     def configure(self) -> List[TMC5160TransferResult]:
         results: List[TMC5160TransferResult] = []
         for address, value in self._registers.writes:
-            results.append(self._transfer(address, value))
+            results.append(self.write_register(address, value))
         return results
 
     def apply_registers(self, writes: Iterable[Tuple[int, int]]) -> List[TMC5160TransferResult]:
         results: List[TMC5160TransferResult] = []
         for address, value in writes:
-            results.append(self._transfer(address, value))
+            results.append(self.write_register(address, value))
         return results
 
     def read_register(self, address: int) -> TMC5160ReadResult:
