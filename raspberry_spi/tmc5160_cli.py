@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Interface de linha de comando para configurar o driver TMC5160."""
 from __future__ import annotations
 
@@ -106,11 +108,7 @@ def _format_read_result(result: TMC5160ReadResult) -> str:
     if status_request.raw == status_reply.raw:
         lines.append(f"  Diagnóstico : {status_reply.summary()}")
     else:
-        lines.append(
-            "  Diagnóstico : {} / {}".format(
-                status_request.summary(), status_reply.summary()
-            )
-        )
+        lines.append("  Diagnóstico : {} / {}".format(status_request.summary(), status_reply.summary()))
     decoded = decode_register_value(result.address, result.value)
     if decoded:
         lines.append("  Tradução    :")
@@ -235,10 +233,8 @@ def _build_status_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--clear-gstat",
         action="store_true",
-        help=(
-            "Executa: leitura dummy, ler GSTAT, limpar GSTAT (0x07), ",
-            "ler GSTAT novamente e ler DRV_STATUS (0x6F) antes das leituras."
-        ),
+        help=("Executa: leitura dummy, ler GSTAT, limpar GSTAT (0x07), "
+              "ler GSTAT novamente e ler DRV_STATUS (0x6F) antes das leituras."),
     )
     parser.add_argument(
         "--register",
@@ -247,7 +243,7 @@ def _build_status_parser() -> argparse.ArgumentParser:
         metavar="REG",
         help=(
             "Lista de registradores a serem lidos (pode ser repetido). "
-            "Aceita aliases conhecidos (gconf, gstat, ...) ou endereços numéricos."
+            "Aceita aliases conhecidos (gconf, gstat, drv_status, ...) ou endereços numéricos."
         ),
     )
     return parser
@@ -265,18 +261,13 @@ def _build_loop_test_parser() -> argparse.ArgumentParser:
         "--address",
         type=_parse_register_name,
         default=REG_GCONF,
-        help=(
-            "Registrador a ser escrito (alias conhecido ou endereço numérico, "
-            "default: gconf)."
-        ),
+        help=("Registrador a ser escrito (alias conhecido ou endereço numérico, default: gconf)."),
     )
     parser.add_argument(
         "--value",
         type=lambda x: int(x, 0),
         default=0x00000004,
-        help=(
-            "Valor de 32 bits a ser enviado em todas as mensagens (default: 0x00000004)."
-        ),
+        help=("Valor de 32 bits a ser enviado em todas as mensagens (default: 0x00000004)."),
     )
     parser.add_argument(
         "--interval",
@@ -306,9 +297,7 @@ def _build_loop_test_parser() -> argparse.ArgumentParser:
 
 def _build_init_stepdir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Aplica configurações básicas para operar o TMC5160 em STEP/DIR externo."
-        ),
+        description=("Aplica configurações básicas para operar o TMC5160 em STEP/DIR externo."),
     )
     _add_common_spi_arguments(parser)
     parser.add_argument("--ihold", type=int, default=10, help="IHOLD (0-31)")
@@ -399,9 +388,7 @@ def _report_missing_device(
 ) -> int:
     available = [str(path) for path in device_finder()]
     if available:
-        available_hint = "Dispositivos disponíveis: {}. ".format(
-            ", ".join(sorted(available))
-        )
+        available_hint = "Dispositivos disponíveis: {}. ".format(", ".join(sorted(available)))
     else:
         available_hint = "Nenhum dispositivo /dev/spidev* encontrado no sistema. "
 
@@ -414,8 +401,8 @@ def _report_missing_device(
 
     print(
         (
-            "Erro: dispositivo SPI '{spi}' não encontrado. {available}" "Habilite o overlay SPI "
-            "correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
+            "Erro: dispositivo SPI '{spi}' não encontrado. {available}"
+            "Habilite o overlay SPI correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
         ).format(spi=spi_node, available=available_hint, overlay=overlay_hint),
         file=sys.stderr,
     )
@@ -483,9 +470,7 @@ def _run_configure(
     )
 
     def _operation(driver):
-        print(
-            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
-        )
+        print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160")
         responses: List[TMC5160TransferResult] = []
         if not args.no_defaults:
             count = len(preset.writes)
@@ -551,16 +536,12 @@ def _run_status(
         register_preset=TMC5160RegisterPreset.default(),
     )
 
-    register_list = ", ".join(
-        REGISTER_NAMES.get(addr, f"0x{addr:02X}") for addr in registers
-    )
+    register_list = ", ".join(REGISTER_NAMES.get(addr, f"0x{addr:02X}") for addr in registers)
 
     def _operation(driver):
-        print(
-            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160"
-        )
-        if hasattr(args, "clear_gstat") and args.clear_gstat:
-            print("Executando sequ��ncia clear-GSTAT:")
+        print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160")
+        if args.clear_gstat:
+            print("Executando sequência clear-GSTAT:")
             dummy = driver.read_register(REG_GCONF)
             print(_format_read_result(dummy))
             gstat_before = driver.read_register(REG_GSTAT)
@@ -693,21 +674,18 @@ def run(
     else:
         argv_list = list(argv)
 
+    # Subcomandos
     if argv_list and argv_list[0] == "help":
-        parser = _build_configure_parser()
-        parser.print_help()
+        print(
+            "Uso:\n"
+            "  configure [opções]         Configura registradores\n"
+            "  status [opções]            Lê registradores (suporta --clear-gstat)\n"
+            "  loop-test [opções]         Gera padrão de escrita contínuo\n"
+            "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
+        )
         return 0
+
     if argv_list and argv_list[0] == "status":
-        if "--clear-gstat" in argv_list[1:]:
-            if __package__:
-                from .tmc5160_status_clear import run_status_clear as _run_status_clear  # type: ignore
-            else:
-                from tmc5160_status_clear import run_status_clear as _run_status_clear  # type: ignore
-            return _run_status_clear(
-                argv_list[1:],
-                configurator_factory=configurator_factory,
-                device_finder=device_finder,
-            )
         return _run_status(
             argv_list[1:],
             configurator_factory=configurator_factory,
@@ -732,9 +710,11 @@ def run(
             device_finder=device_finder,
         )
 
+    # Compat: permitir chamar "configure" explicitamente
     if argv_list and argv_list[0] == "configure":
         argv_list = argv_list[1:]
 
+    # Padrão: configurar
     return _run_configure(
         argv_list,
         configurator_factory=configurator_factory,
