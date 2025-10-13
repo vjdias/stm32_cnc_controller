@@ -119,9 +119,15 @@ def run_status_clear(
         # Optional list of registers to read after the sequence
         regs: List[int] = []
         for item in args.register:
-            try:
-                address = int(item, 0)
-            except Exception:
+            key = str(item).strip().lower()
+            if key in ("drv_status", "drv"):
+                address = 0x6F
+            elif key.startswith("0x") or key.isdigit():
+                try:
+                    address = int(key, 0)
+                except Exception:
+                    address = None
+            else:
                 address = None
             if address is None or not (0 <= address <= 0x7F):
                 continue
@@ -134,4 +140,3 @@ def run_status_clear(
 
     print("Status with clear sequence done.")
     return 0
-

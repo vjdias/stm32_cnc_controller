@@ -493,9 +493,29 @@ def _run_configure(
 
         if responses:
             print("Respostas do TMC5160:")
-            for result in responses:
-                print(_format_response(result))
-                result.raise_on_faults()
+            try:
+                for result in responses:
+                    print(_format_response(result))
+                    result.raise_on_faults()
+            except RuntimeError as exc:
+                # Diagnóstico detalhado com base em GSTAT e DRV_STATUS
+                try:
+                    gstat_read = driver.read_register(REG_GSTAT)
+                    drv_read = driver.read_register(0x6F)
+                    gstat_val = gstat_read.value
+                    drv_val = drv_read.value
+                    gstat_text = decode_register_value(REG_GSTAT, gstat_val)
+                    drv_text = decode_register_value(0x6F, drv_val)
+                    details = []
+                    details.append(
+                        f"GSTAT=0x{gstat_val:08X}: " + ("; ".join(gstat_text) if gstat_text else "")
+                    )
+                    details.append(
+                        f"DRV_STATUS=0x{drv_val:08X}: " + ("; ".join(drv_text) if drv_text else "")
+                    )
+                    raise RuntimeError(str(exc) + " | Diagnóstico: " + " | ".join(details)) from exc
+                except Exception:
+                    raise
 
     return _run_spi_operation(
         args,
@@ -665,6 +685,10 @@ def run(
     else:
         argv_list = list(argv)
 
+    if argv_list and argv_list[0] == "help":
+        parser = _build_configure_parser()
+        parser.print_help()
+        return 0
     if argv_list and argv_list[0] == "status":
         if "--clear-gstat" in argv_list[1:]:
             if __package__:
