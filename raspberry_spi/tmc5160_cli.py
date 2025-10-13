@@ -51,6 +51,9 @@ REGISTER_ALIASES = {
     "tpwmthrs": REG_TPWMTHRS,
     "chopconf": REG_CHOPCONF,
     "pwmconf": REG_PWMCONF,
+    "drv_status": 0x6F,
+    "drvstatus": 0x6F,
+    "drv": 0x6F,
 }
 
 REGISTER_NAMES = {
@@ -61,10 +64,12 @@ REGISTER_NAMES = {
     REG_TPWMTHRS: "TPWMTHRS",
     REG_CHOPCONF: "CHOPCONF",
     REG_PWMCONF: "PWMCONF",
+    0x6F: "DRV_STATUS",
 }
 
 DEFAULT_STATUS_REGISTERS = (
     REG_GSTAT,
+    0x6F,
     REG_GCONF,
     REG_IHOLD_IRUN,
     REG_TPOWERDOWN,
@@ -80,23 +85,10 @@ class CLIError(Exception):
 
 def _format_response(result: TMC5160TransferResult) -> str:
     status = result.status
-    stall_text = (
-        "StallGuard detectado (SG=1)."
-        if status.stallguard
-        else "StallGuard inativo (SG=0)."
-    )
-    faults = status.active_faults()
-    if faults:
-        faults_text = "Alertas: {}.".format(", ".join(faults))
-    else:
-        faults_text = (
-            "Alertas: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
-        )
-
     lines = [
         f"- 0x{result.address:02X} <= 0x{result.value:08X}",
         f"  Resposta bruta: {result.raw_hex}",
-        f"  Status 0x{status.raw:02X}: {stall_text} {faults_text}",
+        f"  Status 0x{status.raw:02X}: {status.summary()}",
         f"  Dado retornado (comando anterior): 0x{result.previous_data:08X}",
     ]
     return "\n".join(lines)
@@ -304,6 +296,66 @@ def _build_loop_test_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _build_init_stepdir_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Aplica configurações básicas para operar o TMC5160 em STEP/DIR externo."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument("--ihold", type=int, default=10, help="IHOLD (0-31)")
+    parser.add_argument("--irun", type=int, default=31, help="IRUN (0-31)")
+    parser.add_argument(
+        "--ihold-delay", dest="iholddelay", type=int, default=6, help="IHOLDDELAY (0-15)"
+    )
+    parser.add_argument(
+        "--microsteps",
+        type=int,
+        choices=[256, 128, 64, 32, 16, 8, 4, 2, 1],
+        default=16,
+        help="Resolução de microstepping para pulsos STEP externos",
+    )
+    parser.add_argument(
+        "--interpolate",
+        dest="interpolate",
+        action="store_true",
+        default=True,
+        help="Ativa interpolação (INTPOL) para 256 micropassos",
+    )
+    parser.add_argument(
+        "--no-interpolate",
+        dest="interpolate",
+        action="store_false",
+        help="Desativa interpolação (INTPOL=0)",
+    )
+    parser.add_argument(
+        "--stealth",
+        dest="stealth",
+        action="store_true",
+        default=True,
+        help="Ativa StealthChop (GCONF.EN_PWM_MODE=1)",
+    )
+    parser.add_argument(
+        "--no-stealth",
+        dest="stealth",
+        action="store_false",
+        help="Desativa StealthChop (EN_PWM_MODE=0)",
+    )
+    parser.add_argument(
+        "--tpowerdown",
+        type=lambda x: int(x, 0),
+        default=0x14,
+        help="TPOWERDOWN (ticks de 2^18/fCLK)",
+    )
+    parser.add_argument(
+        "--tpwmthrs",
+        type=lambda x: int(x, 0),
+        default=0x000001F4,
+        help="TPWMTHRS (limiar de StealthChop↔SpreadCycle)",
+    )
+    return parser
+
+
 def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     overrides: List[Tuple[int, int]] = []
 
@@ -479,6 +531,30 @@ def _run_status(
         print(
             f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160"
         )
+        if hasattr(args, "clear_gstat") and args.clear_gstat:
+            print("Executando sequ��ncia clear-GSTAT:")
+            dummy = driver.read_register(REG_GCONF)
+            print(_format_read_result(dummy))
+            gstat_before = driver.read_register(REG_GSTAT)
+            print(_format_read_result(gstat_before))
+            cleared = driver.write_register(REG_GSTAT, 0x00000007)
+            print(_format_response(cleared))
+            gstat_after = driver.read_register(REG_GSTAT)
+            print(_format_read_result(gstat_after))
+            drv = driver.read_register(0x6F)
+            print(_format_read_result(drv))
+            for r in (
+                dummy.request,
+                dummy.reply,
+                gstat_before.request,
+                gstat_before.reply,
+                cleared,
+                gstat_after.request,
+                gstat_after.reply,
+                drv.request,
+                drv.reply,
+            ):
+                r.raise_on_faults()
         if registers:
             print(f"Consultando registradores: {register_list}")
         else:
@@ -590,6 +666,16 @@ def run(
         argv_list = list(argv)
 
     if argv_list and argv_list[0] == "status":
+        if "--clear-gstat" in argv_list[1:]:
+            if __package__:
+                from .tmc5160_status_clear import run_status_clear as _run_status_clear  # type: ignore
+            else:
+                from tmc5160_status_clear import run_status_clear as _run_status_clear  # type: ignore
+            return _run_status_clear(
+                argv_list[1:],
+                configurator_factory=configurator_factory,
+                device_finder=device_finder,
+            )
         return _run_status(
             argv_list[1:],
             configurator_factory=configurator_factory,
@@ -598,6 +684,17 @@ def run(
 
     if argv_list and argv_list[0] == "loop-test":
         return _run_loop_test(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "init-stepdir":
+        if __package__:
+            from .tmc5160_stepdir import run_init_stepdir as _run_init_stepdir  # type: ignore
+        else:
+            from tmc5160_stepdir import run_init_stepdir as _run_init_stepdir  # type: ignore
+        return _run_init_stepdir(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,

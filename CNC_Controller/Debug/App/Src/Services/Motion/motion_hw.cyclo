@@ -1,0 +1,8 @@
+../App/Src/Services/Motion/motion_hw.c:24:20:gpio_bsrr_set	2
+../App/Src/Services/Motion/motion_hw.c:29:20:gpio_bsrr_reset	2
+../App/Src/Services/Motion/motion_hw.c:35:6:motion_hw_init	2
+../App/Src/Services/Motion/motion_hw.c:54:6:motion_hw_set_dir	3
+../App/Src/Services/Motion/motion_hw.c:61:6:motion_hw_enable	3
+../App/Src/Services/Motion/motion_hw.c:69:6:motion_hw_step_high	2
+../App/Src/Services/Motion/motion_hw.c:74:6:motion_hw_step_low	2
+../App/Src/Services/Motion/motion_hw.c:80:10:motion_hw_encoder_read_raw	3

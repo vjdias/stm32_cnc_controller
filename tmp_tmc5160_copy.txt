@@ -18,7 +18,6 @@ REG_TPOWERDOWN = 0x11
 REG_TPWMTHRS = 0x13
 REG_CHOPCONF = 0x6C
 REG_PWMCONF = 0x70
-REG_DRV_STATUS = 0x6F
 
 
 STATUS_FLAG_DESCRIPTIONS = {
@@ -105,43 +104,34 @@ class TMC5160Status:
 
     @property
     def stallguard(self) -> bool:
-        return self.flag(2)
+        return self.flag(7)
 
     def active_faults(self) -> List[str]:
-        faults: List[str] = []
-        if self.flag(1):
-            faults.append("Erro do driver (driver_error).")
-        return faults
+        return [
+            STATUS_FLAG_DESCRIPTIONS[bit][1]
+            for bit in FAULT_BITS
+            if self.flag(bit)
+        ]
 
     def has_fault(self) -> bool:
         return bool(self.active_faults())
 
     def summary(self) -> str:
-        flags = []
-        if self.flag(7):
-            flags.append("status_stop_r")
-        if self.flag(6):
-            flags.append("status_stop_l")
-        if self.flag(5):
-            flags.append("position_reached")
-        if self.flag(4):
-            flags.append("velocity_reached")
-        if self.flag(3):
-            flags.append("standstill")
-        if self.flag(2):
-            flags.append("stallguard")
-        if self.flag(1):
-            flags.append("driver_error")
-        if self.flag(0):
-            flags.append("reset_flag")
-        status_text = "Flags ativas: {}.".format(", ".join(flags) if flags else "nenhuma")
-        if self.flag(1):
-            diag = "Alerta: driver_error=1 (verifique GSTAT/DRV_STATUS)."
-        elif self.flag(0):
-            diag = "Indica��ǜo: reset_flag=1 (limpe GSTAT escrevendo 1)."
+        stall_text = (
+            "StallGuard detectado (SG=1)."
+            if self.stallguard
+            else "StallGuard inativo (SG=0)."
+        )
+        faults = self.active_faults()
+        if faults:
+            fault_text = "Alertas ativos: {}.".format(
+                ", ".join(faults)
+            )
         else:
-            diag = "Sem falhas relatadas no byte de status SPI."
-        return f"{status_text} {diag}"
+            fault_text = (
+                "Alertas ativos: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
+            )
+        return f"{stall_text} {fault_text}"
 
 
 @dataclass(frozen=True)
@@ -228,29 +218,6 @@ def decode_register_value(address: int, value: int) -> List[str]:
 
     if address == REG_GSTAT:
         return _decode_flag_bits(GSTAT_FLAGS, value)
-    if address == 0x6F:
-        details: List[str] = []
-        if value & (1 << 26):
-            details.append("OT: sobretemperatura detectada.")
-        if value & (1 << 25):
-            details.append("OTPW: pr��-aviso de sobretemperatura.")
-        if value & (1 << 24):
-            details.append("S2GA: curto �� terra na fase A.")
-        if value & (1 << 23):
-            details.append("S2GB: curto �� terra na fase B.")
-        if value & (1 << 22):
-            details.append("S2VSA: curto �� alimenta��ǜo na fase A.")
-        if value & (1 << 21):
-            details.append("S2VSB: curto �� alimenta��ǜo na fase B.")
-        if value & (1 << 20):
-            details.append("OLA: open load na fase A.")
-        if value & (1 << 19):
-            details.append("OLB: open load na fase B.")
-        if value & (1 << 31):
-            details.append("STST: standstill.")
-        if not details:
-            details.append("Nenhum bit de falha em DRV_STATUS.")
-        return details
 
     if address == REG_GCONF:
         active = [
@@ -530,3 +497,4 @@ __all__ = [
     "TMC5160Configurator",
     "decode_register_value",
 ]
+

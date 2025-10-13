@@ -1,6 +1,12 @@
 App/Src/app.o: ../App/Src/app.c ../App/Inc/Services/service_adapters.h \
  ../App/Inc/Services/../Protocol/router.h \
- ../App/Inc/Services/../Protocol/frame_defs.h ../App/Inc/app.h \
+ ../App/Inc/Services/../Protocol/frame_defs.h \
+ ../App/Inc/Services/Log/log_service.h \
+ ../App/Inc/Services/Led/led_service.h \
+ ../App/Inc/Services/Home/home_service.h \
+ ../App/Inc/Services/Probe/probe_service.h \
+ ../App/Inc/Services/Safety/safety_service.h \
+ ../App/Inc/Services/Motion/motion_service.h ../App/Inc/app.h \
  ../Core/Inc/spi.h ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
@@ -35,6 +41,12 @@ App/Src/app.o: ../App/Src/app.c ../App/Inc/Services/service_adapters.h \
 ../App/Inc/Services/service_adapters.h:
 ../App/Inc/Services/../Protocol/router.h:
 ../App/Inc/Services/../Protocol/frame_defs.h:
+../App/Inc/Services/Log/log_service.h:
+../App/Inc/Services/Led/led_service.h:
+../App/Inc/Services/Home/home_service.h:
+../App/Inc/Services/Probe/probe_service.h:
+../App/Inc/Services/Safety/safety_service.h:
+../App/Inc/Services/Motion/motion_service.h:
 ../App/Inc/app.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/main.h:

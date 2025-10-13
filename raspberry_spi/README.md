@@ -43,6 +43,16 @@ Uso rápido
 - Lista resumida com exemplos (sem necessidade de SPI ativo):
   `python3 cnc_spi_client.py examples`
 
+Comandos para o TMC5160 (Raspberry Pi)
+- Inicialização para STEP/DIR externo (microstepping/interpolação/corrente):
+  `python3 tmc5160_cli.py init-stepdir --microsteps 16 --interpolate --stealth --ihold 10 --irun 31 --ihold-delay 6 --tpwmthrs 0x1F4 --tpowerdown 0x14`
+  - Aplica preset padrão e ajusta: `GCONF.EN_PWM_MODE`, `IHOLD_IRUN`, `TPOWERDOWN`,
+    `TPWMTHRS`, `CHOPCONF.MRES/INTPOL`, `PWMCONF`. Limpa `GSTAT` antes.
+- Consulta de status com sequência para limpar GSTAT e checar DRV_STATUS:
+  `python3 tmc5160_cli.py status --clear-gstat`
+  - Executa: leitura dummy → ler `GSTAT` → escrever `GSTAT=0x07` → ler `GSTAT` → ler `DRV_STATUS`.
+  - Depois, pode-se ler registradores adicionais com `--register` (ex.: `--register drv_status`).
+
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.
 - `--speed` em Hz (padrão 1_000_000).
@@ -136,13 +146,17 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   `--write`. Caso nenhuma flag seja passada, o preset padrão é aplicado e o driver
   fica pronto para receber pulsos STEP/DIR.
   Após cada transferência o utilitário exibe a resposta bruta em hexadecimal
-  (5 bytes) seguida de uma interpretação em português do byte de status (SG,
-  OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
-  32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
-  execução é encerrada com erro explicando quais flags foram ativadas. O comando
-  `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
-  retorno útil) com a tradução dos flags e o valor atual de cada registrador
-  consultado. Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN,
+  (5 bytes) seguida de uma interpretação do byte de status SPI e do valor de
+  32 bits devolvido pelo comando anterior. Observação importante: o byte de
+  status do SPI do TMC5160 indica apenas estado (stop_r/stop_l/position_reached/
+  velocity_reached/standstill/sg) e flags de serviço (driver_error, reset_flag).
+  Os diagnósticos de falha (OT/OTPW, S2GA/S2GB, S2VSA/S2VSB, UV_CP) residem em
+  `GSTAT` (reset/uv_cp/driver_error) e `DRV_STATUS` (0x6F). Por isso, o CLI só
+  considera o byte de status como erro quando `driver_error=1`; demais falhas são
+  checadas diretamente em `GSTAT/DRV_STATUS`.
+  O comando `status` apresenta duas respostas por leitura (pedido e retorno útil)
+  com a interpretação do status e o valor atual de cada registrador consultado.
+  Para os registradores padrões (GSTAT, DRV_STATUS, GCONF, IHOLD_IRUN,
   TPOWERDOWN, TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o
   datasheet — por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal,
   bits ativos de `GCONF`, microstepping (`MRES`) e configuração de StealthChop,

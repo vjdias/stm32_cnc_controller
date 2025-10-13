@@ -18,6 +18,7 @@
 "./App/Src/Services/Home/home_service.o"
 "./App/Src/Services/Led/led_service.o"
 "./App/Src/Services/Log/log_service.o"
+"./App/Src/Services/Motion/motion_hw.o"
 "./App/Src/Services/Motion/motion_service.o"
 "./App/Src/Services/Probe/probe_service.o"
 "./App/Src/Services/Safety/safety_service.o"

@@ -213,14 +213,14 @@ def test_context_manager_closes_spi():
 
 
 def test_transfer_result_flags_and_validation():
-    status = TMC5160Status(0b1100_0011)
+    status = TMC5160Status(0b0000_0100)
     assert status.stallguard is True
-    assert "Sobretemperatura" in status.summary()
-    result = TMC5160TransferResult(0x00, 0x0, (0b0100_0001, 0, 0, 0, 0))
+    # driver_error deve acionar exce��o na valida��o
+    result = TMC5160TransferResult(0x00, 0x0, (0b0000_0010, 0, 0, 0, 0))
     with pytest.raises(RuntimeError) as exc:
         result.raise_on_faults()
-    assert "Sobretemperatura" in str(exc.value)
-    assert "status=0x41" in str(exc.value)
+    assert "driver_error" in str(exc.value)
+    assert "status=0x02" in str(exc.value)
 
 
 def test_read_register_performs_two_transfers_and_returns_value():
@@ -415,7 +415,7 @@ def test_cli_status_lists_registers_and_values(capsys):
     assert len(created) == 1
     cfg = created[0]
     assert cfg.read_requests == [
-        [REG_GSTAT, REG_GCONF, REG_IHOLD_IRUN, REG_TPOWERDOWN, REG_TPWMTHRS, REG_CHOPCONF, REG_PWMCONF]
+        [REG_GSTAT, 0x6F, REG_GCONF, REG_IHOLD_IRUN, REG_TPOWERDOWN, REG_TPWMTHRS, REG_CHOPCONF, REG_PWMCONF]
     ]
     assert cfg.closed is True
 
