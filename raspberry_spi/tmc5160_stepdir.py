@@ -1,4 +1,4 @@
-"""Helper subcommand to initialize TMC5160 for external STEP/DIR.
+﻿"""Helper subcommand to initialize TMC5160 for external STEP/DIR.
 
 Provides the `init-stepdir` subcommand used by tmc5160_cli.py.
 """
@@ -134,7 +134,7 @@ def run_init_stepdir(
 
     ihold_irun = (ihold & 0x1F) | ((irun & 0x1F) << 8) | ((iholddelay & 0x0F) << 16)
 
-    base_chopconf = 0x10410150
+    base_chopconf = 0x14010053
     chopconf = (base_chopconf & ~(0x0F << 24)) | ((mres & 0x0F) << 24)
     if args.interpolate:
         chopconf |= (1 << 28)
@@ -208,4 +208,5 @@ def run_init_stepdir(
 
     print("STEP/DIR init done.")
     return 0
+
 

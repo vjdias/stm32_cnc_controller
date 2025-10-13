@@ -1,4 +1,4 @@
-"""Configuração de drivers TMC5160 a partir do Raspberry Pi."""
+﻿"""Configuração de drivers TMC5160 a partir do Raspberry Pi."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -87,7 +87,7 @@ class TMC5160RegisterPreset:
                 # Limiar para modo StealthChop (velocidades abaixo de ~rpm) — 500 ticks
                 (REG_TPWMTHRS, 0x000001F4),
                 # Chopper configuration: toff=3, hstrt=5, hend=0, tbl=2, mres=16 µsteps
-                (REG_CHOPCONF, 0x10410150),
+                (REG_CHOPCONF, 0x14010053),
                 # PWM configuration: autoscale/autograd, freq=2, ofs=36, grad=14
                 (REG_PWMCONF, 0xC10D0024),
             )
@@ -400,6 +400,9 @@ class TMC5160Configurator:
         self._registers = register_preset or TMC5160RegisterPreset.default()
         self._spi = None
         self._spi_device_factory = spi_device_factory
+        self._spi_mode_active = 0b11  # MODE 3: CPOL=1, CPHA=1 (necess�rio para o TMC5160)
+        self._spi_mode_idle = 0b11    # MODE 3 mantém SCK em nível alto (idle)
+        self._current_mode = None
 
     def _ensure_spi(self):
         if self._spi is not None:
@@ -417,14 +420,14 @@ class TMC5160Configurator:
         spi_dev.open(self._bus, self._device)
         spi_dev.max_speed_hz = self._speed_hz
         try:
-            spi_dev.mode = 0b11  # MODE 3: CPOL=1, CPHA=1 (2nd edge)
+            self._set_spi_mode(spi_dev, self._spi_mode_idle)
         except OSError as exc:
             close = getattr(spi_dev, "close", None)
             if callable(close):
                 close()
             raise RuntimeError(
                 (
-                    "Não foi possível configurar o modo SPI 3 (CPOL=1, CPHA=1) em "
+                    "Não foi possível configurar os modos SPI necessários (CPOL/CPHA) em "
                     "/dev/spidev{bus}.{dev}: {error}. Verifique se o overlay/driver SPI "
                     "habilitado para esse barramento suporta modo 3 e se o dispositivo "
                     "está livre. Ajuste --bus/--dev ou reconfigure o dtoverlay correspondente."
@@ -438,14 +441,22 @@ class TMC5160Configurator:
         self._spi = spi_dev
         return spi_dev
 
+    def _set_spi_mode(self, spi_dev, mode: int) -> None:
+        if self._current_mode == mode:
+            return
+        spi_dev.mode = mode
+        self._current_mode = mode
+
     def close(self) -> None:
         if self._spi is not None:
             try:
+                self._set_spi_mode(self._spi, self._spi_mode_idle)
                 close = getattr(self._spi, "close", None)
                 if callable(close):
                     close()
             finally:
                 self._spi = None
+                self._current_mode = None
 
     def __enter__(self) -> "TMC5160Configurator":
         self._ensure_spi()
@@ -474,7 +485,9 @@ class TMC5160Configurator:
     def _transfer(self, address: int, value: int, *, raw: bool = False) -> TMC5160TransferResult:
         spi = self._ensure_spi()
         frame = self._build_frame(address, value, raw=raw)
+        self._set_spi_mode(spi, self._spi_mode_active)
         response = spi.xfer2(frame)
+        self._set_spi_mode(spi, self._spi_mode_idle)
         if len(response) != 5:
             raise RuntimeError(
                 "Resposta SPI inválida do TMC5160: esperado 5 bytes, recebido {}".format(
@@ -533,3 +546,6 @@ __all__ = [
     "TMC5160Configurator",
     "decode_register_value",
 ]
+
+
+
