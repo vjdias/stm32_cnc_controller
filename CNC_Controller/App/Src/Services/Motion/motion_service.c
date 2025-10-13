@@ -19,7 +19,7 @@
 
 LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_AXIS_COUNT 3u
-#define MOTION_QUEUE_CAPACITY 8u
+#define MOTION_QUEUE_CAPACITY 64u
 typedef struct {
 	GPIO_TypeDef *step_port;
 	uint16_t step_pin;
@@ -63,8 +63,8 @@ static uint8_t g_queue_count = 0u;
 static int64_t g_encoder_position[MOTION_AXIS_COUNT];
 static uint32_t g_encoder_last_raw[MOTION_AXIS_COUNT];
 static int64_t g_encoder_origin[MOTION_AXIS_COUNT];
-// Demo flags
-static volatile uint8_t g_demo_continuous = 0u;
+// Flags de teste/demonstração
+static volatile uint8_t g_demo_continuous = 0u; // quando 1, gera passos continuamente
 static inline void gpio_set_high(GPIO_TypeDef *port, uint16_t pin) {
 	if (!port)
 		return;
@@ -545,72 +545,98 @@ void motion_on_move_end(const uint8_t *frame, uint32_t len) {
 	LOGT_THIS(LOG_STATE_APPLIED, PROTO_OK, "move_end", "stopped");
 }
 
-// ===============================================
-//  Demo helpers (para teste em bancada)
-// ===============================================
+/* =====================================================================
+ *  DEMO DE MOVIMENTO (PARA TESTE EM BANCADA)
+ *
+ *  Objetivo: validar rapidamente o cabeamento/driver dos motores sem
+ *  precisar preparar requisições do host. Mantém o código do serviço
+ *  pronto para evoluir com comandos "de verdade" (queue-add/start-move)
+ *  mas permite acionar um gerador de passos contínuos durante bring-up.
+ *
+ *  Uso (uma das opções abaixo):
+ *    1) Ativar modo contínuo após o app_init (STM32), por exemplo:
+ *         - Em Core/Src/main.c, após app_init():
+ *             extern void motion_demo_set_continuous(uint8_t);
+ *             motion_demo_set_continuous(1); // Liga
+ *         - Quando quiser parar:
+ *             motion_demo_set_continuous(0);
+ *
+ *    2) Injetar um segmento curto único (não contínuo):
+ *         extern void motion_demo_set_enabled(uint8_t);
+ *         motion_demo_set_enabled(1);
+ *
+ *  Observações:
+ *   - Largura do pulso STEP = 1 período do TIM6. Ajuste PSC/ARR do TIM6
+ *     conforme o tempo mínimo de pulso exigido pelo driver.
+ *   - Taxa de incremento do alvo por eixo = velocity_per_tick em TIM7
+ *     (≈ passos por ms se TIM7 ≈ 1 kHz). Ex.: 10 → ~10 k steps/s.
+ *   - O modo contínuo ignora a fila e programa um segmento "virtual"
+ *     com total_steps muito grande; use apenas para teste.
+ * ===================================================================== */
 
-// Enfileira um segmento simples e inicia execução se possível
+// Enfileira um único segmento de teste e inicia execução (não contínuo)
 void motion_demo_set_enabled(uint8_t enable)
 {
     if (!enable) return;
+
     uint32_t primask = motion_lock();
     if (g_has_active_segment || g_queue_count > 0u) {
         motion_unlock(primask);
         return;
     }
 
+    // Segmento de teste: XYZ para frente, alvos moderados
     move_queue_add_req_t req = {0};
     req.frameId = 0xEE;
-    req.dirMask = 0x07; // XYZ forward
-    req.vx = 10; req.vy = 8; req.vz = 6; // passos por tick (TIM7)
+    req.dirMask = 0x07;        // XYZ forward
+    req.vx = 10; req.vy = 8; req.vz = 6; // ≈ 10k/8k/6k steps/s
     req.sx = 2000; req.sy = 1600; req.sz = 1200; // passos totais
-    req.kp_x = req.kp_y = req.kp_z = 0;
-    req.ki_x = req.ki_y = req.ki_z = 0;
-    req.kd_x = req.kd_y = req.kd_z = 0;
 
-    // Empilha na fila
+    // Empilha na fila, se houver espaço
     if (g_queue_count < MOTION_QUEUE_CAPACITY) {
         g_queue[g_queue_tail].req = req;
         g_queue_tail = (uint8_t)((g_queue_tail + 1u) % MOTION_QUEUE_CAPACITY);
         g_queue_count++;
     }
 
-    // Inicia imediatamente
+    // Inicia imediatamente se possível
     if (!g_has_active_segment) {
         move_queue_add_req_t next;
-        (void)motion_queue_pop_locked(&next);
-        motion_begin_segment_locked(&next);
-        g_status.state = MOTION_RUNNING;
-        motion_refresh_status_locked();
+        if (motion_queue_pop_locked(&next)) {
+            motion_begin_segment_locked(&next);
+            g_status.state = MOTION_RUNNING;
+            motion_refresh_status_locked();
+        }
     }
     motion_unlock(primask);
 }
 
-// Liga/desliga movimento contínuo (gera passos sem parar)
+// Liga/desliga gerador contínuo de passos (ignora a fila)
 void motion_demo_set_continuous(uint8_t enable)
 {
     uint32_t primask = motion_lock();
     g_demo_continuous = (enable ? 1u : 0u);
+
     if (g_demo_continuous) {
-        // Programa um segmento "infinito"
+        // Programa um "segmento" muito longo e velocidade fixa por eixo
         g_has_active_segment = 1u;
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
             motion_axis_state_t *ax = &g_axis_state[axis];
-            ax->total_steps = 0xFFFFFFFFu;
+            ax->total_steps = 0xFFFFFFFFu; // efetivamente contínuo
             ax->target_steps = 0u;
             ax->emitted_steps = 0u;
-            ax->velocity_per_tick = 10; // ~10k steps/s com TIM7=1kHz
+            ax->velocity_per_tick = 10;    // ≈ 10k steps/s
             ax->kp = ax->ki = ax->kd = 0u;
             ax->step_high = 0u;
             motion_hw_reset_step(axis);
-            motion_hw_set_direction(axis, 1u);
-            motion_hw_enable_axis(axis, 1u);
+            motion_hw_set_direction(axis, 1u);   // forward
+            motion_hw_enable_axis(axis, 1u);     // liga driver (ativo em baixo)
             g_encoder_origin[axis] = g_encoder_position[axis];
         }
         g_status.state = MOTION_RUNNING;
         motion_refresh_status_locked();
     } else {
-        // Para e volta para IDLE
+        // Para tudo e retorna a IDLE
         motion_stop_all_axes_locked();
         motion_queue_clear_locked();
         g_has_active_segment = 0u;
@@ -619,6 +645,7 @@ void motion_demo_set_continuous(uint8_t enable)
     }
     motion_unlock(primask);
 }
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (!htim)
 		return;

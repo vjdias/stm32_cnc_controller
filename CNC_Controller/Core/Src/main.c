@@ -26,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "Services/Motion/motion_service.h"
 #include "app.h"
 #include "board_config.h"
 #include "Services/Log/log_service.h"
@@ -110,6 +111,10 @@ int main(void)
     board_config_apply_interrupt_priorities();
     //board_config_apply_spi_dma_profile();
     app_init();
+    // Inicia timers do laço de passos (TIM6) e controle/status (TIM7)
+    HAL_TIM_Base_Start_IT(&htim6);
+    HAL_TIM_Base_Start_IT(&htim7);
+    motion_demo_set_continuous(1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
