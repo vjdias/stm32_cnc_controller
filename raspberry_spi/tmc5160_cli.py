@@ -682,6 +682,7 @@ def run(
             "  status [opções]            Lê registradores (suporta --clear-gstat)\n"
             "  loop-test [opções]         Gera padrão de escrita contínuo\n"
             "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
+            "  safe-off [opções]          Zera correntes, TOFF=0 e FREEWHEEL\n"
         )
         return 0
 
