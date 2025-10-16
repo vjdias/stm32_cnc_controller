@@ -32,14 +32,14 @@ utilizando o cliente Python.
 O firmware foi estruturado em três camadas principais. A camada \emph{Core}
 engloba os artefatos gerados pelo STM32CubeMX, incluindo inicialização de
 periféricos, descrições de pinos e funções HAL. Sobre ela, a camada
-\emph{App} implementa o laço principal (`app_poll`), o agendador de
+\emph{App} implementa o laço principal (\texttt{app\_poll}), o agendador de
 serviços e as rotinas de inicialização específicas do projeto. A camada
 \emph{Services} agrupa módulos especializados, como o gerador de passos,
 o controlador PID, o serviço de homing e o roteador de mensagens SPI.
 
 A fila de recepção SPI é mantida em memória circular, preenchida pelas
-rotinas de interrupção e consumida por `app_poll`. Respostas são
-enfileiradas em `g_app_responses` e promovidas para o buffer de DMA
+rotinas de interrupção e consumida por \texttt{app\_poll}. Respostas são
+enfileiradas em \texttt{g\_app\_responses} e promovidas para o buffer de DMA
 quando disponíveis. A integração com os drivers TMC5160 ocorre por meio
 de uma API dedicada que abstrai comandos STEP/DIR/EN e monitora
 condições de falha.
@@ -52,8 +52,8 @@ dos pulsos STEP e o jitter do TIM6, confirmando a estabilidade em
 \SI{50}{\kilo\hertz}. Em seguida, foram realizadas varreduras de ganho
 nos controladores PID para avaliar margem de fase e resposta a degraus,
 utilizando logs exportados via USART1. Por fim, o pipeline SPI foi
-monitorado com o cliente `cnc_spi_client.py`, observando a necessidade de
+monitorado com o cliente \texttt{cnc\_spi\_client.py}, observando a necessidade de
 até três ciclos de enquete para respostas completas e avaliando o
-impacto de diferentes valores de `APP_SPI_RESTART_DEFER_MAX`. Os dados
+impacto de diferentes valores de \texttt{APP\_SPI\_RESTART\_DEFER\_MAX}. Os dados
 coletados subsidiam as análises apresentadas no
 Capítulo~\ref{cap:resultados}.

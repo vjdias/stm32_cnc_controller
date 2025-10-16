@@ -26,12 +26,12 @@ automatizando a proteção contra estouros.
 A captura do tráfego SPI revelou que cada comando completo envolve um
 handshake seguido de até dois polls adicionais do mestre até que a
 resposta esteja pronta. Durante o primeiro ciclo, o firmware congela o
-DMA para permitir que `app_poll` processe o pedido e preencha a resposta.
+DMA para permitir que \texttt{app\_poll} processe o pedido e preencha a resposta.
 Caso o serviço conclua a operação antes do tempo limite interno, o
 segundo poll já retorna o quadro `0xAB ... 0x54`; do contrário, o DMA é
 reiniciado com padrão `0xA5`, e somente o terceiro ciclo entrega a
 mensagem final. A análise confirmou que ajustes no parâmetro
-`APP_SPI_RESTART_DEFER_MAX` alteram a quantidade de iterações tolerada
+\texttt{APP\_SPI\_RESTART\_DEFER\_MAX} alteram a quantidade de iterações tolerada
 antes do fallback, permitindo balancear latência e robustez.
 
 Experimentos adicionais reduziram a cópia de memória ao promover o
@@ -42,11 +42,11 @@ dados quando múltiplos serviços respondem simultaneamente.
 
 \section{Integração com a Raspberry Pi}
 
-O cliente `cnc_spi_client.py` executando na Raspberry Pi validou o
+O cliente \texttt{cnc\_spi\_client.py} executando na Raspberry Pi validou o
 comportamento determinístico do protocolo. O script detecta automaticamente
 quando a resposta não contém um frame válido e reenvia o poll após um
-intervalo configurável. Durante os testes, `--tries = 4` e
-`--settle-delay = 0.75\,\text{ms}` mostraram-se suficientes para
+intervalo configurável. Durante os testes, \texttt{--tries = 4} e
+\texttt{--settle-delay = 0.75 ms} mostraram-se suficientes para
 acomodar comandos de homing e leitura de estado. Além disso, a
 sincronização com a fila de logs via USART1 permitiu correlacionar eventos
 de firmware com os pacotes SPI, fornecendo rastreabilidade durante o
