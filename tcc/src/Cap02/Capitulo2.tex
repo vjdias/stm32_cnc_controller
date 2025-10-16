@@ -1,0 +1,133 @@
+\chapter{Fundamentação Teórica}\label{cap:fundamentacao}
+
+Este capítulo apresenta os conceitos fundamentais utilizados na
+implementação do controlador CNC embarcado. São abordados os princípios
+de sistemas CNC, a configuração de temporizadores no STM32L475, os
+métodos DDA para geração de pulsos, a modelagem de motores de passo,
+os controladores PID e os aspectos de comunicação SPI/USART empregados no
+projeto.
+
+\section{Sistemas CNC}
+
+Máquinas de Controle Numérico Computadorizado interpretam instruções
+codificadas (por exemplo, G-code) e convertem essas ordens em movimentos
+coordenados entre múltiplos eixos, garantindo precisão repetível no
+processo de usinagem ou manufatura~\cite{groover2015}. Controladores
+modernos combinam processamento em tempo real com interfaces de alto
+nível para planejar trajetórias, compensar erros e monitorar a execução.
+A adoção de arquiteturas híbridas---com uma unidade embarcada
+responsável pelo tempo real e um computador auxiliar para supervisão---
+diminui a suscetibilidade a jitter e a perdas de sincronismo, mantendo a
+flexibilidade de integração com sistemas de gestão.
+
+\section{Temporizadores do STM32L475}
+
+O microcontrolador STM32L475 disponibiliza temporizadores de uso geral e
+avançado capazes de operar na faixa de \SI{80}{\mega\hertz} com alta
+resolução temporal. A configuração de um temporizador baseia-se na
+relação
+\begin{equation}
+    f_{\text{TIM}} = \frac{f_{\text{bus}}}{(PSC+1)(ARR+1)},
+\end{equation}
+onde $f_{\text{bus}}$ representa a frequência do barramento APB, $PSC$ o
+prescaler e $ARR$ o registrador de auto-reload. O guia de aplicação
+oficial descreve como esses parâmetros possibilitam gerar bases de tempo
+precisas para laços de controle, captura de entradas e geração de pulsos
+PWM~\cite{st_an4013}. No projeto, o TIM6 é configurado com
+$PSC = 79$ e $ARR = 19$ para obter interrupções em \SI{50}{\kilo\hertz},
+enquanto o TIM7 opera com $PSC = 7999$ e $ARR = 9$, produzindo um laço
+de \SI{1}{\kilo\hertz}. Os temporizadores TIM2, TIM3 e TIM5 operam em
+modo encoder para rastrear incrementalmente a posição dos eixos.
+
+\section{Digital Differential Analyzer}
+
+Algoritmos DDA são integradores digitais que aproximam trajetórias
+contínuas por meio de incrementos discretos, amplamente utilizados em
+sistemas de gráficos e em controladores de movimento para motores de
+passo~\cite{fussell2003}. O método acumula um erro fracionário em cada
+interação e emite um pulso quando a soma ultrapassa um limiar definido,
+resultando em uma sequência de passos que aproxima a velocidade ou a
+trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA
+como núcleo do gerador de pulsos, responsável por alimentar os laços de
+posição e velocidade que seguem a referência calculada amostra a
+amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}.
+Panoramas comparativos mostram como variantes circular, linear e por
+superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o
+que fundamenta a escolha de incrementos acumulativos sincronizados para o
+firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste
+trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de
+\SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem
+quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar
+movimentos lineares e circulares através da atualização de incrementos
+acumulados por eixo durante a ISR do temporizador, preservando a
+planicidade de avanço descrita pelas referências.
+
+\section{Modelagem de motores de passo}
+
+Motores de passo híbridos apresentam dinâmica eletromecânica dominada
+por indutâncias de fase, resistência de enrolamento e um torque
+relacionado à diferença angular entre rotor e campo magnético. Modelos
+clássicos de motores de passo descrevem a relação entre corrente,
+torque e velocidade angular por meio de equações diferenciais acopladas
+que podem ser discretizadas para implementação em controladores digitais
+~\cite{kenjo1994}. A precisão do controle depende da estimação do torque
+de carga $T_L$, do momento de inércia equivalente $J$ e da compensação
+de efeitos como ressonâncias de meia etapa. A utilização de encoders em
+modo quadratura provê realimentação adicional para compensar perda de
+passos e acúmulo de erro estático.
+
+\section{Controlador PID digital}
+
+O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma
+das estratégias mais difundidas para controle de processos, combinando
+uma ação proporcional que reage ao erro instantâneo, um termo integral
+que remove erro estacionário e um termo derivativo que prevê tendências
+de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as
+posições discretizadas pelo interpolador e corrigem desvios com ganhos
+sintonizados para cada eixo, podendo incluir observadores ou compensação
+de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}.
+Para implementação digital, é comum utilizar a forma incremental
+\begin{equation}
+    u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]),
+\end{equation}
+onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o
+período fixo reduz o esforço computacional e facilita a análise de
+estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de
+primeira ordem no termo derivativo, são essenciais para lidar com o
+ruído proveniente dos encoders e das variações do torque de
+carga. Pesquisas recentes destacam ainda controladores PID
+acoplados/cross-coupled que tratam o erro de contorno entre eixos como
+variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+
+\section{Integração PID-DDA}
+
+A sincronização entre o DDA e o controlador PID ocorre ao transformar o
+comando de posição desejada em incrementos de passos por período do TIM6.
+Métodos de distribuição diferencial garantem que ajustes produzidos pelo
+PID sejam refletidos sem rupturas na geração de pulsos, mantendo o
+alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais
+didáticos e relatórios industriais ilustram o fluxo completo: o
+interpolador entrega referências de posição, o encoder fornece o retorno
+real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em
+um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}.
+Implementações modernas combinam esses blocos em FPGAs ou SoCs para
+reduzir latência e habilitar interpolação multi-eixo síncrona com laços
+servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No
+firmware do STM32, o laço de controle alimenta as metas de velocidade e
+microstepping de cada eixo, enquanto o DDA executa as transições
+discretas, possibilitando perfis suaves e respeitando os limites de
+aceleração definidos pelo firmware.
+
+\section{Comunicação SPI e USART}
+
+A comunicação com a Raspberry Pi utiliza o periférico SPI1 em modo
+escravo com DMA circular. Esse desenho reduz a carga da CPU e garante que
+as transferências de 42 bytes sejam executadas dentro da janela entre
+interrupções do TIM6 e TIM7. A USART1, configurada como \emph{Virtual
+COM Port}, é utilizada para depuração e registro de eventos críticos,
+com uma fila não bloqueante que impede o impacto sobre o laço de
+controle. A coordenação entre SPI e USART é fundamental para evitar
+inversões de prioridade que poderiam comprometer o determinismo do
+sistema~\cite{um2153}. A análise do pipeline de polls evidencia como o
+firmware pausa e reinicia o DMA para garantir que cada resposta seja
+transmitida somente após processamento completo.

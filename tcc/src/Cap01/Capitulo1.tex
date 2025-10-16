@@ -1,0 +1,58 @@
+\chapter{Introdução}\label{cap:introducao}
+
+A popularização de máquinas de Controle Numérico Computadorizado (CNC)
+depende de controladores capazes de converter instruções digitais em
+movimentos sincronizados com elevado grau de previsibilidade. No
+contexto de manufatura de pequeno e médio porte, soluções baseadas em
+computadores pessoais apresentam custo acessível, mas sofrem com a
+variabilidade de latência inerente aos sistemas operacionais de propósito
+geral. Este trabalho investiga uma alternativa embarcada utilizando o
+microcontrolador STM32L475, capaz de operar a \SI{80}{\mega\hertz} e
+oferecer temporizadores avançados para geração de pulsos e amostragem de
+dados~\cite{st_an4013}. Ao combinar a unidade embarcada com uma
+Raspberry Pi responsável pela interface de alto nível, busca-se garantir
+escalabilidade e facilidade de integração com pipelines de produção.
+
+A motivação está ligada ao desenvolvimento de um controlador determinista
+que gere pulsos STEP/DIR/EN em \SI{50}{\kilo\hertz}, execute o laço
+PID a \SI{1}{\kilo\hertz} e mantenha comunicação confiável com o host
+via SPI e USART, entregando registros de telemetria para diagnósticos. A
+arquitetura proposta precisa coordenar três eixos de motores de passo
+monitorados por encoders de alta resolução, sincronizar serviços de
+homing e segurança, e permitir a inserção de novas rotinas sem
+comprometer as janelas temporais estabelecidas.
+
+\section{Objetivos}\label{sec:objetivos}
+
+\subsection{Objetivo Geral}
+
+Projetar e documentar um controlador CNC determinístico baseado no
+STM32L475, integrando geração DDA de pulsos, controle PID em tempo real e
+protocolo de comunicação SPI com um cliente Raspberry Pi.
+
+\subsection{Objetivos Específicos}
+
+\begin{itemize}
+    \item Configurar o temporizador TIM6 para gerar pulsos em
+          \SI{50}{\kilo\hertz} utilizando o método DDA.
+    \item Implementar o loop de controle PID a \SI{1}{\kilo\hertz}
+          no TIM7, incorporando leitura incremental dos encoders.
+    \item Estruturar o firmware em camadas modulares (Core, App e
+          Services) que facilitem a validação incremental.
+    \item Validar o pipeline de comunicação SPI escravo com DMA circular
+          e logs assíncronos via USART1.
+    \item Registrar testes que comprovem jitter reduzido e estabilidade
+          nos serviços críticos.
+\end{itemize}
+
+\section{Organização do texto}\label{sec:organizacao}
+
+O Capítulo~\ref{cap:fundamentacao} apresenta a fundamentação teórica
+sobre CNC, temporizadores STM32, DDA, controle PID e protocolos de
+comunicação. O Capítulo~\ref{cap:metodologia} descreve a metodologia de
+\emph{bring-up} incremental utilizada para configurar o firmware e o
+hardware de suporte. Em seguida, o Capítulo~\ref{cap:resultados}
+reúne os resultados experimentais, analisando desempenho dos serviços e
+o comportamento do pipeline SPI. Por fim, o
+Capítulo~\ref{cap:conclusao} sintetiza as contribuições, limitações e
+linhas futuras de trabalho.
