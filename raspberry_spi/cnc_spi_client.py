@@ -267,6 +267,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     examples.set_defaults(handler=print_examples, needs_client=False)
 
+    # Safe-off: para o movimento no STM32 e coloca TMC5160 em alta impedância
+    safe_off = sub.add_parser(
+        "safe-off",
+        help=(
+            "Parar movimento (MOVE_END) e colocar drivers TMC5160 em modo de segurança (IHOLD/IRUN=0, TOFF=0, FREEWHEEL)."
+        ),
+    )
+    _common_args(safe_off, include_tries=True, include_settle_delay=True)
+    safe_off.add_argument("--frame-id", type=int, default=0, help="FrameId para MOVE_END (default: 0)")
+    # Alvos TMC5160: por padrão age em TODOS os /dev/spidevX.Y
+    safe_off.add_argument("--tmc-bus", type=int, help="SPI bus do TMC (omite para agir em todos)")
+    safe_off.add_argument("--tmc-dev", type=int, help="SPI device do TMC (omite para agir em todos)")
+    safe_off.add_argument("--tmc-speed", type=int, default=4_000_000, help="Velocidade SPI TMC (default: 4_000_000)")
+    safe_off.add_argument(
+        "--tmc-freewheel",
+        type=int,
+        choices=[0, 1, 2, 3],
+        default=3,
+        help="PWMCONF.FREEWHEEL para o TMC (0..3, default: 3 = alta impedância)",
+    )
+    safe_off.add_argument(
+        "--skip-tmc",
+        action="store_true",
+        help="Somente enviar MOVE_END ao STM32; não altera TMC5160",
+    )
+    safe_off.set_defaults(handler="safe_off", needs_client=True)
+
     return parser
 
 
