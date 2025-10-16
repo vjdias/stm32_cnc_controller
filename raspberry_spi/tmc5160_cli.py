@@ -353,6 +353,37 @@ def _build_init_stepdir_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _build_safe_off_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Coloca o TMC5160 em modo seguro: correntes=0, TOFF=0 e FREEWHEEL."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument(
+        "--freewheel",
+        type=int,
+        choices=[0, 1, 2, 3],
+        default=3,
+        help=(
+            "PWM_FREEWHEEL (0=normal, 1=short break, 2=passive fast decay, 3=freewheeling). "
+            "Default: 3"
+        ),
+    )
+    parser.add_argument(
+        "--toff",
+        type=int,
+        default=0,
+        help="TOFF (0–15). Default: 0 (desliga o chopper)",
+    )
+    parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help="Limpa GSTAT (0x07) antes",
+    )
+    return parser
+
+
 def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     overrides: List[Tuple[int, int]] = []
 
@@ -663,6 +694,72 @@ def _run_loop_test(
     )
 
 
+def _run_safe_off(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_safe_off_parser()
+    args = parser.parse_args(list(argv))
+
+    # Não aplicar preset no modo seguro
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset(writes=tuple()),
+    )
+
+    def _operation(driver):
+        print(
+            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para modo seguro (safe-off)"
+        )
+
+        if args.clear_gstat:
+            cleared = driver.write_register(REG_GSTAT, 0x00000007)
+            print(_format_response(cleared))
+            cleared.raise_on_faults()
+
+        # Leitura para preservar campos e fazer read-modify-write
+        chop_old = driver.read_register(REG_CHOPCONF)
+        pwm_old = driver.read_register(REG_PWMCONF)
+        print(_format_read_result(chop_old))
+        print(_format_read_result(pwm_old))
+
+        chop = chop_old.value
+        pwm = pwm_old.value
+
+        # CHOPCONF[3:0] = TOFF
+        new_chop = (chop & ~0xF) | (int(args.toff) & 0xF)
+
+        # PWMCONF: FREEWHEEL em [21:20]; também zera AUTOSCALE(18)/AUTOGRAD(19)
+        new_pwm = (pwm & ~(0b11 << 20) & ~(1 << 18) & ~(1 << 19)) | (
+            (int(args.freewheel) & 0b11) << 20
+        )
+
+        responses: List[TMC5160TransferResult] = []
+        # Zera correntes
+        responses.append(driver.write_register(REG_IHOLD_IRUN, 0x00000000))
+        # Aplica TOFF
+        responses.append(driver.write_register(REG_CHOPCONF, new_chop))
+        # Coloca FREEWHEEL
+        responses.append(driver.write_register(REG_PWMCONF, new_pwm))
+
+        print("Respostas do TMC5160:")
+        for r in responses:
+            print(_format_response(r))
+            r.raise_on_faults()
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Safe-off aplicado.",
+        operation=_operation,
+    )
+
+
 def run(
     argv: Optional[Sequence[str]] = None,
     *,
@@ -706,6 +803,13 @@ def run(
         else:
             from tmc5160_stepdir import run_init_stepdir as _run_init_stepdir  # type: ignore
         return _run_init_stepdir(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "safe-off":
+        return _run_safe_off(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,
