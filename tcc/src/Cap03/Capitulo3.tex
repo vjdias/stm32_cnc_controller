@@ -1,0 +1,59 @@
+\chapter{Metodologia}\label{cap:metodologia}
+
+A metodologia adotada para o desenvolvimento do controlador CNC seguiu
+um roteiro incremental que prioriza a validação dos blocos críticos antes
+de incorporar funcionalidades auxiliares. Cada etapa foi documentada,
+testada e revisada de forma a garantir que os requisitos de determinismo
+fossem mantidos durante todo o processo.
+
+\section{Roteiro incremental de bring-up}
+
+O ponto de partida consistiu na configuração do clock principal para
+\SI{80}{\mega\hertz} e na definição das prioridades do NVIC de acordo
+com o orçamento temporal: interrupções externas de segurança, TIM6,
+SPI1/DMA, TIM7 e USART1. Em seguida, foram ativadas as entradas de parada
+de emergência (E-STOP) e sensores de proximidade, assegurando que flags
+de segurança pudessem interromper o fluxo de comandos. As etapas
+posteriores focaram na calibração dos temporizadores: o TIM6 foi
+dimensionado com $PSC = 79$ e $ARR = 19$, enquanto o TIM7 recebeu
+$PSC = 7999$ e $ARR = 9$. Os temporizadores TIM2, TIM3 e TIM5 foram
+configurados em modo quadratura para leitura de encoders.
+
+A configuração do SPI1 em modo escravo com DMA circular foi realizada
+após os temporizadores, evitando contenda na memória compartilhada.
+Por fim, a USART1 foi ajustada para \SI{115200}{bps} e integrada a um
+serviço de log com fila não bloqueante. Cada etapa do roteiro foi
+acompanhada por testes de bancada: medições de frequência com
+osciloscópio, leitura de contadores de encoder e injeção de quadros SPI
+utilizando o cliente Python.
+
+\section{Arquitetura de software}
+
+O firmware foi estruturado em três camadas principais. A camada \emph{Core}
+engloba os artefatos gerados pelo STM32CubeMX, incluindo inicialização de
+periféricos, descrições de pinos e funções HAL. Sobre ela, a camada
+\emph{App} implementa o laço principal (`app_poll`), o agendador de
+serviços e as rotinas de inicialização específicas do projeto. A camada
+\emph{Services} agrupa módulos especializados, como o gerador de passos,
+o controlador PID, o serviço de homing e o roteador de mensagens SPI.
+
+A fila de recepção SPI é mantida em memória circular, preenchida pelas
+rotinas de interrupção e consumida por `app_poll`. Respostas são
+enfileiradas em `g_app_responses` e promovidas para o buffer de DMA
+quando disponíveis. A integração com os drivers TMC5160 ocorre por meio
+de uma API dedicada que abstrai comandos STEP/DIR/EN e monitora
+condições de falha.
+
+\section{Procedimentos de teste}
+
+Os testes de validação foram conduzidos em três frentes. Primeiro,
+medições com osciloscópio e analisador lógico verificaram a frequência
+dos pulsos STEP e o jitter do TIM6, confirmando a estabilidade em
+\SI{50}{\kilo\hertz}. Em seguida, foram realizadas varreduras de ganho
+nos controladores PID para avaliar margem de fase e resposta a degraus,
+utilizando logs exportados via USART1. Por fim, o pipeline SPI foi
+monitorado com o cliente `cnc_spi_client.py`, observando a necessidade de
+até três ciclos de enquete para respostas completas e avaliando o
+impacto de diferentes valores de `APP_SPI_RESTART_DEFER_MAX`. Os dados
+coletados subsidiam as análises apresentadas no
+Capítulo~\ref{cap:resultados}.
