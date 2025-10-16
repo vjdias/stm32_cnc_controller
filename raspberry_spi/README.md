@@ -26,6 +26,11 @@ Uso rápido
   `python3 cnc_spi_client.py start-move --frame-id 3`
   `python3 cnc_spi_client.py end-move --frame-id 4`
 
+- Parada de segurança (para movimento + desativa drivers TMC):
+  `python3 cnc_spi_client.py safe-off --frame-id 4`
+  - Opções TMC: `--tmc-bus/--tmc-dev` para alvo específico, ou omita para todos; `--tmc-freewheel {0,1,2,3}` (default 3).
+  - Para apenas enviar o STOP sem mudar TMC: adicione `--skip-tmc`.
+
 - Home e Probe Level:
   `python3 cnc_spi_client.py home --frame-id 5 --axes 0x03 --dirs 0x01 --vhome 0x1234`
   `python3 cnc_spi_client.py probe-level --frame-id 6 --axes 0x04 --vprobe 0x0100`
