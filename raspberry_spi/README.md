@@ -50,7 +50,7 @@ Uso rápido
 
 Comandos para o TMC5160 (Raspberry Pi)
 - Inicialização para STEP/DIR externo (microstepping/interpolação/corrente):
-  `python3 tmc5160_cli.py init-stepdir --microsteps 16 --interpolate --stealth --ihold 10 --irun 31 --ihold-delay 6 --tpwmthrs 0x1F4 --tpowerdown 0x14`
+  `python3 tmc5160_cli.py init-stepdir --microsteps 16 --interpolate --stealth --ihold 1 --irun 1 --ihold-delay 6 --tpwmthrs 0x1F4 --tpowerdown 0x14`
   - Aplica preset padrão e ajusta: `GCONF.EN_PWM_MODE`, `IHOLD_IRUN`, `TPOWERDOWN`,
     `TPWMTHRS`, `CHOPCONF.MRES/INTPOL`, `PWMCONF`. Limpa `GSTAT` antes.
 - Consulta de status com sequência para limpar GSTAT e checar DRV_STATUS:

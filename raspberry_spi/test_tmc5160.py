@@ -110,7 +110,7 @@ def test_configure_uses_default_preset_and_spi_settings():
     expected_frames = [
         [REG_GSTAT, 0x00, 0x00, 0x00, 0x07],
         [REG_GCONF, 0x00, 0x00, 0x00, 0x04],
-        [REG_IHOLD_IRUN, 0x00, 0x06, 0x1F, 0x0A],
+        [REG_IHOLD_IRUN, 0x00, 0x06, 0x01, 0x01],
         [REG_TPOWERDOWN, 0x00, 0x00, 0x00, 0x14],
         [REG_TPWMTHRS, 0x00, 0x00, 0x01, 0xF4],
         [REG_CHOPCONF, 0x10, 0x41, 0x01, 0x50],
@@ -487,7 +487,7 @@ def test_cli_loop_test_repeats_specified_iterations_and_can_be_quiet(capsys):
         (REG_GSTAT, 0x00, "Nenhum bit relevante ativo."),
         (REG_GSTAT, 0x05, "RESET"),
         (REG_GCONF, 0x00000004, "StealthChop"),
-        (REG_IHOLD_IRUN, 0x00061F0A, "IHOLD=10"),
+        (REG_IHOLD_IRUN, 0x00060101, "IHOLD=1"),
         (REG_CHOPCONF, 0x10410150, "TOFF"),
         (REG_PWMCONF, 0xC10D0024, "PWM_OFS"),
     ],

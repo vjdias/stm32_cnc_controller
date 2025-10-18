@@ -80,8 +80,10 @@ class TMC5160RegisterPreset:
                 (REG_GSTAT, 0x00000007),
                 # Ativa o modo PWM de controle de corrente para operação Step/Dir.
                 (REG_GCONF, 0x00000004),
-                # Correntes: IHOLD=10/32 (~31%), IRUN=31/32 (100%), demora 6 * 2^n clock
-                (REG_IHOLD_IRUN, 0x00061F0A),
+                # Correntes padrão (baixas) para bring-up seguro:
+                #   IHOLD=1/32, IRUN=1/32, IHOLDDELAY=6 (tempo de rampa de hold)
+                #   Valor: 0x0006_0101 => [00 06 01 01]
+                (REG_IHOLD_IRUN, 0x00060101),
                 # Tempo até desligar bobina após parada (20 * 16 ciclos de clock interno)
                 (REG_TPOWERDOWN, 0x00000014),
                 # Limiar para modo StealthChop (velocidades abaixo de ~rpm) — 500 ticks
