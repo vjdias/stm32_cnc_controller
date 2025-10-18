@@ -9,6 +9,7 @@
 #include "Protocol/Responses/start_move_response.h"
 #include "Protocol/frame_defs.h"
 #include "Services/Log/log_service.h"
+#include "Services/Safety/safety_service.h"
 #include "app.h"
 #include "gpio.h"
 #include "main.h"
@@ -65,6 +66,8 @@ static uint32_t g_encoder_last_raw[MOTION_AXIS_COUNT];
 static int64_t g_encoder_origin[MOTION_AXIS_COUNT];
 // Flags de teste/demonstração
 static volatile uint8_t g_demo_continuous = 0u; // quando 1, gera passos continuamente
+static const uint16_t g_demo_speed_table[4] = { 5u, 10u, 20u, 40u }; // ksteps/s aprox (1kHz)
+static volatile uint8_t g_demo_speed_idx = 1u; // default ≈10k steps/s (compatível com versão anterior)
 static inline void gpio_set_high(GPIO_TypeDef *port, uint16_t pin) {
 	if (!port)
 		return;
@@ -459,15 +462,21 @@ void motion_on_move_queue_add(const uint8_t *frame, uint32_t len) {
 	move_queue_add_req_t req;
 	uint8_t ack_status = MOTION_ACK_INVALID;
 	uint8_t frame_id = 0u;
-	if (!frame)
-		return;
-	proto_result_t decode_status = move_queue_add_req_decoder(frame, len, &req);
-	if (decode_status != PROTO_OK) {
-		motion_send_queue_add_ack(frame_id, ack_status);
-		LOGA_THIS(LOG_STATE_ERROR, decode_status, "queue_add", "decode_fail");
-		return;
-	}
-	frame_id = req.frameId;
+    if (!frame)
+        return;
+    proto_result_t decode_status = move_queue_add_req_decoder(frame, len, &req);
+    if (decode_status != PROTO_OK) {
+        motion_send_queue_add_ack(frame_id, ack_status);
+        LOGA_THIS(LOG_STATE_ERROR, decode_status, "queue_add", "decode_fail");
+        return;
+    }
+    frame_id = req.frameId;
+    /* Bloqueia enfileiramento em condição de E-STOP */
+    if (!safety_is_safe()) {
+        motion_send_queue_add_ack(frame_id, ack_status);
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "queue_add", "blocked_safety");
+        return;
+    }
 	uint32_t primask = motion_lock();
 	proto_result_t push_status = motion_queue_push_locked(&req);
 	if (push_status == PROTO_OK) {
@@ -509,7 +518,10 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
 	}
 	uint8_t started = 0u;
 	uint32_t primask = motion_lock();
-	if (!g_has_active_segment) {
+	if (!safety_is_safe()) {
+		/* Segurança não liberada: ignora início */
+		started = 0u;
+	} else if (!g_has_active_segment) {
 		if (motion_try_start_next_locked()) {
 			g_status.state = MOTION_RUNNING;
 			started = 1u;
@@ -625,7 +637,7 @@ void motion_demo_set_continuous(uint8_t enable)
             ax->total_steps = 0xFFFFFFFFu; // efetivamente contínuo
             ax->target_steps = 0u;
             ax->emitted_steps = 0u;
-            ax->velocity_per_tick = 10;    // ≈ 10k steps/s
+            ax->velocity_per_tick = g_demo_speed_table[g_demo_speed_idx & 0x3u];
             ax->kp = ax->ki = ax->kd = 0u;
             ax->step_high = 0u;
             motion_hw_reset_step(axis);
@@ -656,4 +668,45 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	} else {
 		(void) htim;
 	}
+}
+
+/* ===== API pública auxiliar ===== */
+void motion_emergency_stop(void)
+{
+    uint32_t primask = motion_lock();
+    /* Desliga demo e qualquer segmento em andamento */
+    g_demo_continuous = 0u;
+    motion_stop_all_axes_locked();
+    motion_queue_clear_locked();
+    g_has_active_segment = 0u;
+    /* Transição de estado segura */
+    g_status.state = MOTION_STOPPING;
+    motion_refresh_status_locked();
+    motion_unlock(primask);
+
+    /* Retorna a IDLE logo em seguida para refletir repouso */
+    primask = motion_lock();
+    g_status.state = MOTION_IDLE;
+    motion_refresh_status_locked();
+    motion_unlock(primask);
+}
+
+uint8_t motion_demo_is_active(void)
+{
+    return g_demo_continuous ? 1u : 0u;
+}
+
+void motion_demo_cycle_speed(void)
+{
+    /* Avança índice (0..3) */
+    g_demo_speed_idx = (uint8_t)((g_demo_speed_idx + 1u) & 0x3u);
+    if (!g_demo_continuous)
+        return;
+    /* Aplica nova velocidade imediatamente se demo está ativo */
+    uint16_t v = g_demo_speed_table[g_demo_speed_idx & 0x3u];
+    uint32_t primask = motion_lock();
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        g_axis_state[axis].velocity_per_tick = v;
+    }
+    motion_unlock(primask);
 }

@@ -29,6 +29,7 @@
 #include "Services/Motion/motion_service.h"
 #include "app.h"
 #include "board_config.h"
+#include "Services/Safety/safety_service.h"
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
 #include <stdio.h>
@@ -184,6 +185,42 @@ void SystemClock_Config(void)
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     app_spi_isr_txrx_done(hspi);
+}
+
+/* Botões de segurança (EXTI):
+ * - B1 (PC13): E-STOP imediato (pressionado = nível baixo)
+ * - B2 (PC0): Release/recover + funções extras do demo (pressionado = baixo)
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    switch (GPIO_Pin) {
+    case GPIO_PIN_13: /* B1 - E-STOP */
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET) {
+            /* Pressionado: aciona E-STOP e para tudo agora */
+            safety_estop_assert();
+            motion_emergency_stop();
+        }
+        break;
+    case GPIO_PIN_0:  /* B2 - Release/Resume + demo speed step */
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == GPIO_PIN_RESET) {
+            /* Libera segurança */
+            safety_estop_release();
+            /* Reativa movimentos conforme contexto */
+            if (motion_demo_is_active()) {
+                /* Cicla velocidade no modo demo contínuo */
+                motion_demo_cycle_speed();
+            } else {
+                /* Se o demo estava desligado (ex.: após E-STOP), religa */
+                motion_demo_set_continuous(1);
+            }
+        }
+        break;
+    case GPIO_PIN_1:
+    case GPIO_PIN_2:
+    default:
+        /* Reservado para sensores PROX/limites; sem ação específica aqui */
+        break;
+    }
 }
 
 /* USER CODE END 4 */
