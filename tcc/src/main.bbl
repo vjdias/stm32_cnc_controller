@@ -71,6 +71,13 @@ Mori, M., Sato, S., and Ohashi, T. (2005).
   with STM32L4}.
 \newblock User manual.
 
+\bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
+  2022]{tmcs28_datasheet}
+{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)} (2022).
+\newblock {\em TMCS-28 Hardware Manual: Optical Incremental Encoder (Rev.
+  1.80)}.
+\newblock Accessories for Stepper \& BLDC, Hardware Version V1.00.
+
 \bibitem[Wang and Hu, 2016]{efficient_reference}
 Wang, L. and Hu, J. (2016).
 \newblock Efficient reference-pulse cnc interpolator.

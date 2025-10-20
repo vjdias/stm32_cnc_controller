@@ -50,24 +50,37 @@
 \@writefile{toc}{\contentsline {section}{\numberline {2.5}Controlador PID digital}{5}{section.2.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2.6}Integração PID-DDA}{5}{section.2.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2.7}Comunicação SPI e USART}{6}{section.2.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {3}Metodologia}{7}{chapter.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2.8}Driver Trinamic TMC5160 e Encoder TMCS-28}{6}{section.2.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.8.1}TMC5160}{6}{subsection.2.8.1}\protected@file@percent }
+\citation{tmcs28_datasheet}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.8.2}TMCS-28 (Trinamic/Analog Devices)}{7}{subsection.2.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.8.3}Implic\c {c}\~oes de projeto}{7}{subsection.2.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {3}Metodologia}{8}{chapter.3}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:metodologia}{{3}{7}{Metodologia}{chapter.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.1}Roteiro incremental de bring-up}{7}{section.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.2}Arquitetura de software}{7}{section.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.3}Procedimentos de teste}{8}{section.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}Resultados e Discussão}{9}{chapter.4}\protected@file@percent }
+\newlabel{cap:metodologia}{{3}{8}{Metodologia}{chapter.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}Roteiro incremental de bring-up}{8}{section.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}Arquitetura de software}{8}{section.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Procedimentos de teste}{9}{section.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}Arquitetura de Hardware}{9}{section.3.4}\protected@file@percent }
+\newlabel{sec:arq_hw}{{3.4}{9}{Arquitetura de Hardware}{section.3.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.1}Vis\~ao geral do sistema}{9}{subsection.3.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.2}Alimenta\c {c}\~ao e EMC}{9}{subsection.3.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.3}Drivers TMC5160}{10}{subsection.3.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.4}Encoder \'{o}ptico TMCS-28}{10}{subsection.3.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.5}Intertravamentos e seguran\c {c}a}{10}{subsection.3.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4.6}PCB, cabeamento e montagem}{10}{subsection.3.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}Resultados e Discussão}{11}{chapter.4}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:resultados}{{4}{9}{Resultados e Discussão}{chapter.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{9}{section.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{9}{section.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{10}{section.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}Conclusão}{11}{chapter.5}\protected@file@percent }
+\newlabel{cap:resultados}{{4}{11}{Resultados e Discussão}{chapter.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{11}{section.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{11}{section.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{12}{section.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Conclusão}{13}{chapter.5}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:conclusao}{{5}{11}{Conclusão}{chapter.5}{}}
+\newlabel{cap:conclusao}{{5}{13}{Conclusão}{chapter.5}{}}
 \bibstyle{apalike}
 \bibdata{Ref/SampleReferences}
 \bibcite{astrom1995}{{\r A}str{\"o}m and H{\"a}gglund, 1995}
@@ -82,8 +95,9 @@
 \bibcite{kung_fpga_motion}{Kung et~al., 2005}
 \bibcite{mori2005dda}{Mori et~al., 2005}
 \bibcite{st_an4013}{{STMicroelectronics}, 2013}
-\@writefile{toc}{\contentsline {chapter}{Bibliografia}{12}{chapter.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{Bibliografia}{14}{chapter.5}\protected@file@percent }
 \bibcite{um2153}{{STMicroelectronics}, 2018}
+\bibcite{tmcs28_datasheet}{{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, 2022}
 \bibcite{efficient_reference}{Wang and Hu, 2016}
 \bibcite{adaptive_fuzzy_pid}{Wang et~al., 2021}
-\gdef \@abspage@last{27}
+\gdef \@abspage@last{30}

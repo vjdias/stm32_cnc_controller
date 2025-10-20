@@ -1,0 +1,77 @@
+\section{Driver Trinamic TMC5160 e Encoder TMCS-28}
+
+Os drivers de motor de passo da Trinamic s\~ao amplamente utilizados por
+oferecerem modos de comuta\c{c}\~ao silenciosos, detec\c{c}\~ao de carga
+\emph{sensorless} e parametriza\c{c}\~ao fina via registradores. Em
+complemento, encoders \'{o}pticos incrementais como o TMCS-28 permitem
+medi\c{c}\~ao sem contato da posi\c{c}\~ao/angulo do eixo com disco \'{o}ptico e
+sensor, habilitando calibra\c{c}\~oes de zero, telemetria e malhas fechadas.
+Esta se\c{c}\~ao resume os recursos relevantes do TMC5160 e do TMCS-28 e como
+eles se relacionam \`a arquitetura do firmware.
+
+\subsection{TMC5160}
+
+O TMC5160 \'e um driver de alto desempenho voltado a correntes elevadas,
+com interface \texttt{SPI} e controle por pinos \texttt{STEP}/\texttt{DIR}/\texttt{EN}.
+Entre os principais recursos:
+
+- \textbf{Microstepping e microPlyer}: gera\c{c}\~ao de at\'e 256 micropassos e
+  interpola\c{c}\~ao \textit{microPlyer} a partir de entradas com baixa
+  resolu\c{c}\~ao, suavizando o movimento mesmo com taxas de pulso moderadas.
+- \textbf{stealthChop2}: modo de chaveamento focado em baixo ru\'ido
+  ac\'ustico; configurado principalmente em \texttt{PWMCONF}.
+- \textbf{spreadCycle}: chopper cl\'assico de corrente para maior fidelidade
+  em torque em altas velocidades; parametriza\c{c}\~ao em \texttt{CHOPCONF}.
+- \textbf{StallGuard2}: medi\c{c}\~ao de carga sem sensor (\emph{sensorless}) que
+  permite detectar perda de passo/contato; limiar em \texttt{SGTHRS} e leitura
+  do ganho em \texttt{SG\_RESULT}.
+- \textbf{coolStep}: regula\c{c}\~ao din\^amica de corrente baseada na carga para
+  reduzir perdas sem comprometer torque.
+- \textbf{dcStep}: avan\c{c}o dependente de carga para evitar perda de passo
+  em condi\c{c}\~oes adversas.
+- \textbf{Prote\c{c}\~oes e diagn\'ostico}: \texttt{DRV\_STATUS} exp\~oe flags de
+  sobrecorrente, subtens\~ao e temperatura.
+
+Na integra\c{c}\~ao com o firmware, o TMC5160 \'e inicializado via \texttt{SPI}
+ajustando \texttt{IHOLD\_IRUN} (correntes de hold/run), \texttt{TPOWERDOWN},
+\texttt{CHOPCONF} e \texttt{PWMCONF}. A comuta\c{c}\~ao de perfis (\textit{stealthChop2}
+\(\leftrightarrow\) \textit{spreadCycle}) pode ser feita em tempo de execu\c{c}\~ao
+para equilibrar ru\'ido e robustez. Para homing \emph{sensorless}, calibra-se
+\texttt{SGTHRS} e a janela \texttt{TCOOLTHRS} de maneira a obter detec\c{c}\~ao
+repet\'ivel sem falsos positivos.
+
+\subsection{TMCS-28 (Trinamic/Analog Devices)}
+
+O TMCS-28 \`e um encoder \'{o}ptico incremental de baixo custo e dimens\~ao
+reduzida para motores de passo e PMSM/BLDC. Utiliza roda c\'odigo \'{o}ptica
+e fornece sa\'idas em quadratura \textbf{A} e \textbf{B} mais \textbf{N}
+(\emph{index}). Principais pontos (\cite{tmcs28_datasheet}):
+
+- \textbf{Resoluc\c{c}\~oes}: at\'e 625\,lpr (\emph{lines per rotation}) \(\Rightarrow\)
+  40\,000\,cpr; op\c{c}\~ao de 64\,lpr \(\Rightarrow\) 4\,096\,cpr.
+- \textbf{Sinal}: ABN em n\'{\i}vel TTL, \emph{rise/fall} t\'ipicos \(~10\,\text{ns}\),
+  \(V_\text{OH} \ge 2.4\,\text{V}\), \(V_\text{IL} \le 0.4\,\text{V}\), \(I_\text{out}\,\text{max}\approx 20\,\text{mA}\).
+- \textbf{Alimenta\c{c}\~ao}: 4.5--5.5\,V (t\'ipico 5\,V), consumo \(\approx\) 110\,mA.
+- \textbf{Faixa de frequ\^encia}: at\'e \(\sim 1.5\,\text{MHz}\) de comuta\c{c}\~ao.
+- \textbf{Mec\^anica}: di\^ametro do furo 5\,mm ou 6.35\,mm; carga axial 50\,N,
+  radial 80\,N; rota\c{c}\~ao m\'axima 6000\,rpm; m\'odulo 28\,mm\,\(\times\)\,28\,mm\,\(\times\)\,18\,mm (aprox.).
+
+Integra\c{c}\~ao com o firmware: conectar A/B aos temporizadores do STM32 em modo
+\emph{encoder} (por exemplo, TIM2/TIM3/TIM5) e o \emph{index} N a uma entrada
+de reset/captura para refer\^encia de zero. Converter contagens em \^angulo via
+\(\theta = 360\,^{\circ} \cdot \text{count}/\text{CPR}\). Neste TCC foi utilizada a
+variante \textbf{TMCS-28-10k} (c\'odigo TMCS-28-x-10000-AT-01), com
+\textbf{625\,lpr} e \textbf{40\,000\,cpr}; portanto, considerar \(\text{CPR}=40\,000\).
+Como as sa\'idas s\~ao TTL a 5\,V, prever adapta\c{c}\~ao
+de n\'{\i}vel para GPIOs de 3.3\,V do STM32 (divisores/\emph{level shifter}).
+
+\subsection{Implic\c{c}\~oes de projeto}
+
+No contexto deste trabalho, os recursos de microstepping e os modos
+\textit{stealthChop2}/\textit{spreadCycle} s\~ao os mais relevantes para
+compatibilizar a taxa de passos do DDA (\SI{50}{\kilo\hertz}) com suavidade e
+torque. Quando aplic\'avel, o uso de \textit{StallGuard2} permite
+procedimentos de homing sem sensores, desde que a calibra\c{c}\~ao de
+\texttt{SGTHRS}/\texttt{TCOOLTHRS} seja validada em bancada. A parametriza\c{c}\~ao
+via \texttt{SPI}/UART se integra naturalmente \`a camada de \emph{Services},
+mantendo os ajustes desacoplados do la\c{c}o de tempo real.
