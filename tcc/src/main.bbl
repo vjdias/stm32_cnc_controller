@@ -60,16 +60,34 @@ Mori, M., Sato, S., and Ohashi, T. (2005).
 \newblock {\em International Journal of Machine Tools and Manufacture},
   45(4--5):529--536.
 
+\bibitem[Romeros, 2022]{romeros_tcc_ifmg_2022}
+Romeros, F.~M. (2022).
+\newblock Trabalho de conclus\~{a}o de curso (tcc).
+\newblock Instituto Federal de Minas Gerais (IFMG) -- Campus Formiga.
+\newblock Acesso em: 20 out. 2025.
+
 \bibitem[{STMicroelectronics}, 2013]{st_an4013}
 {STMicroelectronics} (2013).
 \newblock {\em AN4013: Introduction to timers for STM32 MCUs}.
 \newblock Application note.
 
-\bibitem[{STMicroelectronics}, 2018]{um2153}
-{STMicroelectronics} (2018).
+\bibitem[{STMicroelectronics}, 2018a]{stm32l4_rm}
+{STMicroelectronics} (2018a).
+\newblock {\em RM0394: STM32L4x5/STM32L4x6 Advanced ARM\textregistered{}-based
+  32-bit MCUs reference manual}.
+\newblock Reference manual.
+
+\bibitem[{STMicroelectronics}, 2018b]{um2153}
+{STMicroelectronics} (2018b).
 \newblock {\em UM2153: Discovery kit for IoT node multichannel communication
   with STM32L4}.
 \newblock User manual.
+
+\bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
+  ]{tmc5160_ds}
+{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}.
+\newblock {\em TMC5160A: Datasheet and Register Description}.
+\newblock Stepper Motor Driver IC.
 
 \bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
   2022]{tmcs28_datasheet}

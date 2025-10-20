@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  20 OCT 2025 11:32
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  20 OCT 2025 18:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -340,25 +340,42 @@ Package: array 2025/06/08 v2.6j Tabular extension package (FMi)
 \c@nlinenum=\count312
 \TeXr@lab=\toks28
 )
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/tools\tabularx.sty
+Package: tabularx 2023/12/11 v2.12a `tabularx' package (DPC)
+\TX@col@width=\dimen183
+\TX@old@table=\dimen184
+\TX@old@col=\dimen185
+\TX@target=\dimen186
+\TX@delta=\dimen187
+\TX@cols=\count313
+\TX@ftn=\toks29
+)
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
 Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
-\heavyrulewidth=\dimen183
-\lightrulewidth=\dimen184
-\cmidrulewidth=\dimen185
-\belowrulesep=\dimen186
-\belowbottomsep=\dimen187
-\aboverulesep=\dimen188
-\abovetopsep=\dimen189
-\cmidrulesep=\dimen190
-\cmidrulekern=\dimen191
-\defaultaddspace=\dimen192
-\@cmidla=\count313
-\@cmidlb=\count314
-\@aboverulesep=\dimen193
-\@belowrulesep=\dimen194
-\@thisruleclass=\count315
-\@lastruleclass=\count316
-\@thisrulewidth=\dimen195
+\heavyrulewidth=\dimen188
+\lightrulewidth=\dimen189
+\cmidrulewidth=\dimen190
+\belowrulesep=\dimen191
+\belowbottomsep=\dimen192
+\aboverulesep=\dimen193
+\abovetopsep=\dimen194
+\cmidrulesep=\dimen195
+\cmidrulekern=\dimen196
+\defaultaddspace=\dimen197
+\@cmidla=\count314
+\@cmidlb=\count315
+\@aboverulesep=\dimen198
+\@belowrulesep=\dimen199
+\@thisruleclass=\count316
+\@lastruleclass=\count317
+\@thisrulewidth=\dimen256
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count318
+\float@exts=\toks30
+\float@box=\box58
+\@float@everytoks=\toks31
+\@floatcapt=\box59
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/algorithmicx\algpseudo
 code.sty
@@ -369,15 +386,15 @@ icx.sty
 Package: algorithmicx 2005/04/27 v1.2 Algorithmicx
 
 Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
-\c@ALG@line=\count317
-\c@ALG@rem=\count318
-\c@ALG@nested=\count319
+\c@ALG@line=\count319
+\c@ALG@rem=\count320
+\c@ALG@nested=\count321
 \ALG@tlm=\skip73
 \ALG@thistlm=\skip74
-\c@ALG@Lnr=\count320
-\c@ALG@blocknr=\count321
-\c@ALG@storecount=\count322
-\c@ALG@tmpcounter=\count323
+\c@ALG@Lnr=\count322
+\c@ALG@blocknr=\count323
+\c@ALG@storecount=\count324
+\c@ALG@tmpcounter=\count325
 \ALG@tmplength=\skip75
 )
 Document Style - pseudocode environments for use with the `algorithmicx' style
@@ -386,16 +403,8 @@ Document Style - pseudocode environments for use with the `algorithmicx' style
 ty
 Package: algorithm 2009/08/24 v0.1 Document Style `algorithm' - floating enviro
 nment
- (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
-Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count324
-\float@exts=\toks29
-\float@box=\box58
-\@float@everytoks=\toks30
-\@floatcapt=\box59
-)
-\@float@every@algorithm=\toks31
-\c@algorithm=\count325
+\@float@every@algorithm=\toks32
+\c@algorithm=\count326
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
 Package: hyperref 2025-07-12 v7.01o Hypertext links for LaTeX
@@ -445,20 +454,20 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 y
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
-\c@section@level=\count326
+\c@section@level=\count327
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
 Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count327
+\etb@tempcnta=\count328
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
 sty
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
-\@linkdim=\dimen196
-\Hy@linkcounter=\count328
-\Hy@pagecounter=\count329
+\@linkdim=\dimen257
+\Hy@linkcounter=\count329
+\Hy@pagecounter=\count330
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
 File: pd1enc.def 2025-07-12 v7.01o Hyperref: PDFDocEncoding definition (HO)
@@ -468,7 +477,7 @@ Now handling font encoding PD1 ...
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count330
+\Hy@SavedSpaceFactor=\count331
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
 File: puenc.def 2025-07-12 v7.01o Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
@@ -481,14 +490,14 @@ Package hyperref Info: Plain pages OFF on input line 4210.
 Package hyperref Info: Backreferencing OFF on input line 4215.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4462.
-\c@Hy@tempcnt=\count331
+\c@Hy@tempcnt=\count332
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
 \Urlmuskip=\muskip21
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 4801.
-\XeTeXLinkMargin=\dimen197
+\XeTeXLinkMargin=\dimen258
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
@@ -498,9 +507,9 @@ c.sty
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count332
-\Field@Width=\dimen198
-\Fld@charsize=\dimen199
+\Fld@menulength=\count333
+\Field@Width=\dimen259
+\Fld@charsize=\dimen260
 Package hyperref Info: Hyper figures OFF on input line 6078.
 Package hyperref Info: Link nesting OFF on input line 6083.
 Package hyperref Info: Hyper index ON on input line 6086.
@@ -508,16 +517,16 @@ Package hyperref Info: backreferencing OFF on input line 6093.
 Package hyperref Info: Link coloring OFF on input line 6098.
 Package hyperref Info: Link coloring with OCG OFF on input line 6103.
 Package hyperref Info: PDF/A mode OFF on input line 6108.
-\Hy@abspage=\count333
-\c@Item=\count334
-\c@Hfootnote=\count335
+\Hy@abspage=\count334
+\c@Item=\count335
+\c@Hfootnote=\count336
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
 File: hpdftex.def 2025-07-12 v7.01o Hyperref driver for pdfTeX
-\Fld@listcount=\count336
-\c@bookmark@seq@number=\count337
+\Fld@listcount=\count337
+\c@bookmark@seq@number=\count338
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
 lecheck.sty
@@ -537,40 +546,40 @@ Package: pdfpages 2025/07/23 v0.6g Insert pages of external PDF documents (AM)
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/eso-pic\eso-pic.sty
 Package: eso-pic 2023/05/03 v3.0c eso-pic (RN)
-\ESO@tempdima=\dimen256
-\ESO@tempdimb=\dimen257
+\ESO@tempdima=\dimen261
+\ESO@tempdimb=\dimen262
 )
-\AM@pagewidth=\dimen258
-\AM@pageheight=\dimen259
-\AM@fboxrule=\dimen260
+\AM@pagewidth=\dimen263
+\AM@pageheight=\dimen264
+\AM@fboxrule=\dimen265
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pppdftex.def
 File: pppdftex.def 2025/07/23 v0.6g Pdfpages driver for pdfTeX (AM)
 )
-\pdfpages@includegraphics@status=\count338
+\pdfpages@includegraphics@status=\count339
 \AM@pagebox=\box60
-\AM@global@opts=\toks32
-\AM@pagecnt=\count339
-\AM@toc@title=\toks33
-\AM@lof@heading=\toks34
-\c@AM@survey=\count340
+\AM@global@opts=\toks33
+\AM@pagecnt=\count340
+\AM@toc@title=\toks34
+\AM@lof@heading=\toks35
+\c@AM@survey=\count341
 \AM@templatesizebox=\box61
 ) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
 Package: siunitx 2025-07-09 v3.4.14 A comprehensive (SI) units package
-\l__siunitx_number_uncert_offset_int=\count341
-\l__siunitx_number_exponent_fixed_int=\count342
-\l__siunitx_number_min_decimal_int=\count343
-\l__siunitx_number_min_integer_int=\count344
-\l__siunitx_number_round_precision_int=\count345
-\l__siunitx_number_lower_threshold_int=\count346
-\l__siunitx_number_upper_threshold_int=\count347
-\l__siunitx_number_group_first_int=\count348
-\l__siunitx_number_group_size_int=\count349
-\l__siunitx_number_group_minimum_int=\count350
-\l__siunitx_angle_tmp_dim=\dimen261
+\l__siunitx_number_uncert_offset_int=\count342
+\l__siunitx_number_exponent_fixed_int=\count343
+\l__siunitx_number_min_decimal_int=\count344
+\l__siunitx_number_min_integer_int=\count345
+\l__siunitx_number_round_precision_int=\count346
+\l__siunitx_number_lower_threshold_int=\count347
+\l__siunitx_number_upper_threshold_int=\count348
+\l__siunitx_number_group_first_int=\count349
+\l__siunitx_number_group_size_int=\count350
+\l__siunitx_number_group_minimum_int=\count351
+\l__siunitx_angle_tmp_dim=\dimen266
 \l__siunitx_angle_marker_box=\box62
 \l__siunitx_angle_unit_box=\box63
-\l__siunitx_compound_count_int=\count351
+\l__siunitx_compound_count_int=\count352
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/translations\translati
 ons.sty
@@ -578,57 +587,60 @@ Package: translations 2022/02/05 v1.12 internationalization of LaTeX2e packages
  (CN)
 )
 \l__siunitx_table_tmp_box=\box64
-\l__siunitx_table_tmp_dim=\dimen262
-\l__siunitx_table_column_width_dim=\dimen263
+\l__siunitx_table_tmp_dim=\dimen267
+\l__siunitx_table_column_width_dim=\dimen268
 \l__siunitx_table_integer_box=\box65
 \l__siunitx_table_decimal_box=\box66
 \l__siunitx_table_uncert_box=\box67
 \l__siunitx_table_before_box=\box68
 \l__siunitx_table_after_box=\box69
-\l__siunitx_table_before_dim=\dimen264
-\l__siunitx_table_carry_dim=\dimen265
-\l__siunitx_unit_tmp_int=\count352
-\l__siunitx_unit_position_int=\count353
-\l__siunitx_unit_total_int=\count354
+\l__siunitx_table_before_dim=\dimen269
+\l__siunitx_table_carry_dim=\dimen270
+\l__siunitx_unit_tmp_int=\count353
+\l__siunitx_unit_position_int=\count354
+\l__siunitx_unit_total_int=\count355
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/placeins\placeins.sty
+Package: placeins 2005/04/18  v 2.2
 ) (main.aux (Identificacao.aux)
 Package babel Info: 'portuguese' activates 'portuges' shorthands.
 (babel)             Reported on input line 9.
 )
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
 kii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count355
-\scratchdimen=\dimen266
+\scratchcounter=\count356
+\scratchdimen=\dimen271
 \scratchbox=\box70
-\nofMPsegments=\count356
-\nofMParguments=\count357
-\everyMPshowfont=\toks35
-\MPscratchCnt=\count358
-\MPscratchDim=\dimen267
-\MPnumerator=\count359
-\makeMPintoPDFobject=\count360
-\everyMPtoPDFconversion=\toks36
+\nofMPsegments=\count357
+\nofMParguments=\count358
+\everyMPshowfont=\toks36
+\MPscratchCnt=\count359
+\MPscratchDim=\dimen272
+\MPnumerator=\count360
+\makeMPintoPDFobject=\count361
+\everyMPtoPDFconversion=\toks37
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
 base.sty
@@ -678,7 +690,7 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring OFF on input line 20.
+Package hyperref Info: Link coloring OFF on input line 23.
 (main.out) (main.out)
 \@outlinefile=\write3
 \openout3 = `main.out'.
@@ -699,22 +711,22 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 ))
 Package translations Info: no dictionary file `translations-basic-dictionary-po
-rtuges.trsl' found. on input line 20.
+rtuges.trsl' found. on input line 23.
 \openout2 = `Identificacao.aux'.
 
 (Identificacao.tex)
-<Cap00/IC.jpg, id=138, 1185.42876pt x 1185.42876pt>
+<Cap00/IC.jpg, id=150, 1185.42876pt x 1185.42876pt>
 File: Cap00/IC.jpg Graphic file (type jpg)
 <use Cap00/IC.jpg>
-Package pdftex.def Info: Cap00/IC.jpg  used on input line 23.
+Package pdftex.def Info: Cap00/IC.jpg  used on input line 26.
 (pdftex.def)             Requested size: 99.57533pt x 99.58464pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 23.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 26.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 23.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 26.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
@@ -760,7 +772,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.28 \dedicatoria
+l.31 \dedicatoria
                  {} [1
 
 
@@ -771,7 +783,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.ii}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.29 \agradecimentos
+l.32 \agradecimentos
                     {} [2
 
 
@@ -804,7 +816,19 @@ l.29 \agradecimentos
 
 
 
-] (main.lot)
+] (main.lot
+Underfull \hbox (badness 10000) in paragraph at lines 12--12
+ [][] [][]\OT1/cmr/m/n/12 Registros STM32 L4 uti-li-za-dos neste tra-ba-lho (ve
+r 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 13--13
+ [][] [][]\OT1/cmr/m/n/12 Registros TMC5160 uti-li-za-dos neste tra-ba-lho (ver
+ 
+ []
+
+)
 \tf@lot=\write5
 \openout5 = `main.lot'.
 
@@ -848,7 +872,7 @@ Cap\'{\i }tulo 1.
 ])
 
 Package babel Info: 'portuguese' activates 'portuges' shorthands.
-(babel)             Reported on input line 53.
+(babel)             Reported on input line 56.
 [2] (Cap02/Capitulo2.tex
 Cap\'{\i }tulo 2.
 
@@ -858,133 +882,237 @@ Cap\'{\i }tulo 2.
 
 ]
 
-[4]) (Cap02/DriversTMC.tex
+[4]) (Cap02/SPIProtocol.tex
 
 [5]
 
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+
 [6]
-Underfull \hbox (badness 2790) in paragraph at lines 45--49
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+) (Cap02/DriversTMC.tex
+
+[7]
+
+[8]
+Underfull \hbox (badness 2790) in paragraph at lines 65--69
 \OT1/cmr/m/n/12 du-zida para mo-to-res de passo e PMSM/BLDC. Uti-liza roda c^^S
 odigo ^^Soptica e
  []
 
 
-Underfull \hbox (badness 3919) in paragraph at lines 45--49
+Underfull \hbox (badness 3919) in paragraph at lines 65--69
 \OT1/cmr/m/n/12 for-nece sa^^S^^Pdas em qua-dra-tura \OT1/cmr/bx/n/12 A \OT1/cm
 r/m/n/12 e \OT1/cmr/bx/n/12 B \OT1/cmr/m/n/12 mais \OT1/cmr/bx/n/12 N \OT1/cmr/
 m/n/12 (\OT1/cmr/m/it/12 in-dex\OT1/cmr/m/n/12 ). Prin-ci-pais pon-tos
  []
 
-)
 
-[7] (Cap03/Capitulo3.tex
+
+[9]) (Cap02/RegTables.tex
+Underfull \hbox (badness 4328) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Prescaler para $1$$[]$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Entradas ma-pe-a-das
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Polaridade n~ao in-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+\OT1/cmr/m/n/10 ver-tida (con-forme
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Modo es-cravo,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+\OT1/cmr/m/n/10 fase/polaridade
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 DMA cir-cu-lar para
+ []
+
+
+Underfull \hbox (badness 1248) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Tamanho e en-dere^^Xcos
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Baud rate para
+ []
+
+
+Underfull \hbox (badness 1648) in paragraph at lines 33--33
+[]|\OT1/cmr/m/n/10 Interrup^^Xc~oes de se-gu-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--33
+\OT1/cmr/m/n/10 TIM6, SPI/DMA,
+ []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 40--40
+[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
+lho (ver
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+[]|\OT1/cmr/m/n/10 Limite de co-muta^^Xc~ao ste-alth-
+ []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+)
+Underfull \hbox (badness 10000) in paragraph at lines 60--61
+\OT1/cmr/m/it/12 Observa^^Xc~ao\OT1/cmr/m/n/12 : va-lo-res exa-tos de bits po-d
+em va-riar con-forme a
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 60--61
+\OT1/cmr/m/n/12 placa/variante e ro-teiro de tes-tes; recomenda-se va-li-dar co
+m os ma-nu-
+ []
+
+
+Underfull \hbox (badness 5847) in paragraph at lines 60--61
+\OT1/cmr/m/n/12 ais do STM32 L4 ([[]]) e o da-tasheet do TMC5160
+ []
+
+
+
+[10]
+
+[11] (Cap03/Capitulo3.tex
 Cap\'{\i }tulo 3.
 
 
-[8
+[12
 
 
 ]) (Cap03/ArquiteturaHardware.tex
 
-[9])
+[13])
+Underfull \hbox (badness 7558) in paragraph at lines 77--64
+[]\OT1/cmr/m/n/12 Como re-fer^encia adi-ci-o-nal de mon-ta-gem e in-te-gra^^Xc~
+ao de hard-ware, ver
+ []
 
-[10] (Cap04/Capitulo4.tex
+
+
+[14] (Cap04/Capitulo4.tex
 Cap\'{\i }tulo 4.
 
 
-[11
+[15
 
 
 ])
 
-[12] (Cap05/Capitulo5.tex
+[16] (Cap05/Capitulo5.tex
 Cap\'{\i }tulo 5.
 )
 
-[13
+[17
 
 
 ] (main.bbl
 
-[14
+[18
 
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 76--80
+Underfull \hbox (badness 10000) in paragraph at lines 75--79
+[]\OT1/cmr/m/n/12 STMicroelectronics (2018a).  \OT1/cmr/m/it/12 RM0394:
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 94--98
 []\OT1/cmr/m/n/12 TRINAMIC
  []
 
 )
 
-[15] (main.aux (Identificacao.aux))
+[19] (main.aux (Identificacao.aux))
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
  ***********
 
 
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: E16F970166D2F643266A7BBF334DD52D;5736
-(rerunfilecheck)             After:  FFC9978EEF3107CF677724215E57723D;5777.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: 0B1BD9034932B6E62C8BFF2FB6E56B11;6231.
  ) 
 Here is how much of TeX's memory you used:
- 20107 strings out of 468081
- 382113 string characters out of 5425304
- 876413 words of memory out of 5000000
- 48342 multiletter control sequences out of 15000+600000
- 637999 words of font info for 76 fonts, out of 8000000 for 9000
+ 20291 strings out of 468081
+ 385556 string characters out of 5425304
+ 894942 words of memory out of 5000000
+ 48487 multiletter control sequences out of 15000+600000
+ 642849 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,6n,85p,318b,1215s stack positions out of 10000i,1000n,20000p,200000b,200000s
-
-pdfTeX warning (dest): name{section.3.10} has been referenced but does not exis
-t, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{section.3.9} has been referenced but does not exist
-, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{section.3.8} has been referenced but does not exist
-, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{section.3.7} has been referenced but does not exist
-, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{section.3.6} has been referenced but does not exist
-, replaced by a fixed one
-
-
-pdfTeX warning (dest): name{section.3.5} has been referenced but does not exist
-, replaced by a fixed one
-
- <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1
-200.pk><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
-ts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/pub
-lic/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/
-type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdir/AppData/Local/Programs/M
-iKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Valdir/AppData/Local/
-Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Valdir/AppDa
-ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Val
-dir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/
-Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.
+ 75i,15n,85p,318b,1188s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tct
+i1200.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
+600\tcrm1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
+/ec/dpi600\tcrm1200.pk><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/typ
+e1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdir/AppData/
+Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Valdi
+r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/U
+sers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.
 pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/
-cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public
-/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/ty
-pe1/public/amsfonts/cm/cmsy8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Progr
-ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on main.pdf (30 pages, 729510 bytes).
+cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+amsfonts/cm/cmr12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
+1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fo
+nts/type1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs
+/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Loca
+l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/Valdir/App
+Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/
+Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb>
+<C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
+mtt10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmtt12.pfb>
+Output written on main.pdf (34 pages, 801933 bytes).
 PDF statistics:
- 452 PDF objects out of 1000 (max. 8388607)
- 95 named destinations out of 1000 (max. 500000)
- 278 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 550 PDF objects out of 1000 (max. 8388607)
+ 113 named destinations out of 1000 (max. 500000)
+ 302 words of extra memory for PDF output out of 10000 (max. 10000000)
 

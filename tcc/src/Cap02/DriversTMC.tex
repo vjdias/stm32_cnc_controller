@@ -40,6 +40,26 @@ para equilibrar ru\'ido e robustez. Para homing \emph{sensorless}, calibra-se
 \texttt{SGTHRS} e a janela \texttt{TCOOLTHRS} de maneira a obter detec\c{c}\~ao
 repet\'ivel sem falsos positivos.
 
+\noindent\label{sec:tmc5160-examples}
+\begin{table}[H]
+  \centering
+  \caption{Exemplos de acessos SPI ao TMC5160.}
+  \label{tab:tmc5160-examples}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    Registro & Opera\c{c}\~ao/Observa\c{c}\~ao \\
+    \midrule
+    \texttt{IHOLD\_IRUN} & Escrita dos campos \texttt{IHOLD}, \texttt{IRUN} e \texttt{IHOLDDELAY} para corrente de hold/run e rampa. \\
+    \texttt{CHOPCONF} & Sele\c{c}\~ao de \emph{spreadCycle} ou par\^ametros de histerese do chopper. \\
+    \texttt{PWMCONF} & Par\^ametros do \emph{stealthChop2} (\texttt{PWM\_AMPL}, \texttt{PWM\_GRAD}). \\
+    \texttt{SGTHRS} & Limiar do \emph{StallGuard2} para homing sensorless. \\
+    \texttt{DRV\_STATUS} & Leitura de flags de falha e \texttt{SG\_RESULT}; lembrar da lat\^encia de um quadro. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\FloatBarrier
 \subsection{TMCS-28 (Trinamic/Analog Devices)}
 
 O TMCS-28 \`e um encoder \'{o}ptico incremental de baixo custo e dimens\~ao

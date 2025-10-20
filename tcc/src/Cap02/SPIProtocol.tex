@@ -1,0 +1,189 @@
+% Complemento da seção 2.7: Comunicação SPI — protocolo e quadros
+\subsection*{Protocolo SPI e formato de quadro}
+
+O enlace SPI escravo utiliza quadros de tamanho fixo com \textbf{42~bytes},
+transferidos em modo \emph{full-duplex}. O mestre (Raspberry~Pi) envia um
+\emph{poll} com a requisi\c{c}\~ao e recebe, no mesmo ciclo ou nos ciclos
+subsequentes, a resposta preparada pelo firmware (via fila de respostas e
+DMA). O quadro adota marcadores de in\'icio/fim para robustez:
+
+\begin{table}[h]
+  \centering
+  \caption{Layout do quadro SPI (tamanho fixo: 42~bytes).}
+  \label{tab:spi-frame}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & SOF & Marcador de in\'icio: \texttt{0xAB}. \\
+    1 & 1 & CMD & Identificador do servi\c{c}o/comando. \\
+    2 & 1 & FLAGS & Bits de controle. \\
+    3 & 1 & LEN & Tamanho v\'alido do payload (0--34). \\
+    4 & 34 & PAYLOAD & Dados do comando/resposta (preencher com \texttt{0x00} quando n\~ao usado). \\
+    38 & 2 & CRC16 & CRC-16 (LSB, MSB) sobre bytes 0..37. \\
+    40 & 1 & RSV & Reservado (\texttt{0x00}). \\
+    41 & 1 & EOF & Marcador de fim: \texttt{0x54}. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Quando n\~ao h\'a resposta pronta, o escravo devolve um quadro com
+\texttt{SOF=0xAB}, \texttt{CMD=0x00} e o \texttt{PAYLOAD} preenchido com
+\texttt{0xA5}. Quando a resposta de um servi\c{c}o est\'a completa, o escravo
+publica o quadro final com \texttt{EOF=0x54} e CRC v\'alido, conforme
+observado no cliente \texttt{cnc\_spi\_client.py}.
+
+\subsection*{Servi\c{c}o LED (exemplo de comando simples)}
+
+O servi\c{c}o LED liga/desliga ou alterna o estado. O mestre envia uma
+requisi\c{c}\~ao; a resposta confirma o estado final.
+
+\begin{table}[h]
+  \centering
+  \caption{Requisi\c{c}\~ao LED (\texttt{CMD=0x10}).}
+  \label{tab:spi-led-req}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Valor/Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & SOF & \texttt{0xAB} \\
+    1 & 1 & CMD & \texttt{0x10} (LED) \\
+    2 & 1 & FLAGS & \texttt{0x00} (padr\~ao) \\
+    3 & 1 & LEN & \texttt{0x02} \\
+    4 & 1 & LED\_ID & \texttt{0x00} (LED on-board) \\
+    5 & 1 & MODE & \texttt{0x00=OFF}, \texttt{0x01=ON}, \texttt{0x02=TOGGLE} \\
+    6..37 & 32 & RSV & \texttt{0x00} \\
+    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    40 & 1 & RSV & \texttt{0x00} \\
+    41 & 1 & EOF & \texttt{0x54} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \caption{Resposta LED.}
+  \label{tab:spi-led-rsp}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Valor/Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & SOF & \texttt{0xAB} \\
+    1 & 1 & CMD & \texttt{0x10} (eco) \\
+    2 & 1 & FLAGS & \texttt{0x00} \\
+    3 & 1 & LEN & \texttt{0x02} \\
+    4 & 1 & STATUS & \texttt{0x00=OK}, \texttt{\textgreater 0}=erro \\
+    5 & 1 & LED\_STATE & \texttt{0x00=OFF}, \texttt{0x01=ON} \\
+    6..37 & 32 & RSV & \texttt{0x00} \\
+    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    40 & 1 & RSV & \texttt{0x00} \\
+    41 & 1 & EOF & \texttt{0x54} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection*{Servi\c{c}o Movimento (exemplo de comando composto)}
+
+O servi\c{c}o de movimento recebe metas por eixo e par\^ametros cinem\'aticos
+simplificados. Campos n\~ao usados devem ser zero.
+
+\begin{table}[h]
+  \centering
+  \caption{Requisi\c{c}\~ao Movimento (\texttt{CMD=0x20}).}
+  \label{tab:spi-move-req}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Valor/Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & SOF & \texttt{0xAB} \\
+    1 & 1 & CMD & \texttt{0x20} (MOVE) \\
+    2 & 1 & FLAGS & \texttt{0x00} \\
+    3 & 1 & LEN & \texttt{0x15} (exemplo) \\
+    4 & 1 & AXIS\_MASK & Bit0=X, Bit1=Y, Bit2=Z \\
+    5..8 & 4 & X\_STEPS & \texttt{int32} (passos relativos) \\
+    9..12 & 4 & Y\_STEPS & \texttt{int32} (passos relativos) \\
+    13..16 & 4 & Z\_STEPS & \texttt{int32} (passos relativos) \\
+    17..20 & 4 & FEED & \texttt{uint32} (passos/s m\'ax) \\
+    21 & 1 & JERK & Opcional (perfil) \\
+    22..37 & 16 & RSV & \texttt{0x00} \\
+    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    40 & 1 & RSV & \texttt{0x00} \\
+    41 & 1 & EOF & \texttt{0x54} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \caption{Resposta Movimento.}
+  \label{tab:spi-move-rsp}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Valor/Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & SOF & \texttt{0xAB} \\
+    1 & 1 & CMD & \texttt{0x20} (eco) \\
+    2 & 1 & FLAGS & \texttt{0x00} \\
+    3 & 1 & LEN & \texttt{0x03} \\
+    4 & 1 & STATUS & \texttt{0x00=aceito}, \texttt{0x01=ocupado}, \texttt{\textgreater 0}=erro \\
+    5 & 1 & QUEUE\_DEPTH & Itens pendentes \\
+    6 & 1 & RESERVED & \texttt{0x00} \\
+    7..37 & 31 & RSV & \texttt{0x00} \\
+    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    40 & 1 & RSV & \texttt{0x00} \\
+    41 & 1 & EOF & \texttt{0x54} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Os exemplos acima alinham-se ao fluxo de \emph{poll} descrito na Se\c{c}\~ao~2.7.
+
+\subsection*{SPI Raspberry Pi \texorpdfstring{$\leftrightarrow$}{<->} TMC5160: configura\c{c}\~ao por registradores}
+
+O TMC5160 exp\'oe um barramento SPI para configura\c{c}\~ao e diagn\'ostico por meio de
+transa\c{c}\~oes de \textbf{40~bits} (\,5~bytes por quadro\,), compostas por um byte de
+endere\c{c}o e quatro bytes de dados. O bit mais significativo do byte de
+endere\c{c}o indica leitura/escrita (\,\textbf{1}=leitura, \textbf{0}=escrita\,) e
+os 7~bits menos significativos selecionam o registrador. O protocolo apresenta
+\textbf{lat\^encia de uma transa\c{c}\~ao}: os dados retornados em \texttt{SDO} referem-se
+ao comando emitido no quadro anterior. Recomenda-se emitir uma leitura “de
+preparo” antes de coletar o valor v\'alido do registrador desejado
+(ver \cite{tmc5160_ds}). Em implementa\c{c}\~oes usuais o SPI opera em modo~3
+(CPOL=1, CPHA=1).
+
+\begin{table}[h]
+  \centering
+  \caption{Quadro de escrita TMC5160 (5 bytes, big-endian).}
+  \label{tab:tmc5160-write}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & ADDR[6:0], R/W=0 & Endere\c{c}o do registrador (7~bits), bit~7=0 (escrita). \\
+    1..4 & 4 & DATA[31:0] & Palavra de 32~bits, ordem de bytes: MSB\,$\to$\,LSB. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \caption{Quadro de leitura TMC5160 (5 bytes, big-endian; resposta no ciclo seguinte).}
+  \label{tab:tmc5160-read}
+  \setlength{\tabcolsep}{4pt}\footnotesize
+  \begin{tabularx}{\textwidth}{lllX}
+    \toprule
+    Offset & Tamanho & Campo & Descri\c{c}\~ao \\
+    \midrule
+    0 & 1 & ADDR[6:0], R/W=1 & Endere\c{c}o do registrador (7~bits), bit~7=1 (leitura). \\
+    1..4 & 4 & DUMMY & \texttt{0x00}; os 32~bits lidos pertencem ao quadro anterior. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\noindent Exemplos de registros comuns na bring-up e opera\c{c}\~ao s\~ao apresentados junto ao TMC5160 (Se\c{c}\~ao~\ref{sec:tmc5160-examples}).
