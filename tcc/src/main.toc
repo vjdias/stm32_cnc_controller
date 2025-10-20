@@ -1,0 +1,23 @@
+\babel@toc {portuguese}{}\relax 
+\contentsline {chapter}{\numberline {1}Introdução}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Objetivos}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Objetivo Geral}{1}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}Objetivos Específicos}{2}{subsection.1.1.2}%
+\contentsline {section}{\numberline {1.2}Organização do texto}{2}{section.1.2}%
+\contentsline {chapter}{\numberline {2}Fundamentação Teórica}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Sistemas CNC}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Temporizadores do STM32L475}{3}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Digital Differential Analyzer}{4}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Modelagem de motores de passo}{4}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Controlador PID digital}{5}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Integração PID-DDA}{5}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Comunicação SPI e USART}{5}{section.2.7}%
+\contentsline {chapter}{\numberline {3}Metodologia}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Roteiro incremental de bring-up}{7}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Arquitetura de software}{7}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Procedimentos de teste}{8}{section.3.3}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{9}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{9}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{9}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{10}{section.4.3}%
+\contentsline {chapter}{\numberline {5}Conclusão}{11}{chapter.5}%

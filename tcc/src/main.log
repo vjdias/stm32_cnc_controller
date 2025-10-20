@@ -1,0 +1,1664 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  20 OCT 2025 08:51
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**./main.tex
+(main.tex
+LaTeX2e <2025-06-01> patch level 1
+L3 programming layer <2025-09-02>
+(easysparc.cls
+Document Class: easysparc 2019/10/24 v4.5 JITH LaTeX document class
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\report.cls
+Document Class: report 2025/01/22 v1.4n Standard LaTeX document class
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\size12.clo
+File: size12.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count275
+\c@chapter=\count276
+\c@section=\count277
+\c@subsection=\count278
+\c@subsubsection=\count279
+\c@paragraph=\count280
+\c@subparagraph=\count281
+\c@figure=\count282
+\c@table=\count283
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen148
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/fancyhdr\fancyhdr.sty
+Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
+
+\f@nch@headwidth=\skip51
+\f@nch@offset@elh=\skip52
+\f@nch@offset@erh=\skip53
+\f@nch@offset@olh=\skip54
+\f@nch@offset@orh=\skip55
+\f@nch@offset@elf=\skip56
+\f@nch@offset@erf=\skip57
+\f@nch@offset@olf=\skip58
+\f@nch@offset@orf=\skip59
+\f@nch@height=\skip60
+\f@nch@footalignment=\skip61
+\f@nch@widthL=\skip62
+\f@nch@widthC=\skip63
+\f@nch@widthR=\skip64
+\@temptokenb=\toks17
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+Package: inputenc 2024/02/08 v1.3d Input encoding file
+\inpenc@prehook=\toks18
+\inpenc@posthook=\toks19
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/setspace\setspace.sty
+Package: setspace 2022/12/04 v6.7b set line spacing
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/xifthen\xifthen.sty
+Package: xifthen 2015/11/05 v1.4.0 Extended ifthen features
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/tools\calc.sty
+Package: calc 2025/03/01 v4.3b Infix arithmetic (KKT,FJ)
+\calc@Acount=\count284
+\calc@Bcount=\count285
+\calc@Adimen=\dimen149
+\calc@Bdimen=\dimen150
+\calc@Askip=\skip65
+\calc@Bskip=\skip66
+LaTeX Info: Redefining \setlength on input line 86.
+LaTeX Info: Redefining \addtolength on input line 87.
+\calc@Ccount=\count286
+\calc@Cskip=\skip67
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/ifmtarg\ifmtarg.sty
+Package: ifmtarg 2018/04/16 v1.2b check for an empty argument
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 274.
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.de
+f
+File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx
+)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
+Package xcolor Info: Model `RGB' extended on input line 1365.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\svgnam.def
+File: svgnam.def 2024/09/29 v3.02 Predefined colors according to SVG 1.1 (UK)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\dvipsnam.def
+File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
+Package: babel 2025/10/01 v25.13 The multilingual framework for LuaLaTeX, pdfLa
+TeX and XeLaTeX
+\babel@savecnt=\count287
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input li
+ne 2045.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input li
+ne 2047.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input lin
+e 2049.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input lin
+e 2050.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) 
+on input line 2051.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) 
+on input line 2053.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) 
+on input line 2078.
+\U@D=\dimen151
+\l@unhyphenated=\language79
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
+\bbl@readstream=\read2
+\bbl@dirlevel=\count288
+
+*************************************
+* Local config file bblopts.cfg used
+*
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/arabi\bblopts.cfg
+File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
+ babel
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/babel-portuges\portugu
+ese.ldf
+Language: portuges 2021/07/09 v1.2t Portuguese support from the babel system
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/pt\babe
+l-portuguese.tex
+Package babel Info: Importing font and identification data for portuguese
+(babel)             from babel-pt.ini. Reported on input line 12.
+)
+Package babel Info: Making " an active character on input line 143.
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks20
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+Package: iftex 2024/12/12 v1.0g TeX engine tests
+))
+\Gm@cnth=\count289
+\Gm@cntv=\count290
+\c@Gm@tempcnt=\count291
+\Gm@bindingoffset=\dimen152
+\Gm@wd@mp=\dimen153
+\Gm@odd@mp=\dimen154
+\Gm@even@mp=\dimen155
+\Gm@layoutwidth=\dimen156
+\Gm@layoutheight=\dimen157
+\Gm@layouthoffset=\dimen158
+\Gm@layoutvoffset=\dimen159
+\Gm@dimlist=\toks21
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg)
+)) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+Package: amsmath 2025/06/16 v2.17y AMS math features
+\@mathmargin=\skip68
+For additional information on amsmath, use the `?' option.
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+Package: amstext 2024/11/17 v2.01 AMS text
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks22
+\ex@=\dimen160
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen161
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count292
+LaTeX Info: Redefining \frac on input line 233.
+\uproot@=\count293
+\leftroot@=\count294
+LaTeX Info: Redefining \overline on input line 398.
+LaTeX Info: Redefining \colon on input line 409.
+\classnum@=\count295
+\DOTSCASE@=\count296
+LaTeX Info: Redefining \ldots on input line 495.
+LaTeX Info: Redefining \dots on input line 498.
+LaTeX Info: Redefining \cdots on input line 619.
+\Mathstrutbox@=\box53
+\strutbox@=\box54
+LaTeX Info: Redefining \big on input line 721.
+LaTeX Info: Redefining \Big on input line 722.
+LaTeX Info: Redefining \bigg on input line 723.
+LaTeX Info: Redefining \Bigg on input line 724.
+\big@size=\dimen162
+LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
+\macc@depth=\count297
+LaTeX Info: Redefining \bmod on input line 904.
+LaTeX Info: Redefining \pmod on input line 909.
+LaTeX Info: Redefining \smash on input line 939.
+LaTeX Info: Redefining \relbar on input line 969.
+LaTeX Info: Redefining \Relbar on input line 970.
+\c@MaxMatrixCols=\count298
+\dotsspace@=\muskip17
+\c@parentequation=\count299
+\dspbrk@lvl=\count300
+\tag@help=\toks23
+\row@=\count301
+\column@=\count302
+\maxfields@=\count303
+\andhelp@=\toks24
+\eqnshift@=\dimen163
+\alignsep@=\dimen164
+\tagshift@=\dimen165
+\tagwidth@=\dimen166
+\totwidth@=\dimen167
+\lineht@=\dimen168
+\@envbody=\toks25
+\multlinegap=\skip69
+\multlinetaggap=\skip70
+\mathdisplay@stack=\toks26
+LaTeX Info: Redefining \[ on input line 2949.
+LaTeX Info: Redefining \] on input line 2950.
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/mathdots\mathdots.st
+y
+Package: mathdots 2014/06/11 v0.9 Improve and add various macros for dots in ma
+th.
+\MDo@unit=\dimen169
+\MDo@dotsbox=\box55
+\MDoprekern=\muskip18
+\MDopostkern=\muskip19
+\MDodotkern=\muskip20
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
+Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.
+cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 106.
+)
+\Gin@req@height=\dimen170
+\Gin@req@width=\dimen171
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+Package: subcaption 2023/07/28 v1.6b Sub-captions (AR)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
+\caption@tempdima=\dimen172
+\captionmargin=\dimen173
+\caption@leftmargin=\dimen174
+\caption@rightmargin=\dimen175
+\caption@width=\dimen176
+\caption@indent=\dimen177
+\caption@parindent=\dimen178
+\caption@hangindent=\dimen179
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count304
+\c@continuedfloat=\count305
+)
+Package caption Info: New subtype `subfigure' on input line 238.
+\c@subfigure=\count306
+Package caption Info: New subtype `subtable' on input line 238.
+\c@subtable=\count307
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/lipsum\lipsum.sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/l3keys2e\l3
+keys2e.sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
+Package: expl3 2025-09-02 L3 programming layer (loader) 
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pd
+ftex.def
+File: l3backend-pdftex.def 2025-06-09 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count308
+))
+Package: l3keys2e 2024-08-16 LaTeX2e option processing using LaTeX3 keys
+)
+Package: lipsum 2021-09-20 v2.7 150 paragraphs of Lorem Ipsum dummy text
+\g__lipsum_par_int=\count309
+\l__lipsum_a_int=\count310
+\l__lipsum_b_int=\count311
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/lipsum\lipsum.ltd.tex)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/tools\indentfirst.sty
+Package: indentfirst 2023/07/02 v1.03 Indent first paragraph (DPC)
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/makecell\makecell.st
+y
+Package: makecell 2009/08/03 V0.1e Managing of Tab Column Heads and Cells
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+Package: array 2025/06/08 v2.6j Tabular extension package (FMi)
+\col@sep=\dimen180
+\ar@mcellbox=\box56
+\extrarowheight=\dimen181
+\NC@list=\toks27
+\extratabsurround=\skip71
+\backup@length=\skip72
+\ar@cellbox=\box57
+)
+\rotheadsize=\dimen182
+\c@nlinenum=\count312
+\TeXr@lab=\toks28
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen183
+\lightrulewidth=\dimen184
+\cmidrulewidth=\dimen185
+\belowrulesep=\dimen186
+\belowbottomsep=\dimen187
+\aboverulesep=\dimen188
+\abovetopsep=\dimen189
+\cmidrulesep=\dimen190
+\cmidrulekern=\dimen191
+\defaultaddspace=\dimen192
+\@cmidla=\count313
+\@cmidlb=\count314
+\@aboverulesep=\dimen193
+\@belowrulesep=\dimen194
+\@thisruleclass=\count315
+\@lastruleclass=\count316
+\@thisrulewidth=\dimen195
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/algorithmicx\algpseudo
+code.sty
+Package: algpseudocode 
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/algorithmicx\algorithm
+icx.sty
+Package: algorithmicx 2005/04/27 v1.2 Algorithmicx
+
+Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
+\c@ALG@line=\count317
+\c@ALG@rem=\count318
+\c@ALG@nested=\count319
+\ALG@tlm=\skip73
+\ALG@thistlm=\skip74
+\c@ALG@Lnr=\count320
+\c@ALG@blocknr=\count321
+\c@ALG@storecount=\count322
+\c@ALG@tmpcounter=\count323
+\ALG@tmplength=\skip75
+)
+Document Style - pseudocode environments for use with the `algorithmicx' style
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithm.s
+ty
+Package: algorithm 2009/08/24 v0.1 Document Style `algorithm' - floating enviro
+nment
+ (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count324
+\float@exts=\toks29
+\float@box=\box58
+\@float@everytoks=\toks30
+\@floatcapt=\box59
+)
+\@float@every@algorithm=\toks31
+\c@algorithm=\count325
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+Package: hyperref 2025-07-12 v7.01o Hypertext links for LaTeX
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.st
+y
+Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefin
+ekeys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.
+sty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmd
+s.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.
+sty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+Package: nameref 2025-06-21 v2.57 Cross-referencing by name of section
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\getti
+tlestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.st
+y
+Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
+))
+\c@section@level=\count326
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
+Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count327
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
+sty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
+)
+)
+\@linkdim=\dimen196
+\Hy@linkcounter=\count328
+\Hy@pagecounter=\count329
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+File: pd1enc.def 2025-07-12 v7.01o Hyperref: PDFDocEncoding definition (HO)
+Now handling font encoding PD1 ...
+... no UTF-8 mapping file for font encoding PD1
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+)
+\Hy@SavedSpaceFactor=\count330
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
+File: puenc.def 2025-07-12 v7.01o Hyperref: PDF Unicode definition (HO)
+Now handling font encoding PU ...
+... no UTF-8 mapping file for font encoding PU
+)
+Package hyperref Info: Hyper figures OFF on input line 4195.
+Package hyperref Info: Link nesting OFF on input line 4200.
+Package hyperref Info: Hyper index ON on input line 4203.
+Package hyperref Info: Plain pages OFF on input line 4210.
+Package hyperref Info: Backreferencing OFF on input line 4215.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4462.
+\c@Hy@tempcnt=\count331
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+\Urlmuskip=\muskip21
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4801.
+\XeTeXLinkMargin=\dimen197
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcal
+c.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
+))
+\Fld@menulength=\count332
+\Field@Width=\dimen198
+\Fld@charsize=\dimen199
+Package hyperref Info: Hyper figures OFF on input line 6078.
+Package hyperref Info: Link nesting OFF on input line 6083.
+Package hyperref Info: Hyper index ON on input line 6086.
+Package hyperref Info: backreferencing OFF on input line 6093.
+Package hyperref Info: Link coloring OFF on input line 6098.
+Package hyperref Info: Link coloring with OCG OFF on input line 6103.
+Package hyperref Info: PDF/A mode OFF on input line 6108.
+\Hy@abspage=\count333
+\c@Item=\count334
+\c@Hfootnote=\count335
+)
+Package hyperref Info: Driver (autodetected): hpdftex.
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+File: hpdftex.def 2025-07-12 v7.01o Hyperref driver for pdfTeX
+\Fld@listcount=\count336
+\c@bookmark@seq@number=\count337
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
+lecheck.sty
+Package: rerunfilecheck 2025-06-21 v1.11 Rerun checks for auxiliary files (HO)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\unique
+counter.sty
+Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+84.
+)
+\Hy@SectionHShift=\skip76
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pdfpages.sty
+Package: pdfpages 2025/07/23 v0.6g Insert pages of external PDF documents (AM)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/eso-pic\eso-pic.sty
+Package: eso-pic 2023/05/03 v3.0c eso-pic (RN)
+\ESO@tempdima=\dimen256
+\ESO@tempdimb=\dimen257
+)
+\AM@pagewidth=\dimen258
+\AM@pageheight=\dimen259
+\AM@fboxrule=\dimen260
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pdfpages\pppdftex.def
+File: pppdftex.def 2025/07/23 v0.6g Pdfpages driver for pdfTeX (AM)
+)
+\pdfpages@includegraphics@status=\count338
+\AM@pagebox=\box60
+\AM@global@opts=\toks32
+\AM@pagecnt=\count339
+\AM@toc@title=\toks33
+\AM@lof@heading=\toks34
+\c@AM@survey=\count340
+\AM@templatesizebox=\box61
+) (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
+Package: siunitx 2025-07-09 v3.4.14 A comprehensive (SI) units package
+\l__siunitx_number_uncert_offset_int=\count341
+\l__siunitx_number_exponent_fixed_int=\count342
+\l__siunitx_number_min_decimal_int=\count343
+\l__siunitx_number_min_integer_int=\count344
+\l__siunitx_number_round_precision_int=\count345
+\l__siunitx_number_lower_threshold_int=\count346
+\l__siunitx_number_upper_threshold_int=\count347
+\l__siunitx_number_group_first_int=\count348
+\l__siunitx_number_group_size_int=\count349
+\l__siunitx_number_group_minimum_int=\count350
+\l__siunitx_angle_tmp_dim=\dimen261
+\l__siunitx_angle_marker_box=\box62
+\l__siunitx_angle_unit_box=\box63
+\l__siunitx_compound_count_int=\count351
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/translations\translati
+ons.sty
+Package: translations 2022/02/05 v1.12 internationalization of LaTeX2e packages
+ (CN)
+)
+\l__siunitx_table_tmp_box=\box64
+\l__siunitx_table_tmp_dim=\dimen262
+\l__siunitx_table_column_width_dim=\dimen263
+\l__siunitx_table_integer_box=\box65
+\l__siunitx_table_decimal_box=\box66
+\l__siunitx_table_uncert_box=\box67
+\l__siunitx_table_before_box=\box68
+\l__siunitx_table_after_box=\box69
+\l__siunitx_table_before_dim=\dimen264
+\l__siunitx_table_carry_dim=\dimen265
+\l__siunitx_unit_tmp_int=\count352
+\l__siunitx_unit_position_int=\count353
+\l__siunitx_unit_total_int=\count354
+) (main.aux (Identificacao.aux)
+Package babel Info: 'portuguese' activates 'portuges' shorthands.
+(babel)             Reported on input line 9.
+)
+\openout1 = `main.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
+kii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count355
+\scratchdimen=\dimen266
+\scratchbox=\box70
+\nofMPsegments=\count356
+\nofMParguments=\count357
+\everyMPshowfont=\toks35
+\MPscratchCnt=\count358
+\MPscratchDim=\dimen267
+\MPnumerator=\count359
+\makeMPintoPDFobject=\count360
+\everyMPtoPDFconversion=\toks36
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
+base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.
+cfg
+File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
+))
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(85.35826pt, 455.24411pt, 56.9055pt)
+* v-part:(T,H,B)=(85.35826pt, 702.78308pt, 56.9055pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=455.24411pt
+* \textheight=702.78308pt
+* \oddsidemargin=13.08827pt
+* \evensidemargin=13.08827pt
+* \topmargin=-23.91173pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=12.0pt
+* \footskip=30.0pt
+* \marginparwidth=35.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.8pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: float package is loaded.
+Package caption Info: hyperref package is loaded.
+Package caption Info: End \AtBeginDocument code.
+Package hyperref Info: Link coloring OFF on input line 20.
+(main.out) (main.out)
+\@outlinefile=\write3
+\openout3 = `main.out'.
+
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape.st
+y
+Package: pdflscape 2022-10-27 v0.13 Display of landscape pages in PDF
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape-no
+metadata.sty
+Package: pdflscape-nometadata 2022-10-28 v0.13 Display of landscape pages in PD
+F (HO)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/graphics\lscape.sty
+Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
+)
+Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
+))
+Package translations Info: no dictionary file `translations-basic-dictionary-po
+rtuges.trsl' found. on input line 20.
+\openout2 = `Identificacao.aux'.
+
+(Identificacao.tex)
+
+LaTeX Warning: File `Cap00/IC.jpg' not found on input line 23.
+
+
+! Package pdftex.def Error: File `Cap00/IC.jpg' not found: using draft setting.
+
+
+See the pdftex.def package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.23 \capa
+          {}
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 23.
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 23.
+
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+
+[1
+
+
+
+
+{C:/Users/Valdir/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
+
+[2
+
+
+] (Cap00/FichaCatalografica.tex
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.15 \end{titlepage}
+                     [1
+
+
+]) (Cap00/AtaAssinada.tex
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.13 \end{titlepage}
+                     [1
+
+]) (Cap00/Dedicatoria.tex)
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.28 \dedicatoria
+                 {} [1
+
+
+] (Cap00/Agradecimentos.tex)
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.ii}) has
+ been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.29 \agradecimentos
+                    {} [2
+
+
+
+] (Cap00/Epigrafe.tex)
+
+[3
+
+
+
+] (Cap00/Resumo.tex)
+
+[4
+
+
+
+] (Cap00/Abstract.tex)
+
+[5
+
+
+
+] (main.lof)
+\tf@lof=\write4
+\openout4 = `main.lof'.
+
+
+
+[6
+
+
+
+] (main.lot)
+\tf@lot=\write5
+\openout5 = `main.lot'.
+
+
+
+[7
+
+
+] (Cap00/Simbolos.tex)
+
+[8
+
+
+] (Cap00/Abreviaturas.tex)
+
+[9
+
+
+
+
+] (main.toc)
+\tf@toc=\write6
+\openout6 = `main.toc'.
+
+
+
+[10
+
+
+
+
+] (Cap01/Capitulo1.tex
+Cap\'{\i }tulo 1.
+
+LaTeX Warning: Citation `st_an4013' on page 1 undefined on input line 12.
+
+
+
+[1
+
+
+])
+
+Package babel Info: 'portuguese' activates 'portuges' shorthands.
+(babel)             Reported on input line 54.
+[2] (Cap02/Capitulo2.tex
+Cap\'{\i }tulo 2.
+
+LaTeX Warning: Citation `groover2015' on page 3 undefined on input line 15.
+
+
+LaTeX Warning: Citation `st_an4013' on page 3 undefined on input line 36.
+
+
+
+[3
+
+
+]
+
+LaTeX Warning: Citation `fussell2003' on page 4 undefined on input line 47.
+
+
+LaTeX Warning: Citation `idc_cnc_interp' on page 4 undefined on input line 53.
+
+
+LaTeX Warning: Citation `koren_reference' on page 4 undefined on input line 53.
+
+
+
+LaTeX Warning: Citation `efficient_reference' on page 4 undefined on input line
+ 53.
+
+
+LaTeX Warning: Citation `unit3_interpolators' on page 4 undefined on input line
+ 53.
+
+
+LaTeX Warning: Citation `koren_cnc_interpolators' on page 4 undefined on input 
+line 57.
+
+
+LaTeX Warning: Citation `kenjo1994' on page 4 undefined on input line 73.
+
+
+LaTeX Warning: Citation `astrom1995' on page 4 undefined on input line 85.
+
+
+LaTeX Warning: Citation `efficient_reference' on page 4 undefined on input line
+ 88.
+
+
+LaTeX Warning: Citation `real_time_interpolators' on page 4 undefined on input 
+line 88.
+
+
+LaTeX Warning: Citation `kung_fpga_motion' on page 4 undefined on input line 88
+.
+
+
+
+[4]
+
+LaTeX Warning: Citation `adaptive_fuzzy_pid' on page 5 undefined on input line 
+100.
+
+
+LaTeX Warning: Citation `mori2005dda' on page 5 undefined on input line 108.
+
+
+LaTeX Warning: Citation `efficient_reference' on page 5 undefined on input line
+ 108.
+
+
+LaTeX Warning: Citation `idc_cnc_interp' on page 5 undefined on input line 112.
+
+
+
+LaTeX Warning: Citation `unit3_interpolators' on page 5 undefined on input line
+ 112.
+
+
+LaTeX Warning: Citation `kung_fpga_motion' on page 5 undefined on input line 11
+5.
+
+
+LaTeX Warning: Citation `real_time_interpolators' on page 5 undefined on input 
+line 115.
+
+
+LaTeX Warning: Citation `um2153' on page 5 undefined on input line 131.
+
+)
+
+[5]
+
+[6] (Cap03/Capitulo3.tex
+Cap\'{\i }tulo 3.
+! Missing $ inserted.
+<inserted text> 
+                $
+l.35 ...h{App} implementa o laço principal (`app_
+                                                  poll`), o agendador de
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 36.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.36 serviç
+            os e as rotinas de inicialização específicas do projeto. A ca...
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 36.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.36 serviços e as rotinas de inicializaç
+                                           ão específicas do projeto. A ca...
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 36.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.36 serviços e as rotinas de inicializaçã
+                                             o específicas do projeto. A ca...
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 36.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.36 ...os e as rotinas de inicialização especí
+                                                  ficas do projeto. A camada
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.36 ...os e as rotinas de inicialização especí
+                                                  ficas do projeto. A camada
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \i invalid in math mode on input line 36.
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 37.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.37 \emph{Services} agrupa mó
+                               dulos especializados, como o gerador de passos,
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 38.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.38 o controlador PID, o serviç
+                                 o de homing e o roteador de mensagens SPI.
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.39 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.39 
+     
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+
+Overfull \hbox (680.12874pt too wide) in paragraph at lines 32--39
+\OT1/cmr/m/n/12 (`app$[]\OML/cmm/m/it/12 oll\OT1/cmr/m/n/12 `)\OML/cmm/m/it/12 
+; oagendadordeservi[]oseasrotinasdeinicializa[][]oespec[]$ 
+ []
+
+
+
+[7
+
+
+]
+! Missing $ inserted.
+<inserted text> 
+                $
+l.41 ...nas de interrupção e consumida por `app_
+                                                  poll`. Respostas são
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 41.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.41 ... e consumida por `app_poll`. Respostas sã
+                                                  o
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 43.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.43 quando disponí
+                    veis. A integração com os drivers TMC5160 ocorre por meio
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.43 quando disponí
+                    veis. A integração com os drivers TMC5160 ocorre por meio
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \i invalid in math mode on input line 43.
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 43.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.43 quando disponíveis. A integraç
+                                     ão com os drivers TMC5160 ocorre por meio
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 43.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.43 quando disponíveis. A integraçã
+                                       o com os drivers TMC5160 ocorre por meio
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 45.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.45 condiç
+            ões de falha.
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 45.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.45 condiçõ
+              es de falha.
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.46 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.46 
+     
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 40--46
+[]\OT1/cmr/m/n/12 A fila de re-cep^^Xc~ao SPI ^^Se man-tida em mem^^Soria cir-c
+u-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 40--46
+\OT1/cmr/m/n/12 lar, pre-en-chida pe-las ro-ti-nas de in-ter-rup^^Xc~ao e con-s
+u-mida por
+ []
+
+
+Overfull \hbox (812.64278pt too wide) in paragraph at lines 40--46
+\OT1/cmr/m/n/12 `app$[]\OML/cmm/m/it/12 oll\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 :R
+espostass[]oenfileiradasem\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 g[]pp[]esponses\OT1
+/cmr/m/n/12 `\OML/cmm/m/it/12 epromovidasparaobufferdeDMAquandodispon[]$ 
+ []
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.55 monitorado com o cliente `cnc_
+                                   spi_client.py`, observando a necessidade de
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 56.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.56 até
+          três ciclos de enquete para respostas completas e avaliando o
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \^ invalid in math mode on input line 56.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.56 até trê
+              s ciclos de enquete para respostas completas e avaliando o
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 58.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.58 coletados subsidiam as aná
+                                lises apresentadas no
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 59.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.59 Capí
+          tulo~\ref{cap:resultados}.
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.59 Capí
+          tulo~\ref{cap:resultados}.
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \i invalid in math mode on input line 59.
+
+)
+! Missing $ inserted.
+<inserted text> 
+                $
+l.58 \cleardoublepage
+                     {}
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.58 \cleardoublepage
+                     {}
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+
+Overfull \hbox (761.16542pt too wide) in paragraph at lines 49--58
+\OT1/cmr/m/n/12 `cnc$[]\OML/cmm/m/it/12 pi[]lient:py\OT1/cmr/m/n/12 `\OML/cmm/m
+/it/12 ; observandoanecessidadedeat[]tr[]sciclosdeenquetepararespostascompletas
+eavaliandooimpactodediferentesvaloresde\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 APP[]P
+I[]ESTART[]EFER[]AX\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 :Osdadoscoletadossubsidiam
+asan[]lisesapresentadasnoCap[]$ 
+ []
+
+
+
+[8] (Cap04/Capitulo4.tex
+Cap\'{\i }tulo 4.
+! Missing $ inserted.
+<inserted text> 
+                $
+l.29 DMA para permitir que `app_
+                                poll` processe o pedido e preencha a resposta.
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 30.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.30 Caso o serviç
+                   o conclua a operação antes do tempo limite interno, o
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 30.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.30 Caso o serviço conclua a operaç
+                                      ão antes do tempo limite interno, o
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 30.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.30 Caso o serviço conclua a operaçã
+                                        o antes do tempo limite interno, o
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 31.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.31 segundo poll já
+                      retorna o quadro `0xAB ... 0x54`; do contrário, o DMA é
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 31.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.31 ...torna o quadro `0xAB ... 0x54`; do contrá
+                                                  rio, o DMA é
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 31.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.31 ...o `0xAB ... 0x54`; do contrário, o DMA é
+                                                  
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 32.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.32 reiniciado com padrã
+                          o `0xA5`, e somente o terceiro ciclo entrega a
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 33.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.33 mensagem final. A aná
+                           lise confirmou que ajustes no parâmetro
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \^ invalid in math mode on input line 33.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.33 ... A análise confirmou que ajustes no parâ
+                                                  metro
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 34.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.34 ...DEFER_MAX` alteram a quantidade de iteraç
+                                                  ões tolerada
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 34.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.34 ...FER_MAX` alteram a quantidade de iteraçõ
+                                                  es tolerada
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \^ invalid in math mode on input line 35.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.35 antes do fallback, permitindo balancear latê
+                                                  ncia e robustez.
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.36 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+Underfull \hbox (badness 1748) in paragraph at lines 26--36
+[]\OT1/cmr/m/n/12 A cap-tura do tr^^Safego SPI re-ve-lou que cada co-mando com-
+pleto en-volve um
+ []
+
+
+Overfull \hbox (1745.68675pt too wide) in paragraph at lines 26--36
+\OT1/cmr/m/n/12 `app$[]\OML/cmm/m/it/12 oll\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 pr
+ocesseopedidoepreenchaaresposta:Casooservi[]oconcluaaopera[][]oantesdotempolimi
+teinterno; osegundopollj[]retornaoquadro\OT1/cmr/m/n/12 `0\OML/cmm/m/it/12 xAB:
+::\OT1/cmr/m/n/12 0\OML/cmm/m/it/12 x\OT1/cmr/m/n/12 54`; \OML/cmm/m/it/12 doco
+ntr[]rio; oDMA[]reiniciadocompadr[]o\OT1/cmr/m/n/12 `0\OML/cmm/m/it/12 xA\OT1/c
+mr/m/n/12 5`\OML/cmm/m/it/12 ; esomenteoterceirocicloentregaamensagemfinal:Aan[
+]liseconfirmouqueajustesnopar[]metro\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 APP[]PI[]
+ESTART[]EFER[]AX\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 alteramaquantidadedeitera[][]
+estoleradaantesdofallback; permitindobalancearlat[]nciaerobustez:$ 
+ []
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.45 O cliente `cnc_
+                    spi_client.py` executando na Raspberry Pi validou o
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 46.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.46 comportamento determiní
+                             stico do protocolo. O script detecta automatica...
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.46 comportamento determiní
+                             stico do protocolo. O script detecta automatica...
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \i invalid in math mode on input line 46.
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 47.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.47 quando a resposta nã
+                          o contém um frame válido e reenvia o poll após um
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 47.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.47 quando a resposta não conté
+                                  m um frame válido e reenvia o poll após um
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 47.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.47 quando a resposta não contém um frame vá
+                                                lido e reenvia o poll após um
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 47.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.47 ...ém um frame válido e reenvia o poll apó
+                                                  s um
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 48.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.48 intervalo configurá
+                         vel. Durante os testes, `--tries = 4` e
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 50.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.50 ...mandos de homing e leitura de estado. Alé
+                                                  m disso, a
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \c invalid in math mode on input line 51.
+
+! Please use \mathaccent for accents in math mode.
+<recently read> \accent 
+                        
+l.51 sincronizaç
+                 ão com a fila de logs via USART1 permitiu correlacionar ev...
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+
+LaTeX Warning: Command \~ invalid in math mode on input line 51.
+
+! Please use \mathaccent for accents in math mode.
+\add@accent ... \let \ignorespaces \relax \accent 
+                                                  #1 #2\egroup \ifmmode \els...
+l.51 sincronizaçã
+                   o com a fila de logs via USART1 permitiu correlacionar ev...
+I'm changing \accent to \mathaccent here; wish me luck.
+(Accents are not the same in formulas as they are in text.)
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.54 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.54 
+     
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+
+Overfull \hbox (2347.3188pt too wide) in paragraph at lines 45--54
+[]\OT1/cmr/m/n/12 O cli-ente `cnc$[]\OML/cmm/m/it/12 pi[]lient:py\OT1/cmr/m/n/1
+2 `\OML/cmm/m/it/12 executandonaRaspberryPivalidouocomportamentodetermin[]$ 
+ []
+
+
+
+[9
+
+
+])
+
+[10] (Cap05/Capitulo5.tex
+Cap\'{\i }tulo 5.
+)
+
+[11
+
+
+]
+No file main.bbl.
+(main.aux (Identificacao.aux))
+ ***********
+LaTeX2e <2025-06-01> patch level 1
+L3 programming layer <2025-09-02>
+ ***********
+
+
+LaTeX Warning: There were undefined references.
+
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: A7759F65544A33389FD053B0373AC994;3631.
+ ) 
+Here is how much of TeX's memory you used:
+ 20045 strings out of 468081
+ 380867 string characters out of 5425304
+ 875413 words of memory out of 5000000
+ 48326 multiletter control sequences out of 15000+600000
+ 638700 words of font info for 78 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 75i,6n,85p,301b,1159s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcr
+m1200.pk><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
+onts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/p
+ublic/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/font
+s/type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdir/AppData/Local/Programs
+/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Valdir/AppData/Loca
+l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Valdir/App
+Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/V
+aldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C
+:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr
+8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/
+type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiK
+TeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on main.pdf (25 pages, 234223 bytes).
+PDF statistics:
+ 314 PDF objects out of 1000 (max. 8388607)
+ 56 named destinations out of 1000 (max. 500000)
+ 177 words of extra memory for PDF output out of 10000 (max. 10000000)
+
