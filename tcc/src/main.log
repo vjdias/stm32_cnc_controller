@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  20 OCT 2025 08:51
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  20 OCT 2025 09:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -703,23 +703,13 @@ rtuges.trsl' found. on input line 20.
 \openout2 = `Identificacao.aux'.
 
 (Identificacao.tex)
-
-LaTeX Warning: File `Cap00/IC.jpg' not found on input line 23.
-
-
-! Package pdftex.def Error: File `Cap00/IC.jpg' not found: using draft setting.
-
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.23 \capa
-          {}
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
+<Cap00/IC.jpg, id=94, 1185.42876pt x 1185.42876pt>
+File: Cap00/IC.jpg Graphic file (type jpg)
+<use Cap00/IC.jpg>
+Package pdftex.def Info: Cap00/IC.jpg  used on input line 23.
+(pdftex.def)             Requested size: 99.57533pt x 99.58464pt.
 LaTeX Font Info:    Trying to load font information for U+msa on input line 23.
+
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
@@ -736,7 +726,8 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 
-{C:/Users/Valdir/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
+{C:/Users/Valdir/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map} <./Cap00/IC.
+jpg>]
 
 [2
 
@@ -848,9 +839,6 @@ l.29 \agradecimentos
 ] (Cap01/Capitulo1.tex
 Cap\'{\i }tulo 1.
 
-LaTeX Warning: Citation `st_an4013' on page 1 undefined on input line 12.
-
-
 
 [1
 
@@ -862,749 +850,27 @@ Package babel Info: 'portuguese' activates 'portuges' shorthands.
 [2] (Cap02/Capitulo2.tex
 Cap\'{\i }tulo 2.
 
-LaTeX Warning: Citation `groover2015' on page 3 undefined on input line 15.
-
-
-LaTeX Warning: Citation `st_an4013' on page 3 undefined on input line 36.
-
-
 
 [3
 
 
 ]
 
-LaTeX Warning: Citation `fussell2003' on page 4 undefined on input line 47.
-
-
-LaTeX Warning: Citation `idc_cnc_interp' on page 4 undefined on input line 53.
-
-
-LaTeX Warning: Citation `koren_reference' on page 4 undefined on input line 53.
-
-
-
-LaTeX Warning: Citation `efficient_reference' on page 4 undefined on input line
- 53.
-
-
-LaTeX Warning: Citation `unit3_interpolators' on page 4 undefined on input line
- 53.
-
-
-LaTeX Warning: Citation `koren_cnc_interpolators' on page 4 undefined on input 
-line 57.
-
-
-LaTeX Warning: Citation `kenjo1994' on page 4 undefined on input line 73.
-
-
-LaTeX Warning: Citation `astrom1995' on page 4 undefined on input line 85.
-
-
-LaTeX Warning: Citation `efficient_reference' on page 4 undefined on input line
- 88.
-
-
-LaTeX Warning: Citation `real_time_interpolators' on page 4 undefined on input 
-line 88.
-
-
-LaTeX Warning: Citation `kung_fpga_motion' on page 4 undefined on input line 88
-.
-
-
-
-[4]
-
-LaTeX Warning: Citation `adaptive_fuzzy_pid' on page 5 undefined on input line 
-100.
-
-
-LaTeX Warning: Citation `mori2005dda' on page 5 undefined on input line 108.
-
-
-LaTeX Warning: Citation `efficient_reference' on page 5 undefined on input line
- 108.
-
-
-LaTeX Warning: Citation `idc_cnc_interp' on page 5 undefined on input line 112.
-
-
-
-LaTeX Warning: Citation `unit3_interpolators' on page 5 undefined on input line
- 112.
-
-
-LaTeX Warning: Citation `kung_fpga_motion' on page 5 undefined on input line 11
-5.
-
-
-LaTeX Warning: Citation `real_time_interpolators' on page 5 undefined on input 
-line 115.
-
-
-LaTeX Warning: Citation `um2153' on page 5 undefined on input line 131.
-
-)
+[4])
 
 [5]
 
 [6] (Cap03/Capitulo3.tex
 Cap\'{\i }tulo 3.
-! Missing $ inserted.
-<inserted text> 
-                $
-l.35 ...h{App} implementa o laço principal (`app_
-                                                  poll`), o agendador de
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 36.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.36 serviç
-            os e as rotinas de inicialização específicas do projeto. A ca...
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 36.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.36 serviços e as rotinas de inicializaç
-                                           ão específicas do projeto. A ca...
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 36.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.36 serviços e as rotinas de inicializaçã
-                                             o específicas do projeto. A ca...
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 36.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.36 ...os e as rotinas de inicialização especí
-                                                  ficas do projeto. A camada
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing { inserted.
-<to be read again> 
-                   \begingroup 
-l.36 ...os e as rotinas de inicialização especí
-                                                  ficas do projeto. A camada
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-
-LaTeX Warning: Command \i invalid in math mode on input line 36.
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 37.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.37 \emph{Services} agrupa mó
-                               dulos especializados, como o gerador de passos,
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 38.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.38 o controlador PID, o serviç
-                                 o de homing e o roteador de mensagens SPI.
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing $ inserted.
-<inserted text> 
-                $
-l.39 
-     
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-! Missing } inserted.
-<inserted text> 
-                }
-l.39 
-     
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-
-Overfull \hbox (680.12874pt too wide) in paragraph at lines 32--39
-\OT1/cmr/m/n/12 (`app$[]\OML/cmm/m/it/12 oll\OT1/cmr/m/n/12 `)\OML/cmm/m/it/12 
-; oagendadordeservi[]oseasrotinasdeinicializa[][]oespec[]$ 
- []
-
 
 
 [7
 
 
-]
-! Missing $ inserted.
-<inserted text> 
-                $
-l.41 ...nas de interrupção e consumida por `app_
-                                                  poll`. Respostas são
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 41.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.41 ... e consumida por `app_poll`. Respostas sã
-                                                  o
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 43.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.43 quando disponí
-                    veis. A integração com os drivers TMC5160 ocorre por meio
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing { inserted.
-<to be read again> 
-                   \begingroup 
-l.43 quando disponí
-                    veis. A integração com os drivers TMC5160 ocorre por meio
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-
-LaTeX Warning: Command \i invalid in math mode on input line 43.
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 43.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.43 quando disponíveis. A integraç
-                                     ão com os drivers TMC5160 ocorre por meio
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 43.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.43 quando disponíveis. A integraçã
-                                       o com os drivers TMC5160 ocorre por meio
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 45.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.45 condiç
-            ões de falha.
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 45.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.45 condiçõ
-              es de falha.
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing $ inserted.
-<inserted text> 
-                $
-l.46 
-     
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-! Missing } inserted.
-<inserted text> 
-                }
-l.46 
-     
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 40--46
-[]\OT1/cmr/m/n/12 A fila de re-cep^^Xc~ao SPI ^^Se man-tida em mem^^Soria cir-c
-u-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 40--46
-\OT1/cmr/m/n/12 lar, pre-en-chida pe-las ro-ti-nas de in-ter-rup^^Xc~ao e con-s
-u-mida por
- []
-
-
-Overfull \hbox (812.64278pt too wide) in paragraph at lines 40--46
-\OT1/cmr/m/n/12 `app$[]\OML/cmm/m/it/12 oll\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 :R
-espostass[]oenfileiradasem\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 g[]pp[]esponses\OT1
-/cmr/m/n/12 `\OML/cmm/m/it/12 epromovidasparaobufferdeDMAquandodispon[]$ 
- []
-
-! Missing $ inserted.
-<inserted text> 
-                $
-l.55 monitorado com o cliente `cnc_
-                                   spi_client.py`, observando a necessidade de
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 56.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.56 até
-          três ciclos de enquete para respostas completas e avaliando o
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \^ invalid in math mode on input line 56.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.56 até trê
-              s ciclos de enquete para respostas completas e avaliando o
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 58.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.58 coletados subsidiam as aná
-                                lises apresentadas no
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 59.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.59 Capí
-          tulo~\ref{cap:resultados}.
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing { inserted.
-<to be read again> 
-                   \begingroup 
-l.59 Capí
-          tulo~\ref{cap:resultados}.
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-
-LaTeX Warning: Command \i invalid in math mode on input line 59.
-
-)
-! Missing $ inserted.
-<inserted text> 
-                $
-l.58 \cleardoublepage
-                     {}
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-! Missing } inserted.
-<inserted text> 
-                }
-l.58 \cleardoublepage
-                     {}
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-
-Overfull \hbox (761.16542pt too wide) in paragraph at lines 49--58
-\OT1/cmr/m/n/12 `cnc$[]\OML/cmm/m/it/12 pi[]lient:py\OT1/cmr/m/n/12 `\OML/cmm/m
-/it/12 ; observandoanecessidadedeat[]tr[]sciclosdeenquetepararespostascompletas
-eavaliandooimpactodediferentesvaloresde\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 APP[]P
-I[]ESTART[]EFER[]AX\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 :Osdadoscoletadossubsidiam
-asan[]lisesapresentadasnoCap[]$ 
- []
-
-
+])
 
 [8] (Cap04/Capitulo4.tex
 Cap\'{\i }tulo 4.
-! Missing $ inserted.
-<inserted text> 
-                $
-l.29 DMA para permitir que `app_
-                                poll` processe o pedido e preencha a resposta.
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 30.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.30 Caso o serviç
-                   o conclua a operação antes do tempo limite interno, o
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 30.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.30 Caso o serviço conclua a operaç
-                                      ão antes do tempo limite interno, o
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 30.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.30 Caso o serviço conclua a operaçã
-                                        o antes do tempo limite interno, o
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 31.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.31 segundo poll já
-                      retorna o quadro `0xAB ... 0x54`; do contrário, o DMA é
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 31.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.31 ...torna o quadro `0xAB ... 0x54`; do contrá
-                                                  rio, o DMA é
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 31.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.31 ...o `0xAB ... 0x54`; do contrário, o DMA é
-                                                  
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 32.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.32 reiniciado com padrã
-                          o `0xA5`, e somente o terceiro ciclo entrega a
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 33.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.33 mensagem final. A aná
-                           lise confirmou que ajustes no parâmetro
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \^ invalid in math mode on input line 33.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.33 ... A análise confirmou que ajustes no parâ
-                                                  metro
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 34.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.34 ...DEFER_MAX` alteram a quantidade de iteraç
-                                                  ões tolerada
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 34.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.34 ...FER_MAX` alteram a quantidade de iteraçõ
-                                                  es tolerada
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \^ invalid in math mode on input line 35.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.35 antes do fallback, permitindo balancear latê
-                                                  ncia e robustez.
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing $ inserted.
-<inserted text> 
-                $
-l.36 
-     
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-
-Underfull \hbox (badness 1748) in paragraph at lines 26--36
-[]\OT1/cmr/m/n/12 A cap-tura do tr^^Safego SPI re-ve-lou que cada co-mando com-
-pleto en-volve um
- []
-
-
-Overfull \hbox (1745.68675pt too wide) in paragraph at lines 26--36
-\OT1/cmr/m/n/12 `app$[]\OML/cmm/m/it/12 oll\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 pr
-ocesseopedidoepreenchaaresposta:Casooservi[]oconcluaaopera[][]oantesdotempolimi
-teinterno; osegundopollj[]retornaoquadro\OT1/cmr/m/n/12 `0\OML/cmm/m/it/12 xAB:
-::\OT1/cmr/m/n/12 0\OML/cmm/m/it/12 x\OT1/cmr/m/n/12 54`; \OML/cmm/m/it/12 doco
-ntr[]rio; oDMA[]reiniciadocompadr[]o\OT1/cmr/m/n/12 `0\OML/cmm/m/it/12 xA\OT1/c
-mr/m/n/12 5`\OML/cmm/m/it/12 ; esomenteoterceirocicloentregaamensagemfinal:Aan[
-]liseconfirmouqueajustesnopar[]metro\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 APP[]PI[]
-ESTART[]EFER[]AX\OT1/cmr/m/n/12 `\OML/cmm/m/it/12 alteramaquantidadedeitera[][]
-estoleradaantesdofallback; permitindobalancearlat[]nciaerobustez:$ 
- []
-
-! Missing $ inserted.
-<inserted text> 
-                $
-l.45 O cliente `cnc_
-                    spi_client.py` executando na Raspberry Pi validou o
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 46.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.46 comportamento determiní
-                             stico do protocolo. O script detecta automatica...
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing { inserted.
-<to be read again> 
-                   \begingroup 
-l.46 comportamento determiní
-                             stico do protocolo. O script detecta automatica...
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-
-LaTeX Warning: Command \i invalid in math mode on input line 46.
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 47.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.47 quando a resposta nã
-                          o contém um frame válido e reenvia o poll após um
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 47.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.47 quando a resposta não conté
-                                  m um frame válido e reenvia o poll após um
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 47.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.47 quando a resposta não contém um frame vá
-                                                lido e reenvia o poll após um
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 47.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.47 ...ém um frame válido e reenvia o poll apó
-                                                  s um
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 48.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.48 intervalo configurá
-                         vel. Durante os testes, `--tries = 4` e
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \' invalid in math mode on input line 50.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.50 ...mandos de homing e leitura de estado. Alé
-                                                  m disso, a
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \c invalid in math mode on input line 51.
-
-! Please use \mathaccent for accents in math mode.
-<recently read> \accent 
-                        
-l.51 sincronizaç
-                 ão com a fila de logs via USART1 permitiu correlacionar ev...
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-
-LaTeX Warning: Command \~ invalid in math mode on input line 51.
-
-! Please use \mathaccent for accents in math mode.
-\add@accent ... \let \ignorespaces \relax \accent 
-                                                  #1 #2\egroup \ifmmode \els...
-l.51 sincronizaçã
-                   o com a fila de logs via USART1 permitiu correlacionar ev...
-I'm changing \accent to \mathaccent here; wish me luck.
-(Accents are not the same in formulas as they are in text.)
-
-! Missing $ inserted.
-<inserted text> 
-                $
-l.54 
-     
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-! Missing } inserted.
-<inserted text> 
-                }
-l.54 
-     
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-
-Overfull \hbox (2347.3188pt too wide) in paragraph at lines 45--54
-[]\OT1/cmr/m/n/12 O cli-ente `cnc$[]\OML/cmm/m/it/12 pi[]lient:py\OT1/cmr/m/n/1
-2 `\OML/cmm/m/it/12 executandonaRaspberryPivalidouocomportamentodetermin[]$ 
- []
-
 
 
 [9
@@ -1619,28 +885,29 @@ Cap\'{\i }tulo 5.
 [11
 
 
-]
-No file main.bbl.
-(main.aux (Identificacao.aux))
+] (main.bbl
+
+[12
+
+
+])
+
+[13] (main.aux (Identificacao.aux))
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: A7759F65544A33389FD053B0373AC994;3631.
+(rerunfilecheck)             Checksum: B1ED984C8E30CE038FF9347AFA909FA5;3735.
  ) 
 Here is how much of TeX's memory you used:
- 20045 strings out of 468081
- 380867 string characters out of 5425304
- 875413 words of memory out of 5000000
- 48326 multiletter control sequences out of 15000+600000
- 638700 words of font info for 78 fonts, out of 8000000 for 9000
+ 20058 strings out of 468081
+ 381059 string characters out of 5425304
+ 876413 words of memory out of 5000000
+ 48320 multiletter control sequences out of 15000+600000
+ 637999 words of font info for 76 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,6n,85p,301b,1159s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,6n,85p,301b,1170s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcr
 m1200.pk><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
 onts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/p
@@ -1656,9 +923,9 @@ s/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/
 type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiK
 TeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on main.pdf (25 pages, 234223 bytes).
+Output written on main.pdf (27 pages, 693237 bytes).
 PDF statistics:
- 314 PDF objects out of 1000 (max. 8388607)
- 56 named destinations out of 1000 (max. 500000)
- 177 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 369 PDF objects out of 1000 (max. 8388607)
+ 74 named destinations out of 1000 (max. 500000)
+ 190 words of extra memory for PDF output out of 10000 (max. 10000000)
 
