@@ -36,5 +36,7 @@ App/Src/Services \
 App/Src \
 Core/Src \
 Core/Startup \
+Drivers/CMSIS \
 Drivers/STM32L4xx_HAL_Driver/Src \
+Drivers/STM32L4xx_HAL_Driver \
 

@@ -1,9 +1,9 @@
 ../App/Src/Protocol/router.c:20:6:router_init	2
 ../App/Src/Protocol/router.c:29:12:is_req_complete	5
-../App/Src/Protocol/router.c:42:13:dispatch	18
-../App/Src/Protocol/router.c:84:6:router_feed_bytes	5
-../App/Src/Protocol/router.c:101:18:resp_fifo_create	1
-../App/Src/Protocol/router.c:105:6:resp_fifo_destroy	3
-../App/Src/Protocol/router.c:114:5:resp_fifo_push	7
-../App/Src/Protocol/router.c:136:5:resp_fifo_pop	6
-../App/Src/Protocol/router.c:152:5:resp_fifo_count	2
+../App/Src/Protocol/router.c:42:13:dispatch	22
+../App/Src/Protocol/router.c:88:6:router_feed_bytes	5
+../App/Src/Protocol/router.c:105:18:resp_fifo_create	1
+../App/Src/Protocol/router.c:109:6:resp_fifo_destroy	3
+../App/Src/Protocol/router.c:118:5:resp_fifo_push	7
+../App/Src/Protocol/router.c:140:5:resp_fifo_pop	6
+../App/Src/Protocol/router.c:156:5:resp_fifo_count	2

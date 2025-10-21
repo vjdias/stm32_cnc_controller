@@ -1,7 +1,7 @@
-../Core/Src/main.c:72:5:main	8	static
-../Core/Src/main.c:132:6:SystemClock_Config	96	static
-../Core/Src/main.c:179:6:HAL_SPI_TxRxHalfCpltCallback	16	static
-../Core/Src/main.c:184:6:HAL_SPI_TxRxCpltCallback	16	static
-../Core/Src/main.c:189:6:HAL_SPI_TxCpltCallback	16	static
-../Core/Src/main.c:199:6:Error_Handler	8	static,ignoring_inline_asm
-../Core/Src/main.c:220:6:assert_failed	16	static
+../Core/Src/main.c:71:5:main	8	static
+../Core/Src/main.c:130:6:SystemClock_Config	96	static
+../Core/Src/main.c:177:6:HAL_SPI_TxRxHalfCpltCallback	16	static
+../Core/Src/main.c:182:6:HAL_SPI_TxRxCpltCallback	16	static
+../Core/Src/main.c:187:6:HAL_SPI_TxCpltCallback	16	static
+../Core/Src/main.c:197:6:Error_Handler	8	static,ignoring_inline_asm
+../Core/Src/main.c:218:6:assert_failed	16	static
