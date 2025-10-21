@@ -42,6 +42,38 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 | **EN** | PC4 (X), PC5 (Y), PA8 (Z) | GPIO Out |
 | **EXTI** | PC0/PC1/PC2 (PROX_X/Y/Z), PC13 (E-STOP) | ISR **só-flag** |
 
+### 2.1) Interconexões KiCad (STM32 ↔ TMC5160 ↔ Raspberry Pi)
+
+Os roteamentos críticos entre o Raspberry Pi 3 A+, a placa B-L475E-IOT01A e o *stack* de drivers TMC5160 foram capturados em um 
+esquemático KiCad gerado via script Python (`Docs/schematics/generate_cnc_schematic.py`). O arquivo resultante (`Docs/schematics/
+cnc_connections.kicad_sch`) mantém os símbolos parametrizados das três placas, encoders incrementais e laços de segurança. A im
+agem abaixo é uma renderização automática (Graphviz) das mesmas ligações para consulta rápida; o `.kicad_sch` pode ser aberto no
+KiCad 9 para inspeção detalhada e edição.
+
+<img src="Docs/schematics/cnc_connections.svg" alt="Interconexões principais do controlador CNC" />
+
+> A renderização vetorial completa está disponível em [SVG](Docs/schematics/cnc_connections.svg) para zoom ilimitado.
+
+| Net | Origem | Destino(s) | Observações |
+| --- | --- | --- | --- |
+| **3V3** | J1-1 (RPi) | U1-1 (STM32), A1-1 (TMC5160), SW1-7 (Safety) | Distribui alimentação lógica de 3,3 V para MCU, drivers e circuito de intertravamento. |
+| **GND** | J1-2 (RPi) | U1-2 (STM32), A1-2 (TMC5160), P1-8 (Encoders), SW1-5/6 (Safety) | Plano de referência comum para SPI, STEP/DIR/EN e sensores. |
+| **SPI_MOSI** | J1-3 (RPi) | U1-3 (STM32), A1-3 (TMC5160) | Dados mestre→escravo compartilhados entre Pi, microcontrolador e drivers. |
+| **SPI_MISO** | J1-4 (RPi) | U1-4 (STM32), A1-4 (TMC5160) | Retorno de dados/telemetria para o Raspberry Pi. |
+| **SPI_SCK** | J1-5 (RPi) | U1-5 (STM32), A1-5 (TMC5160) | Clock SPI comum (modo 3, até 8 MHz). |
+| **CS_STM32** | J1-6 (RPi) | U1-6 (STM32) | *Chip-select* dedicado ao link Pi↔STM32. |
+| **CS_TMC5160** | J1-7 (RPi) | A1-6 (TMC5160) | *Chip-select* individual para configuração dos três TMC5160 via CLI no Pi. |
+| **STEP_X / DIR_X / EN_X** | U1-7/8/9 (STM32) | A1-7/8/9 (TMC5160) | Controle completo do eixo X (pulso, direção e habilitação). |
+| **STEP_Y / DIR_Y / EN_Y** | U1-10/11/12 | A1-10/11/12 | Canal dedicado ao eixo Y. |
+| **STEP_Z / DIR_Z / EN_Z** | U1-13/14/15 | A1-13/14/15 | Canal dedicado ao eixo Z. |
+| **ENC_XA / ENC_XB** | U1-16/17 | P1-1/2 (Encoder) | Entradas quadratura TIM2 (eixo X). |
+| **ENC_YA / ENC_YB** | U1-18/19 | P1-3/4 (Encoder) | Entradas quadratura TIM5 (eixo Y). |
+| **ENC_ZA / ENC_ZB** | U1-20/21 | P1-5/6 (Encoder) | Entradas quadratura TIM3 (eixo Z). |
+| **ESTOP** | U1-22 | SW1-1 (Safety) | Linha de emergência que derruba EN global dos TMC5160. |
+| **LIM_X / LIM_Y / LIM_Z** | U1-23/24/25 | SW1-2/3/4 (Safety) | Fins de curso com disparo por EXTI no STM32. |
+| **5V_AUX** | J1-8 (RPi) | P1-7 (Encoder) | Alimentação auxiliar de 5 V para os encoders incrementais. |
+| **RUN** | J1-9 (RPi) | — | Linha RUN do Raspberry Pi disponível para intertravamento externo (sem ligação a outros blocos). |
+
 ---
 
 ## 3) CubeMX — Seleções Principais
