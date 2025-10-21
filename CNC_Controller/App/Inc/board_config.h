@@ -23,19 +23,12 @@ void board_config_apply_motion_gpio(void);
  * @brief Força os *timers* de encoder a operar em modo de quadratura TI12 (X4).
  *
  * CubeMX gera os contadores no modo TI1 por padrão, o que perderia metade dos
- * flancos. Esta rotina reconfigura TIM2/TIM3/TIM5 para capturar ambos os
- * canais do encoder e habilita a contagem em quatro vezes a resolução.
+ * flancos. Esta rotina reconfigura TIM3 (eixo X) e TIM5 (eixo Z) para capturar
+ * ambos os canais dos encoders e habilita a contagem em quatro vezes a
+ * resolução, enquanto o LPTIM1 (eixo Y) já nasce em modo dedicado de
+ * quadratura.
  */
 void board_config_force_encoder_quadrature(void);
-
-/**
- * @brief Remapeia os sinais do encoder do eixo Z para os pinos PC6/PC7.
- *
- * O chicote do controlador leva TIM3_CH1/CH2 até o conector em GPIOC, mas o
- * CubeMX ainda prende os canais a PE3/PE4. Esta função libera os pinos
- * originais e refaz a configuração de *alternate function* em PC6/PC7.
- */
-void board_config_remap_tim3_encoder_pins(void);
 
 /**
  * @brief Programa a hierarquia de prioridades de interrupção usada pelo CNC.

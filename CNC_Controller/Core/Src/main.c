@@ -21,6 +21,7 @@
 #include "dma.h"
 #include "spi.h"
 #include "tim.h"
+#include "lptim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -99,7 +100,7 @@ int main(void)
   MX_DMA_Init();
   MX_SPI2_Init();
   MX_TIM6_Init();
-  MX_TIM2_Init();
+  MX_LPTIM1_Init();
   MX_TIM5_Init();
   MX_TIM7_Init();
   MX_TIM3_Init();
@@ -107,7 +108,6 @@ int main(void)
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
     board_config_apply_motion_gpio();
-    board_config_remap_tim3_encoder_pins();
     board_config_force_encoder_quadrature();
     board_config_apply_interrupt_priorities();
     //board_config_apply_spi_dma_profile();

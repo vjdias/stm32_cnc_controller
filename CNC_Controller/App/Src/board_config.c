@@ -126,26 +126,8 @@ void board_config_apply_motion_gpio(void)
 
 void board_config_force_encoder_quadrature(void)
 {
-    configure_encoder_timer(&htim2);
     configure_encoder_timer(&htim3);
     configure_encoder_timer(&htim5);
-}
-
-void board_config_remap_tim3_encoder_pins(void)
-{
-    GPIO_InitTypeDef init = {0};
-
-    /* Libera a configuração padrão do CubeMX e migra o encoder para PC6/PC7 */
-    HAL_GPIO_DeInit(GPIOE, GPIO_PIN_3 | GPIO_PIN_4);
-
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-
-    init.Pin = GPIO_PIN_6 | GPIO_PIN_7;
-    init.Mode = GPIO_MODE_AF_PP;
-    init.Pull = GPIO_NOPULL;
-    init.Speed = GPIO_SPEED_FREQ_LOW;
-    init.Alternate = GPIO_AF2_TIM3;
-    HAL_GPIO_Init(GPIOC, &init);
 }
 
 void board_config_apply_interrupt_priorities(void)
