@@ -11,7 +11,7 @@ fossem mantidos durante todo o processo.
 O ponto de partida consistiu na configuração do clock principal para
 \SI{80}{\mega\hertz} e na definição das prioridades do NVIC de acordo
 com o orçamento temporal: interrupções externas de segurança, TIM6,
-SPI1/DMA, TIM7 e USART1. Em seguida, foram ativadas as entradas de parada
+SPI2/DMA, TIM7 e USART1. Em seguida, foram ativadas as entradas de parada
 de emergência (E-STOP) e sensores de proximidade, assegurando que flags
 de segurança pudessem interromper o fluxo de comandos. As etapas
 posteriores focaram na calibração dos temporizadores: o TIM6 foi
@@ -19,7 +19,7 @@ dimensionado com $PSC = 79$ e $ARR = 19$, enquanto o TIM7 recebeu
 $PSC = 7999$ e $ARR = 9$. Os temporizadores TIM2, TIM3 e TIM5 foram
 configurados em modo quadratura para leitura de encoders.
 
-A configuração do SPI1 em modo escravo com DMA circular foi realizada
+A configuração do SPI2 em modo escravo com DMA circular foi realizada
 após os temporizadores, evitando contenda na memória compartilhada.
 Por fim, a USART1 foi ajustada para \SI{115200}{bps} e integrada a um
 serviço de log com fila não bloqueante. Cada etapa do roteiro foi

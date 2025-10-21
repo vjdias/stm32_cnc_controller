@@ -167,11 +167,11 @@ void board_config_apply_interrupt_priorities(void)
     HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
-    HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 2, 0);
-    HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+    HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 2, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
 
-    HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 2, 0);
-    HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+    HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 2, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
     HAL_NVIC_SetPriority(TIM7_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(TIM7_IRQn);
@@ -179,31 +179,31 @@ void board_config_apply_interrupt_priorities(void)
     HAL_NVIC_SetPriority(USART1_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
 
-    HAL_NVIC_SetPriority(SPI1_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(SPI1_IRQn);
+    HAL_NVIC_SetPriority(SPI2_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(SPI2_IRQn);
 
     HAL_NVIC_SetPriority(TIM1_BRK_TIM15_IRQn, 6, 0);
     HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
 }
 
-//'hdma_spi1_rx' undeclared (first use in this function)	board_config.c	/CNC_Controller/App/Src	line 192	C/C++ Problem
+//'hdma_spi2_rx' undeclared (first use in this function)	board_config.c	/CNC_Controller/App/Src	line 192	C/C++ Problem
 //void board_config_apply_spi_dma_profile(void)
 //{
 //    /* RX em modo normal: cada quadro AA..55 + handshakes byte a byte ocupa um slot */
-//    configure_spi_dma(&hdma_spi1_rx,
-//                      DMA1_Channel2,
-//                      DMA_REQUEST_1,
+//    configure_spi_dma(&hdma_spi2_rx,
+//                      DMA1_Channel4,
+//                      DMA_REQUEST_SPI2_RX,
 //                      DMA_PERIPH_TO_MEMORY,
 //                      DMA_CIRCULAR,
 //                      DMA_PRIORITY_HIGH);
-//    __HAL_LINKDMA(&hspi1, hdmarx, hdma_spi1_rx);
+//    __HAL_LINKDMA(&hspi2, hdmarx, hdma_spi2_rx);
 //
 //    /* TX também em modo normal; buffers são preenchidos a cada transação */
-//    configure_spi_dma(&hdma_spi1_tx,
-//                      DMA1_Channel3,
-//                      DMA_REQUEST_1,
+//    configure_spi_dma(&hdma_spi2_tx,
+//                      DMA1_Channel5,
+//                      DMA_REQUEST_SPI2_TX,
 //                      DMA_MEMORY_TO_PERIPH,
 //					  DMA_CIRCULAR,
 //                      DMA_PRIORITY_LOW);
-//    __HAL_LINKDMA(&hspi1, hdmatx, hdma_spi1_tx);
+//    __HAL_LINKDMA(&hspi2, hdmatx, hdma_spi2_tx);
 //}

@@ -136,7 +136,7 @@ def _parse_led_frequency(raw_value: str) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI1 Slave)",
+        description="Cliente SPI (Raspberry) para CNC_Controller (STM32 SPI2 Slave)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
