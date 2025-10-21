@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  20 OCT 2025 18:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  21 OCT 2025 02:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -895,180 +895,137 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 [6]
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-) (Cap02/DriversTMC.tex
-
 [7]
-
-[8]
-Underfull \hbox (badness 2790) in paragraph at lines 65--69
-\OT1/cmr/m/n/12 du-zida para mo-to-res de passo e PMSM/BLDC. Uti-liza roda c^^S
-odigo ^^Soptica e
- []
-
-
-Underfull \hbox (badness 3919) in paragraph at lines 65--69
-\OT1/cmr/m/n/12 for-nece sa^^S^^Pdas em qua-dra-tura \OT1/cmr/bx/n/12 A \OT1/cm
-r/m/n/12 e \OT1/cmr/bx/n/12 B \OT1/cmr/m/n/12 mais \OT1/cmr/bx/n/12 N \OT1/cmr/
-m/n/12 (\OT1/cmr/m/it/12 in-dex\OT1/cmr/m/n/12 ). Prin-ci-pais pon-tos
- []
+LaTeX Font Info:    Trying to load font information for OML+cmr on input line 1
+45.
+ (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\omlcmr.fd
+File: omlcmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10> not available
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 145.
 
 
+[8]) (Cap02/DriversTMC.tex
 
 [9]) (Cap02/RegTables.tex
-Underfull \hbox (badness 4328) in paragraph at lines 33--33
+Underfull \hbox (badness 4328) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Prescaler para $1$$[]$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Entradas ma-pe-a-das
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Polaridade n~ao in-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 \OT1/cmr/m/n/10 ver-tida (con-forme
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Modo es-cravo,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 \OT1/cmr/m/n/10 fase/polaridade
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 DMA cir-cu-lar para
  []
 
 
-Underfull \hbox (badness 1248) in paragraph at lines 33--33
+Underfull \hbox (badness 1248) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Tamanho e en-dere^^Xcos
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Baud rate para
  []
 
 
-Underfull \hbox (badness 1648) in paragraph at lines 33--33
+Underfull \hbox (badness 1648) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Interrup^^Xc~oes de se-gu-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 33--33
+Underfull \hbox (badness 10000) in paragraph at lines 34--34
 \OT1/cmr/m/n/10 TIM6, SPI/DMA,
- []
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 40--40
-[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
-lho (ver
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 56--56
-[]|\OT1/cmr/m/n/10 Limite de co-muta^^Xc~ao ste-alth-
- []
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-)
-Underfull \hbox (badness 10000) in paragraph at lines 60--61
-\OT1/cmr/m/it/12 Observa^^Xc~ao\OT1/cmr/m/n/12 : va-lo-res exa-tos de bits po-d
-em va-riar con-forme a
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 60--61
-\OT1/cmr/m/n/12 placa/variante e ro-teiro de tes-tes; recomenda-se va-li-dar co
-m os ma-nu-
- []
-
-
-Underfull \hbox (badness 5847) in paragraph at lines 60--61
-\OT1/cmr/m/n/12 ais do STM32 L4 ([[]]) e o da-tasheet do TMC5160
  []
 
 
 
 [10]
-
-[11] (Cap03/Capitulo3.tex
-Cap\'{\i }tulo 3.
-
-
-[12
+Underfull \hbox (badness 10000) in paragraph at lines 41--41
+[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
+lho (ver
+ []
 
 
-]) (Cap03/ArquiteturaHardware.tex
-
-[13])
-Underfull \hbox (badness 7558) in paragraph at lines 77--64
-[]\OT1/cmr/m/n/12 Como re-fer^encia adi-ci-o-nal de mon-ta-gem e in-te-gra^^Xc~
-ao de hard-ware, ver
+Underfull \hbox (badness 10000) in paragraph at lines 57--57
+[]|\OT1/cmr/m/n/10 Limite de co-muta^^Xc~ao ste-alth-
  []
 
 
 
-[14] (Cap04/Capitulo4.tex
+[11])
+
+[12] (Cap03/Capitulo3.tex
+Cap\'{\i }tulo 3.
+) (Cap03/ArquiteturaHardware.tex
+
+[13
+
+
+]
+Underfull \hbox (badness 3148) in paragraph at lines 12--21
+[]\OT1/cmr/m/n/10 - \OT1/cmr/bx/n/10 L^^Sogica\OT1/cmr/m/n/10 : placa com STM32
+L475 ope-rando a $3\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 3$$V$, cris-tal de re-fer^
+encia e in-ter-fa-ces
+ []
+
+
+
+[14])
+
+[15] (Cap04/Capitulo4.tex
 Cap\'{\i }tulo 4.
 
 
-[15
+[16
 
 
 ])
 
-[16] (Cap05/Capitulo5.tex
+[17] (Cap05/Capitulo5.tex
 Cap\'{\i }tulo 5.
 )
-
-[17
-
-
-] (main.bbl
 
 [18
 
 
+] (main.bbl
+
+[19
+
+
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 75--79
-[]\OT1/cmr/m/n/12 STMicroelectronics (2018a).  \OT1/cmr/m/it/12 RM0394:
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 94--98
-[]\OT1/cmr/m/n/12 TRINAMIC
+Underfull \hbox (badness 3009) in paragraph at lines 94--98
+[]\OT1/cmr/m/n/10 TRINAMIC Mo-tion Con-trol
  []
 
 )
 
-[19] (main.aux (Identificacao.aux))
+[20] (main.aux (Identificacao.aux))
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
@@ -1081,38 +1038,40 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 0B1BD9034932B6E62C8BFF2FB6E56B11;6231.
  ) 
 Here is how much of TeX's memory you used:
- 20291 strings out of 468081
- 385556 string characters out of 5425304
- 894942 words of memory out of 5000000
- 48487 multiletter control sequences out of 15000+600000
- 642849 words of font info for 95 fonts, out of 8000000 for 9000
+ 20312 strings out of 468081
+ 385930 string characters out of 5425304
+ 889942 words of memory out of 5000000
+ 48503 multiletter control sequences out of 15000+600000
+ 643157 words of font info for 96 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,15n,85p,318b,1188s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tct
-i1200.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
+i1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 600\tcrm1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
 /ec/dpi600\tcrm1200.pk><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/typ
-e1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Local/Progra
-ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdir/AppData/
-Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Valdi
-r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/U
-sers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.
-pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/
-cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/
-amsfonts/cm/cmr12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
-1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fo
-nts/type1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs
-/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/Valdir/App
-Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/
-Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb>
-<C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
-mtt10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmtt12.pfb>
-Output written on main.pdf (34 pages, 801933 bytes).
+e1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Progr
+ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Lo
+cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdi
+r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/U
+sers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12
+.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts
+/cm/cmmi8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public
+/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/typ
+e1/public/amsfonts/cm/cmr12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Valdir/AppData/Local/Programs
+/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/
+Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/V
+aldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C
+:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmt
+i10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
+nts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/pu
+blic/amsfonts/cm/cmtt10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/font
+s/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on main.pdf (35 pages, 839070 bytes).
 PDF statistics:
- 550 PDF objects out of 1000 (max. 8388607)
- 113 named destinations out of 1000 (max. 500000)
+ 565 PDF objects out of 1000 (max. 8388607)
+ 114 named destinations out of 1000 (max. 500000)
  302 words of extra memory for PDF output out of 10000 (max. 10000000)
 

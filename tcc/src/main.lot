@@ -2,15 +2,15 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \contentsline {table}{\numberline {2.1}{\ignorespaces Layout do quadro SPI (tamanho fixo: 42~bytes).}}{6}{table.caption.12}%
-\contentsline {table}{\numberline {2.2}{\ignorespaces Requisi\c {c}\~ao LED (\texttt {CMD=0x10}).}}{7}{table.caption.14}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Requisição LED (\texttt {CMD=0x10}).}}{7}{table.caption.14}%
 \contentsline {table}{\numberline {2.3}{\ignorespaces Resposta LED.}}{7}{table.caption.15}%
-\contentsline {table}{\numberline {2.4}{\ignorespaces Requisi\c {c}\~ao Movimento (\texttt {CMD=0x20}).}}{8}{table.caption.17}%
+\contentsline {table}{\numberline {2.4}{\ignorespaces Requisição Movimento (\texttt {CMD=0x20}).}}{8}{table.caption.17}%
 \contentsline {table}{\numberline {2.5}{\ignorespaces Resposta Movimento.}}{8}{table.caption.18}%
 \contentsline {table}{\numberline {2.6}{\ignorespaces Quadro de escrita TMC5160 (5 bytes, big-endian).}}{9}{table.caption.20}%
 \contentsline {table}{\numberline {2.7}{\ignorespaces Quadro de leitura TMC5160 (5 bytes, big-endian; resposta no ciclo seguinte).}}{9}{table.caption.21}%
-\contentsline {table}{\numberline {2.8}{\ignorespaces Exemplos de acessos SPI ao TMC5160.}}{9}{table.caption.22}%
+\contentsline {table}{\numberline {2.8}{\ignorespaces Exemplos de acessos SPI ao TMC5160.}}{10}{table.caption.22}%
 \contentsline {table}{\numberline {2.9}{\ignorespaces Registros STM32 L4 utilizados neste trabalho (ver \cite {st_an4013,stm32l4_rm}).}}{11}{table.caption.23}%
-\contentsline {table}{\numberline {2.10}{\ignorespaces Registros TMC5160 utilizados neste trabalho (ver \cite {tmc5160_ds}).}}{11}{table.caption.24}%
+\contentsline {table}{\numberline {2.10}{\ignorespaces Registros TMC5160 utilizados neste trabalho (ver \cite {tmc5160_ds}).}}{12}{table.caption.24}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
