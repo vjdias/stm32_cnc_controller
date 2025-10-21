@@ -48,7 +48,7 @@ void board_config_remap_tim3_encoder_pins(void);
 void board_config_apply_interrupt_priorities(void);
 
 /**
- * @brief Ajusta o perfil de DMA do SPI1 para o transporte mestre-escravo.
+ * @brief Ajusta o perfil de DMA do SPI2 para o transporte mestre-escravo.
  *
  * Reconstrói os canais gerados pelo CubeMX para que a recepção opere em modo
  * circular com prioridade alta (evitando *overrun* de comandos) e a transmissão

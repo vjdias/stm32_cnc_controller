@@ -18,7 +18,7 @@
  *==============================================================================*/
 
 /* --- Handle gerado pelo CubeMX --------------- */
-extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi2;
 
 /* --- Estado e buffers ------------------------------------------------------- */
 static router_t             g_router;
@@ -145,12 +145,12 @@ static void prepare_next_tx(void)
  */
 static void restart_spi_dma(void)
 {
-    if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
+    if (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY) {
         g_spi_error_flag = 1u;
         return;
     }
 
-    if (HAL_SPI_TransmitReceive_DMA(&hspi1,
+    if (HAL_SPI_TransmitReceive_DMA(&hspi2,
             g_spi_tx_dma_buf, g_spi_rx_dma_buf,
             (uint16_t)APP_SPI_DMA_BUF_LEN) != HAL_OK) {
         g_spi_error_flag = 1u;

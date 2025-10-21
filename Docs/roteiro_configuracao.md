@@ -6,7 +6,7 @@ Este roteiro segue o fluxo sugerido do mais crítico ao menos crítico. Utilize 
 - [x] Ajustar o clock global para 80 MHz no CubeMX e regenerar o código.
 - [x] Confirmar os prescalers dos barramentos APB1/APB2 conforme o plano do projeto.
 - [x] Aplicar o mapeamento de pinos previsto para encoders, sinais STEP/DIR/EN, SPI (Serial Peripheral Interface) e USART (Universal Synchronous/Asynchronous Receiver/Transmitter).
-- [x] Definir as prioridades do NVIC seguindo a hierarquia: EXTI (External Interrupt) → TIM6 → SPI1 DMA (Direct Memory Access) → TIM7 → USART1.
+- [x] Definir as prioridades do NVIC seguindo a hierarquia: EXTI (External Interrupt) → TIM6 → SPI2 DMA (Direct Memory Access) → TIM7 → USART1.
 - [x] Teste: compilar e, via debugger/leitura de registradores, confirmar `SystemCoreClock = 80 MHz` e verificar as prioridades no vetor NVIC.
 
 ## 2. Interrupções de segurança (E-STOP/PROX via EXTI)
@@ -33,8 +33,8 @@ Este roteiro segue o fluxo sugerido do mais crítico ao menos crítico. Utilize 
 - [ ] Agendar serviços auxiliares necessários (diagnósticos, filtros, etc.) respeitando o orçamento de tempo do laço.
 - [ ] Teste: instrumentar a ISR e medir jitter/tempo de execução para garantir que o loop mantém 1 kHz sem interferir na janela do TIM6.
 
-## 6. SPI1 escravo com DMA circular (Raspberry Pi ↔ STM32)
-- [ ] Ativar SPI1 em modo escravo MODE 3 com DMA RX circular de alta prioridade.
+## 6. SPI2 escravo com DMA circular (Raspberry Pi ↔ STM32)
+- [ ] Ativar SPI2 em modo escravo MODE 3 com DMA RX circular de alta prioridade.
 - [ ] Habilitar callbacks de half/full transfer para alimentar o roteador de mensagens.
 - [ ] Configurar o TX para operar em modo normal ou via interrupção, evitando contenção com os timers críticos.
 - [ ] Teste: usar a Raspberry Pi (ou gerador SPI) para enviar frames de teste e validar o disparo dos callbacks sem perda de sincronismo.

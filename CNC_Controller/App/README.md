@@ -37,15 +37,16 @@ Servico de LED — LED discreto
 
 Pinos padrao (B-L475E-IOT01A)
 - `LED1_GPIO_PORT=GPIOB`, `LED1_GPIO_PIN=GPIO_PIN_14`  (LD2/verde — UM2153
-  identifica PB14 como LED2 dedicado, sem ligação ao barramento SPI1)
+  identifica PB14 como LED2 dedicado, sem ligação ao barramento SPI2)
 - `LED_ACTIVE_HIGH=1`
 
-> **Atenção:** O mapeamento anterior (PA5) conflita com o sinal SCK do SPI1
-> (UM2153, tabela de *Pin assignments* — PA5 = SPI1_SCK/LED1/ARD.D13). Se
+> **Atenção:** O mapeamento anterior (PA5) conflita com o sinal SCK do SPI2
+> (UM2153, tabela de *Pin assignments* — PD1 = SPI2_SCK no conector PMOD). Se
 > direcionar o serviço para outro LED, verifique a pinagem da placa para
-> garantir que PA4/PA5/PA6/PA7 não sejam reconfigurados por engano. As rotinas
-> atuais do firmware (board_config/app/services) não tocam nesses pinos além da
-> configuração feita pelo CubeMX para o SPI1.
+> garantir que os pinos do barramento SPI2 (PD0/PD1/PD3/PD4) não sejam
+> reconfigurados por engano. As rotinas atuais do firmware
+> (board_config/app/services) não tocam nesses pinos além da configuração
+> feita pelo CubeMX para o SPI2.
 
 Protocolo LED_CTRL (LED1)
 - Tipo: `REQ_LED_CTRL = 0x07`

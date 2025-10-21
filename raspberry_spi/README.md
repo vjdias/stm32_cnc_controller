@@ -10,8 +10,8 @@ Requisitos (no Raspberry Pi)
 - Biblioteca `spidev` instalada: `sudo apt-get install python3-spidev` (ou `pip install spidev`)
 - SPI habilitado: `sudo raspi-config` → Interface Options → SPI → Enable
 
-Fiação (Raspberry Pi → STM32 SPI1 Slave)
-- MISO ↔ MISO, MOSI ↔ MOSI, SCK ↔ SCK, CE0 (NSS) ↔ NSS, GND comum. Níveis 3V3.
+Fiação (Raspberry Pi → STM32 SPI2 Slave)
+- MISO ↔ PD3, MOSI ↔ PD4, SCK ↔ PD1, CE0 (NSS) ↔ PD0, GND comum. Níveis 3V3.
 - Modo SPI: MODE 3 (CPOL=1, CPHA=1 no Linux). 8 bits, MSB first.
 - Velocidade sugerida inicial: 1 MHz (ajustável). O firmware usa RX DMA circular.
 

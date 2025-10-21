@@ -29,7 +29,7 @@
 
 // Permite trocar a instância sem tocar no código
 #ifndef APP_SPI_INSTANCE
-#define APP_SPI_INSTANCE SPI1
+#define APP_SPI_INSTANCE SPI2
 #endif
 
 // ---- Estados mínimos do enlace SPI ----

@@ -6,7 +6,7 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 - **Eixo Z** por **encoder AB** de **2 500 CPR** em **16 bits** (TIM3).
 - **Gerador de passos (DDA)** em **50 kHz** (TIM6) com **STEP/DIR/EN** para 3 drivers **TMC5160**.
 - **Controle PI/PID** a **1 kHz** (TIM7), leitura de encoders e serviços.
-- **SPI1 (Slave, MODE 3, DMA)** para comunicação com **Raspberry Pi** (master).
+- **SPI2 (Slave, MODE 3, DMA)** para comunicação com **Raspberry Pi** (master) via conector PMOD.
 - **USART1 (VCP)** para **logs via USB ST-LINK**.
 - **Framing SPI** compatível com o HDL/FPGA (headers/tails AA..55 / AB..54) e *router* de mensagens.
 
@@ -35,7 +35,7 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 | **Encoder X (TIM2)** | **PA15=CH1**, **PB3=CH2** | Desative SWO; **Debug=SWD** |
 | **Encoder Y (TIM5)** | **PA0=CH1**, **PA1=CH2** | |
 | **Encoder Z (TIM3)** | **PC6=CH1**, **PC7=CH2** | AF2 |
-| **SPI1 (Slave)** | **PA5=SCK**, **PA6=MISO**, **PA7=MOSI**, **PA4=NSS** | **MODE 3**, Very High speed |
+| **SPI2 (Slave)** | **PD1=SCK**, **PD3=MISO**, **PD4=MOSI**, **PD0=NSS** | **MODE 3**, Very High speed |
 | **USART1 (VCP)** | **PB6=TX**, **PB7=RX** | USB do ST-LINK |
 | **STEP** | PB4 (X), PB0 (Y), PB1 (Z) | GPIO Out, Very High |
 | **DIR** | PA3 (X), PB2 (Y), PA2 (Z) | GPIO Out, Very High |
@@ -96,10 +96,10 @@ KiCad 9 para inspeção detalhada e edição.
   1 Hz ou 0,2 Hz é necessário reduzir o clock do TIM15 aumentando o prescaler
   (por exemplo `PSC=7999` → divisor 8 000 → frequência mínima ≈ 0,15 Hz).
 
-**SPI1 (RPi↔STM32)**
-- **Slave, 8-bit, MODE 3 (CPOL=High, CPHA=2nd)**, **NSS=Hardware Input** (PA4).
+**SPI2 (RPi↔STM32)**
+- **Slave, 8-bit, MODE 3 (CPOL=High, CPHA=2nd)**, **NSS=Hardware Input** (PD0 via PMOD).
 - **DMA**: RX *Circular* (Byte/Byte, Priority High, inc mem ON), TX *Normal* (Byte/Byte).  
-- **NVIC**: habilite **DMA RX/TX** e **SPI1 global**.
+- **NVIC**: habilite **DMA RX/TX** e **SPI2 global**.
 
 **USART1 (VCP)**  
 - **115200 8N1**, PB6/PB7. Retarget do `printf` via `_write()`.
@@ -108,7 +108,7 @@ KiCad 9 para inspeção detalhada e edição.
 - **STEP/DIR/EN**: Output, **Very High speed** (bordas limpas).
 
 **NVIC (prioridades sugeridas)**  
-1) **E-STOP/PROX (EXTI)**, 2) **TIM6**, 3) **SPI1 DMA**, 4) (opcional) timer de *timestamp* do Z, 5) **TIM7**, 6) **USART1**.
+1) **E-STOP/PROX (EXTI)**, 2) **TIM6**, 3) **SPI2 DMA**, 4) (opcional) timer de *timestamp* do Z, 5) **TIM7**, 6) **USART1**.
 
 ---
 
@@ -130,7 +130,7 @@ KiCad 9 para inspeção detalhada e edição.
 
 ## 5) SPI — Modo e Desempenho
 
-- **STM32↔RPi (SPI1 Slave, DMA)**: **MODE 3**, RX DMA **circular** (callbacks de **Half/Full** para *router*).  
+- **STM32↔RPi (SPI2 Slave, DMA)**: **MODE 3**, RX DMA **circular** (callbacks de **Half/Full** para *router*).
 - **STM32↔TMC5160 (Master, se usado)**: **MODE 3**; **SCK** típico **4 MHz** (até 8 MHz com clock externo no TMC).  
 - **Buffers**: RX 256–512 B; TX por DMA “on-demand”.  
 - **Integridade**: cabos curtos, GND comum, resistores série 33–47 Ω se houver *ringing*.
@@ -331,9 +331,9 @@ Resumo dos frames de **RESPONSE** publicados pelo HDL, com foco exclusivo na **e
 
 **Esqueleto de callback (HAL)**
 ```c
-void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ router_feed_bytes(rx_buf, RX_BUF_SZ/2); } }
-void HAL_SPI_RxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ router_feed_bytes(rx_buf+RX_BUF_SZ/2, RX_BUF_SZ/2); } }
-void HAL_SPI_TxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ tx_busy = 0; } }
+void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef* h){ if(h->Instance==SPI2){ router_feed_bytes(rx_buf, RX_BUF_SZ/2); } }
+void HAL_SPI_RxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI2){ router_feed_bytes(rx_buf+RX_BUF_SZ/2, RX_BUF_SZ/2); } }
+void HAL_SPI_TxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI2){ tx_busy = 0; } }
 ```
 
 ---
@@ -385,7 +385,7 @@ No CubeIDE, adicione `App/Inc` em Paths & Symbols para os includes `protocol/...
 - [ ] HCLK=80 MHz; APB1=/2; APB2=/1.  
 - [ ] TIM6=50 kHz (79/19), TIM7=1 kHz (7999/9).  
 - [ ] Encoders: TIM2/5 (32 b), TIM3 (16 b).  
-- [ ] SPI1 Slave MODE 3, RX DMA circular, TX DMA normal.  
+- [ ] SPI2 Slave MODE 3, RX DMA circular, TX DMA normal.
 - [ ] USART1 VCP funcionando (printf).  
 - [ ] E-STOP/PROX em EXTI; ISR só-flag.  
 - [ ] Router SPI recebe AA..55 e responde AB..54.
