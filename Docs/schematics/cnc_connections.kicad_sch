@@ -1,0 +1,3624 @@
+(kicad_sch
+        (version 20221206)
+        (generator eeschema)
+        (uuid 14f8930c-45c6-4546-b364-8df56be56f9b)
+        (paper "A3")
+        (title_block
+                (title "CNC Controller Interconnects")
+                (rev "1.0")
+                (company "Auto-generated via kicad-skip script")
+        )
+        (lib_symbols
+                (symbol "CNC:RaspberryPi3APlus"
+                        (uuid 95d4d428-900f-4964-9424-ec9dcf4b2ed8)
+                        (pin_names
+                                (offset 1.27)
+                        )
+                        (exclude_from_sim no)
+                        (in_bom yes)
+                        (on_board yes)
+                        (property "Reference" "J"
+                                (at 0 -20 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Value" "Raspberry Pi 3 A+"
+                                (at 0 20 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Footprint" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Datasheet" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_keywords" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_description" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_fp_filters" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Description" "Key Raspberry Pi 3 A+ control header pins"
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (symbol "CNC:RaspberryPi3APlus_body"
+                                (rectangle
+                                        (start -12 18)
+                                        (end 12 -18)
+                                        (stroke
+                                                (width 0.254)
+                                                (type default)
+                                        )
+                                        (fill
+                                                (type none)
+                                        )
+                                )
+                        )
+                        (symbol "CNC:RaspberryPi3APlus_pins"
+                                (pin passive line
+                                        (uuid 2838614f-47bd-48ec-820b-9c5df4bb607a)
+                                        (at -15 15 0)
+                                        (length 5.08)
+                                        (name "3V3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "1"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid b2019702-381d-4daf-bdf0-58058d55cdc9)
+                                        (at -15 10 0)
+                                        (length 5.08)
+                                        (name "GND"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "2"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 5a859438-8033-47d1-b67a-cef9e06c48ad)
+                                        (at 15 15 180)
+                                        (length 5.08)
+                                        (name "SPI_MOSI"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 53231e6c-02ca-4232-95f8-68b5d8b31985)
+                                        (at 15 10 180)
+                                        (length 5.08)
+                                        (name "SPI_MISO"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "4"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c4c3b2e3-cacc-45ca-b9a9-8601b2906de4)
+                                        (at 15 5 180)
+                                        (length 5.08)
+                                        (name "SPI_SCK"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "5"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 7a2472ab-b598-4bbd-8cf8-13597a51e12c)
+                                        (at 15 0 180)
+                                        (length 5.08)
+                                        (name "CS_STM32"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "6"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 26740742-1aa3-49d6-ba30-8e5482dbe8b9)
+                                        (at 15 -5 180)
+                                        (length 5.08)
+                                        (name "CS_TMC5160"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "7"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid a642e61b-cba1-4a43-8eb6-50f0c65b0d5d)
+                                        (at -15 5 0)
+                                        (length 5.08)
+                                        (name "5V_USB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "8"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid fd02797f-7080-4df3-81cc-0c0ba48979e8)
+                                        (at -15 0 0)
+                                        (length 5.08)
+                                        (name "RUN"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "9"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                        )
+                        (instances
+                                (project "CNC_Interconnects"
+                                        (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88" (reference "J1") (unit 1))
+                                )
+                        )
+                        (embedded_fonts no)
+                )
+                (symbol "CNC:STM32_B-L475E-IOT01A"
+                        (uuid 3f0e1873-4d42-42cb-87f4-d068c9fb9ce2)
+                        (pin_names
+                                (offset 1.27)
+                        )
+                        (exclude_from_sim no)
+                        (in_bom yes)
+                        (on_board yes)
+                        (property "Reference" "U"
+                                (at 0 -32 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Value" "B-L475E-IOT01A"
+                                (at 0 32 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Footprint" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Datasheet" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_keywords" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_description" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_fp_filters" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Description" "STM32L475 Discovery board application connector"
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (symbol "CNC:STM32_B-L475E-IOT01A_body"
+                                (rectangle
+                                        (start -20 30)
+                                        (end 20 -30)
+                                        (stroke
+                                                (width 0.254)
+                                                (type default)
+                                        )
+                                        (fill
+                                                (type none)
+                                        )
+                                )
+                        )
+                        (symbol "CNC:STM32_B-L475E-IOT01A_pins"
+                                (pin passive line
+                                        (uuid c1cab748-1f99-485b-85a6-fd1f79cc69af)
+                                        (at -23 25 0)
+                                        (length 5.08)
+                                        (name "3V3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "1"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 54283784-3f22-482b-aa79-7f42b4bd4a47)
+                                        (at -23 20 0)
+                                        (length 5.08)
+                                        (name "GND"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "2"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 1209a597-c6ed-4aab-8a07-63afedec4432)
+                                        (at -23 15 0)
+                                        (length 5.08)
+                                        (name "SPI_MOSI"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c0f031c8-ac9a-4f38-8e90-12801e2836f8)
+                                        (at -23 10 0)
+                                        (length 5.08)
+                                        (name "SPI_MISO"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "4"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 15de604b-6ea4-4d02-b249-f6b3cfb8573b)
+                                        (at -23 5 0)
+                                        (length 5.08)
+                                        (name "SPI_SCK"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "5"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 6aa26661-22dc-4649-8500-ed49f9839199)
+                                        (at -23 0 0)
+                                        (length 5.08)
+                                        (name "SPI_NSS"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "6"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 75f86ea4-e23d-403a-aeb7-6b884912d3ed)
+                                        (at 23 20 180)
+                                        (length 5.08)
+                                        (name "STEP_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "7"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 9127dbb3-5d49-4fda-af94-bb4be331a6a0)
+                                        (at 23 15 180)
+                                        (length 5.08)
+                                        (name "DIR_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "8"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 51d97fa3-8f6f-4926-aa9e-7412ffe7be43)
+                                        (at 23 10 180)
+                                        (length 5.08)
+                                        (name "EN_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "9"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c5866908-5b93-4ae4-8a45-da36ed7e7944)
+                                        (at 23 5 180)
+                                        (length 5.08)
+                                        (name "STEP_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "10"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c73c2ee2-4f47-46dc-a6a2-62a751ff3e69)
+                                        (at 23 0 180)
+                                        (length 5.08)
+                                        (name "DIR_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "11"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 5d5c6e53-3a67-46c9-bc7b-e03f6df712b3)
+                                        (at 23 -5 180)
+                                        (length 5.08)
+                                        (name "EN_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "12"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid d7b86880-cf11-4c1f-9720-ac0cb5ff4bf0)
+                                        (at 23 -10 180)
+                                        (length 5.08)
+                                        (name "STEP_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "13"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 480c58bd-51fa-46dc-95fa-e0d1f53a9f46)
+                                        (at 23 -15 180)
+                                        (length 5.08)
+                                        (name "DIR_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "14"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 0a2d04e6-5664-4cda-a15f-8118f74b2f5d)
+                                        (at 23 -20 180)
+                                        (length 5.08)
+                                        (name "EN_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "15"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 27484efa-176a-42a3-abdf-54df1a244226)
+                                        (at -23 -5 0)
+                                        (length 5.08)
+                                        (name "ENC_XA"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "16"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid a6f55def-41b5-43ca-b375-d56f3d6422e1)
+                                        (at -23 -10 0)
+                                        (length 5.08)
+                                        (name "ENC_XB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "17"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c6c03245-409f-4d33-9980-2a18db62bec8)
+                                        (at -23 -15 0)
+                                        (length 5.08)
+                                        (name "ENC_YA"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "18"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 695ac1bd-7085-43ca-b245-c4f76fa18de9)
+                                        (at -23 -20 0)
+                                        (length 5.08)
+                                        (name "ENC_YB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "19"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 08159942-88b2-4164-a987-91d110db3328)
+                                        (at -23 -25 0)
+                                        (length 5.08)
+                                        (name "ENC_ZA"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "20"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid b36f9d48-327e-472e-b6f8-d41c02d14d3c)
+                                        (at -23 -30 0)
+                                        (length 5.08)
+                                        (name "ENC_ZB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "21"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 08f22bd1-c30c-4824-8f7b-f876572bed2f)
+                                        (at 23 25 180)
+                                        (length 5.08)
+                                        (name "ESTOP"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "22"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c26e7b86-bd3c-457c-a5d8-706672cae103)
+                                        (at 23 30 180)
+                                        (length 5.08)
+                                        (name "LIM_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "23"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid ded3b6bc-8ee0-43c9-8218-e74dbada99a7)
+                                        (at 23 35 180)
+                                        (length 5.08)
+                                        (name "LIM_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "24"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid d8802167-f784-4cfa-ae32-77d71286cf12)
+                                        (at 23 40 180)
+                                        (length 5.08)
+                                        (name "LIM_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "25"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                        )
+                        (instances
+                                (project "CNC_Interconnects"
+                                        (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88" (reference "U1") (unit 1))
+                                )
+                        )
+                        (embedded_fonts no)
+                )
+                (symbol "CNC:TMC5160_DriverBank"
+                        (uuid d27737e1-b3e8-40fa-8f86-2ec86048c9bc)
+                        (pin_names
+                                (offset 1.27)
+                        )
+                        (exclude_from_sim no)
+                        (in_bom yes)
+                        (on_board yes)
+                        (property "Reference" "A"
+                                (at 0 -32 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Value" "TMC5160 Drivers"
+                                (at 0 32 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Footprint" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Datasheet" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_keywords" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_description" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_fp_filters" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Description" "Aggregate connections to three TMC5160 driver modules"
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (symbol "CNC:TMC5160_DriverBank_body"
+                                (rectangle
+                                        (start -18 30)
+                                        (end 18 -30)
+                                        (stroke
+                                                (width 0.254)
+                                                (type default)
+                                        )
+                                        (fill
+                                                (type none)
+                                        )
+                                )
+                        )
+                        (symbol "CNC:TMC5160_DriverBank_pins"
+                                (pin passive line
+                                        (uuid ac4f5af7-412a-48a2-9c8d-4c70f1d66ca4)
+                                        (at -21 25 0)
+                                        (length 5.08)
+                                        (name "3V3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "1"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid cd10035b-f216-4d58-bc28-4149a479a9b8)
+                                        (at -21 20 0)
+                                        (length 5.08)
+                                        (name "GND"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "2"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c416424d-9095-4943-8c59-93a16d955a40)
+                                        (at -21 15 0)
+                                        (length 5.08)
+                                        (name "SPI_MOSI"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 783faf4a-7207-4a29-994c-e6d2aee9db4e)
+                                        (at -21 10 0)
+                                        (length 5.08)
+                                        (name "SPI_MISO"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "4"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 3598b800-a506-4be6-93d3-3b2f430809b2)
+                                        (at -21 5 0)
+                                        (length 5.08)
+                                        (name "SPI_SCK"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "5"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 1042381d-2374-4804-a47f-0b8ccf41dd64)
+                                        (at -21 0 0)
+                                        (length 5.08)
+                                        (name "CS_TMC5160"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "6"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 3d44c16b-0670-4546-aecf-8b9a652ee47a)
+                                        (at 21 20 180)
+                                        (length 5.08)
+                                        (name "STEP_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "7"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 32408b59-594b-4516-97ba-bb2989452b4d)
+                                        (at 21 15 180)
+                                        (length 5.08)
+                                        (name "DIR_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "8"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 68559ba9-4c37-4848-9de9-95e672e9d060)
+                                        (at 21 10 180)
+                                        (length 5.08)
+                                        (name "EN_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "9"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 22e96107-27c1-4f07-9256-a18037361f79)
+                                        (at 21 5 180)
+                                        (length 5.08)
+                                        (name "STEP_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "10"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid a347d79c-6b11-48f3-849f-3d4f33315c17)
+                                        (at 21 0 180)
+                                        (length 5.08)
+                                        (name "DIR_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "11"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 7b7bba5e-88a5-4694-9c3b-2172e4fa1fe9)
+                                        (at 21 -5 180)
+                                        (length 5.08)
+                                        (name "EN_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "12"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 1dda21ce-4d69-4e33-b513-59c9cb6fa59a)
+                                        (at 21 -10 180)
+                                        (length 5.08)
+                                        (name "STEP_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "13"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 81a308b3-08d8-411e-abd5-dd9ea131ef0a)
+                                        (at 21 -15 180)
+                                        (length 5.08)
+                                        (name "DIR_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "14"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 6e54e83a-e099-490e-8fc0-04ad0520e3a7)
+                                        (at 21 -20 180)
+                                        (length 5.08)
+                                        (name "EN_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "15"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                        )
+                        (instances
+                                (project "CNC_Interconnects"
+                                        (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88" (reference "A1") (unit 1))
+                                )
+                        )
+                        (embedded_fonts no)
+                )
+                (symbol "CNC:EncoderBundle"
+                        (uuid ea2e2c9f-a668-48a3-b760-665721f94c4d)
+                        (pin_names
+                                (offset 1.27)
+                        )
+                        (exclude_from_sim no)
+                        (in_bom yes)
+                        (on_board yes)
+                        (property "Reference" "P"
+                                (at 0 -17 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Value" "Incremental Encoders"
+                                (at 0 17 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Footprint" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Datasheet" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_keywords" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_description" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_fp_filters" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Description" "Differential encoder channels for X/Y/Z axes"
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (symbol "CNC:EncoderBundle_body"
+                                (rectangle
+                                        (start -15 15)
+                                        (end 15 -15)
+                                        (stroke
+                                                (width 0.254)
+                                                (type default)
+                                        )
+                                        (fill
+                                                (type none)
+                                        )
+                                )
+                        )
+                        (symbol "CNC:EncoderBundle_pins"
+                                (pin passive line
+                                        (uuid 7fb8816c-b610-407c-b4a5-4055fd4f2296)
+                                        (at 18 10 180)
+                                        (length 5.08)
+                                        (name "ENC_XA"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "1"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 694e22b5-3645-4b0a-88ed-ed578a613813)
+                                        (at 18 5 180)
+                                        (length 5.08)
+                                        (name "ENC_XB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "2"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 8e0ba5ef-bc23-4e21-9888-664fcee187fb)
+                                        (at 18 0 180)
+                                        (length 5.08)
+                                        (name "ENC_YA"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 9cece6d3-3cf3-4c63-a64a-81323179d3d0)
+                                        (at 18 -5 180)
+                                        (length 5.08)
+                                        (name "ENC_YB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "4"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid d026320a-ebdc-4d4a-862f-2d7985282802)
+                                        (at 18 -10 180)
+                                        (length 5.08)
+                                        (name "ENC_ZA"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "5"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 4ed41ac9-2964-4fcf-a2a6-002783e68366)
+                                        (at 18 -15 180)
+                                        (length 5.08)
+                                        (name "ENC_ZB"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "6"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 466d1c44-2017-4da8-b770-f661c2d98ec1)
+                                        (at -18 10 0)
+                                        (length 5.08)
+                                        (name "5V"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "7"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 3e6cc149-ec36-491a-a493-00420a0843d3)
+                                        (at -18 5 0)
+                                        (length 5.08)
+                                        (name "GND"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "8"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                        )
+                        (instances
+                                (project "CNC_Interconnects"
+                                        (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88" (reference "P1") (unit 1))
+                                )
+                        )
+                        (embedded_fonts no)
+                )
+                (symbol "CNC:SafetyInterlocks"
+                        (uuid 2bc03d22-84df-487b-b781-88ff9d575248)
+                        (pin_names
+                                (offset 1.27)
+                        )
+                        (exclude_from_sim no)
+                        (in_bom yes)
+                        (on_board yes)
+                        (property "Reference" "SW"
+                                (at 0 -14 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Value" "Safety Inputs"
+                                (at 0 14 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (justify left)
+                                )
+                        )
+                        (property "Footprint" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Datasheet" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_keywords" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_description" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "ki_fp_filters" ""
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (property "Description" "Emergency stop and limit switches"
+                                (at 0 0 0)
+                                (effects
+                                        (font
+                                                (size 1.27 1.27)
+                                        )
+                                        (hide yes)
+                                )
+                        )
+                        (symbol "CNC:SafetyInterlocks_body"
+                                (rectangle
+                                        (start -12 12)
+                                        (end 12 -12)
+                                        (stroke
+                                                (width 0.254)
+                                                (type default)
+                                        )
+                                        (fill
+                                                (type none)
+                                        )
+                                )
+                        )
+                        (symbol "CNC:SafetyInterlocks_pins"
+                                (pin passive line
+                                        (uuid 22a29722-e97e-48c4-a8e7-48d5b319c048)
+                                        (at -15 10 0)
+                                        (length 5.08)
+                                        (name "ESTOP"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "1"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid f505e5f9-374e-44c7-bd49-fad6e2b90016)
+                                        (at -15 5 0)
+                                        (length 5.08)
+                                        (name "LIM_X"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "2"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid d2f3d005-5930-4a9c-b403-7f6b0677084f)
+                                        (at -15 0 0)
+                                        (length 5.08)
+                                        (name "LIM_Y"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 96ebd3a6-68ca-42c3-8aa5-f5d8c15688db)
+                                        (at -15 -5 0)
+                                        (length 5.08)
+                                        (name "LIM_Z"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "4"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid c9c1c8cd-1c07-42b8-ab6e-44e16aa6100d)
+                                        (at 15 10 180)
+                                        (length 5.08)
+                                        (name "GND"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "5"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 94760c72-8647-42f6-93cf-8c6afbc5687e)
+                                        (at 15 5 180)
+                                        (length 5.08)
+                                        (name "GND"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "6"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                                (pin passive line
+                                        (uuid 7b0efacb-f1bf-4cc8-ae51-e3658e78f3c6)
+                                        (at 15 0 180)
+                                        (length 5.08)
+                                        (name "3V3"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (justify left)
+                                                )
+                                        )
+                                        (number "7"
+                                                (effects
+                                                        (font
+                                                                (size 1.27 1.27)
+                                                        )
+                                                        (hide yes)
+                                                )
+                                        )
+                                )
+                        )
+                        (instances
+                                (project "CNC_Interconnects"
+                                        (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88" (reference "SW1") (unit 1))
+                                )
+                        )
+                        (embedded_fonts no)
+                )
+        )
+        (sheet
+                (number 1)
+                (name "")
+                (uuid b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88)
+                (property "Sheetname" ""
+                        (at 0 0 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (justify left)
+                        )
+                )
+                (property "Sheetfile" "cnc_connections.kicad_sch"
+                        (at 0 -5 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (justify left)
+                        )
+                )
+        (symbol
+                (lib_id "CNC:RaspberryPi3APlus")
+                (at -120 60 0)
+                (unit 1)
+                (exclude_from_sim no)
+                (in_bom yes)
+                (on_board yes)
+                (dnp no)
+                (fields_autoplaced yes)
+                (uuid d6fd83d3-eafd-4802-a165-d2820bede39a)
+                (property "Reference" "J1"
+                        (at -120 83 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Value" "Raspberry Pi 3 A+"
+                        (at -120 37 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Footprint" ""
+                        (at -120 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Datasheet" ""
+                        (at -120 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Description" "Key Raspberry Pi 3 A+ control header pins"
+                        (at -120 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (pin "1" (uuid de7e6e4b-ab55-4bb8-963b-332f431079e5))
+                (pin "2" (uuid d490f54f-c301-447a-88f9-94719efd3d6e))
+                (pin "3" (uuid 8286c9fe-bc8b-44df-bcd6-8756131e146e))
+                (pin "4" (uuid 6a7f5a96-3048-4858-a533-fac0562e240a))
+                (pin "5" (uuid 39e07133-2f9d-4921-8ab2-51d01d2b3108))
+                (pin "6" (uuid c78d800a-9735-469a-80b5-3a69eb9bcce4))
+                (pin "7" (uuid 8718dfac-b329-48dd-95d6-5b0276f60584))
+                (pin "8" (uuid 3f1132f7-3a54-444e-b691-cc8b0166a72b))
+                (pin "9" (uuid 424869fb-f6a0-4276-afaa-6901e5602c50))
+                (instances
+                        (project "CNC_Interconnects"
+                                (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88"
+                                        (reference "J1")
+                                        (unit 1)
+                                )
+                        )
+                )
+        )
+        (symbol
+                (lib_id "CNC:STM32_B-L475E-IOT01A")
+                (at 0 60 0)
+                (unit 1)
+                (exclude_from_sim no)
+                (in_bom yes)
+                (on_board yes)
+                (dnp no)
+                (fields_autoplaced yes)
+                (uuid 05c06b6c-b95d-482f-b9e8-25696f883f08)
+                (property "Reference" "U1"
+                        (at 0 95 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Value" "B-L475E-IOT01A"
+                        (at 0 25 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Footprint" ""
+                        (at 0 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Datasheet" ""
+                        (at 0 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Description" "STM32L475 Discovery board application connector"
+                        (at 0 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (pin "1" (uuid 0b88c32e-ddef-46e9-bda6-e89d242aba16))
+                (pin "2" (uuid 733e5e9f-691b-49e7-8966-90020d6a5e3f))
+                (pin "3" (uuid c1a3e8d7-d942-4923-97d5-af9198108a5e))
+                (pin "4" (uuid 30032248-bf71-4b76-b130-f19b8cb63c84))
+                (pin "5" (uuid e22fe1af-4982-484f-9f69-830bb8c861bf))
+                (pin "6" (uuid 5099771e-6b30-4714-b675-b8b2058d0b35))
+                (pin "7" (uuid 9667fbd1-bf5e-4573-8808-a165aff8aae3))
+                (pin "8" (uuid 2fc8d4e4-2b73-4792-babf-e4ccb3f2534a))
+                (pin "9" (uuid 41800aef-24d2-490b-a68e-4ef10b29e8be))
+                (pin "10" (uuid c2986954-8cd7-4761-b99f-739d6286fc2f))
+                (pin "11" (uuid 9e79ef04-461c-43c4-9a2a-df0fc8f2f34c))
+                (pin "12" (uuid c064006d-4ca0-47b3-b2d7-d3fe44e0a930))
+                (pin "13" (uuid 225d8a1a-9c27-48b6-9e4e-537d417e5d7a))
+                (pin "14" (uuid 33286c3c-9814-46f2-81da-51165ac3c399))
+                (pin "15" (uuid 1f9fdd93-4431-40d2-aa40-8a0aed034af7))
+                (pin "16" (uuid a82e126a-bbc1-45ab-b37c-00d0d8c9b6f5))
+                (pin "17" (uuid 04b5a684-1d70-49f1-b3ab-7e4b102693df))
+                (pin "18" (uuid c96bb78e-56c8-47cb-a38d-9666939e2bbb))
+                (pin "19" (uuid e1224553-347d-47f5-891d-aa2aecd6777b))
+                (pin "20" (uuid 436a4e95-9618-4117-be50-7da446a773de))
+                (pin "21" (uuid 0f5b6455-5c4e-47d1-ab13-de0463228941))
+                (pin "22" (uuid a5bef628-dd77-4764-9d68-450371aadf0a))
+                (pin "23" (uuid be1ae254-b542-480b-b207-946b6a74b772))
+                (pin "24" (uuid 1a2ad189-b315-4bb9-be3e-9b5ef050178c))
+                (pin "25" (uuid c2918d6d-098e-4ee0-a5cc-525f5a9faec8))
+                (instances
+                        (project "CNC_Interconnects"
+                                (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88"
+                                        (reference "U1")
+                                        (unit 1)
+                                )
+                        )
+                )
+        )
+        (symbol
+                (lib_id "CNC:TMC5160_DriverBank")
+                (at 120 60 0)
+                (unit 1)
+                (exclude_from_sim no)
+                (in_bom yes)
+                (on_board yes)
+                (dnp no)
+                (fields_autoplaced yes)
+                (uuid 2615a193-68c7-4cb5-842a-df14b2380ef8)
+                (property "Reference" "A1"
+                        (at 120 95 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Value" "TMC5160 Drivers"
+                        (at 120 25 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Footprint" ""
+                        (at 120 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Datasheet" ""
+                        (at 120 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Description" "Aggregate connections to three TMC5160 driver modules"
+                        (at 120 60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (pin "1" (uuid b452ee70-9838-4d61-8c2b-d47f751568fd))
+                (pin "2" (uuid 26c85e9d-007c-4510-b430-05872662cce2))
+                (pin "3" (uuid 8b39b5e4-473d-4f65-9f73-855ee9a6cbfa))
+                (pin "4" (uuid b677e7d1-e2f5-4dda-b454-906b878c043f))
+                (pin "5" (uuid 7c0b0a84-8486-4e26-a029-4ced01ea8b70))
+                (pin "6" (uuid 3f4b79cd-2f60-4c12-9ba1-8b84894b4019))
+                (pin "7" (uuid 590d9d34-4a4f-47c5-b3cb-4e044a59ac11))
+                (pin "8" (uuid 08f05178-19fa-4d1f-bf9f-88ba3a95789e))
+                (pin "9" (uuid 35ef07a2-eb12-4299-8312-1537f856451c))
+                (pin "10" (uuid a5893109-ed51-4f02-8692-91ae25bc9c4e))
+                (pin "11" (uuid 239d8112-2d43-424f-bcd9-f368319f304c))
+                (pin "12" (uuid 318c0da1-cd42-4079-92c8-deb206511588))
+                (pin "13" (uuid 9d4a161e-271d-4be7-9db3-0e9b476e1542))
+                (pin "14" (uuid 0a4b599d-a241-46f6-8112-e07661561866))
+                (pin "15" (uuid 8b0ed7b6-3be2-4bda-bd50-c48d1c995c15))
+                (instances
+                        (project "CNC_Interconnects"
+                                (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88"
+                                        (reference "A1")
+                                        (unit 1)
+                                )
+                        )
+                )
+        )
+        (symbol
+                (lib_id "CNC:EncoderBundle")
+                (at 0 -40 0)
+                (unit 1)
+                (exclude_from_sim no)
+                (in_bom yes)
+                (on_board yes)
+                (dnp no)
+                (fields_autoplaced yes)
+                (uuid 3380f009-10e3-4619-a0b3-198e9d92c30f)
+                (property "Reference" "P1"
+                        (at 0 -20 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Value" "Incremental Encoders"
+                        (at 0 -60 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Footprint" ""
+                        (at 0 -40 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Datasheet" ""
+                        (at 0 -40 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Description" "Differential encoder channels for X/Y/Z axes"
+                        (at 0 -40 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (pin "1" (uuid a52bc51f-28d6-43ef-9b38-39f81d154404))
+                (pin "2" (uuid 5a5cd294-1397-4a70-97af-8b14034984ef))
+                (pin "3" (uuid 00357c46-4bee-4f5b-b22d-a94554f31d59))
+                (pin "4" (uuid e276a331-91de-42ab-a984-1417735e69b0))
+                (pin "5" (uuid b3970a11-ff06-49c4-ab78-786c3cf7249b))
+                (pin "6" (uuid f51b5af0-09cf-4244-9be1-e8c1117d6224))
+                (pin "7" (uuid e15f9c5b-b2c5-4c43-bd18-2549ed9e3446))
+                (pin "8" (uuid 4380793e-af8e-46d5-8f11-6f74cb181493))
+                (instances
+                        (project "CNC_Interconnects"
+                                (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88"
+                                        (reference "P1")
+                                        (unit 1)
+                                )
+                        )
+                )
+        )
+        (symbol
+                (lib_id "CNC:SafetyInterlocks")
+                (at 120 -40 0)
+                (unit 1)
+                (exclude_from_sim no)
+                (in_bom yes)
+                (on_board yes)
+                (dnp no)
+                (fields_autoplaced yes)
+                (uuid 67c1d841-cd8f-4cc9-85d8-450c8e44c5c5)
+                (property "Reference" "SW1"
+                        (at 120 -23 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Value" "Safety Inputs"
+                        (at 120 -57 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                        )
+                )
+                (property "Footprint" ""
+                        (at 120 -40 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Datasheet" ""
+                        (at 120 -40 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (property "Description" "Emergency stop and limit switches"
+                        (at 120 -40 0)
+                        (effects
+                                (font
+                                        (size 1.27 1.27)
+                                )
+                                (hide yes)
+                        )
+                )
+                (pin "1" (uuid b79b2150-5d51-46ec-9259-5cc2cdd00e22))
+                (pin "2" (uuid da01fbae-1037-49ce-b3c7-6575d167fa76))
+                (pin "3" (uuid f8eb64fb-bcec-44e8-b9fe-85a861ddd696))
+                (pin "4" (uuid e650ba9d-9fca-4362-8671-655d453f724d))
+                (pin "6" (uuid 453d7203-4b00-460a-88e6-c3add243d800))
+                (pin "7" (uuid 94661477-8610-4cf1-8400-0369a205001c))
+                (instances
+                        (project "CNC_Interconnects"
+                                (path "/b4ee60b2-2eb0-46a1-99b3-7efc5bcf1c88"
+                                        (reference "SW1")
+                                        (unit 1)
+                                )
+                        )
+                )
+        )
+        (wire
+                (pts
+                        (xy -135 75) (xy -128 75)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 132a5045-d5ad-4846-9bfe-f2740f2d6b68)
+        )
+        (wire
+                (pts
+                        (xy -23 85) (xy -16 85)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 6f0127c9-77c5-45c2-ad8e-2d70f7a69f52)
+        )
+        (wire
+                (pts
+                        (xy 99 85) (xy 106 85)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid d2385737-5b91-4546-bc28-f451d9774ef3)
+        )
+        (wire
+                (pts
+                        (xy 135 -40) (xy 128 -40)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 972de2f0-c1e5-4f2f-80f5-17708ce28d9f)
+        )
+        (wire
+                (pts
+                        (xy -135 70) (xy -128 70)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 87001414-e7f8-496e-aee1-01ac456af975)
+        )
+        (wire
+                (pts
+                        (xy -23 80) (xy -16 80)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid d35c9172-d025-45ec-86ee-338ee81d7340)
+        )
+        (wire
+                (pts
+                        (xy 99 80) (xy 106 80)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 275f9a96-1b01-4d43-96ff-91e2fd62e00f)
+        )
+        (wire
+                (pts
+                        (xy -18 -35) (xy -11 -35)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 6b4e6753-7f88-443e-ae55-5a2ab20e861a)
+        )
+        (wire
+                (pts
+                        (xy 135 -35) (xy 128 -35)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 890db8a0-415b-4e9f-ab5a-93348861ccc4)
+        )
+        (wire
+                (pts
+                        (xy -105 75) (xy -112 75)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 2592cd61-0e20-4df5-8f02-7132082ff572)
+        )
+        (wire
+                (pts
+                        (xy -23 75) (xy -16 75)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 12156da3-6ed3-4336-9e8d-d11fb7924ea9)
+        )
+        (wire
+                (pts
+                        (xy 99 75) (xy 106 75)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 81dbfea2-dde2-47a7-9966-e116671544a4)
+        )
+        (wire
+                (pts
+                        (xy -105 70) (xy -112 70)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 7d509fca-7dc7-4521-b3a2-58c5446b6be6)
+        )
+        (wire
+                (pts
+                        (xy -23 70) (xy -16 70)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid d6a9db22-db0f-4e7e-8dd4-3cb9d14cf081)
+        )
+        (wire
+                (pts
+                        (xy 99 70) (xy 106 70)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid a99d5724-92a9-4022-b432-4627f7dac07c)
+        )
+        (wire
+                (pts
+                        (xy -105 65) (xy -112 65)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 48d0c222-d9b3-44d4-aca6-49f09d7590da)
+        )
+        (wire
+                (pts
+                        (xy -23 65) (xy -16 65)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 5bbdd419-f5ce-408c-8b0f-aef8fdaf9f28)
+        )
+        (wire
+                (pts
+                        (xy 99 65) (xy 106 65)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid b7050253-2a74-4575-a9db-a8f86f149759)
+        )
+        (wire
+                (pts
+                        (xy -105 60) (xy -112 60)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid b89f974e-e227-4302-9108-f46db4b84a97)
+        )
+        (wire
+                (pts
+                        (xy -23 60) (xy -16 60)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 8d528fb7-2324-4901-b625-054c894d4187)
+        )
+        (wire
+                (pts
+                        (xy -105 55) (xy -112 55)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid f8f71bbf-a354-4954-8284-2496fd32e400)
+        )
+        (wire
+                (pts
+                        (xy 99 60) (xy 106 60)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid d45669e5-b9f7-4d98-9275-73c2932c0512)
+        )
+        (wire
+                (pts
+                        (xy 23 80) (xy 16 80)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 981573c4-4076-4665-80c6-a45f21359610)
+        )
+        (wire
+                (pts
+                        (xy 141 80) (xy 134 80)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 4b078404-89b2-4635-9826-ab706c3b28ef)
+        )
+        (wire
+                (pts
+                        (xy 23 75) (xy 16 75)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 7a384d3b-a6a2-4ec7-8e47-48d1c0a6584e)
+        )
+        (wire
+                (pts
+                        (xy 141 75) (xy 134 75)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 162f8238-7642-4f63-9eec-b82cb2ece174)
+        )
+        (wire
+                (pts
+                        (xy 23 70) (xy 16 70)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 903b491d-fb12-48a5-bd18-3b2bc930fd15)
+        )
+        (wire
+                (pts
+                        (xy 141 70) (xy 134 70)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 44853373-044d-4b18-9b1f-152e49923735)
+        )
+        (wire
+                (pts
+                        (xy 23 65) (xy 16 65)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 0dfd1474-fda2-4cbd-ba40-c44c2d2c5424)
+        )
+        (wire
+                (pts
+                        (xy 141 65) (xy 134 65)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 9b392500-9cf7-4b23-99f8-7c8b60af6756)
+        )
+        (wire
+                (pts
+                        (xy 23 60) (xy 16 60)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 8e55ec36-4295-4b62-b8dc-ec311ef6842a)
+        )
+        (wire
+                (pts
+                        (xy 141 60) (xy 134 60)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid dbd58fab-d655-4108-b0ab-070259cd1cc2)
+        )
+        (wire
+                (pts
+                        (xy 23 55) (xy 16 55)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 4c1306c6-7ff6-41f8-b026-5570444480f0)
+        )
+        (wire
+                (pts
+                        (xy 141 55) (xy 134 55)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid ba98ea3a-2195-40bd-9c80-30723a442a0a)
+        )
+        (wire
+                (pts
+                        (xy 23 50) (xy 16 50)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 70a359cc-9fb2-46d8-a49c-8d86bdd48c4c)
+        )
+        (wire
+                (pts
+                        (xy 141 50) (xy 134 50)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 26251466-60f2-4641-bb91-fb37a211214f)
+        )
+        (wire
+                (pts
+                        (xy 23 45) (xy 16 45)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid ab8f5381-845f-4380-8d50-4400b1573435)
+        )
+        (wire
+                (pts
+                        (xy 141 45) (xy 134 45)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 020ec68f-c738-4373-9091-ebeb7e23655c)
+        )
+        (wire
+                (pts
+                        (xy 23 40) (xy 16 40)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid ea332be6-490f-4253-9e95-706680c2bda1)
+        )
+        (wire
+                (pts
+                        (xy 141 40) (xy 134 40)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid ef3a6175-066d-4802-947e-eea10d300161)
+        )
+        (wire
+                (pts
+                        (xy -23 55) (xy -16 55)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid c159f685-9369-4532-a5c3-b33dcb52a1fe)
+        )
+        (wire
+                (pts
+                        (xy 18 -30) (xy 11 -30)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 43d899eb-38dc-479f-b884-3f3cc13e9ec9)
+        )
+        (wire
+                (pts
+                        (xy -23 50) (xy -16 50)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid d24d513d-7cca-47c7-bb90-7de490b38d2a)
+        )
+        (wire
+                (pts
+                        (xy 18 -35) (xy 11 -35)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid aeec44ed-ee38-497c-9ff3-b8f1915459ee)
+        )
+        (wire
+                (pts
+                        (xy -23 45) (xy -16 45)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid ecf05589-21d4-49f0-b919-a5b61a7b8e02)
+        )
+        (wire
+                (pts
+                        (xy 18 -40) (xy 11 -40)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid b3518656-1e97-4218-acf5-291c5d968871)
+        )
+        (wire
+                (pts
+                        (xy -23 40) (xy -16 40)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 34a0abf2-e658-46e8-a8f8-dddfde67bafa)
+        )
+        (wire
+                (pts
+                        (xy 18 -45) (xy 11 -45)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid c9262255-fe3b-4e2d-b64f-ffbfecd3bfe3)
+        )
+        (wire
+                (pts
+                        (xy -23 35) (xy -16 35)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid f298f3e7-c21a-4acb-bab7-cee7ff33d92f)
+        )
+        (wire
+                (pts
+                        (xy 18 -50) (xy 11 -50)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid ad8f4f74-1617-4d66-9e02-14cb3f470758)
+        )
+        (wire
+                (pts
+                        (xy -23 30) (xy -16 30)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 0b9f12b5-1670-4714-8918-e360c8cc1204)
+        )
+        (wire
+                (pts
+                        (xy 18 -55) (xy 11 -55)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid b3da1dac-fb3d-4f68-9fb8-db1fb1ed93d7)
+        )
+        (wire
+                (pts
+                        (xy 23 85) (xy 16 85)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 69df017a-bf1a-4704-91ce-4d6e878b99ae)
+        )
+        (wire
+                (pts
+                        (xy 105 -30) (xy 112 -30)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 636f108a-f358-4d57-a961-acef3e364166)
+        )
+        (wire
+                (pts
+                        (xy 23 90) (xy 16 90)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 19d28d74-6be6-4df0-97f0-904661568c2c)
+        )
+        (wire
+                (pts
+                        (xy 105 -35) (xy 112 -35)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 48209b45-5f5b-4fa5-b443-e4189fc6ff14)
+        )
+        (wire
+                (pts
+                        (xy 23 95) (xy 16 95)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 4a2bdc72-58d1-4b85-85aa-9586ff202503)
+        )
+        (wire
+                (pts
+                        (xy 105 -40) (xy 112 -40)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid fa519b04-3848-4abd-9f6f-dd31f6b5d6aa)
+        )
+        (wire
+                (pts
+                        (xy 23 100) (xy 16 100)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 1515eb86-7d79-4886-b7a9-1eb53a024269)
+        )
+        (wire
+                (pts
+                        (xy 105 -45) (xy 112 -45)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 9a562198-474b-40f0-a10c-41aabcb3ae06)
+        )
+        (wire
+                (pts
+                        (xy -135 65) (xy -128 65)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 867fe578-87aa-49f0-a11a-5e6d405648db)
+        )
+        (wire
+                (pts
+                        (xy -18 -30) (xy -11 -30)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 63a56dab-51e8-49b5-ae8a-725e68046878)
+        )
+        (wire
+                (pts
+                        (xy -135 60) (xy -128 60)
+                )
+                (stroke
+                        (width 0)
+                        (type solid)
+                )
+                (uuid 10379ea1-c0fa-4fb6-9ad5-1bd43d3df503)
+        )
+        (global_label "3V3"
+                (shape input)
+                (at -126 75 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid b9de18e7-3482-442c-962d-66175617f66d)
+        )
+        (global_label "3V3"
+                (shape input)
+                (at -14 85 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid e9b82e31-4b46-4526-87fe-02bb7ef9742e)
+        )
+        (global_label "3V3"
+                (shape input)
+                (at 108 85 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 91c82df9-4b8e-4f25-99f3-36e94d0ac347)
+        )
+        (global_label "3V3"
+                (shape input)
+                (at 126 -40 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid b93efd7b-aba8-449b-9e2e-41000fc35df6)
+        )
+        (global_label "GND"
+                (shape input)
+                (at -126 70 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid c68f2e28-6ede-4490-80cb-95ff529c9e98)
+        )
+        (global_label "GND"
+                (shape input)
+                (at -14 80 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 357f69ae-7525-47b4-8f9b-fd024fcee2d4)
+        )
+        (global_label "GND"
+                (shape input)
+                (at 108 80 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid cd3be973-8afe-4959-9e73-99e015993f82)
+        )
+        (global_label "GND"
+                (shape input)
+                (at -9 -35 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 57da0d94-1c2f-4b06-8482-10f32690ae1b)
+        )
+        (global_label "GND"
+                (shape input)
+                (at 126 -35 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid f72c8ca2-acfc-4bcf-997e-9b0ad8ad253e)
+        )
+        (global_label "SPI_MOSI"
+                (shape input)
+                (at -114 75 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 9e709478-6d37-4f33-89b5-3a2b7bdb9d75)
+        )
+        (global_label "SPI_MOSI"
+                (shape input)
+                (at -14 75 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 23ca56b7-1f77-4f0d-8620-c0cb5e254f72)
+        )
+        (global_label "SPI_MOSI"
+                (shape input)
+                (at 108 75 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 04b8cb58-aa2d-473a-b032-2c3fda3f684e)
+        )
+        (global_label "SPI_MISO"
+                (shape input)
+                (at -114 70 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid cd96d456-f83b-457d-be57-e589ef95d621)
+        )
+        (global_label "SPI_MISO"
+                (shape input)
+                (at -14 70 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid c1f3f1e6-8bde-40b2-b8e8-0c53d8ba2617)
+        )
+        (global_label "SPI_MISO"
+                (shape input)
+                (at 108 70 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 3203e41f-7625-4dc8-ac1d-d581c9376774)
+        )
+        (global_label "SPI_SCK"
+                (shape input)
+                (at -114 65 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 1b40aa13-7023-4fbc-b234-8aac66b55131)
+        )
+        (global_label "SPI_SCK"
+                (shape input)
+                (at -14 65 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 2d2fd61a-04f4-4a9e-a4b3-afc45542186d)
+        )
+        (global_label "SPI_SCK"
+                (shape input)
+                (at 108 65 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid f633f37f-7362-48a0-bf2a-bb4aa59b2652)
+        )
+        (global_label "CS_STM32"
+                (shape input)
+                (at -114 60 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid bac116ed-ca22-41c9-893a-01b1c735ec91)
+        )
+        (global_label "CS_STM32"
+                (shape input)
+                (at -14 60 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 5cd9aacd-a0d3-40c8-b0ed-2f602100481f)
+        )
+        (global_label "CS_TMC5160"
+                (shape input)
+                (at -114 55 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid cd7e08e9-c9f8-4a89-adc0-db6fb559d1ce)
+        )
+        (global_label "CS_TMC5160"
+                (shape input)
+                (at 108 60 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 17bb9f5e-cd94-42c2-834f-92081e4bc60f)
+        )
+        (global_label "STEP_X"
+                (shape input)
+                (at 14 80 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 8a769208-f857-4788-8549-a629889e80ec)
+        )
+        (global_label "STEP_X"
+                (shape input)
+                (at 132 80 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid c4ed850c-4051-4dd3-b7ee-fde11280864d)
+        )
+        (global_label "DIR_X"
+                (shape input)
+                (at 14 75 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 574a78a0-1ecb-461b-a57e-b501f436db37)
+        )
+        (global_label "DIR_X"
+                (shape input)
+                (at 132 75 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 9cc2413d-eb41-4898-a53d-2fd89b067198)
+        )
+        (global_label "EN_X"
+                (shape input)
+                (at 14 70 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 6813cec4-cebb-4b16-8996-f55e03e5a20b)
+        )
+        (global_label "EN_X"
+                (shape input)
+                (at 132 70 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 818dec7e-60b2-4779-97b6-178ea83e8a41)
+        )
+        (global_label "STEP_Y"
+                (shape input)
+                (at 14 65 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid afa10280-3974-4fd8-844d-afc3c19246e5)
+        )
+        (global_label "STEP_Y"
+                (shape input)
+                (at 132 65 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid d19597d3-52ba-4d76-9c3b-45b00b996d39)
+        )
+        (global_label "DIR_Y"
+                (shape input)
+                (at 14 60 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid b34a2ad0-7055-48c3-a6ea-6875df62e7ff)
+        )
+        (global_label "DIR_Y"
+                (shape input)
+                (at 132 60 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid b1be9b65-51d0-4ffb-afde-f05f2d63a267)
+        )
+        (global_label "EN_Y"
+                (shape input)
+                (at 14 55 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 6afe7f0c-47d2-40a2-895d-8c3d1c1eae89)
+        )
+        (global_label "EN_Y"
+                (shape input)
+                (at 132 55 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 72bf9c37-26d8-4e15-b02f-083737b5cff2)
+        )
+        (global_label "STEP_Z"
+                (shape input)
+                (at 14 50 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 8a1c191b-9342-4be6-9abb-0f3bf7162976)
+        )
+        (global_label "STEP_Z"
+                (shape input)
+                (at 132 50 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 5bce6981-15e6-46f5-810b-e7f2d69894ff)
+        )
+        (global_label "DIR_Z"
+                (shape input)
+                (at 14 45 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid c30f3da0-21ec-4235-8f8c-6dfe856efa0d)
+        )
+        (global_label "DIR_Z"
+                (shape input)
+                (at 132 45 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid fa09a1ae-9f69-44d2-a622-68cc1bd6fe54)
+        )
+        (global_label "EN_Z"
+                (shape input)
+                (at 14 40 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 5e294e76-e141-4e9f-9853-2418a5d609fc)
+        )
+        (global_label "EN_Z"
+                (shape input)
+                (at 132 40 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid d2fa19e3-9656-4308-9862-3064de2d4fa5)
+        )
+        (global_label "ENC_XA"
+                (shape input)
+                (at -14 55 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 67d44f0c-dff4-4571-ab23-753d9c5535c3)
+        )
+        (global_label "ENC_XA"
+                (shape input)
+                (at 9 -30 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 42a17b7f-2bb1-47df-8d08-fc236c5e5097)
+        )
+        (global_label "ENC_XB"
+                (shape input)
+                (at -14 50 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid d7a387f3-7fb7-4046-8914-ce261d9b09a5)
+        )
+        (global_label "ENC_XB"
+                (shape input)
+                (at 9 -35 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 5e04568f-b720-4817-8611-a0d3ee7b0a0d)
+        )
+        (global_label "ENC_YA"
+                (shape input)
+                (at -14 45 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 6820177a-fc09-4351-a052-0e3cba3f26dd)
+        )
+        (global_label "ENC_YA"
+                (shape input)
+                (at 9 -40 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 88c818a7-df77-455a-89f2-bbb4e448dc2d)
+        )
+        (global_label "ENC_YB"
+                (shape input)
+                (at -14 40 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 08b3267f-d01d-4e64-b3e1-4517ae25c291)
+        )
+        (global_label "ENC_YB"
+                (shape input)
+                (at 9 -45 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid f80cbcd2-8d24-4d57-a016-0b5889456bab)
+        )
+        (global_label "ENC_ZA"
+                (shape input)
+                (at -14 35 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid ac0a1663-e6af-4016-b849-d627725dbf0e)
+        )
+        (global_label "ENC_ZA"
+                (shape input)
+                (at 9 -50 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 87c70de8-f77d-4fe9-a831-9c8eda07d581)
+        )
+        (global_label "ENC_ZB"
+                (shape input)
+                (at -14 30 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid c9b2ce19-9fc9-4fe9-bcbc-7959aea3d1a2)
+        )
+        (global_label "ENC_ZB"
+                (shape input)
+                (at 9 -55 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 365115a4-ea35-4d1b-951f-acd4a17aecda)
+        )
+        (global_label "ESTOP"
+                (shape input)
+                (at 14 85 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 72003383-8c78-4f28-8a6e-0a1aa428b9ce)
+        )
+        (global_label "ESTOP"
+                (shape input)
+                (at 114 -30 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 0d440b54-089a-44f0-9342-a56728f79ede)
+        )
+        (global_label "LIM_X"
+                (shape input)
+                (at 14 90 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 8f02941f-1cb5-4274-b970-f8e93a9900f6)
+        )
+        (global_label "LIM_X"
+                (shape input)
+                (at 114 -35 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 73024a56-49e4-4f88-b5c0-fad792abe6a1)
+        )
+        (global_label "LIM_Y"
+                (shape input)
+                (at 14 95 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 0b3a8458-0ce6-4477-af4c-e37f09789671)
+        )
+        (global_label "LIM_Y"
+                (shape input)
+                (at 114 -40 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 26f812d9-5d17-4c99-96db-0a76cc1365b8)
+        )
+        (global_label "LIM_Z"
+                (shape input)
+                (at 14 100 180)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                        (justify right)
+                )
+                (uuid 094789ca-883b-48f8-8daa-ef1906079ac0)
+        )
+        (global_label "LIM_Z"
+                (shape input)
+                (at 114 -45 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid a41d7b50-5310-4f09-8a64-fa2da2ffec78)
+        )
+        (global_label "5V_AUX"
+                (shape input)
+                (at -126 65 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid b7527e7f-87c7-4334-82c7-c7e9abf04f4f)
+        )
+        (global_label "5V_AUX"
+                (shape input)
+                (at -9 -30 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 29051521-6841-4c1a-8006-7bf9e6c442a8)
+        )
+        (global_label "RUN"
+                (shape input)
+                (at -126 60 0)
+                (fields_autoplaced yes)
+                (effects
+                        (font
+                                (size 1.27 1.27)
+                        )
+                )
+                (uuid 74e765e1-8100-47e3-95df-bd6e338c98d4)
+        )
+        )
+        (sheet_instances
+                (path "/" (page "1"))
+        )
+)
