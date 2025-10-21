@@ -1,24 +1,37 @@
 #include "Services/Motion/motion_hw.h"
 #include "gpio.h"
 #include "tim.h"
+#include "lptim.h"
 #include "main.h"
 
 // Mapeamento de pinos e timers por eixo
+typedef enum {
+    MOTION_ENCODER_TYPE_TIM = 0,
+    MOTION_ENCODER_TYPE_LPTIM = 1,
+} motion_encoder_type_t;
+
 typedef struct {
     GPIO_TypeDef *step_port; uint16_t step_pin;
     GPIO_TypeDef *dir_port;  uint16_t dir_pin;
     GPIO_TypeDef *ena_port;  uint16_t ena_pin;
-    TIM_HandleTypeDef *encoder;
+    motion_encoder_type_t encoder_type;
+    TIM_HandleTypeDef *tim;
+    LPTIM_HandleTypeDef *lptim;
     uint8_t counter_bits; // 16 ou 32
 } motion_axis_hw_t;
 
+#define LPTIM_ENCODER_PERIOD 0xFFFFu
+
 static const motion_axis_hw_t g_axis[MOTION_AXIS_COUNT] = {
-    // X
-    { GPIOB, GPIO_PIN_4, GPIOA, GPIO_PIN_3, GPIOC, GPIO_PIN_4, &htim2, 32u },
-    // Y
-    { GPIOB, GPIO_PIN_0, GPIOB, GPIO_PIN_2, GPIOC, GPIO_PIN_5, &htim5, 32u },
-    // Z
-    { GPIOB, GPIO_PIN_1, GPIOA, GPIO_PIN_2, GPIOA, GPIO_PIN_8, &htim3, 16u },
+    // X -> TIM3 em PA6/PA7 (16 bits)
+    { GPIOB, GPIO_PIN_4, GPIOA, GPIO_PIN_3, GPIOC, GPIO_PIN_4,
+      MOTION_ENCODER_TYPE_TIM, &htim3, NULL, 16u },
+    // Y -> LPTIM1 em PA4/PA5 (16 bits)
+    { GPIOB, GPIO_PIN_0, GPIOB, GPIO_PIN_2, GPIOC, GPIO_PIN_5,
+      MOTION_ENCODER_TYPE_LPTIM, NULL, &hlptim1, 16u },
+    // Z -> TIM5 em PA0/PA1 (32 bits)
+    { GPIOB, GPIO_PIN_1, GPIOA, GPIO_PIN_2, GPIOA, GPIO_PIN_8,
+      MOTION_ENCODER_TYPE_TIM, &htim5, NULL, 32u },
 };
 
 static inline void gpio_bsrr_set(GPIO_TypeDef *port, uint16_t pin)
@@ -41,14 +54,22 @@ void motion_hw_init(void)
         gpio_bsrr_set(g_axis[i].ena_port, g_axis[i].ena_pin);
     }
 
-    // Zera contadores e inicia encoders
-    __HAL_TIM_SET_COUNTER(g_axis[MOTION_AXIS_X].encoder, 0u);
-    __HAL_TIM_SET_COUNTER(g_axis[MOTION_AXIS_Y].encoder, 0u);
-    __HAL_TIM_SET_COUNTER(g_axis[MOTION_AXIS_Z].encoder, 0u);
-
-    (void)HAL_TIM_Encoder_Start(g_axis[MOTION_AXIS_X].encoder, TIM_CHANNEL_ALL);
-    (void)HAL_TIM_Encoder_Start(g_axis[MOTION_AXIS_Y].encoder, TIM_CHANNEL_ALL);
-    (void)HAL_TIM_Encoder_Start(g_axis[MOTION_AXIS_Z].encoder, TIM_CHANNEL_ALL);
+    // Zera contadores e inicia encoders conforme o tipo de periférico
+    for (uint8_t i = 0; i < MOTION_AXIS_COUNT; ++i) {
+        const motion_axis_hw_t *axis = &g_axis[i];
+        if (axis->encoder_type == MOTION_ENCODER_TYPE_TIM) {
+            __HAL_TIM_SET_COUNTER(axis->tim, 0u);
+            if (HAL_TIM_Encoder_Start(axis->tim, TIM_CHANNEL_ALL) != HAL_OK) {
+                Error_Handler();
+            }
+        } else if (axis->encoder_type == MOTION_ENCODER_TYPE_LPTIM) {
+            (void)HAL_LPTIM_Encoder_Stop(axis->lptim);
+            if (HAL_LPTIM_Encoder_Start(axis->lptim, LPTIM_ENCODER_PERIOD) != HAL_OK) {
+                Error_Handler();
+            }
+            __HAL_LPTIM_RESET_COUNTER(axis->lptim);
+        }
+    }
 }
 
 void motion_hw_set_dir(uint8_t axis, uint8_t dir)
@@ -80,10 +101,17 @@ void motion_hw_step_low(uint8_t axis)
 uint32_t motion_hw_encoder_read_raw(uint8_t axis)
 {
     if (axis >= MOTION_AXIS_COUNT) return 0;
-    if (g_axis[axis].counter_bits == 16u) {
-        return (uint32_t)(__HAL_TIM_GET_COUNTER(g_axis[axis].encoder) & 0xFFFFu);
+    const motion_axis_hw_t *hw = &g_axis[axis];
+    if (hw->encoder_type == MOTION_ENCODER_TYPE_TIM) {
+        return (uint32_t)__HAL_TIM_GET_COUNTER(hw->tim);
     } else {
-        return (uint32_t)__HAL_TIM_GET_COUNTER(g_axis[axis].encoder);
+        return (uint32_t)(hw->lptim->Instance->CNT & 0xFFFFu);
     }
+}
+
+uint8_t motion_hw_encoder_bits(uint8_t axis)
+{
+    if (axis >= MOTION_AXIS_COUNT) return 0u;
+    return g_axis[axis].counter_bits;
 }
 

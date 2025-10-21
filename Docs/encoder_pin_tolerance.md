@@ -4,11 +4,11 @@ This note records the 5 V compatibility of the STM32L475 encoder inputs used by 
 
 | Timer/Axis | MCU pin | Datasheet I/O type | 5 V tolerant conditions |
 |------------|---------|--------------------|-------------------------|
-| TIM2 / X   | PA15    | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
-| TIM2 / X   | PB3     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
-| TIM3 / Z   | PE3     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
-| TIM3 / Z   | PE4     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
-| TIM5 / Y   | PA0     | `FT_a`             | 5 V tolerant when configured as digital/alternate function with no internal pull-up or pull-down and not used as analog input. |
-| TIM5 / Y   | PA1     | `FT_a`             | 5 V tolerant when configured as digital/alternate function with no internal pull-up or pull-down and not used as analog input. |
+| TIM3 / X   | PA6     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
+| TIM3 / X   | PA7     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
+| LPTIM1 / Y | PA4     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
+| LPTIM1 / Y | PA5     | `FT`               | 5 V tolerant in all digital modes as long as VDD is applied. |
+| TIM5 / Z   | PA0     | `FT_a`             | 5 V tolerant when configured as digital/alternate function with no internal pull-up or pull-down and not used as analog input. |
+| TIM5 / Z   | PA1     | `FT_a`             | 5 V tolerant when configured as digital/alternate function with no internal pull-up or pull-down and not used as analog input. |
 
-Because the firmware drives each encoder channel as an alternate-function input, it must leave the internal pull resistors disabled to respect the `FT_a` restriction on PA0/PA1. The CubeMX-generated initialization already uses `GPIO_NOPULL`; no further electrical changes are required, but this file documents the datasheet justification for keeping those pins in high-impedance mode.
+Because the firmware drives each encoder channel as an alternate-function input, it must leave the internal pull resistors disabled to respect the `FT_a` restriction on PA0/PA1 (Z axis). The CubeMX-generated initialization already uses `GPIO_NOPULL`; no further electrical changes are required, but this file documents the datasheet justification for keeping PA0/PA1 high-impedance and records the full 5 V tolerance of the PA6/PA7 (X axis) and PA4/PA5 (Y axis) pairs.

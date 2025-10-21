@@ -36,7 +36,7 @@ precisas para laços de controle, captura de entradas e geração de pulsos
 PWM~\cite{st_an4013}. No projeto, o TIM6 é configurado com
 $PSC = 79$ e $ARR = 19$ para obter interrupções em \SI{50}{\kilo\hertz},
 enquanto o TIM7 opera com $PSC = 7999$ e $ARR = 9$, produzindo um laço
-de \SI{1}{\kilo\hertz}. Os temporizadores TIM2, TIM3 e TIM5 operam em
+de \SI{1}{\kilo\hertz}. Os temporizadores LPTIM1, TIM3 e TIM5 operam em
 modo encoder para rastrear incrementalmente a posição dos eixos.
 
 \section{Digital Differential Analyzer}
@@ -120,7 +120,7 @@ aceleração definidos pelo firmware.
 
 \section{Comunicação SPI e USART}
 
-A comunicação com a Raspberry Pi utiliza o periférico SPI1 em modo
+A comunicação com a Raspberry Pi utiliza o periférico SPI2 em modo
 escravo com DMA circular. Esse desenho reduz a carga da CPU e garante que
 as transferências de 42 bytes sejam executadas dentro da janela entre
 interrupções do TIM6 e TIM7. A USART1, configurada como \emph{Virtual

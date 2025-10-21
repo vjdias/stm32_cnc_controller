@@ -2,11 +2,12 @@
 
 Este repositório descreve e implementa um **controlador CNC** baseado no **STM32L475** (kit **B-L475E-IOT01A**), com:
 
-- **Eixos X/Y** medidos por **encoders AB** de **alta resolução (40 000 CPR)** em **32 bits** (TIM2/TIM5).
-- **Eixo Z** por **encoder AB** de **2 500 CPR** em **16 bits** (TIM3).
+- **Eixo X** com **encoder AB** de **40 pulsos por rotação** monitorado pelo **TIM3** (16 bits).
+- **Eixo Y** com **encoder AB** de **2 500 pulsos por rotação** usando o **LPTIM1** (16 bits acumulados em software).
+- **Eixo Z** com **encoder AB** de **40 pulsos por rotação** registrado pelo **TIM5** (32 bits).
 - **Gerador de passos (DDA)** em **50 kHz** (TIM6) com **STEP/DIR/EN** para 3 drivers **TMC5160**.
 - **Controle PI/PID** a **1 kHz** (TIM7), leitura de encoders e serviços.
-- **SPI1 (Slave, MODE 3, DMA)** para comunicação com **Raspberry Pi** (master).
+- **SPI2 (Slave, MODE 3, DMA)** para comunicação com **Raspberry Pi** (master) via conector PMOD.
 - **USART1 (VCP)** para **logs via USB ST-LINK**.
 - **Framing SPI** compatível com o HDL/FPGA (headers/tails AA..55 / AB..54) e *router* de mensagens.
 
@@ -20,11 +21,11 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 - **Clock** (CubeMX → Clock Configuration):
   - **HCLK = 80 MHz**, **APB1 = /2**, **APB2 = /1**.
   - Regra ST: com prescaler APB ≠ 1, **TIMxCLK = 2×PCLK**.
-  - Assim, **TIM2/3/4/5/6/7** (APB1) e **TIM1/8/15/16/17** (APB2) operam a **80 MHz**.
+  - Assim, **TIM2/3/4/5/6/7** (APB1) e **TIM1/8/15/16/17** (APB2) operam a **80 MHz**; o **LPTIM1** também recebe o **PCLK1** (80 MHz) quando configurado para clock APB.
 - **Drivers**: **TMC5160**, SPI **MODE 3** (CPOL=1, CPHA=2), SCK recomendado **4–8 MHz** conforme clock do TMC.
 - **Encoders**:
-  - **X/Y**: 40 000 **CPR** (X4) → **alta taxa** de contagens; use **32 bits**.
-  - **Z**: 2 500 **CPR** (X4) → **16 bits** suficiente.
+  - **X/Z**: 40 **CPR** (X4) → 16 bits são suficientes (TIM3/TIM5).
+  - **Y**: 2 500 **CPR** (X4) → 16 bits (LPTIM1) com acumulação em software.
 
 ---
 
@@ -32,10 +33,10 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 
 | Função | Pino(s) | Observações |
 |---|---|---|
-| **Encoder X (TIM2)** | **PA15=CH1**, **PB3=CH2** | Desative SWO; **Debug=SWD** |
-| **Encoder Y (TIM5)** | **PA0=CH1**, **PA1=CH2** | |
-| **Encoder Z (TIM3)** | **PC6=CH1**, **PC7=CH2** | AF2 |
-| **SPI1 (Slave)** | **PA5=SCK**, **PA6=MISO**, **PA7=MOSI**, **PA4=NSS** | **MODE 3**, Very High speed |
+| **Encoder X (TIM3)** | **PA6=CH1**, **PA7=CH2** | AF2, mantidos em `NOPULL` para tolerância a 5 V |
+| **Encoder Y (LPTIM1)** | **PA4=IN1**, **PA5=IN2** | Usa pinos liberados do SPI1 (sem SWO) |
+| **Encoder Z (TIM5)** | **PA0=CH1**, **PA1=CH2** | Necessário manter `NOPULL` para o requisito `FT_a` |
+| **SPI2 (Slave)** | **PD1=SCK**, **PD3=MISO**, **PD4=MOSI**, **PD0=NSS** | **MODE 3**, Very High speed |
 | **USART1 (VCP)** | **PB6=TX**, **PB7=RX** | USB do ST-LINK |
 | **STEP** | PB4 (X), PB0 (Y), PB1 (Z) | GPIO Out, Very High |
 | **DIR** | PA3 (X), PB2 (Y), PA2 (Z) | GPIO Out, Very High |
@@ -66,9 +67,9 @@ KiCad 9 para inspeção detalhada e edição.
 | **STEP_X / DIR_X / EN_X** | U1-7/8/9 (STM32) | A1-7/8/9 (TMC5160) | Controle completo do eixo X (pulso, direção e habilitação). |
 | **STEP_Y / DIR_Y / EN_Y** | U1-10/11/12 | A1-10/11/12 | Canal dedicado ao eixo Y. |
 | **STEP_Z / DIR_Z / EN_Z** | U1-13/14/15 | A1-13/14/15 | Canal dedicado ao eixo Z. |
-| **ENC_XA / ENC_XB** | U1-16/17 | P1-1/2 (Encoder) | Entradas quadratura TIM2 (eixo X). |
-| **ENC_YA / ENC_YB** | U1-18/19 | P1-3/4 (Encoder) | Entradas quadratura TIM5 (eixo Y). |
-| **ENC_ZA / ENC_ZB** | U1-20/21 | P1-5/6 (Encoder) | Entradas quadratura TIM3 (eixo Z). |
+| **ENC_XA / ENC_XB** | U1-16/17 | P1-1/2 (Encoder) | Entradas quadratura TIM3 (eixo X). |
+| **ENC_YA / ENC_YB** | U1-18/19 | P1-3/4 (Encoder) | Entradas quadratura LPTIM1 (eixo Y). |
+| **ENC_ZA / ENC_ZB** | U1-20/21 | P1-5/6 (Encoder) | Entradas quadratura TIM5 (eixo Z). |
 | **ESTOP** | U1-22 | SW1-1 (Safety) | Linha de emergência que derruba EN global dos TMC5160. |
 | **LIM_X / LIM_Y / LIM_Z** | U1-23/24/25 | SW1-2/3/4 (Safety) | Fins de curso com disparo por EXTI no STM32. |
 | **5V_AUX** | J1-8 (RPi) | P1-7 (Encoder) | Alimentação auxiliar de 5 V para os encoders incrementais. |
@@ -84,9 +85,9 @@ KiCad 9 para inspeção detalhada e edição.
 **Timers**  
 - **TIM6 — Time Base 50 kHz (DDA/STEP)**: `PSC=79`, `ARR=19`, `Up`, **TRGO=Update** (opcional), **IRQ ON**.  
 - **TIM7 — Time Base 1 kHz (PI/PID)**: `PSC=7999`, `ARR=9`, `Up`, **IRQ ON**.
-- **TIM2 — Encoder X (32b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFFFFFF`.
-- **TIM5 — Encoder Y (32b)**: igual ao TIM2, `ARR=0xFFFFFFFF`.
-- **TIM3 — Encoder Z (16b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFF`.
+- **TIM3 — Encoder X (16b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFF`.
+- **LPTIM1 — Encoder Y (16b)**: **Encoder interface** (X4), `ARR=0xFFFF`, clock em `APB1`.
+- **TIM5 — Encoder Z (32b)**: mesmo perfil 32 bits (`ARR=0xFFFFFFFF`).
 - **TIM15 — PWM do LED discreto**: `PSC=0`, `ARR=0xFFFF`. O serviço aceita frequências
   em centi-hertz e calcula o período em ticks com arredondamento, mas o valor é
   limitado a 65 536 passos por conta do ARR de 16 bits. Com o clock atual
@@ -96,10 +97,10 @@ KiCad 9 para inspeção detalhada e edição.
   1 Hz ou 0,2 Hz é necessário reduzir o clock do TIM15 aumentando o prescaler
   (por exemplo `PSC=7999` → divisor 8 000 → frequência mínima ≈ 0,15 Hz).
 
-**SPI1 (RPi↔STM32)**
-- **Slave, 8-bit, MODE 3 (CPOL=High, CPHA=2nd)**, **NSS=Hardware Input** (PA4).
+**SPI2 (RPi↔STM32)**
+- **Slave, 8-bit, MODE 3 (CPOL=High, CPHA=2nd)**, **NSS=Hardware Input** (PD0 via PMOD).
 - **DMA**: RX *Circular* (Byte/Byte, Priority High, inc mem ON), TX *Normal* (Byte/Byte).  
-- **NVIC**: habilite **DMA RX/TX** e **SPI1 global**.
+- **NVIC**: habilite **DMA RX/TX** e **SPI2 global**.
 
 **USART1 (VCP)**  
 - **115200 8N1**, PB6/PB7. Retarget do `printf` via `_write()`.
@@ -108,7 +109,7 @@ KiCad 9 para inspeção detalhada e edição.
 - **STEP/DIR/EN**: Output, **Very High speed** (bordas limpas).
 
 **NVIC (prioridades sugeridas)**  
-1) **E-STOP/PROX (EXTI)**, 2) **TIM6**, 3) **SPI1 DMA**, 4) (opcional) timer de *timestamp* do Z, 5) **TIM7**, 6) **USART1**.
+1) **E-STOP/PROX (EXTI)**, 2) **TIM6**, 3) **SPI2 DMA**, 4) (opcional) timer de *timestamp* do Z, 5) **TIM7**, 6) **USART1**.
 
 ---
 
@@ -120,7 +121,7 @@ KiCad 9 para inspeção detalhada e edição.
 - **Encoders** (QEI): modo **TI1&TI2 (X4)** conta A↑/A↓/B↑/B↓ em hardware; **sem ISR** por borda.  
 - **Leitura contínua (sem zerar)**: acumular por **diferença modular** (trata *wrap*):
   ```c
-  int16_t dX = (int16_t)(TIM2->CNT - lastX); lastX = TIM2->CNT; posX += dX;
+  int16_t dX = (int16_t)((uint16_t)LPTIM1->CNT - (uint16_t)lastX); lastX = (uint16_t)LPTIM1->CNT; posX += dX;
   int16_t dY = (int16_t)(TIM5->CNT - lastY); lastY = TIM5->CNT; posY += dY;
   int16_t dZ = (int16_t)(TIM3->CNT - lastZ); lastZ = TIM3->CNT; posZ += dZ;
   ```
@@ -130,7 +131,7 @@ KiCad 9 para inspeção detalhada e edição.
 
 ## 5) SPI — Modo e Desempenho
 
-- **STM32↔RPi (SPI1 Slave, DMA)**: **MODE 3**, RX DMA **circular** (callbacks de **Half/Full** para *router*).  
+- **STM32↔RPi (SPI2 Slave, DMA)**: **MODE 3**, RX DMA **circular** (callbacks de **Half/Full** para *router*).
 - **STM32↔TMC5160 (Master, se usado)**: **MODE 3**; **SCK** típico **4 MHz** (até 8 MHz com clock externo no TMC).  
 - **Buffers**: RX 256–512 B; TX por DMA “on-demand”.  
 - **Integridade**: cabos curtos, GND comum, resistores série 33–47 Ω se houver *ringing*.
@@ -167,7 +168,7 @@ Drivers/ CMSIS, HAL/...
 
 - **DDA 50 kHz** (TIM6): gera **STEP** síncrono p/ 3 eixos, largura de pulso segura (≥ 1 µs).  
 - **Controle 1 kHz** (TIM7): leitura de encoders, **PI/PID** (X/Y/Z), *service loop* do protocolo.  
-- **Encoders por hardware** (TIM2/TIM5/TIM3): contagem exata; velocidade por `ΔN`/Δt.  
+- **Encoders por hardware** (LPTIM1/TIM5/TIM3): contagem exata; velocidade por `ΔN`/Δt.
 - **Router SPI (RX DMA circular)**: FSM byte-a-byte, valida **header/tail/paridade**, despacha para serviços.  
 - **Homing**: por **sensor de proximidade (EXTI)** + (opcional) **timestamp do Z** para *home offset* fino.  
 - **Safety**: **E-STOP** em **EXTI** (prioridade máxima) corta **EN** de todos os eixos.
@@ -331,16 +332,16 @@ Resumo dos frames de **RESPONSE** publicados pelo HDL, com foco exclusivo na **e
 
 **Esqueleto de callback (HAL)**
 ```c
-void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ router_feed_bytes(rx_buf, RX_BUF_SZ/2); } }
-void HAL_SPI_RxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ router_feed_bytes(rx_buf+RX_BUF_SZ/2, RX_BUF_SZ/2); } }
-void HAL_SPI_TxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI1){ tx_busy = 0; } }
+void HAL_SPI_RxHalfCpltCallback(SPI_HandleTypeDef* h){ if(h->Instance==SPI2){ router_feed_bytes(rx_buf, RX_BUF_SZ/2); } }
+void HAL_SPI_RxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI2){ router_feed_bytes(rx_buf+RX_BUF_SZ/2, RX_BUF_SZ/2); } }
+void HAL_SPI_TxCpltCallback    (SPI_HandleTypeDef* h){ if(h->Instance==SPI2){ tx_busy = 0; } }
 ```
 
 ---
 
 ## 13) Notas de Controle (PI/PID) & Desempenho
 
-- **Loop 1 kHz** é um *sweet spot* para 40k/2.5k CPR: baixa quantização de velocidade, latência de 1 ms e pouca carga de CPU.  
+- **Loop 1 kHz** é um *sweet spot* para 40/2.5k CPR: baixa quantização de velocidade, latência de 1 ms e pouca carga de CPU.
 - **Filtro de velocidade**: média móvel 50–200 ms sobre `ΔN` reduz ruído a baixas rotações.  
 - **Sincronismo**: o DDA (TIM6) é o relógio mestre; atualize *setpoints* no TIM7 (1 kHz).  
 - **Homing**: *latch* preciso do Z (se usar timestamp sub-tick), com correção de fase do DDA.
@@ -384,8 +385,8 @@ No CubeIDE, adicione `App/Inc` em Paths & Symbols para os includes `protocol/...
 
 - [ ] HCLK=80 MHz; APB1=/2; APB2=/1.  
 - [ ] TIM6=50 kHz (79/19), TIM7=1 kHz (7999/9).  
-- [ ] Encoders: TIM2/5 (32 b), TIM3 (16 b).  
-- [ ] SPI1 Slave MODE 3, RX DMA circular, TX DMA normal.  
+- [ ] Encoders: TIM3 (16 b, eixo X), TIM5 (32 b, eixo Z), LPTIM1 (16 b, eixo Y).
+- [ ] SPI2 Slave MODE 3, RX DMA circular, TX DMA normal.
 - [ ] USART1 VCP funcionando (printf).  
 - [ ] E-STOP/PROX em EXTI; ISR só-flag.  
 - [ ] Router SPI recebe AA..55 e responde AB..54.

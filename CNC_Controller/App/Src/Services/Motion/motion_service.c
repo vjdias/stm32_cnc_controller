@@ -1,4 +1,5 @@
 #include "Services/Motion/motion_service.h"
+#include "Services/Motion/motion_hw.h"
 #include "Protocol/Requests/move_end_request.h"
 #include "Protocol/Requests/move_queue_add_request.h"
 #include "Protocol/Requests/move_queue_status_request.h"
@@ -22,16 +23,6 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_AXIS_COUNT 3u
 #define MOTION_QUEUE_CAPACITY 64u
 typedef struct {
-	GPIO_TypeDef *step_port;
-	uint16_t step_pin;
-	GPIO_TypeDef *dir_port;
-	uint16_t dir_pin;
-	GPIO_TypeDef *ena_port;
-	uint16_t ena_pin;
-	TIM_HandleTypeDef *encoder;
-	uint8_t counter_bits;
-} motion_axis_hw_t;
-typedef struct {
 	uint32_t total_steps;
 	uint32_t target_steps;
 	uint32_t emitted_steps;
@@ -48,12 +39,6 @@ enum {
 enum {
 	MOTION_ACK_OK = 0, MOTION_ACK_INVALID = 1, MOTION_ACK_QUEUE_FULL = 2,
 };
-static const motion_axis_hw_t g_axis_hw[MOTION_AXIS_COUNT] =
-		{
-				{ GPIOB, GPIO_PIN_4, GPIOA, GPIO_PIN_3, GPIOC, GPIO_PIN_4,
-						&htim2, 32u }, { GPIOB, GPIO_PIN_0, GPIOB, GPIO_PIN_2,
-						GPIOC, GPIO_PIN_5, &htim5, 32u }, { GPIOB, GPIO_PIN_1,
-						GPIOA, GPIO_PIN_2, GPIOA, GPIO_PIN_8, &htim3, 16u }, };
 static motion_status_t g_status;
 static motion_axis_state_t g_axis_state[MOTION_AXIS_COUNT];
 static volatile uint8_t g_has_active_segment = 0u;
@@ -68,16 +53,6 @@ static int64_t g_encoder_origin[MOTION_AXIS_COUNT];
 static volatile uint8_t g_demo_continuous = 0u; // quando 1, gera passos continuamente
 static const uint16_t g_demo_speed_table[4] = { 5u, 10u, 20u, 40u }; // ksteps/s aprox (1kHz)
 static volatile uint8_t g_demo_speed_idx = 1u; // default ≈10k steps/s (compatível com versão anterior)
-static inline void gpio_set_high(GPIO_TypeDef *port, uint16_t pin) {
-	if (!port)
-		return;
-	port->BSRR = pin;
-}
-static inline void gpio_set_low(GPIO_TypeDef *port, uint16_t pin) {
-	if (!port)
-		return;
-	port->BSRR = ((uint32_t) pin) << 16u;
-}
 static inline uint32_t motion_lock(void) {
 	uint32_t primask = __get_PRIMASK();
 	__disable_irq();
@@ -198,31 +173,13 @@ static void motion_refresh_status_locked(void) {
 		}
 	}
 }
-static void motion_hw_set_direction(uint8_t axis, uint8_t dir) {
-	const motion_axis_hw_t *hw = &g_axis_hw[axis];
-	if (dir)
-		gpio_set_high(hw->dir_port, hw->dir_pin);
-	else
-		gpio_set_low(hw->dir_port, hw->dir_pin);
-}
-static void motion_hw_enable_axis(uint8_t axis, uint8_t enable) {
-	const motion_axis_hw_t *hw = &g_axis_hw[axis];
-	if (enable)
-		gpio_set_low(hw->ena_port, hw->ena_pin);
-	else
-		gpio_set_high(hw->ena_port, hw->ena_pin);
-}
-static void motion_hw_reset_step(uint8_t axis) {
-	const motion_axis_hw_t *hw = &g_axis_hw[axis];
-	gpio_set_low(hw->step_port, hw->step_pin);
-}
 static void motion_stop_all_axes_locked(void) {
-	for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
-		motion_hw_reset_step(axis);
-		motion_hw_enable_axis(axis, 0u);
-		g_axis_state[axis].total_steps = 0u;
-		g_axis_state[axis].target_steps = 0u;
-		g_axis_state[axis].emitted_steps = 0u;
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+                motion_hw_step_low(axis);
+                motion_hw_enable(axis, 0u);
+                g_axis_state[axis].total_steps = 0u;
+                g_axis_state[axis].target_steps = 0u;
+                g_axis_state[axis].emitted_steps = 0u;
 		g_axis_state[axis].velocity_per_tick = 0u;
 		g_axis_state[axis].kp = 0u;
 		g_axis_state[axis].ki = 0u;
@@ -269,13 +226,13 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
 		ax->ki = motion_ki_for_axis(seg, axis);
 		ax->kd = motion_kd_for_axis(seg, axis);
 		ax->step_high = 0u;
-		motion_hw_reset_step(axis);
-		motion_hw_set_direction(axis,
-				(uint8_t) ((seg->dirMask >> axis) & 0x1u));
-		if (total > 0u)
-			motion_hw_enable_axis(axis, 1u);
-		else
-			motion_hw_enable_axis(axis, 0u);
+                motion_hw_step_low(axis);
+                motion_hw_set_dir(axis,
+                                (uint8_t) ((seg->dirMask >> axis) & 0x1u));
+                if (total > 0u)
+                        motion_hw_enable(axis, 1u);
+                else
+                        motion_hw_enable(axis, 0u);
 		g_encoder_origin[axis] = g_encoder_position[axis];
 	}
 }
@@ -287,19 +244,20 @@ static uint8_t motion_try_start_next_locked(void) {
 	return 1u;
 }
 static void motion_update_encoders(void) {
-	uint32_t now_x = __HAL_TIM_GET_COUNTER(g_axis_hw[AXIS_X].encoder);
-	int32_t delta_x = (int32_t) (now_x - g_encoder_last_raw[AXIS_X]);
-	g_encoder_last_raw[AXIS_X] = now_x;
-	g_encoder_position[AXIS_X] += delta_x;
-	uint32_t now_y = __HAL_TIM_GET_COUNTER(g_axis_hw[AXIS_Y].encoder);
-	int32_t delta_y = (int32_t) (now_y - g_encoder_last_raw[AXIS_Y]);
-	g_encoder_last_raw[AXIS_Y] = now_y;
-	g_encoder_position[AXIS_Y] += delta_y;
-	uint32_t now_z = __HAL_TIM_GET_COUNTER(g_axis_hw[AXIS_Z].encoder) & 0xFFFFu;
-	int16_t delta_z = (int16_t) ((uint16_t) now_z
-			- (uint16_t) g_encoder_last_raw[AXIS_Z]);
-	g_encoder_last_raw[AXIS_Z] = now_z & 0xFFFFu;
-	g_encoder_position[AXIS_Z] += delta_z;
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+                uint32_t now = motion_hw_encoder_read_raw(axis);
+                uint8_t bits = motion_hw_encoder_bits(axis);
+                if (bits == 16u) {
+                        uint16_t prev = (uint16_t) g_encoder_last_raw[axis];
+                        int16_t delta = (int16_t) ((uint16_t) now - prev);
+                        g_encoder_last_raw[axis] = (uint16_t) now;
+                        g_encoder_position[axis] += delta;
+                } else {
+                        int32_t delta = (int32_t) (now - g_encoder_last_raw[axis]);
+                        g_encoder_last_raw[axis] = now;
+                        g_encoder_position[axis] += delta;
+                }
+        }
 }
 static void motion_send_queue_add_ack(uint8_t frame_id, uint8_t status) {
 	uint8_t raw[6];
@@ -357,23 +315,20 @@ void motion_service_init(void) {
 	g_status.state = MOTION_IDLE;
 	g_queue_head = g_queue_tail = g_queue_count = 0u;
 	g_has_active_segment = 0u;
-	motion_stop_all_axes_locked();
-	motion_refresh_status_locked();
-	motion_unlock(primask);
-	__HAL_TIM_SET_COUNTER(&htim2, 0u);
-	__HAL_TIM_SET_COUNTER(&htim5, 0u);
-	__HAL_TIM_SET_COUNTER(&htim3, 0u);
-	if (HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL) != HAL_OK)
-		Error_Handler();
-	if (HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL) != HAL_OK)
-		Error_Handler();
-	if (HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL) != HAL_OK)
-		Error_Handler();
-	g_encoder_last_raw[AXIS_X] = __HAL_TIM_GET_COUNTER(&htim2);
-	g_encoder_last_raw[AXIS_Y] = __HAL_TIM_GET_COUNTER(&htim5);
-	g_encoder_last_raw[AXIS_Z] = __HAL_TIM_GET_COUNTER(&htim3) & 0xFFFFu;
-	if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
-		Error_Handler();
+        motion_stop_all_axes_locked();
+        motion_refresh_status_locked();
+        motion_unlock(primask);
+        motion_hw_init();
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+                uint32_t raw = motion_hw_encoder_read_raw(axis);
+                if (motion_hw_encoder_bits(axis) == 16u) {
+                        g_encoder_last_raw[axis] = raw & 0xFFFFu;
+                } else {
+                        g_encoder_last_raw[axis] = raw;
+                }
+        }
+        if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
+                Error_Handler();
 	if (HAL_TIM_Base_Start_IT(&htim7) != HAL_OK)
 		Error_Handler();
 	LOGT_THIS(LOG_STATE_START, PROTO_OK, "init", "timers_ready");
@@ -382,24 +337,23 @@ const motion_status_t* motion_status_get(void) {
 	return &g_status;
 }
 void motion_on_tim6_tick(void) {
-	if (g_status.state != MOTION_RUNNING || !g_has_active_segment)
-		return;
-	for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
-		motion_axis_state_t *ax = &g_axis_state[axis];
-		const motion_axis_hw_t *hw = &g_axis_hw[axis];
-		if (ax->step_high) {
-			gpio_set_low(hw->step_port, hw->step_pin);
-			ax->step_high = 0u;
-			continue;
-		}
-		if (ax->emitted_steps >= ax->total_steps)
-			continue;
-		if (ax->emitted_steps < ax->target_steps) {
-			gpio_set_high(hw->step_port, hw->step_pin);
-			ax->step_high = 1u;
-			++ax->emitted_steps;
-		}
-	}
+        if (g_status.state != MOTION_RUNNING || !g_has_active_segment)
+                return;
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+                motion_axis_state_t *ax = &g_axis_state[axis];
+                if (ax->step_high) {
+                        motion_hw_step_low(axis);
+                        ax->step_high = 0u;
+                        continue;
+                }
+                if (ax->emitted_steps >= ax->total_steps)
+                        continue;
+                if (ax->emitted_steps < ax->target_steps) {
+                        motion_hw_step_high(axis);
+                        ax->step_high = 1u;
+                        ++ax->emitted_steps;
+                }
+        }
 	uint8_t finished = 1u;
 	for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
 		const motion_axis_state_t *ax = &g_axis_state[axis];
@@ -640,9 +594,9 @@ void motion_demo_set_continuous(uint8_t enable)
             ax->velocity_per_tick = g_demo_speed_table[g_demo_speed_idx & 0x3u];
             ax->kp = ax->ki = ax->kd = 0u;
             ax->step_high = 0u;
-            motion_hw_reset_step(axis);
-            motion_hw_set_direction(axis, 1u);   // forward
-            motion_hw_enable_axis(axis, 1u);     // liga driver (ativo em baixo)
+            motion_hw_step_low(axis);
+            motion_hw_set_dir(axis, 1u);   // forward
+            motion_hw_enable(axis, 1u);     // liga driver (ativo em baixo)
             g_encoder_origin[axis] = g_encoder_position[axis];
         }
         g_status.state = MOTION_RUNNING;

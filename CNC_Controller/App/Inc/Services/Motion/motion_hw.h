@@ -21,6 +21,7 @@ void motion_hw_step_low(uint8_t axis);
 
 // Leitura de encoders (valor bruto)
 uint32_t motion_hw_encoder_read_raw(uint8_t axis);
+uint8_t motion_hw_encoder_bits(uint8_t axis);
 
 #ifdef __cplusplus
 }

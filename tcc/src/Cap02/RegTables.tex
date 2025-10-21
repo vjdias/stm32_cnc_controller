@@ -20,12 +20,14 @@ exemplo de tabelas de configura\c{c}\~ao com campos e finalidade.
     TIM6 & ARR & 19 & Per\'iodo de \SI{20}{\micro s}. \\
     TIM7 & PSC & 7999 & Prescaler para \SI{1}{kHz} (PID). \\
     TIM7 & ARR & 9 & Per\'iodo de \SI{1}{ms}. \\
-    TIM2/3/5 & SMCR & SMS=0b011 & Modo encoder (contagem em TI1 e TI2). \\
-    TIM2/3/5 & CCMR1 & CC1S=01; CC2S=01 & Entradas mapeadas para TI1/TI2. \\
-    TIM2/3/5 & CCER & CC1P=0; CC2P=0 & Polaridade n\~ao invertida (conforme liga\c{c}\~ao). \\
-    SPI1 & CR1 & MSTR=0; CPOL=0; CPHA=0 & Modo escravo, fase/polaridade padr\~ao. \\
-    SPI1 & CR2 & RXDMAEN=1; TXDMAEN=1; DS=8 & SPI com DMA e palavra de 8 bits. \\
-    DMAx & CCR(RX/TX) & MINC=1; CIRC=1; DIR & DMA circular para SPI1 RX/TX. \\
+    LPTIM1 & CFGR & ENC=1; CKPOL=00 & Modo encoder externo (A/B) para eixo X. \\
+    LPTIM1 & ARR & 0xFFFF & Per\'iodo m\'aximo de 16 bits (contagem modular). \\
+    TIM3/5 & SMCR & SMS=0b011 & Modo encoder (contagem em TI1 e TI2). \\
+    TIM3/5 & CCMR1 & CC1S=01; CC2S=01 & Entradas mapeadas para TI1/TI2. \\
+    TIM3/5 & CCER & CC1P=0; CC2P=0 & Polaridade n\~ao invertida (conforme liga\c{c}\~ao). \\
+    SPI2 & CR1 & MSTR=0; CPOL=0; CPHA=0 & Modo escravo, fase/polaridade padr\~ao. \\
+    SPI2 & CR2 & RXDMAEN=1; TXDMAEN=1; DS=8 & SPI com DMA e palavra de 8 bits. \\
+    DMA1 (Ch4/Ch5) & CCR(RX/TX) & MINC=1; CIRC=1; DIR & DMA circular para SPI2 RX/TX. \\
     DMAx & CNDTR/CPAR/CMAR & -- & Tamanho e endere\c{c}os de perif. e mem\'oria. \\
     USART1 & BRR & 115200 & Baud rate para logs/telemetria. \\
     EXTI & IMR/RTSR/FTSR & Linhas de E-STOP/limites & Interrup\c{c}\~oes de seguran\c{c}a. \\
