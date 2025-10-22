@@ -400,6 +400,20 @@ def _list_spidev_nodes() -> List[Tuple[int, int, str]]:
     return nodes
 
 
+def _rpi_cs_info(bus: int, dev: int) -> Optional[Tuple[str, int]]:
+    """Retorna (label, bcm_pin) do CS padrão do Raspberry para (bus, dev).
+    Somente mapeia pares comuns (SPI0/1)."""
+    mapping: Dict[Tuple[int, int], Tuple[str, int]] = {
+        (0, 0): ("SPI0.CE0", 8),
+        (0, 1): ("SPI0.CE1", 7),
+        # (0, 2) não é exposto na maioria dos modelos
+        (1, 0): ("SPI1.CE0", 18),
+        (1, 1): ("SPI1.CE1", 17),
+        (1, 2): ("SPI1.CE2", 16),
+    }
+    return mapping.get((bus, dev))
+
+
 def _open_spidev(bus: int, dev: int):  # pragma: no cover - depende de hardware
     try:
         import spidev  # type: ignore
@@ -430,12 +444,12 @@ def _print_spidev_info(bus: int, dev: int, expected_mode: int, expected_bpw: int
         threewire = bool(getattr(spi, "threewire", False))
         loop = bool(getattr(spi, "loop", False))
         no_cs = bool(getattr(spi, "no_cs", False))
-        alias = None
-        if bus == 0 and dev in (0, 1):
-            alias = f"CE{dev} (BCM{8 if dev == 0 else 7})"
         print("  open: OK")
-        if alias:
-            print(f"  alias: {alias}")
+        cs_info = _rpi_cs_info(bus, dev)
+        if cs_info:
+            cs_label, bcm_pin = cs_info
+            print(f"  cs_line: {cs_label}")
+            print(f"  cs_pin_bcm: {bcm_pin}")
         print(f"  mode: {_decode_mode(mode)}")
         print(f"  cshigh: {cshigh} (ativo={'alto' if cshigh else 'baixo'})")
         print(f"  bits_per_word: {bpw}")
