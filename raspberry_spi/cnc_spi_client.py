@@ -4,10 +4,12 @@
 """Cliente SPI para comunicação com o firmware CNC no STM32."""
 
 import argparse
+import os
 import sys
+import glob
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
 
 MODULE_DIR = Path(__file__).resolve().parent
 
@@ -255,6 +257,50 @@ def build_parser() -> argparse.ArgumentParser:
     led_boot.add_argument("--chunk-len", type=int, default=7)
     led_boot.set_defaults(handler="boot_led", needs_client=True)
 
+    # Verificação de CS / SPI
+    cs_check = sub.add_parser(
+        "cs-check",
+        help=(
+            "Listar dispositivos SPI (spidevX.Y), conferir configurações e opcionalmente ler GPIOs de CS manual."
+        ),
+    )
+    cs_check.add_argument(
+        "--expected-mode",
+        type=int,
+        choices=[0, 1, 2, 3],
+        default=3,
+        help="Modo SPI esperado (0..3). Default: 3",
+    )
+    cs_check.add_argument(
+        "--expected-bpw",
+        type=int,
+        default=8,
+        help="Bits por palavra esperados. Default: 8",
+    )
+    cs_check.add_argument(
+        "--expected-active-low",
+        action="store_true",
+        help="Tratar como OK apenas quando CS for ativo em nível baixo (cshigh=False).",
+    )
+    cs_check.add_argument(
+        "--manual-cs",
+        action="append",
+        metavar="NAME=GPIO",
+        help=(
+            "GPIO(s) usados como CS manual, no formato NOME=GPIO. "
+            "Pode repetir a opção: --manual-cs STM32=17 --manual-cs TMC5160=27"
+        ),
+    )
+    cs_check.add_argument(
+        "--toggle-test",
+        action="store_true",
+        help=(
+            "Se informado, alterna os GPIOs de CS manual (alto->baixo->alto) para teste. "
+            "Use com cuidado, isso pode ativar escravos momentaneamente."
+        ),
+    )
+    cs_check.set_defaults(handler="cs_check", needs_client=False)
+
     examples = sub.add_parser(
         "examples",
         help="Listar os comandos disponíveis acompanhados de exemplos de uso",
@@ -323,11 +369,218 @@ def print_examples(_: argparse.Namespace) -> None:
             "Frame de boot 'led' (requer firmware com boot-test habilitado)",
             f"{base_cmd} led --tries 10 --chunk-len 7",
         ),
+        (
+            "Checar CS / SPI",
+            f"{base_cmd} cs-check --expected-mode 3 --manual-cs STM32=17 --manual-cs TMC5160=27",
+        ),
     ]
 
     print("Comandos disponíveis e exemplos:")
     for title, command in examples:
         print(f"- {title}:\n  {command}")
+
+
+def _decode_mode(mode: int) -> str:
+    cpol = 1 if (mode & 0x02) else 0
+    cpha = 1 if (mode & 0x01) else 0
+    return f"mode={mode} (CPOL={cpol}, CPHA={cpha})"
+
+
+def _list_spidev_nodes() -> List[Tuple[int, int, str]]:
+    nodes = []
+    for path in sorted(glob.glob("/dev/spidev*")):
+        try:
+            base = os.path.basename(path)
+            _, bus_dev = base.split("spidev", 1)
+            bus_s, dev_s = bus_dev.split(".")
+            bus, dev = int(bus_s), int(dev_s)
+            nodes.append((bus, dev, path))
+        except Exception:
+            continue
+    return nodes
+
+
+def _open_spidev(bus: int, dev: int):  # pragma: no cover - depende de hardware
+    try:
+        import spidev  # type: ignore
+    except Exception:
+        return None, "spidev não disponível (instale python3-spidev)"
+    try:
+        spi = spidev.SpiDev()
+        spi.open(bus, dev)
+        return spi, None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def _print_spidev_info(bus: int, dev: int, expected_mode: int, expected_bpw: int,
+                       expected_active_low: bool) -> None:
+    spi, err = _open_spidev(bus, dev)
+    label = f"/dev/spidev{bus}.{dev}"
+    print(f"Device: {label}")
+    if spi is None:
+        print(f"  open: FAIL: {err}")
+        return
+    try:
+        mode = int(spi.mode)
+        bpw = int(spi.bits_per_word or 0)
+        speed = int(getattr(spi, "max_speed_hz", 0) or 0)
+        cshigh = bool(getattr(spi, "cshigh", False))
+        lsbfirst = bool(getattr(spi, "lsbfirst", False))
+        threewire = bool(getattr(spi, "threewire", False))
+        loop = bool(getattr(spi, "loop", False))
+        no_cs = bool(getattr(spi, "no_cs", False))
+        alias = None
+        if bus == 0 and dev in (0, 1):
+            alias = f"CE{dev} (BCM{8 if dev == 0 else 7})"
+        print("  open: OK")
+        if alias:
+            print(f"  alias: {alias}")
+        print(f"  mode: {_decode_mode(mode)}")
+        print(f"  cshigh: {cshigh} (ativo={'alto' if cshigh else 'baixo'})")
+        print(f"  bits_per_word: {bpw}")
+        print(f"  max_speed_hz: {speed}")
+        print(f"  lsbfirst: {lsbfirst}")
+        print(f"  threewire: {threewire}")
+        print(f"  loop: {loop}")
+        print(f"  no_cs: {no_cs}")
+        # Heurística simples de OK
+        ok_flags: List[str] = []
+        warn_flags: List[str] = []
+        if expected_mode == mode:
+            ok_flags.append("mode")
+        else:
+            warn_flags.append(f"mode esperado={expected_mode}")
+        if expected_bpw == 0 or bpw in (0, expected_bpw):
+            # Alguns drivers reportam 0 antes de setar explicitamente
+            ok_flags.append("bpw")
+        else:
+            warn_flags.append(f"bpw esperado={expected_bpw}")
+        if expected_active_low and not cshigh:
+            ok_flags.append("cs ativo-baixo")
+        elif expected_active_low and cshigh:
+            warn_flags.append("CS configurado como ativo-alto (cshigh=True)")
+        if no_cs:
+            warn_flags.append("no_cs=True (CS de hardware desabilitado)")
+        print("  check:")
+        if ok_flags:
+            print("    OK:", ", ".join(ok_flags))
+        if warn_flags:
+            print("    WARN:", ", ".join(warn_flags))
+        # Teste rápido de troca
+        try:
+            rx = spi.xfer2([0x00])
+            _ = len(rx)
+            print("  transfer: OK (xfer2 de 1 byte)")
+        except Exception as exc:
+            print(f"  transfer: FAIL: {exc}")
+    finally:
+        try:
+            spi.close()
+        except Exception:
+            pass
+
+
+def _parse_manual_cs(items: Optional[List[str]]) -> Dict[str, int]:
+    result: Dict[str, int] = {}
+    if not items:
+        return result
+    for raw in items:
+        if not raw:
+            continue
+        if "=" not in raw:
+            raise ValueError(f"Formato inválido para --manual-cs: '{raw}'. Use NOME=GPIO.")
+        name, num = raw.split("=", 1)
+        name = name.strip() or "GPIO"
+        try:
+            gpio = int(num.strip())
+        except ValueError:
+            raise ValueError(f"GPIO inválido em --manual-cs: '{num}'.")
+        result[name] = gpio
+    return result
+
+
+def _manual_cs_read_and_optionally_toggle(mapping: Dict[str, int], toggle: bool) -> None:
+    if not mapping:
+        return
+    # Preferência: gpiod (v2). Fallback: RPi.GPIO
+    gpiod_err: Optional[str] = None
+    try:
+        import gpiod  # type: ignore
+        # Usar o primeiro chip por padrão (Raspberry Pi)
+        chip = gpiod.Chip("gpiochip0")
+        for name, line in mapping.items():
+            print(f"Manual CS: {name} (GPIO{line})")
+            try:
+                req = chip.request_lines(
+                    consumer="cs-check",
+                    config={line: gpiod.LineSettings(direction=gpiod.LineDirection.INPUT)},
+                )
+                val = req.get_values([line])[0]
+                print(f"  level: {'alto' if val else 'baixo'}")
+                req.release()
+                if toggle:
+                    req = chip.request_lines(
+                        consumer="cs-check",
+                        config={
+                            line: gpiod.LineSettings(direction=gpiod.LineDirection.OUTPUT,
+                                                      output_value=gpiod.LineValue.ONE)
+                        },
+                    )
+                    req.set_values({line: gpiod.LineValue.ZERO})
+                    req.set_values({line: gpiod.LineValue.ONE})
+                    req.release()
+                    print("  toggle: OK (alto→baixo→alto)")
+            except Exception as exc:
+                print(f"  erro: {exc}")
+        return
+    except Exception as exc:
+        gpiod_err = str(exc)
+    # Fallback RPi.GPIO
+    try:
+        import RPi.GPIO as GPIO  # type: ignore
+    except Exception as exc:
+        print("Aviso: gpiod e RPi.GPIO indisponíveis. Pulei teste de CS manual.")
+        if gpiod_err:
+            print(f"  gpiod erro: {gpiod_err}")
+        return
+    try:
+        GPIO.setmode(GPIO.BCM)
+        for name, pin in mapping.items():
+            print(f"Manual CS: {name} (GPIO{pin})")
+            try:
+                GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_OFF)
+                val = GPIO.input(pin)
+                print(f"  level: {'alto' if val else 'baixo'}")
+                if toggle:
+                    GPIO.setup(pin, GPIO.OUT, initial=GPIO.HIGH)
+                    GPIO.output(pin, GPIO.LOW)
+                    GPIO.output(pin, GPIO.HIGH)
+                    print("  toggle: OK (alto→baixo→alto)")
+            except Exception as exc:
+                print(f"  erro: {exc}")
+    finally:
+        try:
+            GPIO.cleanup()
+        except Exception:
+            pass
+
+
+def cs_check(args: argparse.Namespace) -> None:
+    nodes = _list_spidev_nodes()
+    if not nodes:
+        print("Nenhum /dev/spidevX.Y encontrado. Habilite SPI no Raspberry (raspi-config).")
+    for bus, dev, path in nodes:
+        _print_spidev_info(
+            bus,
+            dev,
+            expected_mode=int(getattr(args, "expected_mode", 3) or 3),
+            expected_bpw=int(getattr(args, "expected_bpw", 8) or 8),
+            expected_active_low=bool(getattr(args, "expected_active_low", False)),
+        )
+    mapping = _parse_manual_cs(getattr(args, "manual_cs", None))
+    if mapping:
+        _manual_cs_read_and_optionally_toggle(mapping, bool(getattr(args, "toggle_test", False)))
 
 
 def main(argv: Optional[List[str]] = None) -> int:

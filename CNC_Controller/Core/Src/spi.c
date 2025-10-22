@@ -81,7 +81,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     PD3     ------> SPI2_MISO
     PD4     ------> SPI2_MOSI
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4;
+    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -97,7 +97,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     hdma_spi2_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_spi2_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_spi2_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_spi2_rx.Init.Mode = DMA_CIRCULAR;
+    /* Normal mode ensures HAL raises TxRxCplt after N bytes */
+    hdma_spi2_rx.Init.Mode = DMA_NORMAL;
     hdma_spi2_rx.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_spi2_rx) != HAL_OK)
     {
@@ -114,7 +115,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     hdma_spi2_tx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_spi2_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_spi2_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_spi2_tx.Init.Mode = DMA_CIRCULAR;
+    /* Normal mode pairs with per-round restart in app.c */
+    hdma_spi2_tx.Init.Mode = DMA_NORMAL;
     hdma_spi2_tx.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_spi2_tx) != HAL_OK)
     {
@@ -144,12 +146,12 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
     __HAL_RCC_SPI2_CLK_DISABLE();
 
     /**SPI2 GPIO Configuration
-    PD0     ------> SPI2_NSS
+    PD5     ------> SPI2_NSS
     PD1     ------> SPI2_SCK
     PD3     ------> SPI2_MISO
     PD4     ------> SPI2_MOSI
     */
-    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4);
+    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_5|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4);
 
     /* SPI2 DMA DeInit */
     HAL_DMA_DeInit(spiHandle->hdmarx);

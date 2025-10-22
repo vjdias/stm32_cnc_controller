@@ -54,7 +54,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+volatile uint32_t g_spi_error_count = 0;
+volatile uint32_t g_spi_last_error = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -185,6 +186,18 @@ void SystemClock_Config(void)
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     app_spi_isr_txrx_done(hspi);
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    if (hspi == NULL) return;
+    if (hspi->Instance != APP_SPI_INSTANCE) return;
+
+    g_spi_last_error = hspi->ErrorCode;
+    g_spi_error_count++;
+
+    /* Indicação visual simples para diagnóstico */
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 }
 
 /* Botões de segurança (EXTI):
