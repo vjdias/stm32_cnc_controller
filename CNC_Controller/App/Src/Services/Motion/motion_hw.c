@@ -67,7 +67,9 @@ void motion_hw_init(void)
             if (HAL_LPTIM_Encoder_Start(axis->lptim, LPTIM_ENCODER_PERIOD) != HAL_OK) {
                 Error_Handler();
             }
+#if defined(LPTIM_CR_COUNTRST)
             __HAL_LPTIM_RESET_COUNTER(axis->lptim);
+#endif
         }
     }
 }

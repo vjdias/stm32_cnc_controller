@@ -1,6 +1,7 @@
 App/Src/Services/Motion/motion_service.o: \
  ../App/Src/Services/Motion/motion_service.c \
  ../App/Inc/Services/Motion/motion_service.h \
+ ../App/Inc/Services/Motion/motion_hw.h \
  ../App/Inc/Protocol/Requests/move_end_request.h \
  ../App/Inc/Protocol/Requests/../frame_defs.h \
  ../App/Inc/Protocol/Requests/move_queue_add_request.h \
@@ -10,8 +11,10 @@ App/Src/Services/Motion/motion_service.o: \
  ../App/Inc/Protocol/Responses/move_queue_add_ack_response.h \
  ../App/Inc/Protocol/Responses/move_queue_status_response.h \
  ../App/Inc/Protocol/Responses/start_move_response.h \
- ../App/Inc/Services/Log/log_service.h ../App/Inc/app.h ../Core/Inc/spi.h \
- ../Core/Inc/main.h ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
+ ../App/Inc/Services/Log/log_service.h \
+ ../App/Inc/Services/Safety/safety_service.h ../App/Inc/app.h \
+ ../Core/Inc/spi.h ../Core/Inc/main.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h \
@@ -33,6 +36,7 @@ App/Src/Services/Motion/motion_service.o: \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_lptim.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h \
@@ -44,6 +48,7 @@ App/Src/Services/Motion/motion_service.o: \
  ../App/Inc/Protocol/router.h ../Core/Inc/gpio.h ../Core/Inc/main.h \
  ../Core/Inc/tim.h
 ../App/Inc/Services/Motion/motion_service.h:
+../App/Inc/Services/Motion/motion_hw.h:
 ../App/Inc/Protocol/Requests/move_end_request.h:
 ../App/Inc/Protocol/Requests/../frame_defs.h:
 ../App/Inc/Protocol/Requests/move_queue_add_request.h:
@@ -54,6 +59,7 @@ App/Src/Services/Motion/motion_service.o: \
 ../App/Inc/Protocol/Responses/move_queue_status_response.h:
 ../App/Inc/Protocol/Responses/start_move_response.h:
 ../App/Inc/Services/Log/log_service.h:
+../App/Inc/Services/Safety/safety_service.h:
 ../App/Inc/app.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/main.h:
@@ -79,6 +85,7 @@ App/Src/Services/Motion/motion_service.o: \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h:
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_lptim.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h:

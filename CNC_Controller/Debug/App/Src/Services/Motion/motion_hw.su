@@ -1,8 +1,9 @@
-../App/Src/Services/Motion/motion_hw.c:24:20:gpio_bsrr_set	16	static
-../App/Src/Services/Motion/motion_hw.c:29:20:gpio_bsrr_reset	16	static
-../App/Src/Services/Motion/motion_hw.c:35:6:motion_hw_init	16	static
-../App/Src/Services/Motion/motion_hw.c:54:6:motion_hw_set_dir	16	static
-../App/Src/Services/Motion/motion_hw.c:61:6:motion_hw_enable	16	static
-../App/Src/Services/Motion/motion_hw.c:69:6:motion_hw_step_high	16	static
-../App/Src/Services/Motion/motion_hw.c:74:6:motion_hw_step_low	16	static
-../App/Src/Services/Motion/motion_hw.c:80:10:motion_hw_encoder_read_raw	16	static
+../App/Src/Services/Motion/motion_hw.c:37:20:gpio_bsrr_set	16	static
+../App/Src/Services/Motion/motion_hw.c:42:20:gpio_bsrr_reset	16	static
+../App/Src/Services/Motion/motion_hw.c:48:6:motion_hw_init	16	static
+../App/Src/Services/Motion/motion_hw.c:75:6:motion_hw_set_dir	16	static
+../App/Src/Services/Motion/motion_hw.c:82:6:motion_hw_enable	16	static
+../App/Src/Services/Motion/motion_hw.c:90:6:motion_hw_step_high	16	static
+../App/Src/Services/Motion/motion_hw.c:95:6:motion_hw_step_low	16	static
+../App/Src/Services/Motion/motion_hw.c:101:10:motion_hw_encoder_read_raw	24	static
+../App/Src/Services/Motion/motion_hw.c:112:9:motion_hw_encoder_bits	16	static

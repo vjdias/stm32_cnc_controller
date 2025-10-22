@@ -19,9 +19,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "lptim.h"
 #include "spi.h"
 #include "tim.h"
-#include "lptim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -100,12 +100,12 @@ int main(void)
   MX_DMA_Init();
   MX_SPI2_Init();
   MX_TIM6_Init();
-  MX_LPTIM1_Init();
   MX_TIM5_Init();
   MX_TIM7_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_TIM15_Init();
+  MX_LPTIM1_Init();
   /* USER CODE BEGIN 2 */
     board_config_apply_motion_gpio();
     board_config_force_encoder_quadrature();
