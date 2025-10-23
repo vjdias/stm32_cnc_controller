@@ -35,6 +35,16 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_STEP_HIGH_TICKS         1u       /* largura do STEP: >= 1 tick (>=20us) */
 #define MOTION_DIR_SETUP_TICKS         1u       /* espera após mudar DIR antes do próximo STEP */
 #define MOTION_ENABLE_SETTLE_TICKS     2u       /* pequena guarda após ENABLE antes do 1º STEP */
+/*
+ * Proteção de tLOW mínimo para STEP entre pulsos consecutivos.
+ * Define quantos ticks (TIM6) o sinal deve permanecer em nível BAIXO
+ * antes de permitir um novo pulso alto. Ex.: 1 => ~20 us com MOTION_TIM6_HZ=50 kHz.
+ *
+ * IMPORTANTE (como voltar ao comportamento anterior):
+ *  - Para reverter ao comportamento antigo (sem tLOW obrigatório), defina este valor como 0u.
+ *    Ex.: #define MOTION_STEP_LOW_TICKS 0u
+ */
+#define MOTION_STEP_LOW_TICKS          1u
 
 /* Q16.16 utilitários (DDA) */
 #define Q16_1                          (1u<<16)
@@ -60,6 +70,8 @@ typedef struct {
 
     /* Pulso STEP: agora é contador de ticks de nível alto */
     uint8_t  step_high;           /* >0 = quantos ticks faltam em ALTO */
+    /* Guarda para tempo mínimo em BAIXO antes do próximo STEP */
+    uint8_t  step_low;            /* >0 = aguarda ticks em BAIXO (tLOW) */
 
     /* --- DDA + rampa para modo DEMO --- */
     uint32_t dda_accum_q16;       /* acumulador de fase Q16.16 */
@@ -216,6 +228,7 @@ static void motion_stop_all_axes_locked(void) {
 
         /* limpa controle de pulso/guardas */
         ax->step_high         = 0u;
+        ax->step_low          = 0u;
         ax->en_settle_ticks   = 0u;
         ax->dir_settle_ticks  = 0u;
 
@@ -275,6 +288,7 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
 
         /* guardas para atender DIR/ENABLE timings do TMC5160 */
         ax->step_high         = 0u;
+        ax->step_low          = 0u; /* tLOW inicia zerado; será aplicado após o 1º pulso */
         ax->en_settle_ticks   = (total > 0u) ? MOTION_ENABLE_SETTLE_TICKS : 0u;
         ax->dir_settle_ticks  = MOTION_DIR_SETUP_TICKS;
 
@@ -433,7 +447,12 @@ void motion_on_tim6_tick(void)
         if (ax->step_high) {
             if (--ax->step_high == 0u) {
                 motion_hw_step_low(axis);
+                /* Inicia tempo mínimo em BAIXO antes de permitir novo STEP */
+                ax->step_low = MOTION_STEP_LOW_TICKS; /* Para voltar ao comportamento anterior, defina MOTION_STEP_LOW_TICKS=0u */
             }
+        } else if (ax->step_low) {
+            /* Conta o período obrigatório em BAIXO (tLOW) */
+            --ax->step_low;
         }
     }
 
@@ -449,6 +468,7 @@ void motion_on_tim6_tick(void)
             if (ax->dir_settle_ticks) { ax->dir_settle_ticks--; continue; }
 
             if (ax->step_high) continue; /* ainda segurando pulso ALTO */
+            if (ax->step_low)  continue; /* aguardando tLOW mínimo antes de novo STEP */
 
             /* DDA: acumula fase e emite STEP ao cruzar 1.0 */
             ax->dda_accum_q16 += ax->dda_inc_q16;
@@ -467,6 +487,7 @@ void motion_on_tim6_tick(void)
             motion_axis_state_t *ax = &g_axis_state[axis];
 
             if (ax->step_high) continue;
+            if (ax->step_low)  continue; /* aguardando tLOW mínimo antes de novo STEP */
             if (ax->emitted_steps >= ax->total_steps) continue;
 
             if (ax->en_settle_ticks)  { ax->en_settle_ticks--;  continue; }
@@ -749,6 +770,7 @@ void motion_demo_set_continuous(uint8_t enable)
             ax->dda_inc_q16       = 0u;
 
             ax->step_high         = 0u;
+            ax->step_low          = 0u; /* tLOW inicia zerado; será aplicado nos pulsos subsequentes */
             ax->en_settle_ticks   = MOTION_ENABLE_SETTLE_TICKS;
             ax->dir_settle_ticks  = MOTION_DIR_SETUP_TICKS;
 

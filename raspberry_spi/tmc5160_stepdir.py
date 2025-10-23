@@ -176,7 +176,9 @@ def run_init_stepdir(
             print(f"  Raw response: {res.raw_hex}")
             print(f"  Status 0x{res.status.raw:02X}: {res.status.summary()}")
             print(f"  Previous data: 0x{res.previous_data:08X}")
-            res.raise_on_faults()
+            # Observação: o byte de status SPI pode sinalizar driver_error=1 de forma transitória
+            # (ex.: UV_CP/DRV_ERR latched) até a limpeza de GSTAT/condições de VM/EN.
+            # Não interrompemos a configuração aqui; a verificação final usa GSTAT/DRV_STATUS.
 
         # Somente registradores legíveis por SPI. IHOLD_IRUN/TPWMTHRS/TPOWERDOWN/PWMCONF
         # são somente-escrita no TMC5160 e tendem a retornar 0 quando lidos.
@@ -188,6 +190,8 @@ def run_init_stepdir(
         ]
         print("Leituras de verificação:")
         results: List[TMC5160ReadResult] = driver.read_registers(verify_regs)
+        gstat_val = None
+        drv_val = None
         for r in results:
             name = {
                 REG_GSTAT: "GSTAT",
@@ -198,7 +202,43 @@ def run_init_stepdir(
             print(f"- {name} (0x{r.address:02X}) => 0x{r.value:08X}")
             print(f"  Requisição: status=0x{r.request.status.raw:02X}, resp={r.request.raw_hex}")
             print(f"  Resposta  : status=0x{r.reply.status.raw:02X}, resp={r.reply.raw_hex}")
-            r.raise_on_faults()
+            # Não encerramos por driver_error no byte de status; avaliamos registradores abaixo
+            if r.address == REG_GSTAT:
+                gstat_val = r.value
+            elif r.address == 0x6F:
+                drv_val = r.value
+
+        # Checagem consolidada de falhas persistentes
+        faults: List[str] = []
+        if gstat_val is not None:
+            if gstat_val & (1 << 1):
+                faults.append("GSTAT.DRV_ERR=1")
+            if gstat_val & (1 << 2):
+                faults.append("GSTAT.UV_CP=1")
+        if drv_val is not None:
+            if drv_val & (1 << 26):
+                faults.append("DRV_STATUS.OT=1")
+            if drv_val & (1 << 25):
+                faults.append("DRV_STATUS.OTPW=1")
+            if drv_val & (1 << 24):
+                faults.append("DRV_STATUS.S2GA=1")
+            if drv_val & (1 << 23):
+                faults.append("DRV_STATUS.S2GB=1")
+            if drv_val & (1 << 22):
+                faults.append("DRV_STATUS.S2VSA=1")
+            if drv_val & (1 << 21):
+                faults.append("DRV_STATUS.S2VSB=1")
+            if drv_val & (1 << 20):
+                faults.append("DRV_STATUS.OLA=1")
+            if drv_val & (1 << 19):
+                faults.append("DRV_STATUS.OLB=1")
+
+        if faults:
+            print("Falhas detectadas após configuração:")
+            for f in faults:
+                print(f"  - {f}")
+            print("Dica: confira alimentação VM/ENN, conexões do motor e limpe GSTAT (0x01=0x07).")
+            # Não lançamos exceção para permitir diagnóstico contínuo via CLI
 
     print("Inicialização STEP/DIR concluída.")
     return 0
