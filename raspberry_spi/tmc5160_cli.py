@@ -1027,7 +1027,8 @@ def _bin_with_bracket(value: int, total_bits: int, bit_start: int, bit_end: int 
     left = bits[:i_min]
     mid = bits[i_min:i_max+1]
     right = bits[i_max+1:]
-    return "0b" + left + "[" + mid + "]" + right
+    # Inserir espaço antes e depois dos colchetes para evidenciar a janela
+    return "0b" + left + (" " if left else "") + "[" + mid + "]" + (" " if right else "") + right
 
 
 def _format_status_bitlist(byte: int) -> str:
@@ -1151,9 +1152,6 @@ def _run_status_compact(
                 req_bin = " ".join(_bin8(b) for b in req_bytes)
                 rep_bin = " ".join(_bin8(b) for b in rep_bytes)
                 print(f"- CS {dev}:")
-                # Mostra status_req e flags
-                print(f"  status_req: {_bin8(s_req)} → [{_format_status_flags(s_req)}]")
-                print(_format_status_bitlist(s_req))
                 # Frames juntos: resp imediatamente abaixo do req
                 print(f"  frame_req : {req_bin}")
                 print(f"  frame_resp: {rep_bin}")
@@ -1167,6 +1165,9 @@ def _run_status_compact(
                     d_dec = decode_register_value(0x6F, d.value)
                     # Causa resumida logo abaixo dos frames
                     print("  Causa resumida: " + _classify_drv_gstat(g.value, d.value))
+                # Em seguida, mostra o status_req e flags
+                print(f"  status_req: {_bin8(s_req)} → [{_format_status_flags(s_req)}]")
+                print(_format_status_bitlist(s_req))
                 # Agora mostra status final (reply) e flags somente se diferente
                 if (s_rep != s_req) or (rep_bytes != req_bytes):
                     print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
