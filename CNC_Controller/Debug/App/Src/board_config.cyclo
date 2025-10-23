@@ -1,5 +1,5 @@
 ../App/Src/board_config.c:24:13:configure_encoder_timer	3
 ../App/Src/board_config.c:55:13:configure_output	1
 ../App/Src/board_config.c:99:6:board_config_apply_motion_gpio	1
-../App/Src/board_config.c:127:6:board_config_force_encoder_quadrature	1
-../App/Src/board_config.c:133:6:board_config_apply_interrupt_priorities	1
+../App/Src/board_config.c:129:6:board_config_force_encoder_quadrature	1
+../App/Src/board_config.c:135:6:board_config_apply_interrupt_priorities	1

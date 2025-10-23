@@ -415,7 +415,7 @@ def test_cli_status_lists_registers_and_values(capsys):
     assert len(created) == 1
     cfg = created[0]
     assert cfg.read_requests == [
-        [REG_GSTAT, 0x6F, REG_GCONF, REG_IHOLD_IRUN, REG_TPOWERDOWN, REG_TPWMTHRS, REG_CHOPCONF, REG_PWMCONF]
+        [REG_GSTAT, 0x6F, REG_GCONF, REG_CHOPCONF]
     ]
     assert cfg.closed is True
 

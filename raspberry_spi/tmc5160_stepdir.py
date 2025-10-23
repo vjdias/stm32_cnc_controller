@@ -164,9 +164,9 @@ def run_init_stepdir(
 
     with configurator as driver:  # type: ignore
         print(
-            f"Open SPI bus={args.bus} dev={args.dev} at {args.speed} Hz to init STEP/DIR"
+            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para inicializar STEP/DIR"
         )
-        print("Applying default preset + specific STEP/DIR settings")
+        print("Aplicando preset padrão + ajustes específicos de STEP/DIR")
         responses: List[TMC5160TransferResult] = []
         responses.extend(driver.configure())
         responses.extend(driver.apply_registers(writes))
@@ -178,35 +178,29 @@ def run_init_stepdir(
             print(f"  Previous data: 0x{res.previous_data:08X}")
             res.raise_on_faults()
 
+        # Somente registradores legíveis por SPI. IHOLD_IRUN/TPWMTHRS/TPOWERDOWN/PWMCONF
+        # são somente-escrita no TMC5160 e tendem a retornar 0 quando lidos.
         verify_regs = [
             REG_GSTAT,
             0x6F,
             REG_GCONF,
-            REG_IHOLD_IRUN,
-            REG_TPOWERDOWN,
-            REG_TPWMTHRS,
             REG_CHOPCONF,
-            REG_PWMCONF,
         ]
-        print("Verification reads:")
+        print("Leituras de verificação:")
         results: List[TMC5160ReadResult] = driver.read_registers(verify_regs)
         for r in results:
             name = {
                 REG_GSTAT: "GSTAT",
                 0x6F: "DRV_STATUS",
                 REG_GCONF: "GCONF",
-                REG_IHOLD_IRUN: "IHOLD_IRUN",
-                REG_TPOWERDOWN: "TPOWERDOWN",
-                REG_TPWMTHRS: "TPWMTHRS",
                 REG_CHOPCONF: "CHOPCONF",
-                REG_PWMCONF: "PWMCONF",
             }.get(r.address, f"0x{r.address:02X}")
             print(f"- {name} (0x{r.address:02X}) => 0x{r.value:08X}")
-            print(f"  Request  : status=0x{r.request.status.raw:02X}, resp={r.request.raw_hex}")
-            print(f"  Reply    : status=0x{r.reply.status.raw:02X}, resp={r.reply.raw_hex}")
+            print(f"  Requisição: status=0x{r.request.status.raw:02X}, resp={r.request.raw_hex}")
+            print(f"  Resposta  : status=0x{r.reply.status.raw:02X}, resp={r.reply.raw_hex}")
             r.raise_on_faults()
 
-    print("STEP/DIR init done.")
+    print("Inicialização STEP/DIR concluída.")
     return 0
 
 

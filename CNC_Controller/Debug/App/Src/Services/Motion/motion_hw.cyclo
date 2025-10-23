@@ -1,9 +1,9 @@
 ../App/Src/Services/Motion/motion_hw.c:37:20:gpio_bsrr_set	2
 ../App/Src/Services/Motion/motion_hw.c:42:20:gpio_bsrr_reset	2
 ../App/Src/Services/Motion/motion_hw.c:48:6:motion_hw_init	7
-../App/Src/Services/Motion/motion_hw.c:77:6:motion_hw_set_dir	3
-../App/Src/Services/Motion/motion_hw.c:84:6:motion_hw_enable	3
-../App/Src/Services/Motion/motion_hw.c:92:6:motion_hw_step_high	2
-../App/Src/Services/Motion/motion_hw.c:97:6:motion_hw_step_low	2
-../App/Src/Services/Motion/motion_hw.c:103:10:motion_hw_encoder_read_raw	3
-../App/Src/Services/Motion/motion_hw.c:114:9:motion_hw_encoder_bits	2
+../App/Src/Services/Motion/motion_hw.c:81:6:motion_hw_set_dir	3
+../App/Src/Services/Motion/motion_hw.c:88:6:motion_hw_enable	3
+../App/Src/Services/Motion/motion_hw.c:96:6:motion_hw_step_high	2
+../App/Src/Services/Motion/motion_hw.c:101:6:motion_hw_step_low	2
+../App/Src/Services/Motion/motion_hw.c:107:10:motion_hw_encoder_read_raw	3
+../App/Src/Services/Motion/motion_hw.c:118:9:motion_hw_encoder_bits	2

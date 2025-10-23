@@ -17,6 +17,7 @@ if __package__:
         REG_GCONF,
         REG_GSTAT,
         REG_IHOLD_IRUN,
+        REG_GLOBAL_SCALER,
         REG_PWMCONF,
         REG_TPOWERDOWN,
         REG_TPWMTHRS,
@@ -34,6 +35,7 @@ else:  # execução direta dos testes/script
         REG_GCONF,
         REG_GSTAT,
         REG_IHOLD_IRUN,
+        REG_GLOBAL_SCALER,
         REG_PWMCONF,
         REG_TPOWERDOWN,
         REG_TPWMTHRS,
@@ -69,15 +71,22 @@ REGISTER_NAMES = {
     0x6F: "DRV_STATUS",
 }
 
+# Alguns registradores do TMC5160 são somente-escrita (sem readback pelo SPI)
+# e, por isso, retornam 0 em leituras: evitamos incluí-los como padrão nas
+# consultas de status para não confundir o usuário. Esses valores ainda podem
+# ser lidos explicitamente via --register, se desejado.
+WRITE_ONLY_REGISTERS = (
+    REG_IHOLD_IRUN,  # 0x10
+    REG_TPOWERDOWN,  # 0x11
+    REG_TPWMTHRS,    # 0x13
+    REG_PWMCONF,     # 0x70
+)
+
 DEFAULT_STATUS_REGISTERS = (
-    REG_GSTAT,
-    0x6F,
-    REG_GCONF,
-    REG_IHOLD_IRUN,
-    REG_TPOWERDOWN,
-    REG_TPWMTHRS,
-    REG_CHOPCONF,
-    REG_PWMCONF,
+    REG_GSTAT,       # 0x01 (RW)
+    0x6F,            # DRV_STATUS (R)
+    REG_GCONF,       # 0x00 (RW)
+    REG_CHOPCONF,    # 0x6C (RW)
 )
 
 
@@ -380,6 +389,57 @@ def _build_safe_off_parser() -> argparse.ArgumentParser:
         "--clear-gstat",
         action="store_true",
         help="Limpa GSTAT (0x07) antes",
+    )
+    return parser
+
+
+def _build_ultrafrio_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Aplica preset ultra-frio: SpreadCycle, 1/16+interpolação, TOFF/HEND ajustados, "
+            "correntes baixas e GLOBAL_SCALER.")
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument("--ihold", type=int, default=1, help="IHOLD (0-31)")
+    parser.add_argument("--irun", type=int, default=1, help="IRUN (0-31)")
+    parser.add_argument(
+        "--ihold-delay", dest="iholddelay", type=int, default=6, help="IHOLDDELAY (0-15)"
+    )
+    parser.add_argument(
+        "--microsteps",
+        type=int,
+        choices=[256, 128, 64, 32, 16, 8, 4, 2, 1],
+        default=16,
+        help="Resolução de microstepping",
+    )
+    parser.add_argument(
+        "--interpolate",
+        dest="interpolate",
+        action="store_true",
+        default=True,
+        help="Ativa interpolação (INTPOL=1) para 256 µsteps",
+    )
+    parser.add_argument(
+        "--no-interpolate",
+        dest="interpolate",
+        action="store_false",
+        help="Desativa interpolação (INTPOL=0)",
+    )
+    parser.add_argument("--toff", type=int, default=5, help="CHOPCONF.TOFF (0-15)")
+    parser.add_argument("--hstrt", type=int, default=5, help="CHOPCONF.HSTRT (0-7)")
+    parser.add_argument("--hend", type=int, default=2, help="CHOPCONF.HEND (0-15)")
+    parser.add_argument("--tbl", type=int, default=2, choices=[0, 1, 2, 3], help="CHOPCONF.TBL (0-3)")
+    parser.add_argument("--globalscaler", type=int, default=32, help="GLOBAL_SCALER (0-255)")
+    parser.add_argument(
+        "--tpowerdown",
+        type=lambda x: int(x, 0),
+        default=0x14,
+        help="TPOWERDOWN (ticks de 2^18/fCLK)",
+    )
+    parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help="Limpa GSTAT (0x07) antes de aplicar as configurações",
     )
     return parser
 
@@ -760,6 +820,105 @@ def _run_safe_off(
     )
 
 
+def _run_preset_ultrafrio(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_ultrafrio_parser()
+    args = parser.parse_args(list(argv))
+
+    def _mres_from_microsteps(ms: int) -> int:
+        table = {256: 0, 128: 1, 64: 2, 32: 3, 16: 4, 8: 5, 4: 6, 2: 7, 1: 8}
+        return table[ms]
+
+    # Clamp inputs
+    ihold = max(0, min(31, int(args.ihold)))
+    irun = max(0, min(31, int(args.irun)))
+    iholddelay = max(0, min(15, int(args.iholddelay)))
+    toff = max(0, min(15, int(args.toff)))
+    hstrt = max(0, min(7, int(args.hstrt)))
+    hend = max(0, min(15, int(args.hend)))
+    tbl = max(0, min(3, int(args.tbl)))
+    mres = _mres_from_microsteps(args.microsteps)
+    globalscaler = max(0, min(255, int(args.globalscaler)))
+    tpowerdown = int(args.tpowerdown)
+
+    # Build registers
+    gconf = 0x00000000  # SpreadCycle (EN_PWM_MODE=0)
+
+    ihold_irun = (ihold & 0x1F) | ((irun & 0x1F) << 8) | ((iholddelay & 0x0F) << 16)
+
+    # Compose CHOPCONF with requested fields; keep other protections enabled
+    chop = 0
+    chop |= (toff & 0x0F)
+    chop |= (hstrt & 0x07) << 4
+    chop |= (hend & 0x0F) << 7
+    chop |= (tbl & 0x03) << 15
+    # VSENSE=0 (0.325 V) -> bit 17 stays 0
+    # SYNC/TPFD left at 0
+    chop |= (mres & 0x0F) << 24
+    if args.interpolate:
+        chop |= (1 << 28)  # INTPOL
+
+    # Ensure TMC5160-specific protections not disabled
+    # DISS2G=0 (bit 30), DISS2VS=0 (bit 31)
+
+    writes: List[Tuple[int, int]] = [
+        (REG_GCONF, gconf),
+        (REG_IHOLD_IRUN, ihold_irun),
+        (REG_TPOWERDOWN, tpowerdown),
+        (REG_CHOPCONF, chop),
+        (REG_GLOBAL_SCALER, globalscaler & 0xFF),
+    ]
+
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset.default(),
+    )
+
+    def _operation(driver):
+        print(
+            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para aplicar preset ultra-frio"
+        )
+        responses: List[TMC5160TransferResult] = []
+        # Base preset first for predictable state
+        responses.extend(driver.configure())
+        if args.clear_gstat:
+            responses.append(driver.write_register(REG_GSTAT, 0x00000007))
+        print("Aplicando ajustes ultra-frios:")
+        for address, value in writes:
+            print(f" - 0x{address:02X} = 0x{value:08X}")
+        responses.extend(driver.apply_registers(writes))
+
+        print("Respostas do TMC5160:")
+        for res in responses:
+            print(_format_response(res))
+            res.raise_on_faults()
+
+        # Verify readable regs
+        verify_regs = [
+            REG_GSTAT,
+            0x6F,
+            REG_GCONF,
+            REG_CHOPCONF,
+        ]
+        print("Leituras de verificação:")
+        results = driver.read_registers(verify_regs)
+        for r in results:
+            print(_format_read_result(r))
+            r.raise_on_faults()
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Preset ultra-frio aplicado.",
+        operation=_operation,
+    )
 def run(
     argv: Optional[Sequence[str]] = None,
     *,
@@ -780,6 +939,7 @@ def run(
             "  loop-test [opções]         Gera padrão de escrita contínuo\n"
             "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
             "  safe-off [opções]          Zera correntes, TOFF=0 e FREEWHEEL\n"
+            "  preset-ultrafrio [opções]  Aplica perfil ultra-frio (SpreadCycle/1\x2f16/TOFF=5/HEND=2)\n"
         )
         return 0
 
@@ -810,6 +970,13 @@ def run(
 
     if argv_list and argv_list[0] == "safe-off":
         return _run_safe_off(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "preset-ultrafrio":
+        return _run_preset_ultrafrio(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,

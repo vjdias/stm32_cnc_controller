@@ -312,6 +312,8 @@ void motion_service_init(void) {
 	memset(g_encoder_position, 0, sizeof g_encoder_position);
 	memset(g_encoder_last_raw, 0, sizeof g_encoder_last_raw);
 	memset(g_encoder_origin, 0, sizeof g_encoder_origin);
+	/* Define velocidade inicial do demo para o menor valor da tabela */
+	g_demo_speed_idx = 0u;
 	g_status.state = MOTION_IDLE;
 	g_queue_head = g_queue_tail = g_queue_count = 0u;
 	g_has_active_segment = 0u;
@@ -591,7 +593,7 @@ void motion_demo_set_continuous(uint8_t enable)
             ax->total_steps = 0xFFFFFFFFu; // efetivamente contínuo
             ax->target_steps = 0u;
             ax->emitted_steps = 0u;
-            ax->velocity_per_tick = g_demo_speed_table[g_demo_speed_idx & 0x3u];
+            ax->velocity_per_tick = (uint16_t)(g_demo_speed_table[g_demo_speed_idx & 0x3u] / 5u);
             ax->kp = ax->ki = ax->kd = 0u;
             ax->step_high = 0u;
             motion_hw_step_low(axis);
@@ -657,7 +659,7 @@ void motion_demo_cycle_speed(void)
     if (!g_demo_continuous)
         return;
     /* Aplica nova velocidade imediatamente se demo está ativo */
-    uint16_t v = g_demo_speed_table[g_demo_speed_idx & 0x3u];
+    uint16_t v = (uint16_t)(g_demo_speed_table[g_demo_speed_idx & 0x3u] / 5u);
     uint32_t primask = motion_lock();
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
         g_axis_state[axis].velocity_per_tick = v;
