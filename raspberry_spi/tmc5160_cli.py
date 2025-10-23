@@ -1151,11 +1151,11 @@ def _run_status_compact(
                 req_bin = " ".join(_bin8(b) for b in req_bytes)
                 rep_bin = " ".join(_bin8(b) for b in rep_bytes)
                 print(f"- CS {dev}:")
+                # Mostra status_req e flags
                 print(f"  status_req: {_bin8(s_req)} → [{_format_status_flags(s_req)}]")
                 print(_format_status_bitlist(s_req))
+                # Frames juntos: resp imediatamente abaixo do req
                 print(f"  frame_req : {req_bin}")
-                print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
-                print(_format_status_bitlist(s_rep))
                 print(f"  frame_resp: {rep_bin}")
 
                 # Se driver_error aparecer, coletar diagnóstico resumido
@@ -1165,6 +1165,12 @@ def _run_status_compact(
                     d = driver.read_register(0x6F)
                     g_dec = decode_register_value(REG_GSTAT, g.value)
                     d_dec = decode_register_value(0x6F, d.value)
+                    # Causa resumida logo abaixo dos frames
+                    print("  Causa resumida: " + _classify_drv_gstat(g.value, d.value))
+                # Agora mostra status final (reply) e flags
+                print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
+                print(_format_status_bitlist(s_rep))
+                if (s_req & 0x02) or (s_rep & 0x02):
                     print(f"  Diag GSTAT:")
                     print(f"    valor: {_bin32(g.value)} (0x{g.value:08X})")
                     print(_format_gstat_bitlist(g.value))
@@ -1173,7 +1179,6 @@ def _run_status_compact(
                     print(f"    valor: {_bin32(d.value)} (0x{d.value:08X})")
                     print(_format_drvstatus_bitlist(d.value))
                     print(f"    resp : {' '.join(_bin8(b) for b in d.request.response)} -> {d.reply.raw_hex}")
-                    print("  Causa resumida: " + _classify_drv_gstat(g.value, d.value))
         except FileNotFoundError:
             print(f"- CS {dev}: dispositivo /dev/spidev{args.bus}.{dev} não encontrado")
             continue
