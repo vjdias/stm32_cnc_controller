@@ -474,6 +474,22 @@ def _build_status_compact_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _build_motion_params_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Lê parâmetros de movimentação do TMC5160 (modo, microstepping, CHOPCONF, correntes, GLOBALSCALER).\n"
+            "Observação: IHOLD_IRUN/TPOWERDOWN/PWMCONF podem ser somente-escrita no 5160; leitura tende a 0."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help="Executa a limpeza de GSTAT (0x07) antes de ler (opcional)",
+    )
+    return parser
+
+
 def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     overrides: List[Tuple[int, int]] = []
 
@@ -564,6 +580,127 @@ def _run_spi_operation(
 
     print(success_message)
     return 0
+
+
+def _run_motion_params(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_motion_params_parser()
+    args = parser.parse_args(list(argv))
+
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset(writes=tuple()),
+    )
+
+    def _field(val: int, start: int, width: int) -> int:
+        mask = (1 << width) - 1
+        return (val >> start) & mask
+
+    def _msteps_from_mres(mres: int) -> Optional[int]:
+        if 0 <= mres <= 8:
+            return 1 << (8 - mres)
+        return None
+
+    try:
+        with configurator as driver:  # type: ignore[assignment]
+            if args.clear_gstat:
+                # Limpa GSTAT para evitar flags antigas na sessão
+                driver.write_register(REG_GSTAT, 0x00000007)
+
+            # Leitura dos registradores relevantes
+            r_gconf = driver.read_register(REG_GCONF)
+            r_chop = driver.read_register(REG_CHOPCONF)
+            # Write-only em muitos 5160; ainda tentamos ler e avisamos
+            r_ihir = driver.read_register(REG_IHOLD_IRUN)
+            r_tpwd = driver.read_register(REG_TPOWERDOWN)
+            # GLOBAL_SCALER (0x0B) — pode ser R/W dependendo da variante
+            try:
+                r_gs = driver.read_register(REG_GLOBAL_SCALER)
+            except Exception:
+                r_gs = None
+
+            # Decodificação básica
+            gconf = r_gconf.value
+            chop = r_chop.value
+            ihir = r_ihir.value
+            tpwd = r_tpwd.value
+            gs = r_gs.value if r_gs is not None else None
+
+            en_pwm_mode = (gconf >> 2) & 1
+            intpol = (chop >> 28) & 1
+            mres = _field(chop, 24, 4)
+            microsteps = _msteps_from_mres(mres)
+            vsense = (chop >> 17) & 1
+            toff = _field(chop, 0, 4)
+            hstrt = _field(chop, 4, 3)
+            hend = _field(chop, 7, 4)
+            tbl = _field(chop, 15, 2)
+
+            ihold = _field(ihir, 0, 5)
+            irun = _field(ihir, 8, 5)
+            iholddelay = _field(ihir, 16, 4)
+
+            # TPOWERDOWN em ticks de 2^18/fCLK (~12 MHz)
+            tpwd_ticks = tpwd & 0xFF
+            tpwd_ms = (tpwd_ticks * (2 ** 18) / 12_000_000.0) * 1000.0 if tpwd_ticks else 0.0
+
+            print(f"Parâmetros (bus={args.bus}, dev={args.dev})")
+            print(f"- Modo             : {'SpreadCycle' if en_pwm_mode == 0 else 'StealthChop (EN_PWM_MODE=1)'}")
+            if microsteps:
+                print(f"- Microstep        : 1/{microsteps}  (MRES={mres})")
+            else:
+                print(f"- Microstep        : MRES={mres} (valor fora da faixa esperada)")
+            print(f"- Interpolação     : {'ON' if intpol else 'OFF'} (INTPOL={intpol})")
+            print(f"- VSENSE           : {vsense}  (0=0,325 V; 1=0,18 V)")
+            print(f"- TOFF             : {toff}")
+            print(f"- TBL              : {tbl}")
+            print(f"- HSTRT            : {hstrt}")
+            print(f"- HEND             : {hend}")
+
+            # IHOLD/IRUN podem retornar 0 (write-only); informamos mesmo assim
+            note_wr = " (write-only: leitura pode retornar 0)"
+            print(f"- IRUN (CS)        : {irun}{note_wr}")
+            print(f"- IHOLD (CS)       : {ihold}{note_wr}")
+            print(f"- IHOLDDELAY       : {iholddelay}{note_wr}")
+
+            if gs is None:
+                print(f"- GLOBALSCALER     : N/D (não lido)")
+            else:
+                print(f"- GLOBALSCALER     : {gs & 0xFF}")
+
+            print(f"- TPOWERDOWN       : {tpwd_ticks} (~{tpwd_ms:.1f} ms){note_wr}")
+
+            # Recomendações (perfil ultra-frio)
+            print("Recomendado (ultra-frio):")
+            print("  - Modo           : SpreadCycle")
+            print("  - Microstep      : 1/16 + INTPOL=1")
+            print("  - VSENSE         : 0 (0,325 V)")
+            print("  - TOFF/TBL       : 5 / 2")
+            print("  - HSTRT/HEND     : 5 / 2 (ajuste fino ±1)")
+            print("  - IRUN/IHOLD     : 1 / 1 (diagnóstico; ajuste conforme torque)")
+            print("  - IHOLDDELAY     : 4–8")
+            print("  - GLOBALSCALER   : 32 (ponto de partida)")
+            print("  - TPOWERDOWN     : 20 (~2 s)")
+
+    except FileNotFoundError:
+        print(f"Dispositivo /dev/spidev{args.bus}.{args.dev} não encontrado")
+        return 1
+    except PermissionError:
+        print(f"Permissão negada em /dev/spidev{args.bus}.{args.dev}")
+        return 1
+    except RuntimeError as exc:
+        # Mantenha leitura parcial para auxiliar diagnóstico
+        print(f"Erro durante leitura: {exc}")
+        return 1
+
+    return 0
+
 
 
 def _run_configure(
@@ -1227,6 +1364,7 @@ def run(
             "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
             "  safe-off [opções]          Zera correntes, TOFF=0 e FREEWHEEL\n"
             "  preset-ultrafrio [opções]  Aplica perfil ultra-frio (SpreadCycle/1\x2f16/TOFF=5/HEND=2)\n"
+            "  motion-params [opções]     Lê parâmetros que definem a movimentação (modo, µstep, chopper, correntes)\n"
             "  status-compact [opções]    Status resumido 1 ou 1,2,3 (bus 0) com diag se driver_error\n"
         )
         return 0
@@ -1265,6 +1403,13 @@ def run(
 
     if argv_list and argv_list[0] == "preset-ultrafrio":
         return _run_preset_ultrafrio(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "motion-params":
+        return _run_motion_params(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,
