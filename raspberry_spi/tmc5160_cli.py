@@ -444,6 +444,36 @@ def _build_ultrafrio_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _build_status_compact_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Mostra o status resumido dos drivers (byte de status SPI, bytes brutos), "
+            "e se houver driver_error, lê GSTAT/DRV_STATUS para diagnóstico."
+        ),
+    )
+    # Para este comando, deixe --dev opcional e ofereça --devs (lista)
+    parser.add_argument("--bus", type=int, default=0, help="Barramento SPI (default: 0)")
+    parser.add_argument("--dev", type=int, default=None, help="Dispositivo SPI (opcional)")
+    parser.add_argument(
+        "--devs",
+        type=str,
+        default=None,
+        help="Lista de dispositivos CS separada por vírgula (ex.: 1,2,3). Ignorado se --dev for informado.",
+    )
+    parser.add_argument(
+        "--speed",
+        type=int,
+        default=4_000_000,
+        help="Velocidade SPI em Hz (default: 4_000_000)",
+    )
+    parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help="Executa a limpeza de GSTAT (0x07) antes de ler o status",
+    )
+    return parser
+
+
 def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
     overrides: List[Tuple[int, int]] = []
 
@@ -919,6 +949,247 @@ def _run_preset_ultrafrio(
         success_message="Preset ultra-frio aplicado.",
         operation=_operation,
     )
+
+
+def _format_status_flags(byte: int) -> str:
+    names = [
+        (7, "status_stop_r"),
+        (6, "status_stop_l"),
+        (5, "position_reached"),
+        (4, "velocity_reached"),
+        (3, "standstill"),
+        (2, "stallguard"),
+        (1, "driver_error"),
+        (0, "reset_flag"),
+    ]
+    active = [name for bit, name in names if (byte & (1 << bit))]
+    return ", ".join(active) if active else "nenhuma"
+
+
+def _classify_drv_gstat(gstat_val: int, drv_val: int) -> str:
+    # DRV_STATUS dominant failures
+    if drv_val & (1 << 26):
+        return "Sobretemperatura (OT): reduza IRUN e melhore a dissipação"
+    if drv_val & (1 << 25):
+        return "Pré‑aviso de sobretemperatura (OTPW): monitore temperatura/corrente"
+    if drv_val & (1 << 24):
+        return "Curto à terra na fase A (S2GA): verifique fiação/módulo"
+    if drv_val & (1 << 23):
+        return "Curto à terra na fase B (S2GB): verifique fiação/módulo"
+    if drv_val & (1 << 22):
+        return "Curto à alimentação na fase A (S2VSA): verifique fiação/módulo"
+    if drv_val & (1 << 21):
+        return "Curto à alimentação na fase B (S2VSB): verifique fiação/módulo"
+    if drv_val & (1 << 20):
+        return "Open‑load na fase A (OLA): motor/cabo desconectado ou intermitente"
+    if drv_val & (1 << 19):
+        return "Open‑load na fase B (OLB): motor/cabo desconectado ou intermitente"
+
+    # GSTAT
+    if gstat_val & (1 << 2):
+        return "UV_CP (subtensão do charge‑pump): confira VM/ENN/partida"
+    if gstat_val & (1 << 1):
+        return "DRV_ERR latched: ver DRV_STATUS para a causa"
+    if gstat_val & (1 << 0):
+        return "RESET recente: limpe GSTAT ou ignore se já limpo"
+
+    # Nothing found in regs
+    if drv_val & (1 << 31):
+        return "Standstill (STST) sem falhas: provável 'driver_error' residual do status SPI"
+    return "Sem falhas em GSTAT/DRV_STATUS (driver_error apenas no byte de status SPI)"
+
+
+def _bin8(v: int) -> str:
+    return f"0b{v & 0xFF:08b}"
+
+
+def _bin32(v: int) -> str:
+    return f"0b{v & 0xFFFFFFFF:032b}"
+
+
+def _bin_with_bracket(value: int, total_bits: int, bit_start: int, bit_end: int | None = None) -> str:
+    """Renderiza o valor em binário e destaca [entre colchetes] o(s) bit(s) de interesse.
+
+    Os bits são indexados MSB=total_bits-1 ... LSB=0, igual aos mapeamentos do datasheet.
+    """
+    if bit_end is None:
+        bit_end = bit_start
+    bit_start = int(bit_start)
+    bit_end = int(bit_end)
+    if not (0 <= bit_start < total_bits and 0 <= bit_end < total_bits):
+        return _bin32(value) if total_bits == 32 else _bin8(value)
+    # MSB primeiro
+    bits = f"{value & ((1<<total_bits)-1):0{total_bits}b}"
+    # Converter índice de bit (MSB=total_bits-1) para índice de string (0..total_bits-1)
+    i0 = total_bits - 1 - bit_start
+    i1 = total_bits - 1 - bit_end
+    i_min, i_max = min(i0, i1), max(i0, i1)
+    left = bits[:i_min]
+    mid = bits[i_min:i_max+1]
+    right = bits[i_max+1:]
+    return "0b" + left + "[" + mid + "]" + right
+
+
+def _format_status_bitlist(byte: int) -> str:
+    labels = {
+        7: ("status_stop_r", "fim de curso R"),
+        6: ("status_stop_l", "fim de curso L"),
+        5: ("position_reached", "posição atingida"),
+        4: ("velocity_reached", "velocidade atingida"),
+        3: ("standstill", "parado"),
+        2: ("stallguard", "stallguard"),
+        1: ("driver_error", "erro de driver"),
+        0: ("reset_flag", "reset detectado"),
+    }
+    lines = []
+    for bit in range(7, -1, -1):
+        if (byte >> bit) & 1:
+            name, desc = labels.get(bit, (f"bit{bit}", ""))
+            lines.append(f"  {_bin_with_bracket(byte, 8, bit)} [{name}] {desc}")
+    if not lines:
+        lines.append("  (nenhuma flag ativa)")
+    return "\n".join(lines)
+
+
+def _format_drvstatus_bitlist(value: int) -> str:
+    mapping = [
+        (31, "STST", "standstill"),
+        (26, "OT", "sobretemperatura"),
+        (25, "OTPW", "pré‑aviso sobretemp"),
+        (24, "S2GA", "curto à terra fase A"),
+        (23, "S2GB", "curto à terra fase B"),
+        (22, "S2VSA", "curto à alimentação A"),
+        (21, "S2VSB", "curto à alimentação B"),
+        (20, "OLA", "open‑load fase A"),
+        (19, "OLB", "open‑load fase B"),
+    ]
+    lines = []
+    for bit, name, desc in mapping:
+        if (value >> bit) & 1:
+            lines.append(f"  {_bin_with_bracket(value, 32, bit)} [{name}] {desc}")
+    if not lines:
+        lines.append("  (nenhum bit de falha relevante em DRV_STATUS)")
+    return "\n".join(lines)
+
+
+def _format_gstat_bitlist(value: int) -> str:
+    mapping = [
+        (2, "UV_CP", "subtensão charge‑pump"),
+        (1, "DRV_ERR", "falha latched"),
+        (0, "RESET", "reset detectado"),
+    ]
+    lines = []
+    for bit, name, desc in mapping:
+        if (value >> bit) & 1:
+            lines.append(f"  {_bin_with_bracket(value, 32, bit)} [{name}] {desc}")
+    if not lines:
+        lines.append("  (nenhum bit ativo em GSTAT)")
+    return "\n".join(lines)
+
+
+def _run_status_compact(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_status_compact_parser()
+    args = parser.parse_args(list(argv))
+
+    # Resolve dev list
+    if args.dev is not None:
+        devs = [int(args.dev)]
+    elif args.devs:
+        try:
+            devs = [int(x.strip()) for x in str(args.devs).split(",") if x.strip()]
+        except Exception:
+            print("Erro: formato inválido em --devs (use ex.: 1,2,3)")
+            return 1
+        if not devs:
+            devs = [1, 2, 3]
+    else:
+        devs = [1, 2, 3]
+
+    print(f"Status compacto (bus={args.bus}, devs={devs})")
+
+    any_error = False
+
+    for dev in devs:
+        configurator = configurator_factory(
+            bus=args.bus,
+            device=dev,
+            speed_hz=args.speed,
+            register_preset=TMC5160RegisterPreset(writes=tuple()),
+        )
+
+        try:
+            with configurator as driver:  # type: ignore[assignment]
+                # Opcional: limpar GSTAT antes de ler status
+                if args.clear_gstat:
+                    gstat_before = driver.read_register(REG_GSTAT)
+                    cleared = driver.write_register(REG_GSTAT, 0x00000007)
+                    gstat_after = driver.read_register(REG_GSTAT)
+                    print(
+                        (
+                            "- CS {dev}: clear-gstat before=0x{b:08X} resp={rb} | write={wc} | after=0x{a:08X} resp={ra}"
+                        ).format(
+                            dev=dev,
+                            b=gstat_before.value,
+                            rb=gstat_before.reply.raw_hex,
+                            wc=cleared.raw_hex,
+                            a=gstat_after.value,
+                            ra=gstat_after.reply.raw_hex,
+                        )
+                    )
+
+                # Fazer uma leitura simples para obter bytes de status e frame
+                rr = driver.read_register(REG_GCONF)
+                s_req = rr.request.status.raw
+                s_rep = rr.reply.status.raw
+                req_bytes = rr.request.response
+                rep_bytes = rr.reply.response
+                req_bin = " ".join(_bin8(b) for b in req_bytes)
+                rep_bin = " ".join(_bin8(b) for b in rep_bytes)
+                print(f"- CS {dev}:")
+                print(f"  status_req: {_bin8(s_req)} → [{_format_status_flags(s_req)}]")
+                print(_format_status_bitlist(s_req))
+                print(f"  frame_req : {req_bin}")
+                print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
+                print(_format_status_bitlist(s_rep))
+                print(f"  frame_resp: {rep_bin}")
+
+                # Se driver_error aparecer, coletar diagnóstico resumido
+                if (s_req & 0x02) or (s_rep & 0x02):
+                    any_error = True
+                    g = driver.read_register(REG_GSTAT)
+                    d = driver.read_register(0x6F)
+                    g_dec = decode_register_value(REG_GSTAT, g.value)
+                    d_dec = decode_register_value(0x6F, d.value)
+                    print(f"  Diag GSTAT:")
+                    print(f"    valor: {_bin32(g.value)} (0x{g.value:08X})")
+                    print(_format_gstat_bitlist(g.value))
+                    print(f"    resp : {' '.join(_bin8(b) for b in g.request.response)} -> {g.reply.raw_hex}")
+                    print(f"  Diag DRV_STATUS:")
+                    print(f"    valor: {_bin32(d.value)} (0x{d.value:08X})")
+                    print(_format_drvstatus_bitlist(d.value))
+                    print(f"    resp : {' '.join(_bin8(b) for b in d.request.response)} -> {d.reply.raw_hex}")
+                    print("  Causa resumida: " + _classify_drv_gstat(g.value, d.value))
+        except FileNotFoundError:
+            print(f"- CS {dev}: dispositivo /dev/spidev{args.bus}.{dev} não encontrado")
+            continue
+        except PermissionError:
+            print(f"- CS {dev}: permissão negada em /dev/spidev{args.bus}.{dev}")
+            continue
+        except RuntimeError as exc:
+            # Não abortar a varredura dos demais
+            print(f"- CS {dev}: erro durante leitura: {exc}")
+            continue
+
+    if any_error:
+        print("Resumo: houve driver_error em pelo menos um driver (ver itens com 'Diag').")
+    else:
+        print("Resumo: nenhum driver_error sinalizado.")
+    return 0
 def run(
     argv: Optional[Sequence[str]] = None,
     *,
@@ -940,6 +1211,7 @@ def run(
             "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
             "  safe-off [opções]          Zera correntes, TOFF=0 e FREEWHEEL\n"
             "  preset-ultrafrio [opções]  Aplica perfil ultra-frio (SpreadCycle/1\x2f16/TOFF=5/HEND=2)\n"
+            "  status-compact [opções]    Status resumido 1 ou 1,2,3 (bus 0) com diag se driver_error\n"
         )
         return 0
 
@@ -977,6 +1249,13 @@ def run(
 
     if argv_list and argv_list[0] == "preset-ultrafrio":
         return _run_preset_ultrafrio(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "status-compact":
+        return _run_status_compact(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,

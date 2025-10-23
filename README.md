@@ -118,6 +118,38 @@ KiCad 9 para inspeção detalhada e edição.
 
 ## 4) Timers — Detalhes & Fórmulas
 
+---
+
+## 5) TMC5160 — Diagnóstico Rápido (GSTAT / DRV_STATUS)
+
+### Byte de status SPI (1º byte de toda resposta)
+- Bits: 7=status_stop_r, 6=status_stop_l, 5=position_reached, 4=velocity_reached,
+  3=standstill, 2=stallguard, 1=driver_error, 0=reset_flag.
+- Observação: `driver_error=1` é genérico — consulte `GSTAT`/`DRV_STATUS` para a causa.
+
+### GSTAT (0x01) — falhas globais (latched)
+- bit0 RESET: houve reset desde a última leitura
+- bit1 DRV_ERR: falha do driver (veja DRV_STATUS)
+- bit2 UV_CP: subtensão no charge‑pump (confira VM/EN)
+- Limpeza: escreva 1 nos bits desejados (ex.: 0x07 limpa todos).
+
+### DRV_STATUS (0x6F) — estágio de potência
+- bit31 STST: standstill (não é falha)
+- bit26 OT: sobretemperatura
+- bit25 OTPW: pré‑aviso de sobretemperatura
+- bit24 S2GA / bit23 S2GB: curto à terra nas fases A/B
+- bit22 S2VSA / bit21 S2VSB: curto à alimentação nas fases A/B
+- bit20 OLA / bit19 OLB: open‑load nas fases A/B
+
+### Limpar erros antigos
+- `python3 raspberry_spi/tmc5160_cli.py status --bus 0 --dev 2 --clear-gstat --register gstat,drv_status`
+- ou `python3 raspberry_spi/tmc5160_cli.py configure --bus 0 --dev 2 --no-defaults --gstat 0x7`
+
+### Status compacto (novo)
+- `python3 raspberry_spi/tmc5160_cli.py status-compact` → varre bus 0 nos devs 1,2,3.
+- Mostra os 5 bytes de cada quadro (req/resp) e as flags do byte de status. Se `driver_error=1`, lê
+  `GSTAT/DRV_STATUS` e imprime um resumo do significado (OT/OL*/S2G*/S2VS*/UV_CP etc.).
+
 - **Time Base**: \( f = \frac{TIMCLK}{(PSC+1)(ARR+1)} \) → com **TIMCLK=80 MHz**:  
   - **TIM6**: 80e6/(80·20) = **50 kHz** (tick = 20 µs).  
   - **TIM7**: 80e6/(8000·10) = **1 kHz** (tick = 1 ms).
