@@ -1,7 +1,7 @@
 ../Core/Src/main.c:76:5:main	1
-../Core/Src/main.c:139:6:SystemClock_Config	4
-../Core/Src/main.c:186:6:HAL_SPI_TxRxCpltCallback	1
-../Core/Src/main.c:191:6:HAL_SPI_ErrorCallback	3
-../Core/Src/main.c:207:6:HAL_GPIO_EXTI_Callback	6
-../Core/Src/main.c:255:6:Error_Handler	1
-../Core/Src/main.c:276:6:assert_failed	1
+../Core/Src/main.c:137:6:SystemClock_Config	4
+../Core/Src/main.c:184:6:HAL_SPI_TxRxCpltCallback	1
+../Core/Src/main.c:189:6:HAL_SPI_ErrorCallback	3
+../Core/Src/main.c:205:6:HAL_GPIO_EXTI_Callback	10
+../Core/Src/main.c:261:6:Error_Handler	1
+../Core/Src/main.c:282:6:assert_failed	1

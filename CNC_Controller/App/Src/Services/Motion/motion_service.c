@@ -23,13 +23,15 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_AXIS_COUNT 3u
 #define MOTION_QUEUE_CAPACITY 64u
 typedef struct {
-	uint32_t total_steps;
-	uint32_t target_steps;
-	uint32_t emitted_steps;
-	uint16_t velocity_per_tick;
-	uint16_t kp, ki, kd;
-	uint8_t step_high;
-    uint16_t warmup_ticks; // ticks de espera antes de emitir o primeiro STEP
+    uint32_t total_steps;
+    uint32_t target_steps;
+    uint32_t emitted_steps;
+    uint16_t velocity_per_tick;  // velocidade instantânea (steps por tick TIM7)
+    uint16_t v_cruise;           // velocidade alvo (steps por tick TIM7)
+    uint16_t accel_per_tick;     // incremento de velocidade por tick TIM7
+    uint16_t kp, ki, kd;
+    uint8_t step_high;
+    uint16_t warmup_ticks;       // atraso antes do primeiro STEP (ticks TIM6)
 } motion_axis_state_t;
 typedef struct {
 	move_queue_add_req_t req;
@@ -227,10 +229,6 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
 		ax->ki = motion_ki_for_axis(seg, axis);
 		ax->kd = motion_kd_for_axis(seg, axis);
 		ax->step_high = 0u;
-            /* Aguardar estabilização do driver após EN=LOW (datasheet TMC5160 sugere
-             * aguardar charge-pump/saídas antes de aplicar STEP). Com tick=100 kHz,
-             * 500 ticks ≈ 5 ms. */
-            ax->warmup_ticks = (ax->total_steps > 0u) ? 500u : 0u;
                 motion_hw_step_low(axis);
                 motion_hw_set_dir(axis,
                                 (uint8_t) ((seg->dirMask >> axis) & 0x1u));
@@ -334,15 +332,6 @@ void motion_service_init(void) {
                         g_encoder_last_raw[axis] = raw;
                 }
         }
-        // Início regular dos timers: contadores zerados e evento de atualização
-        __HAL_TIM_DISABLE(&htim6);
-        __HAL_TIM_DISABLE(&htim7);
-        __HAL_TIM_SET_COUNTER(&htim6, 0);
-        __HAL_TIM_SET_COUNTER(&htim7, 0);
-        __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
-        __HAL_TIM_CLEAR_FLAG(&htim7, TIM_FLAG_UPDATE);
-        HAL_TIM_GenerateEvent(&htim6, TIM_EVENTSOURCE_UPDATE);
-        HAL_TIM_GenerateEvent(&htim7, TIM_EVENTSOURCE_UPDATE);
         if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
                 Error_Handler();
 	if (HAL_TIM_Base_Start_IT(&htim7) != HAL_OK)
@@ -357,10 +346,6 @@ void motion_on_tim6_tick(void) {
                 return;
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
                 motion_axis_state_t *ax = &g_axis_state[axis];
-                if (ax->warmup_ticks > 0u) {
-                        --ax->warmup_ticks;
-                        continue;
-                }
                 if (ax->step_high) {
                         motion_hw_step_low(axis);
                         ax->step_high = 0u;
@@ -408,20 +393,26 @@ void motion_on_tim6_tick(void) {
 	motion_unlock(primask);
 }
 void motion_on_tim7_tick(void) {
-	motion_update_encoders();
-	if (g_status.state == MOTION_RUNNING && g_has_active_segment) {
-		for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
-			motion_axis_state_t *ax = &g_axis_state[axis];
-			if (ax->emitted_steps >= ax->total_steps)
-				continue;
-			uint32_t total = ax->total_steps;
-			uint32_t target = ax->target_steps;
-			uint32_t velocity = ax->velocity_per_tick;
-			if (velocity == 0u) {
-				target = total;
-			} else {
-				uint64_t next = (uint64_t) target + (uint64_t) velocity;
-				if (next > total)
+    motion_update_encoders();
+    if (g_status.state == MOTION_RUNNING && g_has_active_segment) {
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            motion_axis_state_t *ax = &g_axis_state[axis];
+            // Aceleração suave até v_cruise (apenas se definido)
+            if (ax->v_cruise > 0u && ax->velocity_per_tick < ax->v_cruise) {
+                uint32_t nextv = (uint32_t)ax->velocity_per_tick + (uint32_t)ax->accel_per_tick;
+                if (nextv > ax->v_cruise) nextv = ax->v_cruise;
+                ax->velocity_per_tick = (uint16_t)nextv;
+            }
+            if (ax->emitted_steps >= ax->total_steps)
+                continue;
+            uint32_t total = ax->total_steps;
+            uint32_t target = ax->target_steps;
+            uint32_t velocity = ax->velocity_per_tick;
+            if (velocity == 0u) {
+                target = total;
+            } else {
+                uint64_t next = (uint64_t) target + (uint64_t) velocity;
+                if (next > total)
 					next = total;
 				target = (uint32_t) next;
 			}
@@ -611,9 +602,13 @@ void motion_demo_set_continuous(uint8_t enable)
             ax->total_steps = 0xFFFFFFFFu; // efetivamente contínuo
             ax->target_steps = 0u;
             ax->emitted_steps = 0u;
-            ax->velocity_per_tick = (uint16_t)(g_demo_speed_table[g_demo_speed_idx & 0x3u] / 5u);
+            ax->v_cruise = (uint16_t)(g_demo_speed_table[g_demo_speed_idx & 0x3u] / 5u);
+            if (ax->v_cruise == 0u) ax->v_cruise = 1u;
+            ax->velocity_per_tick = 1u;        // início suave
+            ax->accel_per_tick = 1u;           // ~1000 steps/s^2
             ax->kp = ax->ki = ax->kd = 0u;
             ax->step_high = 0u;
+            ax->warmup_ticks = 500u; // ~5ms em 100 kHz antes do primeiro STEP
             motion_hw_step_low(axis);
             motion_hw_set_dir(axis, 1u);   // forward
             motion_hw_enable(axis, 1u);     // liga driver (ativo em baixo)
@@ -680,7 +675,10 @@ void motion_demo_cycle_speed(void)
     uint16_t v = (uint16_t)(g_demo_speed_table[g_demo_speed_idx & 0x3u] / 5u);
     uint32_t primask = motion_lock();
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
-        g_axis_state[axis].velocity_per_tick = v;
+        g_axis_state[axis].v_cruise = (v == 0u) ? 1u : v;
+        if (g_axis_state[axis].velocity_per_tick == 0u)
+            g_axis_state[axis].velocity_per_tick = 1u;
+        g_axis_state[axis].accel_per_tick = 1u;
     }
     motion_unlock(primask);
 }

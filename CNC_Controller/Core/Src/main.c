@@ -113,17 +113,8 @@ int main(void)
     board_config_apply_interrupt_priorities();
     //board_config_apply_spi_dma_profile();
     app_init();
-    // Startup regular: counters em zero e atualização forçada antes de iniciar
-    __HAL_TIM_DISABLE(&htim6);
-    __HAL_TIM_DISABLE(&htim7);
-    __HAL_TIM_SET_COUNTER(&htim6, 0);
-    __HAL_TIM_SET_COUNTER(&htim7, 0);
-    __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
-    __HAL_TIM_CLEAR_FLAG(&htim7, TIM_FLAG_UPDATE);
-    HAL_TIM_GenerateEvent(&htim6, TIM_EVENTSOURCE_UPDATE);
-    HAL_TIM_GenerateEvent(&htim7, TIM_EVENTSOURCE_UPDATE);
-    // Timers serão iniciados pelo motion_service_init() após hardware de movimento
-    motion_demo_set_continuous(1);
+    // Timers base e start regular são tratados em motion_service_init()
+    /* Demo contínuo agora é iniciado pelo botão (PC0). */
   /* USER CODE END 2 */
 
   /* Infinite loop */
