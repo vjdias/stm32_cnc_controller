@@ -29,6 +29,7 @@ typedef struct {
 	uint16_t velocity_per_tick;
 	uint16_t kp, ki, kd;
 	uint8_t step_high;
+    uint16_t warmup_ticks; // ticks de espera antes de emitir o primeiro STEP
 } motion_axis_state_t;
 typedef struct {
 	move_queue_add_req_t req;
@@ -226,6 +227,10 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
 		ax->ki = motion_ki_for_axis(seg, axis);
 		ax->kd = motion_kd_for_axis(seg, axis);
 		ax->step_high = 0u;
+            /* Aguardar estabilização do driver após EN=LOW (datasheet TMC5160 sugere
+             * aguardar charge-pump/saídas antes de aplicar STEP). Com tick=100 kHz,
+             * 500 ticks ≈ 5 ms. */
+            ax->warmup_ticks = (ax->total_steps > 0u) ? 500u : 0u;
                 motion_hw_step_low(axis);
                 motion_hw_set_dir(axis,
                                 (uint8_t) ((seg->dirMask >> axis) & 0x1u));
@@ -329,6 +334,15 @@ void motion_service_init(void) {
                         g_encoder_last_raw[axis] = raw;
                 }
         }
+        // Início regular dos timers: contadores zerados e evento de atualização
+        __HAL_TIM_DISABLE(&htim6);
+        __HAL_TIM_DISABLE(&htim7);
+        __HAL_TIM_SET_COUNTER(&htim6, 0);
+        __HAL_TIM_SET_COUNTER(&htim7, 0);
+        __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
+        __HAL_TIM_CLEAR_FLAG(&htim7, TIM_FLAG_UPDATE);
+        HAL_TIM_GenerateEvent(&htim6, TIM_EVENTSOURCE_UPDATE);
+        HAL_TIM_GenerateEvent(&htim7, TIM_EVENTSOURCE_UPDATE);
         if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
                 Error_Handler();
 	if (HAL_TIM_Base_Start_IT(&htim7) != HAL_OK)
@@ -343,6 +357,10 @@ void motion_on_tim6_tick(void) {
                 return;
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
                 motion_axis_state_t *ax = &g_axis_state[axis];
+                if (ax->warmup_ticks > 0u) {
+                        --ax->warmup_ticks;
+                        continue;
+                }
                 if (ax->step_high) {
                         motion_hw_step_low(axis);
                         ax->step_high = 0u;

@@ -86,7 +86,7 @@ KiCad 9 para inspeção detalhada e edição.
 - **Debug = SWD**, **Timebase = SysTick**, todos **Wake-Up OFF**.
 
 **Timers**  
-- **TIM6 — Time Base 50 kHz (DDA/STEP)**: `PSC=79`, `ARR=19`, `Up`, **TRGO=Update** (opcional), **IRQ ON**.  
+- **TIM6 — Time Base 100 kHz (DDA/STEP)**: `PSC=79`, `ARR=9`, `Up`, **TRGO=Update** (opcional), **IRQ ON**.  
 - **TIM7 — Time Base 1 kHz (PI/PID)**: `PSC=7999`, `ARR=9`, `Up`, **IRQ ON**.
 - **TIM3 — Encoder X (16b)**: **Encoder TI1&TI2 (X4)**, `ICxF=0`, `PSC=0`, `ARR=0xFFFF`.
 - **LPTIM1 — Encoder Y (16b)**: **Encoder interface** (X4), `ARR=0xFFFF`, clock em `APB1`.

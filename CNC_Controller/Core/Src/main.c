@@ -113,9 +113,16 @@ int main(void)
     board_config_apply_interrupt_priorities();
     //board_config_apply_spi_dma_profile();
     app_init();
-    // Inicia timers do laço de passos (TIM6) e controle/status (TIM7)
-    HAL_TIM_Base_Start_IT(&htim6);
-    HAL_TIM_Base_Start_IT(&htim7);
+    // Startup regular: counters em zero e atualização forçada antes de iniciar
+    __HAL_TIM_DISABLE(&htim6);
+    __HAL_TIM_DISABLE(&htim7);
+    __HAL_TIM_SET_COUNTER(&htim6, 0);
+    __HAL_TIM_SET_COUNTER(&htim7, 0);
+    __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
+    __HAL_TIM_CLEAR_FLAG(&htim7, TIM_FLAG_UPDATE);
+    HAL_TIM_GenerateEvent(&htim6, TIM_EVENTSOURCE_UPDATE);
+    HAL_TIM_GenerateEvent(&htim7, TIM_EVENTSOURCE_UPDATE);
+    // Timers serão iniciados pelo motion_service_init() após hardware de movimento
     motion_demo_set_continuous(1);
   /* USER CODE END 2 */
 
@@ -224,6 +231,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             /* Libera segurança */
             safety_estop_release();
             /* Garante que os timers base voltem a rodar */
+            __HAL_TIM_DISABLE(&htim6);
+            __HAL_TIM_DISABLE(&htim7);
+            __HAL_TIM_SET_COUNTER(&htim6, 0);
+            __HAL_TIM_SET_COUNTER(&htim7, 0);
+            __HAL_TIM_CLEAR_FLAG(&htim6, TIM_FLAG_UPDATE);
+            __HAL_TIM_CLEAR_FLAG(&htim7, TIM_FLAG_UPDATE);
+            HAL_TIM_GenerateEvent(&htim6, TIM_EVENTSOURCE_UPDATE);
+            HAL_TIM_GenerateEvent(&htim7, TIM_EVENTSOURCE_UPDATE);
             HAL_TIM_Base_Start_IT(&htim6);
             HAL_TIM_Base_Start_IT(&htim7);
             /* Reativa movimentos conforme contexto */

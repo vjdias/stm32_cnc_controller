@@ -24,7 +24,7 @@ void motion_service_init(void);
 const motion_status_t* motion_status_get(void);
 
 // Hooks de tempo (chamar em TIM6/TIM7)
-void motion_on_tim6_tick(void); // 50 kHz DDA (consome slots)
+void motion_on_tim6_tick(void); // 100 kHz DDA (consome slots)
 void motion_on_tim7_tick(void); // 1 kHz controle/status
 
 // Handlers de frames

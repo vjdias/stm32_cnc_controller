@@ -1167,9 +1167,10 @@ def _run_status_compact(
                     d_dec = decode_register_value(0x6F, d.value)
                     # Causa resumida logo abaixo dos frames
                     print("  Causa resumida: " + _classify_drv_gstat(g.value, d.value))
-                # Agora mostra status final (reply) e flags
-                print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
-                print(_format_status_bitlist(s_rep))
+                # Agora mostra status final (reply) e flags somente se diferente
+                if (s_rep != s_req) or (rep_bytes != req_bytes):
+                    print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
+                    print(_format_status_bitlist(s_rep))
                 if (s_req & 0x02) or (s_rep & 0x02):
                     print(f"  Diag GSTAT:")
                     print(f"    valor: {_bin32(g.value)} (0x{g.value:08X})")
