@@ -1047,6 +1047,73 @@ def _run_preset_ultrafrio(
         register_preset=TMC5160RegisterPreset.default(),
     )
 
+
+def _build_chopconf_set_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Ajusta campos específicos de CHOPCONF preservando os demais (máscara/merge)."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument("--tbl", type=int, default=None, help="TBL (0-3)")
+    parser.add_argument("--hstrt", type=int, default=None, help="HSTRT (0-7)")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Lê CHOPCONF após a escrita para confirmar",
+    )
+    return parser
+
+
+def _run_chopconf_set(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_chopconf_set_parser()
+    args = parser.parse_args(list(argv))
+
+    tbl = args.tbl
+    hstrt = args.hstrt
+    if tbl is None and hstrt is None:
+        print("Nada a fazer: informe ao menos --tbl ou --hstrt")
+        return 1
+    if tbl is not None and not (0 <= int(tbl) <= 3):
+        print("--tbl fora da faixa (0-3)")
+        return 1
+    if hstrt is not None and not (0 <= int(hstrt) <= 7):
+        print("--hstrt fora da faixa (0-7)")
+        return 1
+
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset(writes=tuple()),
+    )
+
+    with configurator as driver:  # type: ignore[assignment]
+        before = driver.read_register(REG_CHOPCONF)
+        old = before.value
+        new = int(old)
+        if tbl is not None:
+            new = (new & ~(0x3 << 15)) | ((int(tbl) & 0x3) << 15)
+        if hstrt is not None:
+            new = (new & ~(0x7 << 4)) | ((int(hstrt) & 0x7) << 4)
+
+        print(
+            f"CHOPCONF antes: 0x{old:08X}  →  aplicando máscara: TBL={tbl if tbl is not None else '—'}, HSTRT={hstrt if hstrt is not None else '—'}"
+        )
+        resp = driver.write_register(REG_CHOPCONF, new)
+        print(_format_response(resp))
+
+        if args.verify:
+            after = driver.read_register(REG_CHOPCONF)
+            print(_format_read_result(after))
+
+    return 0
+
     def _operation(driver):
         print(
             f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para aplicar preset ultra-frio"
@@ -1410,6 +1477,13 @@ def run(
 
     if argv_list and argv_list[0] == "motion-params":
         return _run_motion_params(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "chopconf-set":
+        return _run_chopconf_set(
             argv_list[1:],
             configurator_factory=configurator_factory,
             device_finder=device_finder,
