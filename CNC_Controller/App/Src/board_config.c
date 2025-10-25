@@ -119,10 +119,26 @@ void board_config_apply_motion_gpio(void)
     init.Mode = GPIO_MODE_IT_RISING_FALLING;
     init.Pull = GPIO_PULLUP;
 
-    init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2;
+    /* IMPORTANTE: PC0 e PC2 são usados pelo encoder Y (LPTIM1_IN1/IN2).
+     * Reconfigurá-los como EXTI com PULLUP quebra:
+     *  - o Alternate Function do LPTIM1 (deixa de contar corretamente);
+     *  - a tolerância a 5 V dos pinos do tipo FT_a (puxadores internos ativados).
+     *
+     * Para eliminar a interferência no encoder, comentamos a configuração de EXTI
+     * para PC0/PC2. Mantemos apenas PC1 (se necessário) e PC13.
+     *
+     * Para voltar ao comportamento anterior, remapeie o encoder para outros pinos
+     * ou troque as entradas de EXTI; depois, remova o bloco #if 0 abaixo.
+     */
+#if 0
+    init.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2;  /* PC0/PC1/PC2 como EXTI */
     HAL_GPIO_Init(GPIOC, &init);
+#else
+    init.Pin = GPIO_PIN_1;                             /* Somente PC1 como EXTI */
+    HAL_GPIO_Init(GPIOC, &init);
+#endif
 
-    init.Pin = GPIO_PIN_13;
+    init.Pin = GPIO_PIN_13;                            /* EXTI do PC13 permanece */
     HAL_GPIO_Init(GPIOC, &init);
 }
 
