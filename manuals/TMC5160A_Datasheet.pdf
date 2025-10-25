@@ -1,0 +1,625 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+
+    
+    
+
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-400-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-500-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-600-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-700-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/barlow-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-400-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-500-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-600-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-700-normal.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/inter-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/remixicon.eot" as="font" type="font/eot" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/remixicon.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/remixicon.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/assets/remixicon.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- *** FE html start -->
+    <meta charset="utf-8">
+
+
+
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="follow, index" />
+    <title>ADI Trinamic Support | Analog Devices</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="description" content="Get support from ADI Trinamic’s tools and software to set up and fine-tune motion control systems, as well as from ADI Technical Support, and EngineerZone." />
+    <meta name="viewport" id="adiviewport" content="width=device-width, initial-scale=1.0">
+        <meta name="keywords" content="motor control software, motion control software, trinamic, software resources, trinamic hardware, trinamic support"/>
+    <meta name="breadcrumb" content="ADI Trinamic Support" />
+    <meta name="pageInfoType" content="" />
+    <meta name="verify-v1" content="EH6D19wZGxG0dpmm3/iUbsWFvGU/hZp9p5Vs5UuoIXI=" />
+    <meta name="y_key" content="fdd5bc59ae0e6340" />
+                <meta name="yandex-verification" content="86a60d9bcaab43f0" />
+                <meta name="google-site-verification" content="aVOSmh5Dsd1VpzYMM3a_ZvOQcjP9G5GDlvU-atf48ss" />
+                <meta name="baidu-site-verification" content="cSddD8r1N7" />
+                <meta name="msvalidate.01" content="381E86BC7EF76D19F9365D26D8BFCD35" />
+        <link rel="canonical" href="https://www.analog.com/en/lp/001/trinamic-support.html">
+                <link rel="alternate" hreflang=x-default href="https://www.analog.com/en/lp/001/trinamic-support.html" />
+                <link rel="alternate" hreflang=en-US href="https://www.analog.com/en/lp/001/trinamic-support.html" />
+                <link rel="alternate" hreflang=zh-Hans-CN href="https://www.analog.com/cn/lp/001/trinamic-support.html" />
+                <link rel="alternate" hreflang=ja-JP href="https://www.analog.com/jp/lp/001/trinamic-support.html" />
+
+
+    <script>!function (e, a, n, t) { var i = e.head; if (i) { if (a) return; var o = e.createElement("style"); o.id = "alloy-prehiding", o.innerText = n, i.appendChild(o), setTimeout(function () { o.parentNode && o.parentNode.removeChild(o) }, t) } }(document, document.location.href.indexOf("adobe_authoring_enabled") !== -1, "body { opacity: 0 !important }", 3000);</script>
+
+    <script type="text/javascript">
+        var datalayer = {"device":{"browser":"","type":""},"page":{"details":{"part":{"applicableParts":null,"categories":null,"id":null,"lifeCycle":null,"markets":null,"name":null,"type":null}},"meta":{"breadcrumbs":null,"id":null,"journey":null,"language":null,"pathname":null,"persona":null,"publishDate":null,"title":null,"taxonomy":null,"type":null}},"user":{"cart":{"purchaseID":"","sampleID":"","transactionID":""},"email":"","loggedIn":false,"blocked":false,"memberStatus":false}};
+    </script>
+
+
+        <link rel="stylesheet" href="https://assets2.analog.com/cms-assets-optimizations/css/vendor.min.css">
+        <link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/pages/styles/vendor.bundle.css">
+                <link rel="icon" href="https://www.analog.com/media/favicon/favicon.ico">
+        <link rel="apple-touch-icon" href="https://www.analog.com/media/favicon/apple_favicon.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://www.analog.com/media/favicon/adi-icon-ipad-152x152.png ">
+        <link rel="apple-touch-icon" sizes="180x180" href="https://www.analog.com/media/favicon/adi-icon-iphone-retina-180x180.png ">
+        <link rel="apple-touch-icon" sizes="167x167" href="https://www.analog.com/media/favicon/adi-icon-ipad-retina-167x167.png ">
+        <link href="https://assets2.analog.com/cms-assets/images/images/adi-favicon.svg" rel="shortcut icon" />
+    
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"></noscript>
+    <style>
+        :root {
+            --cta-color: #fff;
+            --cta-background: #1c1c1c;
+        }
+    </style>
+
+
+
+
+
+
+    <!-- Font-awesome -->
+    <!-- Latest compiled and minified CSS -->
+    <!-- Optional theme -->
+    <!-- owl-slider -->
+    <!-- Algolia Instant Search Theme -->
+    <!-- Autocomplete Theme -->
+
+
+    <!-- Latest compiled and minified JavaScript -->
+        <link rel="preload" href="https://assets2.analog.com/cms-assets/css/app.bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/app.bundle.css"></noscript>
+    
+        <link rel="preload" href="https://assets2.analog.com/cms-assets/css/pages/styles/common.bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/pages/styles/common.bundle.css"></noscript>
+     <link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/legacy/styles/legacy-common.bundle.css">
+ <link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/pages/styles/error400page.bundle.css">
+ <link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/pages/styles/error500page.bundle.css">
+<link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/legacy/styles/legacy-applications.bundle.css">            <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/css/pavilion.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://assets2.analog.com/cms-assets-optimizations/css/pavilion.min.css"></noscript>
+         <script type="module" src="https://assets2.analog.com/cms-assets-optimizations/js/pavilion.min.mjs"></script>     
+        <link rel="preload" href="https://assets2.analog.com/cms-assets-optimizations/css/vendor.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://assets2.analog.com/cms-assets-optimizations/css/vendor.min.css"></noscript>
+        <link rel="preload" href="https://assets2.analog.com/cms-assets/css/pages/styles/careerspage.bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/pages/styles/careerspage.bundle.css"></noscript>
+
+        <script src="https://assets2.analog.com/cms-assets/js/pages/scripts/analog-vendor.js"></script>
+        <link rel="stylesheet" href="https://assets2.analog.com/cms-assets/css/pages/styles/rte-editor-control.bundle.css">
+
+
+
+    <link rel="stylesheet" type="text/css" href="https://assets2.analog.com/header-footer/index.css">
+    <script src="https://assets2.analog.com/header-footer/index.js" type="module" defer></script>
+
+    <script src="https://assets.adobedtm.com/bc68b7886092/25785b612092/launch-715705770daf.min.js" async></script>
+    <!-- *** FE html end -->
+</head>
+<body class="default-device bodyclass" data-comp-prefix="app-js__" data-show-legacy-div-wrapper="False">
+
+    
+
+    
+
+<!-- #wrapper -->
+<div id="wrapper" class="page-wrap">
+    <!-- #header -->
+    <header>
+        <div id="header" class="container-fluid">
+            <div class="row">
+                <div>
+        <adi-header>            
+            <adi-account></adi-account>
+        </adi-header>
+            <adi-menu divided>
+                <adi-cart slot="buttons"></adi-cart>
+                <adi-search slot="drawer">
+                    <div slot="search"></div>
+                    <div slot="results"></div>
+                </adi-search>
+            </adi-menu>
+        <adi-dispatch></adi-dispatch>
+</div>
+            </div>
+        </div>
+    </header>
+    <!-- /#header -->
+    <!-- #content -->
+    <main role="main" id="main" tabindex="-1" class="main-content content adi__landing">
+        <div id="content" class="container-fluid">
+            <div class="row">
+                    <div class="legacy-component">
+                        <div class="">
+                            <div class=" landing default-device bodyclass" data-comp-prefix="app-js__">
+                                <div class="legacy-container">
+                                    <div>
+
+
+
+
+<div class="legacy-component">
+    <div class="row ">
+
+
+    </div>
+</div>
+
+
+
+<input type="hidden" id="pageType" value="HPP" name='cee934f5-1165-4a49-9240-c860a08b529e' />
+<div class="component legacy-component">
+    <div id="mw-hppContainer" class="mw-hppContainer">
+
+        <section id="mw-homePromo" class="mw-homePromo ">
+
+            <div class="home-hero-bg visible-desktop">
+                <div data-class="img-responsive">
+                    
+                    <img src="/en/_/media/analog/en/design-center/trinamic-support/trinamic-hero-desktop.jpg?rev=676705297f6b4ba7b8317032706e3af3&amp;sc_lang=en&amp;la=en&amp;h=350&amp;w=2000&amp;hash=180D0B0FC1C8E2EB8A67058024B7595C" class="img-responsive" alt="Trinamic Support Banner" />
+                </div>
+            </div>
+            <div class="home-hero-bg visible-phone">
+                <div data-class="img-responsive">
+                    
+                    <img src="/en/_/media/analog/en/design-center/trinamic-support/trinamic-hero-mobile.jpg?rev=ad362677a2c6490d82d2efb835c74870&amp;sc_lang=en&amp;la=en&amp;h=350&amp;w=640&amp;hash=4D1EEA1AC0894D47D9914E5884237FDA" class="img-responsive" alt="Trinamic Support Banner" loading="lazy" />
+
+                </div>
+            </div>
+            <div class="container">
+                <div class="row home-hero-area fontLight col-md-6 col-sm-12 ">
+                    <div class="title">
+
+
+                        <h1 class="text-highlights">
+                            <span class="visible-desktop">
+                                <br><br>ADI Trinamic Hardware for Motor and Motion Control
+                            </span>
+                                                        <span class="visible-phone">
+                                ADI Trinamic Hardware for Motor and Motion Control
+                            </span>
+                        </h1>
+
+                    </div>
+                    <div class="description rte visible-desktop">
+                        
+
+                    </div>
+                    <div class="description rte visible-phone">
+                        
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+
+
+    <div class="component legacy-component component-content" data-horizontal="False" id="resources">
+        <div class="row">
+                        <div class="container">
+                        <section class="spotlight  spotlight--padded-medium-top spotlight--padded-medium-bottom">
+
+                                                            <div class="spotlight__container spotlight__container--one">
+                                            <div class="spotlight__container__column">
+
+
+                                                                            <div class="spotlight__container__column__content ">
+                    <p>Analog Devices, Inc. (ADI)&rsquo;s Trinamic motor and motion control products transform digital information into precise physical motion, enabling Industry 4.0 performance in applications such as advanced robotics, automation, medical prosthetics, 3D printing, and more. The ADI Trinamic&trade; portfolio includes motors, encoders, and motor control ICs and modules. These complete, efficient, small footprint solutions can help reduce complexity and time to market for intelligent motion systems while supporting potential space and performance efficiency improvements.</p>
+<p><span class="analog-rounded-button"><a href="/en/product-category/motor-and-motion-control.html">Find Products</a></span></p>
+                </div>
+                                </div>
+
+                                </div>
+                                                    </section>
+                    </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="component legacy-component component-content" data-horizontal="False" id="resources">
+        <div class="row">
+                        <div class="container">
+                        <section class="spotlight spotlight--gray spotlight--padded-medium-top spotlight--padded-medium-bottom">
+
+                                <div class="spotlight__container spotlight__container--two">
+                                    
+        <div class="spotlight__container__column">
+<h3 class="spotlight__heading   ">Motor and Motion Control Software</h3>
+
+                                                                            <div class="spotlight__container__column__content ">
+                    <p>The ADI Trinamic portfolio offers an extensive set of tools to set up and fine-tune intelligent motor and motion control systems: A free and intuitive integrated development environment, CANopen tools, and ADI Trinamic technology access package (including the ADI Trinamic API). Regardless of MCU selection and programming style, ADI Trinamic technology offers industry-leading software solutions that are ready to integrate into your own firmware project.</p>
+<p><span class="analog-rounded-button"><a href="/design-center/evaluation-hardware-and-software/motor-motion-control-software.html ">Find Software and Tools</a></span></p>
+                </div>
+                                </div>
+        <div class="spotlight__container__column">
+
+
+                <figure class="spotlight__picture-lead ">
+                    
+                    <img src="/en/_/media/analog/en/design-center/trinamic-support/trinamic-interface-clip.gif?rev=1a64909575ba4c328669aa850220585f&amp;sc_lang=en&amp;la=en&amp;h=403&amp;w=600&amp;hash=073D6328123BA3FE4C10DF138DD78CAA" class="spotlight__picture-lead__img" alt="Interface for software tool" loading="lazy" />
+
+
+                </figure>
+                                                                                            </div>
+                                </div>
+                                                                                </section>
+                    </div>
+            </div>
+        </div>
+
+
+
+
+
+
+    <script type="text/javascript">
+
+    var analyticsObject = {"pageInformation":{"pageName":"trinamic-support","itemId":"d3b3ce45-a0a0-4071-a163-12f09efe7654","pageUrl":"https://www.analog.com/en/lp/001/trinamic-support.html","pageCategory":"Landing Page","previousPageUrl":null,"pageType":"Landing Page","isProduct":false}};
+    </script>
+    <script>
+        let userLoggedState = false;
+        try {
+            const savedAuthToken = localStorage.getItem('active-tokens');
+            if (savedAuthToken) {
+                const activeTokenObject = JSON.parse(savedAuthToken);
+                if (activeTokenObject && activeTokenObject['my'] && activeTokenObject['my']['token']) {
+                    var base64Url = activeTokenObject['my']['token'].split('.')[1]
+                    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    var jsonPayload = decodeURIComponent(
+                        atob(base64)
+                            .split('')
+                            .map(function (c) {
+                                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                            })
+                            .join('')
+                    )
+                }
+                const decodedToken = JSON.parse(jsonPayload)
+                const currentTimestamp = Math.floor(Date.now() / 1000);
+                if (!(decodedToken.exp && currentTimestamp > decodedToken.exp)) {
+                    userLoggedState = true;
+                }
+            } else {
+                const tempAuthStatusKey = 'isAuthenticated';
+                const cookies = document.cookie.split( '; ' );
+                const cookieOptions = 'domain=.analog.com; path=/; secure;';
+	            const tempAuthStatus = cookies.find( ( cookie ) => cookie.includes( tempAuthStatusKey ) )
+                                             ?.slice( ( tempAuthStatusKey.length + 1 ) ) || null;
+        	    
+        	    // Updating 'isLoggedIn' only for the first page visit post login redirect
+        	    if ( tempAuthStatus ) {
+            		userLoggedState = tempAuthStatus === 'true';
+
+                    // Delete 'isAuthenticated' cookie
+                    document.cookie = `${tempAuthStatusKey}=; expires=${new Date().toUTCString()}; ${cookieOptions}`;
+        	    }
+        	}
+        }
+        catch (error) {
+            console.log(error)
+        }
+        const localAnalyticsObject = window.analyticsObject;
+
+        if (localAnalyticsObject && localAnalyticsObject?.pageInformation) {
+            const isPDPPage = localAnalyticsObject?.pageInformation?.isProduct || false;
+            const pageViewObject = {
+				"event": "pageview"
+			};
+
+            let commonBreadCrumb = '';
+            const breadcrumbListSections = document.querySelectorAll('.breadcrumb__container__section');
+            breadcrumbListSections?.forEach((DomElement, indexOfDomElement) => {
+                const itemText = DomElement.querySelector(".breadcrumb__container__section_item")
+                const dropdownText = DomElement.querySelector(".breadcrumb__container__section_dropdown-item")
+                let breadcrumbText = "";
+                if (itemText) {
+                    breadcrumbText = ((indexOfDomElement === 0) ? "" : (breadcrumbText + "|")) + itemText.textContent.trim();
+                } else if (dropdownText) {
+                    breadcrumbText = ((indexOfDomElement === 0) ? "" : (breadcrumbText + "|")) + dropdownText.textContent.trim();
+                } else {
+                    breadcrumbText = ((indexOfDomElement === 0) ? "" : (breadcrumbText + "|")) + DomElement.textContent.trim();
+                }
+                commonBreadCrumb = commonBreadCrumb + breadcrumbText;
+            });
+            if (isPDPPage) {
+                const productLifeCycle = document.querySelector('.recently-viewed-flag');
+                pageViewObject.productInfo = {
+                    eventName: 'Product View',
+                    productListItems: []
+                };
+                pageViewObject.productInfo.productListItems.push({
+                    productLifeCycle: productLifeCycle ? productLifeCycle.textContent.trim().toUpperCase() : '',
+                    productBreadCrumb: '',
+                    SKU: ''
+                })
+                pageViewObject.productInfo.productListItems[0].productBreadCrumb = commonBreadCrumb;
+                pageViewObject.productInfo.productListItems[0].SKU = commonBreadCrumb.split("|").reverse()[0];
+            } else {
+                pageViewObject.productInfo = {};
+            }
+            const url = localAnalyticsObject?.pageInformation?.pageUrl
+            let previousPageName = localAnalyticsObject?.pageInformation?.previousPageUrl;
+            if (previousPageName) {
+                previousPageName = previousPageName.split('.html')[0];
+                previousPageName = previousPageName.split('/').reverse()[0];
+            }
+            const category = url?.split('/');
+            category.shift();
+            category.splice(0, 2);
+            pageViewObject.pageInfo = {
+                "pageName": localAnalyticsObject?.pageInformation?.pageName,
+                "pageCategory": localAnalyticsObject?.pageInformation?.pageCategory,
+                "pageURL": localAnalyticsObject?.pageInformation?.pageUrl,
+                "pageType": localAnalyticsObject?.pageInformation?.pageType,
+                "pageBreadCrumb": commonBreadCrumb,
+                "previousPageName": previousPageName,
+                "previousPageUrl": localAnalyticsObject?.pageInformation?.previousPageUrl,
+                "pageEvents": '',
+                "siteSection1": category[1],
+                "siteSection2": category[2] ? category[2] : '',
+                "siteSection3": category[3] ? category[3] : '',
+                "siteSection4": category[4] ? category[4] : '',
+                "siteSection5": category[5] ? category[5] : '',
+                "sitecoreItemID": localAnalyticsObject?.pageInformation?.itemId
+            };
+            pageViewObject.siteInfo = {
+                "siteLanguage": category[0]
+            };
+            pageViewObject.userInfo = {
+                "userType": '',
+                "isLoggedIn": userLoggedState
+            }
+            window.adobeDataLayer = window.adobeDataLayer || [];
+            window.adobeDataLayer.push(pageViewObject);
+			window.adobeDataLayer.reverse();
+            console.log(window.adobeDataLayer);
+        }
+    </script>
+
+
+
+
+
+    <div class="component legacy-component component-content" data-horizontal="False" id="resources">
+        <div class="row">
+                        <div class="container">
+                        <section class="spotlight  spotlight--padded-medium-top spotlight--padded-heavy-bottom">
+        <div class="spotlight__container spotlight__container--one">
+            <div class="spotlight__container__column">
+<h3 class="spotlight__heading spotlight--left-aligned  ">Explore and Find</h3>                            </div>
+
+            <div class="spotlight__introduction__details">
+                            </div>
+
+
+        </div>
+
+                                <div class="spotlight__container spotlight__container--two">
+                                    
+        <div class="spotlight__container__column">
+
+
+                <figure class="spotlight__picture-lead spotlight__picture-lead--left">
+                    
+                    <img src="/en/_/media/analog/en/design-center/trinamic-support/ezone-logo.svg?rev=fbbe4db7bde84a69a794d50b22abd1cc&amp;sc_lang=en&amp;la=en&amp;hash=CEB499E0F3822DFA1FBC7A6022BF6C66" class="spotlight__picture-lead__img" alt="ezone-logo" loading="lazy" />
+
+
+                </figure>
+                                                                            <div class="spotlight__container__column__content ">
+                    <p>Learn more about ADI Trinamic technologies and solutions in the ADI EngineerZone&trade;.</p>
+<p><span class="analog-rounded-button"><a href="https://ez.analog.com/motor-control-hardware-platforms2/" target="_blank">Explore</a></span></p>
+                </div>
+                                </div>
+        <div class="spotlight__container__column">
+
+
+                <figure class="spotlight__picture-lead spotlight__picture-lead--left">
+                    
+                    <img src="/en/_/media/analog/en/design-center/trinamic-support/support-logo.svg?rev=301149fe9e4a4c37aa7d01a6643f1aa9&amp;sc_lang=en&amp;la=en&amp;hash=9BF5C444263014A1230EB64D6B99E48E" class="spotlight__picture-lead__img" alt="ADI Support Logo" loading="lazy" />
+
+
+                </figure>
+                                                                            <div class="spotlight__container__column__content ">
+                    <p>Please do not hesitate to reach out to the ADI Technical Support if you have specific questions or did not find what you are looking for. Our dedicated team of applications engineers is available to answer your technical questions. We respond to every customer request.</p>
+<p><span class="analog-rounded-button"><a href="/en/support.html">Contact ADI Technical Support</a></span></p>
+                </div>
+                                </div>
+                                </div>
+                                                                                </section>
+                    </div>
+            </div>
+        </div>
+
+
+
+
+
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+            </div>
+        </div>
+    </main>
+    <!-- /#content -->
+    <!-- #footer -->
+    <footer role="contentinfo">
+        <div id="footer" class="container-fluid">
+            <div class=" row">
+                <div>
+        <adi-footer></adi-footer>
+</div>
+            </div>
+        </div>
+    </footer>
+    <!-- /#footer -->
+</div>
+<!-- /#wrapper -->
+
+
+    
+        
+
+    <!-- /#wrapper -->
+                    <script src="https://players.brightcove.net/706011717001/AQ1ZKQZJE_default/index.min.js" defer></script>
+
+        <script src="https://assets2.analog.com/cms-assets/js/pages/scripts/common.bundle.js"></script>
+        <script src="https://assets2.analog.com/cms-assets/js/pages/scripts/rte-editor-control.bundle.js"></script>
+        <script async src="https://assets2.analog.com/cms-assets/js/legacy/scripts/legacy-plugin.bundle.js"></script>
+        <script src="https://assets2.analog.com/cms-assets/js/app.bundle.js"></script>
+        <script src="https://assets2.analog.com/lib/scripts/plugins/bootstrap-slider.min.js"></script>
+    <!-- Latest compiled and minified JS -->
+
+        <!-- Legacy - vendor Dependencies -->
+ <script src="https://assets2.analog.com/cms-assets/js/legacy/scripts/legacy-common.bundle.js"></script>
+ <script src="https://assets2.analog.com/cms-assets/js/legacy/scripts/legacy-page-applications.bundle.js"></script>
+<script src="https://assets2.analog.com/apps-assets/form/index.mjs"></script>        <div class="legacy-component">
+            <script id="image-modal-template" type="text/x-handlebars-template">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="image-label">{{{title}}}</h4>
+                </div>
+                <div class="modal-body">
+                    <ul class="control-icons">
+                        <li>
+                            {{#if data_download}}
+                            <a class="downloadimagelink" href="{{data_download}}" download="{{data_download}}">
+                                <span id="downbutton" class="icon-download"></span>
+                            </a>
+                            {{else}}
+                            <a class="downloadimagelink" href="{{src}}" download="{{src}}">
+                                <span id="downbutton" class="icon-download"></span>
+                            </a>
+                            {{/if}}
+                        </li>
+                        <li><a class="print pull-right"><span class="icon-print"></span></a></li>
+                    </ul>
+                    <br />
+                    <img alt="{{{title}}}" class="img-responsive" title="{{{title}}}" src="{{src}}" loading="lazy" />
+                    <br />
+                </div>
+
+            </script>
+
+            <div class="modal fade product-modal" id="image-modal" tabindex="-1" role="dialog" aria-labelledby="product-modal" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content"></div>
+                </div>
+            </div>
+            <div class="modal" id="adi-modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade product-modal modal-video-window" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span aria-hidden="true">&times;</span>
+                                <span class="sr-only">Close</span>
+                            </button>
+                            <h4 class="modal-title">Modal title</h4>
+                        </div>
+                        <div class="modal-body">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script id="html5Videoplayer" type="text/x-handlebars-template">
+                <div class="deferred-video-player"
+                     data-account="{{accountid}}"
+                     data-application-id
+                     data-controls
+                     data-embed="{{embed}}"
+                     data-player="{{playerid}}"
+                     data-video-id="{{videoid}}">
+                    <i class="fa fa-spinner fa-spin fa-2x"></i>
+                </div>
+            </script>
+        </div>
+            <script src="https://assets2.analog.com/cms-assets/js/pages/scripts/careerspage.bundle.js"></script>
+
+    <script id="image-rte-modal-template" type="text/x-handlebars-template">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="image-label">{{{title}}}</h4>
+        </div>
+        <div class="modal-body">
+            <ul class="control-icons">
+                <li>
+                    {{#if data_download}}
+                    <a class="downloadimagelink" href="{{data_download}}" download="{{data_download}}">
+                        <span id="downbutton" class="icon-download"></span>
+                    </a>
+                    {{else}}
+                    <a class="downloadimagelink" href="{{src}}" download="{{src}}">
+                        <span id="downbutton" class="icon-download"></span>
+                    </a>
+                    {{/if}}
+                </li>
+                <li><a class="print pull-right"><span class="icon-print"></span></a></li>
+            </ul>
+            <br />
+            <img alt="{{{title}}}" class="img-responsive" title="{{{title}}}" src="{{src}}" loading="lazy" />
+            <br />
+        </div>
+    </script>
+
+    <div class="rte-control">
+        <div class="modal fade product-modal image-rte-modal" id="image-rte-modal" tabindex="-1" role="dialog" aria-labelledby="product-modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript"  src="/f-agK97g-xAxeQ8mKQ/1iN1Jkf6V0pXp8Yc/TVhVX1U/X2/c-TCsKY1s"></script></body>
+</html>

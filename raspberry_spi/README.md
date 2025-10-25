@@ -10,8 +10,8 @@ Requisitos (no Raspberry Pi)
 - Biblioteca `spidev` instalada: `sudo apt-get install python3-spidev` (ou `pip install spidev`)
 - SPI habilitado: `sudo raspi-config` → Interface Options → SPI → Enable
 
-Fiação (Raspberry Pi → STM32 SPI1 Slave)
-- MISO ↔ MISO, MOSI ↔ MOSI, SCK ↔ SCK, CE0 (NSS) ↔ NSS, GND comum. Níveis 3V3.
+Fiação (Raspberry Pi → STM32 SPI2 Slave)
+- MISO ↔ PD3, MOSI ↔ PD4, SCK ↔ PD1, CE0 (NSS) ↔ PD0, GND comum. Níveis 3V3.
 - Modo SPI: MODE 3 (CPOL=1, CPHA=1 no Linux). 8 bits, MSB first.
 - Velocidade sugerida inicial: 1 MHz (ajustável). O firmware usa RX DMA circular.
 
@@ -25,6 +25,11 @@ Uso rápido
 - Início e fim de movimento:
   `python3 cnc_spi_client.py start-move --frame-id 3`
   `python3 cnc_spi_client.py end-move --frame-id 4`
+
+- Parada de segurança (para movimento + desativa drivers TMC):
+  `python3 cnc_spi_client.py safe-off --frame-id 4`
+  - Opções TMC: `--tmc-bus/--tmc-dev` para alvo específico, ou omita para todos; `--tmc-freewheel {0,1,2,3}` (default 3).
+  - Para apenas enviar o STOP sem mudar TMC: adicione `--skip-tmc`.
 
 - Home e Probe Level:
   `python3 cnc_spi_client.py home --frame-id 5 --axes 0x03 --dirs 0x01 --vhome 0x1234`
@@ -43,11 +48,64 @@ Uso rápido
 - Lista resumida com exemplos (sem necessidade de SPI ativo):
   `python3 cnc_spi_client.py examples`
 
+Comandos para o TMC5160 (Raspberry Pi)
+- Inicialização para STEP/DIR externo (microstepping/interpolação/corrente):
+  `python3 tmc5160_cli.py init-stepdir --microsteps 16 --interpolate --stealth --ihold 1 --irun 1 --ihold-delay 6 --tpwmthrs 0x1F4 --tpowerdown 0x14`
+  - Aplica preset padrão e ajusta: `GCONF.EN_PWM_MODE`, `IHOLD_IRUN`, `TPOWERDOWN`,
+    `TPWMTHRS`, `CHOPCONF.MRES/INTPOL`, `PWMCONF`. Limpa `GSTAT` antes.
+- Consulta de status com sequência para limpar GSTAT e checar DRV_STATUS:
+  `python3 tmc5160_cli.py status --clear-gstat`
+  - Executa: leitura dummy → ler `GSTAT` → escrever `GSTAT=0x07` → ler `GSTAT` → ler `DRV_STATUS`.
+  - Depois, pode-se ler registradores adicionais com `--register` (ex.: `--register drv_status`).
+
+Nota de correcao (framing SPI do TMC5160)
+- Corrigido em `raspberry_spi/tmc5160.py` o frame de escrita: o bit 7 do primeiro byte agora sobe (`0x80 | endereco`), permitindo que o TMC5160 aceite as configuracoes enviadas.
+- Corrigida a leitura: o pedido inicial passa a usar o endereco com bit 7 limpo e o segundo ciclo envia um NOP (`0x00`), evitando que o registrador seja zerado antes da resposta.
+- Em instalacoes antigas, atualize este arquivo ou aplique o patch manualmente; com o bug original, nenhuma escrita persistia e as leituras retornavam valores incorretos.
+
 Parâmetros comuns
 - `--bus` (padrão 0) e `--dev` (padrão 0) selecionam `/dev/spidev<bus>.<dev>`.
 - `--speed` em Hz (padrão 1_000_000).
 - `--poll-byte` altera o byte usado durante o polling (padrão 0x3C). Use `--disable-poll`
   para confiar apenas no frame de handshake (útil para testes específicos).
+
+Solucionando rejeição ao modo SPI 3 (CPOL=1, CPHA=1)
+---------------------------------------------------
+- O TMC5160 exige clock inativo alto (CPOL=1) e amostragem na segunda transição
+  (CPHA=1). Se o kernel devolver `OSError: [Errno 22] Invalid argument` ao
+  ajustar `spi_dev.mode = 0b11`, significa que o driver do barramento indicado
+  não expôs suporte ao modo 3. Os passos abaixo costumam resolver o problema:
+  1. **Verifique qual controlador está ativo.** Rode
+     `ls -l /sys/bus/spi/devices/spi*.*/driver` e confirme que o link aponta
+     para `spi-bcm2835` (SPI0) ou `spi-bcm2835aux` (SPI1). Esses drivers da
+     Raspberry Pi aceitam os quatro modos.
+  2. **Garanta que o overlay libere um nó `spidev`.** Em `/boot/config.txt`,
+     habilite `dtparam=spi=on` para o barramento 0 ou utilize um dos overlays
+     documentados em `dtoverlay -h spi1-3cs` para o barramento 1. Exemplo:
+     ```ini
+     # SPI0 → /dev/spidev0.0 e /dev/spidev0.1
+     dtparam=spi=on
+
+     # SPI1 com três chip-selects expostos como spidev
+     dtoverlay=spi1-3cs,cs0-spidev=on,cs1-spidev=on,cs2-spidev=on
+     ```
+     Após salvar, execute `sudo reboot` para aplicar.
+  3. **Defina CPOL/CPHA na árvore de dispositivos quando necessário.** Alguns
+     overlays fixam o modo padrão em 0. Acrescente as flags `spi-cpol` e
+     `spi-cpha` na mesma linha do `dtoverlay` correspondente quando quiser que o
+     nó já nasça em modo 3, por exemplo:
+     ```ini
+     dtoverlay=spi1-1cs,cs0-spidev=on,spi-cpol,spi-cpha
+     ```
+     Isso garante que chamadas subsequentes a `spidev` aceitem `mode = 0b11`.
+  4. **Troque de barramento/CS caso o driver esteja bloqueado.** Se outra
+     sobreposição (por exemplo, de um display) já tiver reivindicado o mesmo
+     chip-select, escolha outro par `--bus/--dev` ou remova o overlay conflitante.
+  5. **Reabra o dispositivo após a alteração.** Desconecte a aplicação Python
+     antes de editar os arquivos e abra novamente para forçar a renegociação do
+     modo.
+  Seguindo essa sequência, o `/dev/spidevX.Y` voltará a aceitar CPOL=1/CPHA=1 e
+  a CLI poderá configurar o TMC5160 normalmente.
 
 Configuração do driver TMC5160 a partir do Raspberry Pi
 -------------------------------------------------------
@@ -98,13 +156,17 @@ Configuração do driver TMC5160 a partir do Raspberry Pi
   `--write`. Caso nenhuma flag seja passada, o preset padrão é aplicado e o driver
   fica pronto para receber pulsos STEP/DIR.
   Após cada transferência o utilitário exibe a resposta bruta em hexadecimal
-  (5 bytes) seguida de uma interpretação em português do byte de status (SG,
-  OT/OTPW, S2G/S2VS, UV_CP) conforme a Tabela 1 do datasheet, além do valor de
-  32 bits devolvido pelo comando anterior. Se qualquer alerta for indicado, a
-  execução é encerrada com erro explicando quais flags foram ativadas. O comando
-  `status` segue o mesmo padrão, apresentando duas respostas por leitura (pedido e
-  retorno útil) com a tradução dos flags e o valor atual de cada registrador
-  consultado. Para os registradores padrões (GSTAT, GCONF, IHOLD_IRUN,
+  (5 bytes) seguida de uma interpretação do byte de status SPI e do valor de
+  32 bits devolvido pelo comando anterior. Observação importante: o byte de
+  status do SPI do TMC5160 indica apenas estado (stop_r/stop_l/position_reached/
+  velocity_reached/standstill/sg) e flags de serviço (driver_error, reset_flag).
+  Os diagnósticos de falha (OT/OTPW, S2GA/S2GB, S2VSA/S2VSB, UV_CP) residem em
+  `GSTAT` (reset/uv_cp/driver_error) e `DRV_STATUS` (0x6F). Por isso, o CLI só
+  considera o byte de status como erro quando `driver_error=1`; demais falhas são
+  checadas diretamente em `GSTAT/DRV_STATUS`.
+  O comando `status` apresenta duas respostas por leitura (pedido e retorno útil)
+  com a interpretação do status e o valor atual de cada registrador consultado.
+  Para os registradores padrões (GSTAT, DRV_STATUS, GCONF, IHOLD_IRUN,
   TPOWERDOWN, TPWMTHRS, CHOPCONF e PWMCONF) a CLI detalha os campos conforme o
   datasheet — por exemplo, correntes `IHOLD/IRUN` em % da corrente nominal,
   bits ativos de `GCONF`, microstepping (`MRES`) e configuração de StealthChop,

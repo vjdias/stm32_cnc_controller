@@ -1,0 +1,111 @@
+\begin{thebibliography}{}
+
+\bibitem[{\AA}str{\"o}m and H{\"a}gglund, 1995]{astrom1995}
+{\AA}str{\"o}m, K.~J. and H{\"a}gglund, T. (1995).
+\newblock {\em PID Controllers: Theory, Design, and Tuning}.
+\newblock Instrument Society of America, 2 edition.
+
+\bibitem[{Dronacharya Group of Institutions}, 2019]{unit3_interpolators}
+{Dronacharya Group of Institutions} (2019).
+\newblock {\em Unit 3: Interpolators and Control on NC System}.
+\newblock Teaching material on CNC interpolators and servo loops.
+
+\bibitem[Fussell, 2003]{fussell2003}
+Fussell, D. (2003).
+\newblock Digital differential analyzer algorithms.
+\newblock In {\em Computer Graphics}. University of Texas at Austin.
+
+\bibitem[Groover, 2015]{groover2015}
+Groover, M.~P. (2015).
+\newblock {\em Automation, Production Systems, and Computer-Integrated
+  Manufacturing}.
+\newblock Pearson, 4 edition.
+
+\bibitem[{IDC Technologies}, 2014]{idc_cnc_interp}
+{IDC Technologies} (2014).
+\newblock {\em CNC Machines -- Interpolation, Control and Drive}.
+\newblock Technical training note.
+
+\bibitem[Kenjo and Sugawara, 1994]{kenjo1994}
+Kenjo, T. and Sugawara, A. (1994).
+\newblock {\em Stepping Motors and Their Microprocessor Controls}.
+\newblock Oxford University Press.
+
+\bibitem[Koren, 1978]{koren_reference}
+Koren, Y. (1978).
+\newblock Reference-pulse circular interpolators for cnc systems.
+\newblock Available at the University of Michigan Manufacturing Research
+  website.
+
+\bibitem[Koren, 1980]{real_time_interpolators}
+Koren, Y. (1980).
+\newblock Real-time interpolators for multi-axis cnc machine tools.
+\newblock {\em CIRP Annals}, 29(1):333--336.
+
+\bibitem[Koren, 2010]{koren_cnc_interpolators}
+Koren, Y. (2010).
+\newblock Cnc interpolators: Algorithms and analysis.
+\newblock Technical monograph on interpolator design.
+
+\bibitem[Kung et~al., 2005]{kung_fpga_motion}
+Kung, Y.-S., Tsai, M.-C., and Chang, C.-H. (2005).
+\newblock Development of a fpga-based motion control ic for robot arm.
+\newblock In {\em Proceedings of the IEEE International Conference on
+  Industrial Technology}, pages 1185--1190.
+
+\bibitem[Mori et~al., 2005]{mori2005dda}
+Mori, M., Sato, S., and Ohashi, T. (2005).
+\newblock High-speed interpolation using digital differential analyzer
+  techniques for multi-axis cnc systems.
+\newblock {\em International Journal of Machine Tools and Manufacture},
+  45(4--5):529--536.
+
+\bibitem[Romeros, 2022]{romeros_tcc_ifmg_2022}
+Romeros, F.~M. (2022).
+\newblock Trabalho de conclus\~{a}o de curso (tcc).
+\newblock Instituto Federal de Minas Gerais (IFMG) -- Campus Formiga.
+\newblock Acesso em: 20 out. 2025.
+
+\bibitem[{STMicroelectronics}, 2013]{st_an4013}
+{STMicroelectronics} (2013).
+\newblock {\em AN4013: Introduction to timers for STM32 MCUs}.
+\newblock Application note.
+
+\bibitem[{STMicroelectronics}, 2018a]{stm32l4_rm}
+{STMicroelectronics} (2018a).
+\newblock {\em RM0394: STM32L4x5/STM32L4x6 Advanced ARM\textregistered{}-based
+  32-bit MCUs reference manual}.
+\newblock Reference manual.
+
+\bibitem[{STMicroelectronics}, 2018b]{um2153}
+{STMicroelectronics} (2018b).
+\newblock {\em UM2153: Discovery kit for IoT node multichannel communication
+  with STM32L4}.
+\newblock User manual.
+
+\bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
+  ]{tmc5160_ds}
+{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}.
+\newblock {\em TMC5160A: Datasheet and Register Description}.
+\newblock Stepper Motor Driver IC.
+
+\bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
+  2022]{tmcs28_datasheet}
+{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)} (2022).
+\newblock {\em TMCS-28 Hardware Manual: Optical Incremental Encoder (Rev.
+  1.80)}.
+\newblock Accessories for Stepper \& BLDC, Hardware Version V1.00.
+
+\bibitem[Wang and Hu, 2016]{efficient_reference}
+Wang, L. and Hu, J. (2016).
+\newblock Efficient reference-pulse cnc interpolator.
+\newblock Technical report, School of Mechanical Engineering.
+\newblock Academic report with reference-pulse control diagrams.
+
+\bibitem[Wang et~al., 2021]{adaptive_fuzzy_pid}
+Wang, S., Chen, Y., and Zhang, G. (2021).
+\newblock Adaptive fuzzy pid cross coupled control for multi-axis motion system
+  based on sliding mode disturbance observation.
+\newblock {\em Science Progress}, 104(3):1--21.
+
+\end{thebibliography}

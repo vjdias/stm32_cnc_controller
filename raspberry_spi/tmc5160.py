@@ -1,4 +1,4 @@
-"""Configuração de drivers TMC5160 a partir do Raspberry Pi."""
+﻿"""Configuração de drivers TMC5160 a partir do Raspberry Pi."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,6 +18,7 @@ REG_TPOWERDOWN = 0x11
 REG_TPWMTHRS = 0x13
 REG_CHOPCONF = 0x6C
 REG_PWMCONF = 0x70
+REG_DRV_STATUS = 0x6F
 
 
 STATUS_FLAG_DESCRIPTIONS = {
@@ -79,14 +80,16 @@ class TMC5160RegisterPreset:
                 (REG_GSTAT, 0x00000007),
                 # Ativa o modo PWM de controle de corrente para operação Step/Dir.
                 (REG_GCONF, 0x00000004),
-                # Correntes: IHOLD=10/32 (~31%), IRUN=31/32 (100%), demora 6 * 2^n clock
-                (REG_IHOLD_IRUN, 0x00061F0A),
+                # Correntes padrão (baixas) para bring-up seguro:
+                #   IHOLD=1/32, IRUN=1/32, IHOLDDELAY=6 (tempo de rampa de hold)
+                #   Valor: 0x0006_0101 => [00 06 01 01]
+                (REG_IHOLD_IRUN, 0x00060101),
                 # Tempo até desligar bobina após parada (20 * 16 ciclos de clock interno)
                 (REG_TPOWERDOWN, 0x00000014),
                 # Limiar para modo StealthChop (velocidades abaixo de ~rpm) — 500 ticks
                 (REG_TPWMTHRS, 0x000001F4),
                 # Chopper configuration: toff=3, hstrt=5, hend=0, tbl=2, mres=16 µsteps
-                (REG_CHOPCONF, 0x10410150),
+                (REG_CHOPCONF, 0x14010053),
                 # PWM configuration: autoscale/autograd, freq=2, ofs=36, grad=14
                 (REG_PWMCONF, 0xC10D0024),
             )
@@ -104,34 +107,43 @@ class TMC5160Status:
 
     @property
     def stallguard(self) -> bool:
-        return self.flag(7)
+        return self.flag(2)
 
     def active_faults(self) -> List[str]:
-        return [
-            STATUS_FLAG_DESCRIPTIONS[bit][1]
-            for bit in FAULT_BITS
-            if self.flag(bit)
-        ]
+        faults: List[str] = []
+        if self.flag(1):
+            faults.append("Erro do driver (driver_error).")
+        return faults
 
     def has_fault(self) -> bool:
         return bool(self.active_faults())
 
     def summary(self) -> str:
-        stall_text = (
-            "StallGuard detectado (SG=1)."
-            if self.stallguard
-            else "StallGuard inativo (SG=0)."
-        )
-        faults = self.active_faults()
-        if faults:
-            fault_text = "Alertas ativos: {}.".format(
-                ", ".join(faults)
-            )
+        flags = []
+        if self.flag(7):
+            flags.append("status_stop_r")
+        if self.flag(6):
+            flags.append("status_stop_l")
+        if self.flag(5):
+            flags.append("position_reached")
+        if self.flag(4):
+            flags.append("velocity_reached")
+        if self.flag(3):
+            flags.append("standstill")
+        if self.flag(2):
+            flags.append("stallguard")
+        if self.flag(1):
+            flags.append("driver_error")
+        if self.flag(0):
+            flags.append("reset_flag")
+        status_text = "Flags ativas: {}.".format(", ".join(flags) if flags else "nenhuma")
+        if self.flag(1):
+            diag = "Alerta: driver_error=1 (verifique GSTAT/DRV_STATUS)."
+        elif self.flag(0):
+            diag = "Indica��ǜo: reset_flag=1 (limpe GSTAT escrevendo 1)."
         else:
-            fault_text = (
-                "Alertas ativos: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
-            )
-        return f"{stall_text} {fault_text}"
+            diag = "Sem falhas relatadas no byte de status SPI."
+        return f"{status_text} {diag}"
 
 
 @dataclass(frozen=True)
@@ -218,6 +230,29 @@ def decode_register_value(address: int, value: int) -> List[str]:
 
     if address == REG_GSTAT:
         return _decode_flag_bits(GSTAT_FLAGS, value)
+    if address == 0x6F:
+        details: List[str] = []
+        if value & (1 << 26):
+            details.append("OT: sobretemperatura detectada.")
+        if value & (1 << 25):
+            details.append("OTPW: pr��-aviso de sobretemperatura.")
+        if value & (1 << 24):
+            details.append("S2GA: curto �� terra na fase A.")
+        if value & (1 << 23):
+            details.append("S2GB: curto �� terra na fase B.")
+        if value & (1 << 22):
+            details.append("S2VSA: curto �� alimenta��ǜo na fase A.")
+        if value & (1 << 21):
+            details.append("S2VSB: curto �� alimenta��ǜo na fase B.")
+        if value & (1 << 20):
+            details.append("OLA: open load na fase A.")
+        if value & (1 << 19):
+            details.append("OLB: open load na fase B.")
+        if value & (1 << 31):
+            details.append("STST: standstill.")
+        if not details:
+            details.append("Nenhum bit de falha em DRV_STATUS.")
+        return details
 
     if address == REG_GCONF:
         active = [
@@ -367,6 +402,9 @@ class TMC5160Configurator:
         self._registers = register_preset or TMC5160RegisterPreset.default()
         self._spi = None
         self._spi_device_factory = spi_device_factory
+        self._spi_mode_active = 0b11  # MODE 3: CPOL=1, CPHA=1 (necess�rio para o TMC5160)
+        self._spi_mode_idle = 0b11    # MODE 3 mantém SCK em nível alto (idle)
+        self._current_mode = None
 
     def _ensure_spi(self):
         if self._spi is not None:
@@ -383,7 +421,20 @@ class TMC5160Configurator:
         spi_dev = factory()
         spi_dev.open(self._bus, self._device)
         spi_dev.max_speed_hz = self._speed_hz
-        spi_dev.mode = 0b11  # MODE 3: CPOL=1, CPHA=1 (2nd edge)
+        try:
+            self._set_spi_mode(spi_dev, self._spi_mode_idle)
+        except OSError as exc:
+            close = getattr(spi_dev, "close", None)
+            if callable(close):
+                close()
+            raise RuntimeError(
+                (
+                    "Não foi possível configurar os modos SPI necessários (CPOL/CPHA) em "
+                    "/dev/spidev{bus}.{dev}: {error}. Verifique se o overlay/driver SPI "
+                    "habilitado para esse barramento suporta modo 3 e se o dispositivo "
+                    "está livre. Ajuste --bus/--dev ou reconfigure o dtoverlay correspondente."
+                ).format(bus=self._bus, dev=self._device, error=exc)
+            ) from exc
         spi_dev.bits_per_word = 8
         if hasattr(spi_dev, "lsbfirst"):
             spi_dev.lsbfirst = False
@@ -392,14 +443,22 @@ class TMC5160Configurator:
         self._spi = spi_dev
         return spi_dev
 
+    def _set_spi_mode(self, spi_dev, mode: int) -> None:
+        if self._current_mode == mode:
+            return
+        spi_dev.mode = mode
+        self._current_mode = mode
+
     def close(self) -> None:
         if self._spi is not None:
             try:
+                self._set_spi_mode(self._spi, self._spi_mode_idle)
                 close = getattr(self._spi, "close", None)
                 if callable(close):
                     close()
             finally:
                 self._spi = None
+                self._current_mode = None
 
     def __enter__(self) -> "TMC5160Configurator":
         self._ensure_spi()
@@ -428,7 +487,9 @@ class TMC5160Configurator:
     def _transfer(self, address: int, value: int, *, raw: bool = False) -> TMC5160TransferResult:
         spi = self._ensure_spi()
         frame = self._build_frame(address, value, raw=raw)
+        self._set_spi_mode(spi, self._spi_mode_active)
         response = spi.xfer2(frame)
+        self._set_spi_mode(spi, self._spi_mode_idle)
         if len(response) != 5:
             raise RuntimeError(
                 "Resposta SPI inválida do TMC5160: esperado 5 bytes, recebido {}".format(
@@ -438,18 +499,19 @@ class TMC5160Configurator:
         return TMC5160TransferResult(address, value, tuple(response))
 
     def write_register(self, address: int, value: int) -> TMC5160TransferResult:
-        return self._transfer(address, value)
+        # Bit 7 precisa estar em 1 para indicar escrita no barramento SPI.
+        return self._transfer(address | 0x80, value, raw=True)
 
     def configure(self) -> List[TMC5160TransferResult]:
         results: List[TMC5160TransferResult] = []
         for address, value in self._registers.writes:
-            results.append(self._transfer(address, value))
+            results.append(self.write_register(address, value))
         return results
 
     def apply_registers(self, writes: Iterable[Tuple[int, int]]) -> List[TMC5160TransferResult]:
         results: List[TMC5160TransferResult] = []
         for address, value in writes:
-            results.append(self._transfer(address, value))
+            results.append(self.write_register(address, value))
         return results
 
     def read_register(self, address: int) -> TMC5160ReadResult:
@@ -458,7 +520,9 @@ class TMC5160Configurator:
         if not 0 <= address <= 0x7F:
             raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
 
-        request = self._transfer(0x80 | address, 0x00000000, raw=True)
+        # Primeiro quadro requisita a leitura (bit 7 limpo).
+        request = self._transfer(address, 0x00000000)
+        # Segundo quadro retorna os dados requisitados; envia NOP (0x00).
         reply = self._transfer(0x00, 0x00000000, raw=True)
         return TMC5160ReadResult(address, request, reply)
 
@@ -484,3 +548,6 @@ __all__ = [
     "TMC5160Configurator",
     "decode_register_value",
 ]
+
+
+

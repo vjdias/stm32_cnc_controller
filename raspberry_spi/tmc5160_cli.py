@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Interface de linha de comando para configurar o driver TMC5160."""
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 import sys
+import time
 from typing import List, Optional, Sequence, Tuple
 
 MODULE_DIR = Path(__file__).resolve().parent
@@ -50,6 +53,9 @@ REGISTER_ALIASES = {
     "tpwmthrs": REG_TPWMTHRS,
     "chopconf": REG_CHOPCONF,
     "pwmconf": REG_PWMCONF,
+    "drv_status": 0x6F,
+    "drvstatus": 0x6F,
+    "drv": 0x6F,
 }
 
 REGISTER_NAMES = {
@@ -60,10 +66,12 @@ REGISTER_NAMES = {
     REG_TPWMTHRS: "TPWMTHRS",
     REG_CHOPCONF: "CHOPCONF",
     REG_PWMCONF: "PWMCONF",
+    0x6F: "DRV_STATUS",
 }
 
 DEFAULT_STATUS_REGISTERS = (
     REG_GSTAT,
+    0x6F,
     REG_GCONF,
     REG_IHOLD_IRUN,
     REG_TPOWERDOWN,
@@ -79,23 +87,10 @@ class CLIError(Exception):
 
 def _format_response(result: TMC5160TransferResult) -> str:
     status = result.status
-    stall_text = (
-        "StallGuard detectado (SG=1)."
-        if status.stallguard
-        else "StallGuard inativo (SG=0)."
-    )
-    faults = status.active_faults()
-    if faults:
-        faults_text = "Alertas: {}.".format(", ".join(faults))
-    else:
-        faults_text = (
-            "Alertas: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
-        )
-
     lines = [
         f"- 0x{result.address:02X} <= 0x{result.value:08X}",
         f"  Resposta bruta: {result.raw_hex}",
-        f"  Status 0x{status.raw:02X}: {stall_text} {faults_text}",
+        f"  Status 0x{status.raw:02X}: {status.summary()}",
         f"  Dado retornado (comando anterior): 0x{result.previous_data:08X}",
     ]
     return "\n".join(lines)
@@ -113,11 +108,7 @@ def _format_read_result(result: TMC5160ReadResult) -> str:
     if status_request.raw == status_reply.raw:
         lines.append(f"  Diagnóstico : {status_reply.summary()}")
     else:
-        lines.append(
-            "  Diagnóstico : {} / {}".format(
-                status_request.summary(), status_reply.summary()
-            )
-        )
+        lines.append("  Diagnóstico : {} / {}".format(status_request.summary(), status_reply.summary()))
     decoded = decode_register_value(result.address, result.value)
     if decoded:
         lines.append("  Tradução    :")
@@ -240,14 +231,155 @@ def _build_status_parser() -> argparse.ArgumentParser:
     )
     _add_common_spi_arguments(parser)
     parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help=("Executa: leitura dummy, ler GSTAT, limpar GSTAT (0x07), "
+              "ler GSTAT novamente e ler DRV_STATUS (0x6F) antes das leituras."),
+    )
+    parser.add_argument(
         "--register",
         action="append",
         default=[],
         metavar="REG",
         help=(
             "Lista de registradores a serem lidos (pode ser repetido). "
-            "Aceita aliases conhecidos (gconf, gstat, ...) ou endereços numéricos."
+            "Aceita aliases conhecidos (gconf, gstat, drv_status, ...) ou endereços numéricos."
         ),
+    )
+    return parser
+
+
+def _build_loop_test_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Gera um padrão repetitivo de escrita SPI para observar o barramento "
+            "com instrumentos como osciloscópio ou analisador lógico."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument(
+        "--address",
+        type=_parse_register_name,
+        default=REG_GCONF,
+        help=("Registrador a ser escrito (alias conhecido ou endereço numérico, default: gconf)."),
+    )
+    parser.add_argument(
+        "--value",
+        type=lambda x: int(x, 0),
+        default=0x00000004,
+        help=("Valor de 32 bits a ser enviado em todas as mensagens (default: 0x00000004)."),
+    )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=0.01,
+        help=(
+            "Tempo em segundos entre mensagens consecutivas (default: 0.01). "
+            "Utilize 0 para repetir o mais rápido possível."
+        ),
+    )
+    parser.add_argument(
+        "--iterations",
+        type=int,
+        default=0,
+        help=(
+            "Número de repetições antes de encerrar automaticamente (0 = infinito, "
+            "pressione Ctrl+C para parar)."
+        ),
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Não imprimir cada resposta, apenas o resumo inicial e final.",
+    )
+    return parser
+
+
+def _build_init_stepdir_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=("Aplica configurações básicas para operar o TMC5160 em STEP/DIR externo."),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument("--ihold", type=int, default=10, help="IHOLD (0-31)")
+    parser.add_argument("--irun", type=int, default=31, help="IRUN (0-31)")
+    parser.add_argument(
+        "--ihold-delay", dest="iholddelay", type=int, default=6, help="IHOLDDELAY (0-15)"
+    )
+    parser.add_argument(
+        "--microsteps",
+        type=int,
+        choices=[256, 128, 64, 32, 16, 8, 4, 2, 1],
+        default=16,
+        help="Resolução de microstepping para pulsos STEP externos",
+    )
+    parser.add_argument(
+        "--interpolate",
+        dest="interpolate",
+        action="store_true",
+        default=True,
+        help="Ativa interpolação (INTPOL) para 256 micropassos",
+    )
+    parser.add_argument(
+        "--no-interpolate",
+        dest="interpolate",
+        action="store_false",
+        help="Desativa interpolação (INTPOL=0)",
+    )
+    parser.add_argument(
+        "--stealth",
+        dest="stealth",
+        action="store_true",
+        default=True,
+        help="Ativa StealthChop (GCONF.EN_PWM_MODE=1)",
+    )
+    parser.add_argument(
+        "--no-stealth",
+        dest="stealth",
+        action="store_false",
+        help="Desativa StealthChop (EN_PWM_MODE=0)",
+    )
+    parser.add_argument(
+        "--tpowerdown",
+        type=lambda x: int(x, 0),
+        default=0x14,
+        help="TPOWERDOWN (ticks de 2^18/fCLK)",
+    )
+    parser.add_argument(
+        "--tpwmthrs",
+        type=lambda x: int(x, 0),
+        default=0x000001F4,
+        help="TPWMTHRS (limiar de StealthChop↔SpreadCycle)",
+    )
+    return parser
+
+
+def _build_safe_off_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Coloca o TMC5160 em modo seguro: correntes=0, TOFF=0 e FREEWHEEL."
+        ),
+    )
+    _add_common_spi_arguments(parser)
+    parser.add_argument(
+        "--freewheel",
+        type=int,
+        choices=[0, 1, 2, 3],
+        default=3,
+        help=(
+            "PWM_FREEWHEEL (0=normal, 1=short break, 2=passive fast decay, 3=freewheeling). "
+            "Default: 3"
+        ),
+    )
+    parser.add_argument(
+        "--toff",
+        type=int,
+        default=0,
+        help="TOFF (0–15). Default: 0 (desliga o chopper)",
+    )
+    parser.add_argument(
+        "--clear-gstat",
+        action="store_true",
+        help="Limpa GSTAT (0x07) antes",
     )
     return parser
 
@@ -287,9 +419,7 @@ def _report_missing_device(
 ) -> int:
     available = [str(path) for path in device_finder()]
     if available:
-        available_hint = "Dispositivos disponíveis: {}. ".format(
-            ", ".join(sorted(available))
-        )
+        available_hint = "Dispositivos disponíveis: {}. ".format(", ".join(sorted(available)))
     else:
         available_hint = "Nenhum dispositivo /dev/spidev* encontrado no sistema. "
 
@@ -302,8 +432,8 @@ def _report_missing_device(
 
     print(
         (
-            "Erro: dispositivo SPI '{spi}' não encontrado. {available}" "Habilite o overlay SPI "
-            "correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
+            "Erro: dispositivo SPI '{spi}' não encontrado. {available}"
+            "Habilite o overlay SPI correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
         ).format(spi=spi_node, available=available_hint, overlay=overlay_hint),
         file=sys.stderr,
     )
@@ -330,7 +460,7 @@ def _run_spi_operation(
     spi_node = f"/dev/spidev{args.bus}.{args.dev}"
     try:
         with configurator as driver:  # type: ignore[assignment]
-            operation(driver)
+            completed = operation(driver)
     except FileNotFoundError:
         return _report_missing_device(args, spi_node, device_finder)
     except PermissionError:
@@ -338,6 +468,9 @@ def _run_spi_operation(
     except RuntimeError as exc:
         print(f"Erro: {exc}", file=sys.stderr)
         return 4
+
+    if completed is False:
+        return 130
 
     print(success_message)
     return 0
@@ -368,9 +501,7 @@ def _run_configure(
     )
 
     def _operation(driver):
-        print(
-            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160"
-        )
+        print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para configurar o TMC5160")
         responses: List[TMC5160TransferResult] = []
         if not args.no_defaults:
             count = len(preset.writes)
@@ -386,9 +517,29 @@ def _run_configure(
 
         if responses:
             print("Respostas do TMC5160:")
-            for result in responses:
-                print(_format_response(result))
-                result.raise_on_faults()
+            try:
+                for result in responses:
+                    print(_format_response(result))
+                    result.raise_on_faults()
+            except RuntimeError as exc:
+                # Diagnóstico detalhado com base em GSTAT e DRV_STATUS
+                try:
+                    gstat_read = driver.read_register(REG_GSTAT)
+                    drv_read = driver.read_register(0x6F)
+                    gstat_val = gstat_read.value
+                    drv_val = drv_read.value
+                    gstat_text = decode_register_value(REG_GSTAT, gstat_val)
+                    drv_text = decode_register_value(0x6F, drv_val)
+                    details = []
+                    details.append(
+                        f"GSTAT=0x{gstat_val:08X}: " + ("; ".join(gstat_text) if gstat_text else "")
+                    )
+                    details.append(
+                        f"DRV_STATUS=0x{drv_val:08X}: " + ("; ".join(drv_text) if drv_text else "")
+                    )
+                    raise RuntimeError(str(exc) + " | Diagnóstico: " + " | ".join(details)) from exc
+                except Exception:
+                    raise
 
     return _run_spi_operation(
         args,
@@ -416,14 +567,34 @@ def _run_status(
         register_preset=TMC5160RegisterPreset.default(),
     )
 
-    register_list = ", ".join(
-        REGISTER_NAMES.get(addr, f"0x{addr:02X}") for addr in registers
-    )
+    register_list = ", ".join(REGISTER_NAMES.get(addr, f"0x{addr:02X}") for addr in registers)
 
     def _operation(driver):
-        print(
-            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160"
-        )
+        print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160")
+        if args.clear_gstat:
+            print("Executando sequência clear-GSTAT:")
+            dummy = driver.read_register(REG_GCONF)
+            print(_format_read_result(dummy))
+            gstat_before = driver.read_register(REG_GSTAT)
+            print(_format_read_result(gstat_before))
+            cleared = driver.write_register(REG_GSTAT, 0x00000007)
+            print(_format_response(cleared))
+            gstat_after = driver.read_register(REG_GSTAT)
+            print(_format_read_result(gstat_after))
+            drv = driver.read_register(0x6F)
+            print(_format_read_result(drv))
+            for r in (
+                dummy.request,
+                dummy.reply,
+                gstat_before.request,
+                gstat_before.reply,
+                cleared,
+                gstat_after.request,
+                gstat_after.reply,
+                drv.request,
+                drv.reply,
+            ):
+                r.raise_on_faults()
         if registers:
             print(f"Consultando registradores: {register_list}")
         else:
@@ -445,6 +616,150 @@ def _run_status(
     )
 
 
+def _run_loop_test(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_loop_test_parser()
+    args = parser.parse_args(list(argv))
+
+    if not 0 <= args.value <= 0xFFFFFFFF:
+        raise CLIError("O valor informado precisa caber em 32 bits (0x00000000-0xFFFFFFFF)")
+    if args.interval < 0:
+        raise CLIError("O intervalo entre mensagens deve ser maior ou igual a zero")
+    if args.iterations < 0:
+        raise CLIError("O número de repetições deve ser zero (infinito) ou positivo")
+
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset.default(),
+    )
+
+    register_name = REGISTER_NAMES.get(args.address, f"0x{args.address:02X}")
+
+    def _operation(driver):
+        print(
+            "Abrindo SPI bus={bus} dev={dev} a {speed} Hz para gerar padrão de teste".format(
+                bus=args.bus, dev=args.dev, speed=args.speed
+            )
+        )
+        if args.iterations:
+            print(f"Repetições solicitadas: {args.iterations}")
+        else:
+            print("Repetições solicitadas: infinito (interrompa com Ctrl+C)")
+        if args.interval > 0:
+            print(f"Intervalo entre mensagens: {args.interval:.6f} s")
+        else:
+            print("Intervalo entre mensagens: sem pausa (taxa máxima permitida pela SPI)")
+
+        print(
+            "Registrador {name} (0x{addr:02X}) <= 0x{value:08X}".format(
+                name=register_name, addr=args.address, value=args.value
+            )
+        )
+
+        count = 0
+        try:
+            while args.iterations == 0 or count < args.iterations:
+                result = driver.write_register(args.address, args.value)
+                count += 1
+                if not args.quiet:
+                    print(
+                        "[{count}] status=0x{status:02X} resposta={raw}".format(
+                            count=count,
+                            status=result.status.raw,
+                            raw=result.raw_hex,
+                        )
+                    )
+                result.raise_on_faults()
+                if args.interval > 0:
+                    time.sleep(args.interval)
+        except KeyboardInterrupt:
+            print(f"Loop interrompido pelo usuário após {count} iterações.")
+            return False
+
+        print(f"Loop concluído após {count} iterações.")
+        return True
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Padrão de teste finalizado.",
+        operation=_operation,
+    )
+
+
+def _run_safe_off(
+    argv: Sequence[str],
+    *,
+    configurator_factory,
+    device_finder,
+) -> int:
+    parser = _build_safe_off_parser()
+    args = parser.parse_args(list(argv))
+
+    # Não aplicar preset no modo seguro
+    configurator = configurator_factory(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset(writes=tuple()),
+    )
+
+    def _operation(driver):
+        print(
+            f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para modo seguro (safe-off)"
+        )
+
+        if args.clear_gstat:
+            cleared = driver.write_register(REG_GSTAT, 0x00000007)
+            print(_format_response(cleared))
+            cleared.raise_on_faults()
+
+        # Leitura para preservar campos e fazer read-modify-write
+        chop_old = driver.read_register(REG_CHOPCONF)
+        pwm_old = driver.read_register(REG_PWMCONF)
+        print(_format_read_result(chop_old))
+        print(_format_read_result(pwm_old))
+
+        chop = chop_old.value
+        pwm = pwm_old.value
+
+        # CHOPCONF[3:0] = TOFF
+        new_chop = (chop & ~0xF) | (int(args.toff) & 0xF)
+
+        # PWMCONF: FREEWHEEL em [21:20]; também zera AUTOSCALE(18)/AUTOGRAD(19)
+        new_pwm = (pwm & ~(0b11 << 20) & ~(1 << 18) & ~(1 << 19)) | (
+            (int(args.freewheel) & 0b11) << 20
+        )
+
+        responses: List[TMC5160TransferResult] = []
+        # Zera correntes
+        responses.append(driver.write_register(REG_IHOLD_IRUN, 0x00000000))
+        # Aplica TOFF
+        responses.append(driver.write_register(REG_CHOPCONF, new_chop))
+        # Coloca FREEWHEEL
+        responses.append(driver.write_register(REG_PWMCONF, new_pwm))
+
+        print("Respostas do TMC5160:")
+        for r in responses:
+            print(_format_response(r))
+            r.raise_on_faults()
+
+    return _run_spi_operation(
+        args,
+        configurator,
+        device_finder,
+        success_message="Safe-off aplicado.",
+        operation=_operation,
+    )
+
+
 def run(
     argv: Optional[Sequence[str]] = None,
     *,
@@ -456,6 +771,18 @@ def run(
     else:
         argv_list = list(argv)
 
+    # Subcomandos
+    if argv_list and argv_list[0] == "help":
+        print(
+            "Uso:\n"
+            "  configure [opções]         Configura registradores\n"
+            "  status [opções]            Lê registradores (suporta --clear-gstat)\n"
+            "  loop-test [opções]         Gera padrão de escrita contínuo\n"
+            "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
+            "  safe-off [opções]          Zera correntes, TOFF=0 e FREEWHEEL\n"
+        )
+        return 0
+
     if argv_list and argv_list[0] == "status":
         return _run_status(
             argv_list[1:],
@@ -463,9 +790,36 @@ def run(
             device_finder=device_finder,
         )
 
+    if argv_list and argv_list[0] == "loop-test":
+        return _run_loop_test(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "init-stepdir":
+        if __package__:
+            from .tmc5160_stepdir import run_init_stepdir as _run_init_stepdir  # type: ignore
+        else:
+            from tmc5160_stepdir import run_init_stepdir as _run_init_stepdir  # type: ignore
+        return _run_init_stepdir(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    if argv_list and argv_list[0] == "safe-off":
+        return _run_safe_off(
+            argv_list[1:],
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
+    # Compat: permitir chamar "configure" explicitamente
     if argv_list and argv_list[0] == "configure":
         argv_list = argv_list[1:]
 
+    # Padrão: configurar
     return _run_configure(
         argv_list,
         configurator_factory=configurator_factory,

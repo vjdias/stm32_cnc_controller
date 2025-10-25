@@ -29,7 +29,7 @@
 
 // Permite trocar a instância sem tocar no código
 #ifndef APP_SPI_INSTANCE
-#define APP_SPI_INSTANCE SPI1
+#define APP_SPI_INSTANCE SPI2
 #endif
 
 // ---- Estados mínimos do enlace SPI ----
@@ -57,6 +57,6 @@ uint8_t         app_spi_get_error(void);
 void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi);
 
 int app_resp_push(const uint8_t *frame, uint32_t len);
-static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi);
+//static inline void spi_post_dma_rx_fifo_sanity(SPI_HandleTypeDef *hspi);
 
 

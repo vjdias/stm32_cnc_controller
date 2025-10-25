@@ -1,6 +1,10 @@
 #include <string.h>
 #include "Services/service_adapters.h"
 #include "Services/Log/log_service.h"
+#include "Services/Led/led_service.h"
+#include "Services/Home/home_service.h"
+#include "Services/Probe/probe_service.h"
+#include "Services/Safety/safety_service.h"
 #include "Services/Motion/motion_service.h"
 #include "app.h"
 
@@ -14,7 +18,7 @@
  *==============================================================================*/
 
 /* --- Handle gerado pelo CubeMX --------------- */
-extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi2;
 
 /* --- Estado e buffers ------------------------------------------------------- */
 static router_t             g_router;
@@ -141,12 +145,12 @@ static void prepare_next_tx(void)
  */
 static void restart_spi_dma(void)
 {
-    if (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY) {
+    if (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY) {
         g_spi_error_flag = 1u;
         return;
     }
 
-    if (HAL_SPI_TransmitReceive_DMA(&hspi1,
+    if (HAL_SPI_TransmitReceive_DMA(&hspi2,
             g_spi_tx_dma_buf, g_spi_rx_dma_buf,
             (uint16_t)APP_SPI_DMA_BUF_LEN) != HAL_OK) {
         g_spi_error_flag = 1u;
@@ -166,12 +170,19 @@ static void restart_spi_dma(void)
  */
 void app_init(void)
 {
-    log_service_init();
-    motion_service_init();
-
     /* Registra serviços no router (o projeto deve prover os handlers) */
     memset(&g_handlers, 0, sizeof g_handlers);
     services_register_handlers(&g_handlers);
+
+    /* Inicializa serviços (ordem: log/diag, safety, periféricos simples, motion) */
+#if LOG_ENABLE
+    log_service_init();
+#endif
+    safety_service_init();
+    led_service_init();
+    home_service_init();
+    probe_service_init();
+    motion_service_init();
 
     g_resp_fifo = resp_fifo_create();
     router_init(&g_router, g_resp_fifo, &g_handlers);

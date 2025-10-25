@@ -1,0 +1,78 @@
+\section{Arquitetura de Hardware}\label{sec:arq_hw}
+
+Esta se\c{c}\~ao descreve o circuito do controlador, os blocos f\'isicos
+e as conex\~oes empregadas entre a placa STM32, os drivers de pot\^encia
+TMC5160 e o encoder \'{o}ptico incremental TMCS-28. Tamb\'em s\~ao listadas
+recomenda\c{c}\~oes de montagem, alimenta\c{c}\~ao e EMC.
+
+\subsection{Vis\~ao geral do sistema}
+
+O sistema \'e composto por:
+
+- \textbf{L\'ogica}: placa com STM32L475 operando a \SI{3.3}{V}, cristal de
+  refer\^encia e interfaces SPI/USART/GPIO.
+- \textbf{Drivers de eixo}: m\'odulos/placa com \textbf{TMC5160} recebendo
+  sinais \texttt{STEP}/\texttt{DIR}/\texttt{EN} e configurados via \texttt{SPI}.
+- \textbf{Realimenta\c{c}\~ao}: encoder \'{o}ptico \textbf{TMCS-28} (ABN, TTL
+  \SI{5}{V}) acoplado ao eixo principal.
+- \textbf{Alimenta\c{c}\~ao}: trilha de \SI{5}{V} para l\'ogica e sensores;
+  regulador \SI{3.3}{V} local para o microcontrolador; alimenta\c{c}\~ao separada/filtrada
+  para os est\'agios de pot\^encia dos motores.
+
+\subsection{Alimenta\c{c}\~ao e EMC}
+
+- \textbf{\SI{5}{V} l\'ogica}: entrada regulada (fonte externa), com
+  capacitores de granel (\SI{10}{\micro F} a \SI{47}{\micro F}) e
+  desacoplamentos locais (\SI{100}{nF}) pr\'oximos aos CI.
+- \textbf{\SI{3.3}{V}}: regulador LDO dedicado ao STM32 e perif\'ericos
+  \SI{3.3}{V}. Seguir recomenda\c{c}\~oes de estabilidade do LDO (ESR dos
+  capacitores) e planos de terra.
+- \textbf{Aterramento}: retorno de alta corrente dos motores mantido
+  separado do plano de l\'ogica; conex\~ao em estrela/pr\'oximo ao ponto de
+  entrada da energia. Loops curtos para sinais comuta\c{c}\~ao.
+
+\subsection{Drivers TMC5160}
+
+- \textbf{Sinais}: \texttt{STEP}/\texttt{DIR}/\texttt{EN} do STM32 (\SI{3.3}{V})
+  para TMC5160. Interposi\c{c}\~ao de \emph{level shifter} se necess\'ario
+  conforme a placa utilizada.
+- \textbf{SPI}: barramento dedicado para configura\c{c}\~ao (\texttt{SCK},
+  \texttt{MOSI}, \texttt{MISO}, \texttt{CS\_x}). Resistores de termina\c{c}\~ao/
+  s\'erie curtos para integridade de sinal.
+- \textbf{Pot\^encia}: desacoplamento de VM com capacitores de baixa ESR;
+  rota\c{c}\~ao larga para trilhas de corrente.
+- \textbf{Prote\c{c}\~oes}: leitura de \texttt{DRV\_STATUS} para falhas e EN
+  global intertravado pelo E-STOP.
+
+\subsection{Encoder \'{o}ptico TMCS-28}
+
+- \textbf{Sa\'idas}: \textbf{A}, \textbf{B} (quadratura) e \textbf{N}
+  (\emph{index}) em TTL \SI{5}{V}. Adaptar n\'{\i}vel para \SI{3.3}{V}
+  (divisores/\emph{level shifter}) antes de entrar no STM32.
+- \textbf{Conex\~ao no STM32}: A/B em temporizadores com modo encoder
+  (por exemplo, LPTIM1/TIM3/TIM5); N em entrada de captura/interrup\c{c}\~ao para
+  refer\^encia de zero.
+- \textbf{Resolu\c{c}\~ao}: neste TCC utiliza\-se \textbf{TMCS-28-10k}
+  (625\,lpr, \textbf{40\,000\,cpr}). Convers\~ao \(\theta = 360^{\circ}\cdot
+  \text{count}/40{,}000\). Velocidade: \(\text{rpm} = 60\,\text{CPS}/40{,}000\).
+
+\subsection{Intertravamentos e seguran\c{c}a}
+
+- \textbf{E-STOP}: linha f\'isica que desabilita \texttt{EN} dos drivers e
+  gera EXTI no STM32 para parada ordenada.
+- \textbf{Fins de curso}: entradas com resistores de \emph{pull-up}
+  e filtros RC opcionais; priorizar roteamento distante de trilhas de
+  pot\^encia.
+
+\subsection{PCB, cabeamento e montagem}
+
+- \textbf{Layout}: separar dom\'inios de l\'ogica e pot\^encia; manter
+  pares de A/B e linhas de SPI curtos e com retorno pr\'oximo.
+- \textbf{Cabeamento}: utilizar pares tr\'ancados para A/B e sinais STEP/DIR;
+  blindagem quando o ambiente possuir ru\'{\i}do elevado.
+- \textbf{Ordem de testes}: valida\c{c}\~ao da alimenta\c{c}\~ao (teste inicial),
+  clock/USART, SPI dos TMC5160, leitura ABN do TMCS-28 e, por fim,
+  acionamento de motores sem carga.
+
+Como refer\^encia adicional de montagem e integra\c{c}\~ao de hardware, ver
+\cite{romeros_tcc_ifmg_2022}.

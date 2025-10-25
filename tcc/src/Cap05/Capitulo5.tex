@@ -1,0 +1,32 @@
+\chapter{Conclusão}\label{cap:conclusao}
+
+Este trabalho apresentou o desenvolvimento de um controlador CNC
+embarcardo no STM32L475 com ênfase em determinismo temporal. A
+arquitetura proposta integrou geração de pulsos DDA a
+\SI{50}{\kilo\hertz}, controle PID em \SI{1}{\kilo\hertz}, leitura de
+encoders em modo quadratura e comunicação SPI com DMA circular voltada à
+integração com uma Raspberry Pi. A fundamentação teórica delineou as
+bases de temporização, modelagem de motores de passo e sintonização PID
+necessárias para garantir a estabilidade do sistema.
+
+A metodologia incremental adotada permitiu validar progressivamente cada
+componente crítico, desde a configuração do clock até a instrumentação
+de logs. Os resultados indicaram jitter reduzido no gerador de passos e
+no laço PID, bem como o comportamento do pipeline SPI ao lidar com polls
+sequenciais do mestre. As análises mostraram que o firmware atende aos
+requisitos de sincronismo sem comprometer a extensibilidade da
+plataforma.
+
+Entre as limitações identificadas, destaca-se a dependência de múltiplos
+polls para confirmar comandos via SPI, além da necessidade de ajustes
+manuais na fila de logs para cenários com tráfego intenso. Como trabalhos
+futuros, propõe-se: (i) explorar mecanismos de reinicialização imediata
+do DMA assim que um serviço disponibilizar a resposta; (ii) investigar
+estratégias adaptativas de prescaler para acomodar perfis de movimento
+mais agressivos; e (iii) avaliar a migração para controladores de campo
+orientado (FOC) em motores de passo híbridos para reduzir vibrações em
+altas velocidades.
+
+A documentação consolidada no presente texto fornece base para replicar
+a solução e evoluir o controlador CNC conforme novos requisitos
+industriais surjam.
