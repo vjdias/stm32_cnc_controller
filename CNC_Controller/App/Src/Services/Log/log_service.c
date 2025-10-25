@@ -1,4 +1,6 @@
-// Serviço de log simplificado: envia tudo para printf (USART1 via _write)
+// Serviço de log simplificado: retarget de printf para SWO (ITM) quando ativo,
+// com fallback para USART1. Assim, se o SWV estiver habilitado no debugger,
+// as mensagens seguem via SWO; caso contrário, seguem para a UART.
 #include "Services/Log/log_service.h"
 #if LOG_ENABLE
 
@@ -6,6 +8,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "usart.h"
+#include "stm32l4xx.h"  // ITM_SendChar/CoreDebug/DBGMCU/TPI
 
 void log_service_init(void){
     // Garante stdout sem buffer para que o printf descarregue imediatamente na UART.
@@ -27,17 +30,31 @@ void log_event_names(const char* service_name, const char* state_name, const cha
     printf("LOG:service=%s,state=%s,status=%s\r\n", service_name, state_name, status_text);
 }
 
-// Mantém _write exatamente igual: utilizado pelo printf para enviar à USART1.
-int _write(int fd, char *ptr, int len) {
-    HAL_StatusTypeDef hstatus;
+// Verifica em tempo de execução se o SWO/ITM está habilitado (porta 0).
+static inline int log_swo_enabled(void)
+{
+    return ((CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk) &&
+            (DBGMCU->CR & DBGMCU_CR_TRACE_IOEN) &&
+            (ITM->TCR & ITM_TCR_ITMENA_Msk) &&
+            (ITM->TER & (1UL << 0)));
+}
 
-    if (fd == 1 || fd == 2) {
-      hstatus = HAL_UART_Transmit(&huart1, (uint8_t *) ptr, len, HAL_MAX_DELAY);
-      if (hstatus == HAL_OK)
-        return len;
-      else
+// Retarget de printf: usa SWO quando disponível; senão, USART1.
+int _write(int fd, char *ptr, int len)
+{
+    if (fd != 1 && fd != 2)
         return -1;
+
+    if (log_swo_enabled()) {
+        for (int i = 0; i < len; ++i) {
+            ITM_SendChar((uint32_t)ptr[i]);
+        }
+        return len;
     }
+
+    // Fallback: UART1 síncrona
+    if (HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, HAL_MAX_DELAY) == HAL_OK)
+        return len;
     return -1;
 }
 

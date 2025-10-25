@@ -47,3 +47,11 @@ void motion_emergency_stop(void);
 uint8_t motion_demo_is_active(void);
 // - Avança para a próxima velocidade predefinida (4 passos) e aplica ao demo
 void motion_demo_cycle_speed(void);
+
+// Sombras 32-bit para SWV/Data Trace (opcionais)
+// - g_enc_abs32: posição absoluta acumulada desde o boot (cast p/ int32)
+// - g_enc_rel32: posição relativa ao "zero" lógico atual (cast p/ int32)
+// Essas variáveis são atualizadas no tick do TIM7 e podem ser usadas em
+// SWV Graph/Data Trace (tamanhos suportados: 4 bytes).
+extern volatile int32_t g_enc_abs32[3];
+extern volatile int32_t g_enc_rel32[3];

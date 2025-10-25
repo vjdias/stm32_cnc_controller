@@ -50,6 +50,9 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define Q16_1                          (1u<<16)
 #define Q16_FROM_UINT(x)               ((uint32_t)(x) << 16)
 #define Q16_DIV_UINT(numer,den)        ((uint32_t)(((uint64_t)(numer) << 16) / (uint32_t)(den)))
+#ifndef MOTION_DEBUG_ENCODERS
+#define MOTION_DEBUG_ENCODERS          1
+#endif
 
 /* Aceleração padrão para o DEMO (steps/s^2) */
 #define DEMO_ACCEL_SPS2                200000u  /* ~50 ms p/ ir a 10k sps */
@@ -107,6 +110,9 @@ static uint8_t g_queue_count = 0u;
 static int64_t  g_encoder_position[MOTION_AXIS_COUNT];
 static uint32_t g_encoder_last_raw[MOTION_AXIS_COUNT];
 static int64_t  g_encoder_origin[MOTION_AXIS_COUNT];
+// Sombras 32-bit para uso com SWV Data Trace/Graph
+volatile int32_t g_enc_abs32[MOTION_AXIS_COUNT];
+volatile int32_t g_enc_rel32[MOTION_AXIS_COUNT];
 
 /* Flags de teste/demonstração */
 static volatile uint8_t g_demo_continuous = 0u; /* 1 = gera passos continuamente (modo DEMO) */
@@ -329,10 +335,30 @@ static void motion_update_encoders(void) {
             int16_t delta = (int16_t)((uint16_t)now - prev);
             g_encoder_last_raw[axis] = (uint16_t)now;
             g_encoder_position[axis] += delta;
+#if MOTION_DEBUG_ENCODERS
+            if (delta != 0) {
+                printf("[ENC axis=%u raw=%u delta=%d abs=%ld rel=%ld]\r\n",
+                       (unsigned)axis,
+                       (unsigned)now,
+                       (int)delta,
+                       (long)g_enc_abs32[axis],
+                       (long)g_enc_rel32[axis]);
+            }
+#endif
         } else {
             int32_t delta = (int32_t)(now - g_encoder_last_raw[axis]);
             g_encoder_last_raw[axis] = now;
             g_encoder_position[axis] += delta;
+#if MOTION_DEBUG_ENCODERS
+            if (delta != 0) {
+                printf("[ENC axis=%u raw=%lu delta=%ld abs=%ld rel=%ld]\r\n",
+                       (unsigned)axis,
+                       (unsigned long)now,
+                       (long)delta,
+                       (long)g_enc_abs32[axis],
+                       (long)g_enc_rel32[axis]);
+            }
+#endif
         }
     }
 }
@@ -527,6 +553,18 @@ void motion_on_tim6_tick(void)
                 g_has_active_segment = 0u;
                 motion_stop_all_axes_locked();
                 g_status.state = MOTION_DONE;
+#if MOTION_DEBUG_ENCODERS
+                printf("[ENC DONE abs=(%ld,%ld,%ld) rel=(%ld,%ld,%ld) target=(%lu,%lu,%lu)]\r\n",
+                       (long)g_enc_abs32[AXIS_X],
+                       (long)g_enc_abs32[AXIS_Y],
+                       (long)g_enc_abs32[AXIS_Z],
+                       (long)g_enc_rel32[AXIS_X],
+                       (long)g_enc_rel32[AXIS_Y],
+                       (long)g_enc_rel32[AXIS_Z],
+                       (unsigned long)g_axis_state[AXIS_X].total_steps,
+                       (unsigned long)g_axis_state[AXIS_Y].total_steps,
+                       (unsigned long)g_axis_state[AXIS_Z].total_steps);
+#endif
             }
             motion_refresh_status_locked();
         }
@@ -543,6 +581,12 @@ void motion_on_tim6_tick(void)
 void motion_on_tim7_tick(void)
 {
     motion_update_encoders();
+
+    // Atualiza sombras 32-bit para SWV/Data Trace (4 bytes por amostra)
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        g_enc_abs32[axis] = (int32_t)g_encoder_position[axis];
+        g_enc_rel32[axis] = (int32_t)(g_encoder_position[axis] - g_encoder_origin[axis]);
+    }
 
     /* DEMO: aplica rampa e calcula incremento do DDA */
     if (g_status.state == MOTION_RUNNING && g_has_active_segment && g_demo_continuous) {
