@@ -1,0 +1,29 @@
+[
+build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raspberry-spi-tmc5160"
+version = "0.1.0"
+description = "CLI e utilitários para configurar o TMC5160 via SPI"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+  { name = "Valdir" },
+]
+keywords = ["tmc5160", "spi", "stepper", "motor", "raspberry-pi"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+]
+
+[project.scripts]
+tmc5160-cli = "raspberry_spi.tmc5160_cli:main"
+tmc5160 = "raspberry_spi.tmc5160_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["raspberry_spi*"]
+
