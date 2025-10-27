@@ -261,6 +261,8 @@ def _build_status_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Lê parametros principais legiveis do TMC5160")
     _add_common_spi_arguments(p)
     p.add_argument("--clear-gstat", action="store_true", help="Limpa GSTAT (0x07) antes de ler")
+    p.add_argument("--errors", action="store_true", help="Imprime apenas a secao de erros (GSTAT/DRV_STATUS)")
+    p.add_argument("--json", action="store_true", help="Saida JSON estruturada (erros e registradores)")
     return p
 
 
@@ -530,7 +532,7 @@ def _format_read_result(res: TMC5160ReadResult) -> str:
     ]
     dec = decode_register_value(res.address, res.value)
     if dec:
-        lines.append("  TraduÃ§Ã£o    :")
+        lines.append("Tradução:")
         for d in dec:
             lines.append(f"    - {d}")
     return "\n".join(lines)
@@ -550,8 +552,55 @@ def run_status(argv: Sequence[str]) -> int:
         if args.clear_gstat:
             driver.write_register(REG_GSTAT, 0x00000007)
         regs = (REG_GSTAT, REG_DRV_STATUS, REG_GCONF, REG_CHOPCONF)
-        for r in driver.read_registers(regs):
+        results = driver.read_registers(regs)
+        # Preparar dados
+        gstat_val = next((r.value for r in results if r.address == REG_GSTAT), 0)
+        drv_val = next((r.value for r in results if r.address == REG_DRV_STATUS), 0)
+        errors = _summarize_errors(gstat_val, drv_val)
+        # JSON?
+        if getattr(args, "json", False):
+            import json as _json
+            reg_names = {REG_GCONF:"GCONF", REG_CHOPCONF:"CHOPCONF", REG_DRV_STATUS:"DRV_STATUS", REG_GSTAT:"GSTAT"}
+            payload = {
+                "bus": args.bus,
+                "dev": args.dev,
+                "speed": args.speed,
+                "errors": errors,
+            }
+            if not getattr(args, "errors", False):
+                regs_out = []
+                for r in results:
+                    regs_out.append({
+                        "name": reg_names.get(r.address, f"0x{r.address:02X}"),
+                        "address": r.address,
+                        "value": r.value,
+                        "value_hex": f"0x{r.value:08X}",
+                        "req_bin5": _bin5_bytes(r.request.response),
+                        "resp_bin5": _bin5_bytes(r.reply.response),
+                    })
+                payload["registers"] = regs_out
+            print(_json.dumps(payload, ensure_ascii=False, indent=2))
+            return 0
+        # Texto normal: imprime apenas erros se --errors
+        if getattr(args, "errors", False):
+            if errors:
+                print("Erros detectados:")
+                for e in errors:
+                    print(f"  - {e}")
+            else:
+                print("Erros: nenhum")
+            return 0
+        # Caso padrão: imprime registradores + binários + resumo de erros
+        for r in results:
             print(_format_read_result(r))
+            print(f"  Requisicao binaria (5B): {_bin5_bytes(r.request.response)}")
+            print(f"  Resposta   binaria (5B): {_bin5_bytes(r.reply.response)}")
+        if errors:
+            print("Erros detectados:")
+            for e in errors:
+                print(f"  - {e}")
+        else:
+            print("Erros: nenhum")
     return 0
 
 
@@ -569,6 +618,37 @@ def _bin32(v: int) -> str:
     b = f"{v:032b}"
     # Agrupa em nybbles para leitura
     return " ".join(b[i:i+4] for i in range(0, 32, 4))
+
+
+def _bin5_bytes(bs: tuple[int, int, int, int, int]) -> str:
+    return " ".join(f"{x:08b}" for x in bs)
+
+
+def _summarize_errors(gstat_val: int, drv_val: int) -> list[str]:
+    errs: list[str] = []
+    # GSTAT
+    if gstat_val & (1 << 2):
+        errs.append("GSTAT.UV_CP (subtensao charge pump)")
+    if gstat_val & (1 << 1):
+        errs.append("GSTAT.DRV_ERR (falha de driver)")
+    # DRV_STATUS
+    if drv_val & (1 << 26):
+        errs.append("DRV_STATUS.OT (sobretemperatura)")
+    if drv_val & (1 << 25):
+        errs.append("DRV_STATUS.OTPW (pre-aviso sobretemperatura)")
+    if drv_val & (1 << 24):
+        errs.append("DRV_STATUS.S2GA (curto a terra fase A)")
+    if drv_val & (1 << 23):
+        errs.append("DRV_STATUS.S2GB (curto a terra fase B)")
+    if drv_val & (1 << 22):
+        errs.append("DRV_STATUS.S2VSA (curto a Vsup fase A)")
+    if drv_val & (1 << 21):
+        errs.append("DRV_STATUS.S2VSB (curto a Vsup fase B)")
+    if drv_val & (1 << 20):
+        errs.append("DRV_STATUS.OLA (open-load fase A)")
+    if drv_val & (1 << 19):
+        errs.append("DRV_STATUS.OLB (open-load fase B)")
+    return errs
 
 
 def run_get(argv: Sequence[str]) -> int:
@@ -648,6 +728,60 @@ def run_get(argv: Sequence[str]) -> int:
                         print(f"    - {d}")
             except Exception as exc:
                 print(f"Erro ao ler 0x{addr:02X}: {exc}")
+    return 0
+
+
+def _build_errors_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Consulta erros em GSTAT/DRV_STATUS do TMC5160")
+    _add_common_spi_arguments(p)
+    p.add_argument("--devs", type=str, help="Lista de dispositivos (ex.: 1,2,3). Se ausente, usa --dev.")
+    return p
+
+
+def run_errors(argv: Sequence[str]) -> int:
+    p = _build_errors_parser()
+    args = p.parse_args(list(argv))
+
+    if args.devs:
+        dev_list = []
+        for tok in str(args.devs).split(','):
+            tok = tok.strip()
+            if not tok:
+                continue
+            try:
+                dev_list.append(int(tok))
+            except Exception:
+                print(f"Aviso: dev invalido: {tok}")
+        if not dev_list:
+            print("Nenhum dispositivo valido em --devs")
+            return 1
+    else:
+        dev_list = [args.dev]
+
+    for dev in dev_list:
+        configurator = TMC5160Configurator(
+            bus=args.bus,
+            device=dev,
+            speed_hz=args.speed,
+            register_preset=TMC5160RegisterPreset.default(),
+        )
+        with configurator as driver:  # type: ignore
+            print(f"Abrindo SPI bus={args.bus} dev={dev} a {args.speed} Hz para verificar erros")
+            r_gstat = driver.read_register(REG_GSTAT)
+            r_drv = driver.read_register(REG_DRV_STATUS)
+            errors = _summarize_errors(r_gstat.value, r_drv.value)
+            print(f"- GSTAT (0x01) => 0x{r_gstat.value:08X}")
+            print(f"  binario: {_bin32(r_gstat.value)}")
+            print(f"  resposta (5B): {_bin5_bytes(r_gstat.reply.response)}")
+            print(f"- DRV_STATUS (0x6F) => 0x{r_drv.value:08X}")
+            print(f"  binario: {_bin32(r_drv.value)}")
+            print(f"  resposta (5B): {_bin5_bytes(r_drv.reply.response)}")
+            if errors:
+                print("Erros detectados:")
+                for e in errors:
+                    print(f"  - {e}")
+            else:
+                print("Erros: nenhum")
     return 0
 
 
@@ -754,9 +888,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return run_get(rest)
     if cmd == "security":
         return run_security(rest)
+    if cmd == "errors":
+        return run_errors(rest)
     print("Comando desconhecido:", cmd)
     return 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
