@@ -232,7 +232,9 @@ def _build_configure_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--pwmconf", type=lambda x: int(x, 0), help="Valor para REG_PWMCONF"
-    parser.add_argument("--globalscaler", type=int, help="Valor para REG_GLOBAL_SCALER (0-255; 0 equivale a 256)")
+    )
+    parser.add_argument(
+        "--globalscaler", type=int, help="Valor para REG_GLOBAL_SCALER (0-255; 0 equivale a 256)"
     )
     return parser
 
@@ -504,8 +506,8 @@ def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
         "tpwmthrs": args.tpwmthrs,
         "chopconf": args.chopconf,
         "pwmconf": args.pwmconf,
+        "globalscaler": getattr(args, "globalscaler", None),
     }
-        "globalscaler": args.globalscaler,
 
     for name, value in option_map.items():
         if value is None:
