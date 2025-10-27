@@ -195,13 +195,13 @@ def _add_common_spi_arguments(parser: argparse.ArgumentParser) -> None:
 
 def _build_configure_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Configura o driver TMC5160 atravÃƒÂ©s do barramento SPI do Raspberry Pi",
+        description="Configura o driver TMC5160 através do barramento SPI do Raspberry Pi",
     )
     _add_common_spi_arguments(parser)
     parser.add_argument(
         "--no-defaults",
         action="store_true",
-        help="NÃƒÂ£o enviar o preset padrÃƒÂ£o antes dos ajustes informados",
+        help="Não enviar o preset padrão antes dos ajustes informados",
     )
     parser.add_argument(
         "--write",
@@ -241,7 +241,7 @@ def _build_configure_parser() -> argparse.ArgumentParser:
 
 def _build_status_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Consulta os registradores do TMC5160 sem alterar a configuraÃƒÂ§ÃƒÂ£o",
+        description="Consulta os registradores do TMC5160 sem alterar a configuração",
     )
     _add_common_spi_arguments(parser)
     parser.add_argument(
@@ -266,7 +266,7 @@ def _build_status_parser() -> argparse.ArgumentParser:
 def _build_loop_test_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Gera um padrÃƒÂ£o repetitivo de escrita SPI para observar o barramento "
+            "Gera um padrão repetitivo de escrita SPI para observar o barramento "
             "com instrumentos como osciloscÃƒÂ³pio ou analisador lÃƒÂ³gico."
         ),
     )
@@ -738,7 +738,7 @@ def _run_configure(
         responses: List[TMC5160TransferResult] = []
         if not args.no_defaults:
             count = len(preset.writes)
-            print(f"Aplicando preset padrÃƒÂ£o ({count} registradores)")
+            print(f"Aplicando preset padrão ({count} registradores)")
             responses.extend(driver.configure())
         if overrides:
             print("Aplicando ajustes adicionais:")
@@ -746,7 +746,7 @@ def _run_configure(
                 print(f" - 0x{address:02X} = 0x{value:08X}")
             responses.extend(driver.apply_registers(overrides))
         else:
-            print("Nenhum ajuste adicional informado; mantendo preset padrÃƒÂ£o.")
+            print("Nenhum ajuste adicional informado; mantendo preset padrão.")
 
         if responses:
             print("Respostas do TMC5160:")
@@ -778,7 +778,7 @@ def _run_configure(
         args,
         configurator,
         device_finder,
-        success_message="ConfiguraÃƒÂ§ÃƒÂ£o concluÃƒÂ­da.",
+        success_message="Configuração concluída.",
         operation=_operation,
     )
 
@@ -844,7 +844,7 @@ def _run_status(
         args,
         configurator,
         device_finder,
-        success_message="Consulta concluÃƒÂ­da.",
+        success_message="Consulta concluída.",
         operation=_operation,
     )
 
@@ -876,7 +876,7 @@ def _run_loop_test(
 
     def _operation(driver):
         print(
-            "Abrindo SPI bus={bus} dev={dev} a {speed} Hz para gerar padrÃƒÂ£o de teste".format(
+            "Abrindo SPI bus={bus} dev={dev} a {speed} Hz para gerar padrão de teste".format(
                 bus=args.bus, dev=args.dev, speed=args.speed
             )
         )
@@ -915,7 +915,7 @@ def _run_loop_test(
             print(f"Loop interrompido pelo usuÃƒÂ¡rio apÃƒÂ³s {count} iteraÃƒÂ§ÃƒÂµes.")
             return False
 
-        print(f"Loop concluÃƒÂ­do apÃƒÂ³s {count} iteraÃƒÂ§ÃƒÂµes.")
+        print(f"Loop concluído após {count} iterações.")
         return True
 
     return _run_spi_operation(
@@ -1448,7 +1448,7 @@ def run(
             "Uso:\n"
             "  configure [opÃƒÂ§ÃƒÂµes]         Configura registradores\n"
             "  status [opÃƒÂ§ÃƒÂµes]            LÃƒÂª registradores (suporta --clear-gstat)\n"
-            "  loop-test [opÃƒÂ§ÃƒÂµes]         Gera padrÃƒÂ£o de escrita contÃƒÂ­nuo\n"
+            "  loop-test [opções]         Gera padrão de escrita contínuo\n"
             "  init-stepdir [opÃƒÂ§ÃƒÂµes]      Aplica preset para STEP/DIR externo\n"
             "  safe-off [opÃƒÂ§ÃƒÂµes]          Zera correntes, TOFF=0 e FREEWHEEL\n"
             "  preset-ultrafrio [opÃƒÂ§ÃƒÂµes]  Aplica perfil ultra-frio (SpreadCycle/1\x2f16/TOFF=5/HEND=2)\n"
