@@ -387,7 +387,11 @@ def run_set(argv: Sequence[str]) -> int:
 
     # TPOWERDOWN/TPWMTHRS/TCOOLTHRS/THIGH (write-only)
     if args.tpowerdown is not None:
-        writes.append((REG_TPOWERDOWN, args.tpowerdown & 0xFF))
+        tp = args.tpowerdown & 0xFF
+        if tp < 2:
+            print("Erro: TPOWERDOWN deve ser >= 2 (datasheet TMC5160 recomenda mínimo 2).")
+            return 1
+        writes.append((REG_TPOWERDOWN, tp))
     for addr, val in ((0x14, args.tcoolthrs), (0x15, args.thigh), (REG_TPWMTHRS, args.tpwmthrs)):
         if val is not None:
             writes.append((addr, val & 0xFFFFF))
@@ -822,7 +826,7 @@ def _build_security_parser() -> argparse.ArgumentParser:
         "mode",
         choices=["off", "on"],
         help=(
-            "off: desabilita corrente (IHOLD/IRUN=0, FREEWHEEL=3, TOFF=0); "
+            "off: desabilita corrente (IHOLD/IRUN=0, FREEWHEEL=1, TOFF=0); "
             "on: preset seguro (IHOLD/IRUN=0, FREEWHEEL=0, TOFF=3)."
         ),
     )
@@ -839,8 +843,8 @@ def run_security(argv: Sequence[str]) -> int:
     if args.mode == "off":
         # 1) Zero currents (IHOLD/IRUN = 0)
         writes.append((REG_IHOLD_IRUN, 0x00000000))
-        # 2) PWMCONF: FREEWHEEL=3 (freewheeling)
-        pwm_val = (3 & 0x3) << 20
+        # 2) PWMCONF: FREEWHEEL=1 (coast / freewheeling)
+        pwm_val = (1 & 0x3) << 20
         writes.append((REG_PWMCONF, pwm_val))
         # 3) CHOPCONF: TOFF=0 (disable chopper/outputs)
         with TMC5160Configurator(
@@ -894,7 +898,7 @@ def run_security(argv: Sequence[str]) -> int:
         for r in res:
             print(f"  -> 0x{r.address:02X} <= 0x{r.value:08X}  status=0x{r.status.raw:02X}")
     if args.mode == "off":
-        print("Security off aplicado: IHOLD/IRUN=0, PWM FREEWHEEL=3, CHOPCONF.TOFF=0.")
+        print("Security off aplicado: IHOLD/IRUN=0, PWM FREEWHEEL=1 (coast), CHOPCONF.TOFF=0.")
         print("Motores sem corrente. Para reativar, use 'security on' ou 'set'.")
     else:
         print("Security on aplicado: GS=32, IHOLD/IRUN=0, TOFF=3, TBL=2, HSTRT/HEND=5/2, MRES=1/16 + INTPOL.")
