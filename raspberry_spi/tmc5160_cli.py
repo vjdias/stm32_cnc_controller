@@ -1511,6 +1511,14 @@ def run(
             device_finder=device_finder,
         )
 
+    # Fallback: se o usuário passou flags de CHOPCONF sem subcomando, trata como chopconf-set
+    if argv_list and any(arg.startswith("--toff") or arg.startswith("--tbl") or arg.startswith("--hstrt") for arg in argv_list):
+        return _run_chopconf_set(
+            argv_list,
+            configurator_factory=configurator_factory,
+            device_finder=device_finder,
+        )
+
     # Compat: permitir chamar "configure" explicitamente
     if argv_list and argv_list[0] == "configure":
         argv_list = argv_list[1:]
