@@ -567,6 +567,25 @@ def run_status(argv: Sequence[str]) -> int:
                 "speed": args.speed,
                 "errors": errors,
             }
+            # Inclui sempre campos brutos de GSTAT e DRV_STATUS com binário
+            r_g = next((r for r in results if r.address == REG_GSTAT), None)
+            r_d = next((r for r in results if r.address == REG_DRV_STATUS), None)
+            if r_g is not None:
+                payload["gstat"] = {
+                    "value": r_g.value,
+                    "value_hex": f"0x{r_g.value:08X}",
+                    "bin32": _bin32(r_g.value),
+                    "req_bin5": _bin5_bytes(r_g.request.response),
+                    "resp_bin5": _bin5_bytes(r_g.reply.response),
+                }
+            if r_d is not None:
+                payload["drv_status"] = {
+                    "value": r_d.value,
+                    "value_hex": f"0x{r_d.value:08X}",
+                    "bin32": _bin32(r_d.value),
+                    "req_bin5": _bin5_bytes(r_d.request.response),
+                    "resp_bin5": _bin5_bytes(r_d.reply.response),
+                }
             if not getattr(args, "errors", False):
                 regs_out = []
                 for r in results:
@@ -583,6 +602,19 @@ def run_status(argv: Sequence[str]) -> int:
             return 0
         # Texto normal: imprime apenas erros se --errors
         if getattr(args, "errors", False):
+            # Mostra valores/binários dos regs de erro
+            r_g = next((r for r in results if r.address == REG_GSTAT), None)
+            r_d = next((r for r in results if r.address == REG_DRV_STATUS), None)
+            if r_g is not None:
+                print(f"- GSTAT (0x01) => 0x{r_g.value:08X}")
+                print(f"  binario: {_bin32(r_g.value)}")
+                print(f"  req (5B): {_bin5_bytes(r_g.request.response)}")
+                print(f"  resp(5B): {_bin5_bytes(r_g.reply.response)}")
+            if r_d is not None:
+                print(f"- DRV_STATUS (0x6F) => 0x{r_d.value:08X}")
+                print(f"  binario: {_bin32(r_d.value)}")
+                print(f"  req (5B): {_bin5_bytes(r_d.request.response)}")
+                print(f"  resp(5B): {_bin5_bytes(r_d.reply.response)}")
             if errors:
                 print("Erros detectados:")
                 for e in errors:
