@@ -27,7 +27,7 @@ if __package__:
         TMC5160TransferResult,
         decode_register_value,
     )
-else:  # execução direta dos testes/script
+else:  # execuÃƒÂ§ÃƒÂ£o direta dos testes/script
     if str(MODULE_DIR) not in sys.path:
         sys.path.insert(0, str(MODULE_DIR))
     from tmc5160 import (  # type: ignore
@@ -55,6 +55,7 @@ REGISTER_ALIASES = {
     "tpwmthrs": REG_TPWMTHRS,
     "chopconf": REG_CHOPCONF,
     "pwmconf": REG_PWMCONF,
+    "globalscaler": REG_GLOBAL_SCALER,
     "drv_status": 0x6F,
     "drvstatus": 0x6F,
     "drv": 0x6F,
@@ -69,11 +70,12 @@ REGISTER_NAMES = {
     REG_CHOPCONF: "CHOPCONF",
     REG_PWMCONF: "PWMCONF",
     0x6F: "DRV_STATUS",
+    REG_GLOBAL_SCALER: "GLOBALSCALER",
 }
 
-# Alguns registradores do TMC5160 são somente-escrita (sem readback pelo SPI)
-# e, por isso, retornam 0 em leituras: evitamos incluí-los como padrão nas
-# consultas de status para não confundir o usuário. Esses valores ainda podem
+# Alguns registradores do TMC5160 sÃƒÂ£o somente-escrita (sem readback pelo SPI)
+# e, por isso, retornam 0 em leituras: evitamos incluÃƒÂ­-los como padrÃƒÂ£o nas
+# consultas de status para nÃƒÂ£o confundir o usuÃƒÂ¡rio. Esses valores ainda podem
 # ser lidos explicitamente via --register, se desejado.
 WRITE_ONLY_REGISTERS = (
     REG_IHOLD_IRUN,  # 0x10
@@ -91,7 +93,7 @@ DEFAULT_STATUS_REGISTERS = (
 
 
 class CLIError(Exception):
-    """Erro de validação dos parâmetros da CLI."""
+    """Erro de validaÃƒÂ§ÃƒÂ£o dos parÃƒÂ¢metros da CLI."""
 
 
 def _format_response(result: TMC5160TransferResult) -> str:
@@ -111,16 +113,16 @@ def _format_read_result(result: TMC5160ReadResult) -> str:
     status_reply = result.reply.status
     lines = [
         f"- {name} (0x{result.address:02X}) => 0x{result.value:08X}",
-        f"  Requisição  : status=0x{status_request.raw:02X}, resposta={result.request.raw_hex}",
-        f"  Resposta útil: status=0x{status_reply.raw:02X}, resposta={result.reply.raw_hex}",
+        f"  RequisiÃƒÂ§ÃƒÂ£o  : status=0x{status_request.raw:02X}, resposta={result.request.raw_hex}",
+        f"  Resposta ÃƒÂºtil: status=0x{status_reply.raw:02X}, resposta={result.reply.raw_hex}",
     ]
     if status_request.raw == status_reply.raw:
-        lines.append(f"  Diagnóstico : {status_reply.summary()}")
+        lines.append(f"  DiagnÃƒÂ³stico : {status_reply.summary()}")
     else:
-        lines.append("  Diagnóstico : {} / {}".format(status_request.summary(), status_reply.summary()))
+        lines.append("  DiagnÃƒÂ³stico : {} / {}".format(status_request.summary(), status_reply.summary()))
     decoded = decode_register_value(result.address, result.value)
     if decoded:
-        lines.append("  Tradução    :")
+        lines.append("  TraduÃƒÂ§ÃƒÂ£o    :")
         for item in decoded:
             lines.append(f"    - {item}")
     return "\n".join(lines)
@@ -135,9 +137,9 @@ def _parse_register_assignment(raw: str) -> Tuple[int, int]:
     value_text = value_text.strip()
 
     if not name:
-        raise CLIError("Informe o nome ou endereço do registrador antes do '='")
+        raise CLIError("Informe o nome ou endereÃƒÂ§o do registrador antes do '='")
     if not value_text:
-        raise CLIError("Informe o valor do registrador após o '='")
+        raise CLIError("Informe o valor do registrador apÃƒÂ³s o '='")
 
     if name in REGISTER_ALIASES:
         address = REGISTER_ALIASES[name]
@@ -147,16 +149,16 @@ def _parse_register_assignment(raw: str) -> Tuple[int, int]:
         except ValueError as exc:  # pragma: no cover - defensive
             raise CLIError(
                 f"Registrador desconhecido '{name}'. Informe um dos aliases conhecidos "
-                "ou um endereço numérico."
+                "ou um endereÃƒÂ§o numÃƒÂ©rico."
             ) from exc
 
     try:
         value = int(value_text, 0)
     except ValueError as exc:  # pragma: no cover - defensive
-        raise CLIError(f"Valor inválido '{value_text}'. Utilize decimal ou hexadecimal.") from exc
+        raise CLIError(f"Valor invÃƒÂ¡lido '{value_text}'. Utilize decimal ou hexadecimal.") from exc
 
     if not 0 <= address <= 0x7F:
-        raise CLIError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+        raise CLIError("EndereÃƒÂ§o de registrador deve estar entre 0x00 e 0x7F")
     if not 0 <= value <= 0xFFFFFFFF:
         raise CLIError("Valor do registrador deve caber em 32 bits")
 
@@ -166,17 +168,17 @@ def _parse_register_assignment(raw: str) -> Tuple[int, int]:
 def _parse_register_name(raw: str) -> int:
     key = raw.strip().lower()
     if not key:
-        raise CLIError("Informe o nome ou endereço do registrador a consultar")
+        raise CLIError("Informe o nome ou endereÃƒÂ§o do registrador a consultar")
     if key in REGISTER_ALIASES:
         return REGISTER_ALIASES[key]
     try:
         address = int(key, 0)
     except ValueError as exc:  # pragma: no cover - defensivo
         raise CLIError(
-            f"Registrador desconhecido '{raw}'. Utilize um alias conhecido ou um endereço numérico."
+            f"Registrador desconhecido '{raw}'. Utilize um alias conhecido ou um endereÃƒÂ§o numÃƒÂ©rico."
         ) from exc
     if not 0 <= address <= 0x7F:
-        raise CLIError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+        raise CLIError("EndereÃƒÂ§o de registrador deve estar entre 0x00 e 0x7F")
     return address
 
 
@@ -193,13 +195,13 @@ def _add_common_spi_arguments(parser: argparse.ArgumentParser) -> None:
 
 def _build_configure_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Configura o driver TMC5160 através do barramento SPI do Raspberry Pi",
+        description="Configura o driver TMC5160 atravÃƒÂ©s do barramento SPI do Raspberry Pi",
     )
     _add_common_spi_arguments(parser)
     parser.add_argument(
         "--no-defaults",
         action="store_true",
-        help="Não enviar o preset padrão antes dos ajustes informados",
+        help="NÃƒÂ£o enviar o preset padrÃƒÂ£o antes dos ajustes informados",
     )
     parser.add_argument(
         "--write",
@@ -207,8 +209,8 @@ def _build_configure_parser() -> argparse.ArgumentParser:
         default=[],
         metavar="REG=VAL",
         help=(
-            "Sequência adicional de escritas de registrador (pode ser repetido). "
-            "Aceita aliases (gconf, chopconf, ...) ou endereços numéricos."
+            "SequÃƒÂªncia adicional de escritas de registrador (pode ser repetido). "
+            "Aceita aliases (gconf, chopconf, ...) ou endereÃƒÂ§os numÃƒÂ©ricos."
         ),
     )
     parser.add_argument("--gconf", type=lambda x: int(x, 0), help="Valor para REG_GCONF")
@@ -230,13 +232,14 @@ def _build_configure_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--pwmconf", type=lambda x: int(x, 0), help="Valor para REG_PWMCONF"
+    parser.add_argument("--globalscaler", type=int, help="Valor para REG_GLOBAL_SCALER (0-255; 0 equivale a 256)")
     )
     return parser
 
 
 def _build_status_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Consulta os registradores do TMC5160 sem alterar a configuração",
+        description="Consulta os registradores do TMC5160 sem alterar a configuraÃƒÂ§ÃƒÂ£o",
     )
     _add_common_spi_arguments(parser)
     parser.add_argument(
@@ -252,7 +255,7 @@ def _build_status_parser() -> argparse.ArgumentParser:
         metavar="REG",
         help=(
             "Lista de registradores a serem lidos (pode ser repetido). "
-            "Aceita aliases conhecidos (gconf, gstat, drv_status, ...) ou endereços numéricos."
+            "Aceita aliases conhecidos (gconf, gstat, drv_status, ...) ou endereÃƒÂ§os numÃƒÂ©ricos."
         ),
     )
     return parser
@@ -261,8 +264,8 @@ def _build_status_parser() -> argparse.ArgumentParser:
 def _build_loop_test_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Gera um padrão repetitivo de escrita SPI para observar o barramento "
-            "com instrumentos como osciloscópio ou analisador lógico."
+            "Gera um padrÃƒÂ£o repetitivo de escrita SPI para observar o barramento "
+            "com instrumentos como osciloscÃƒÂ³pio ou analisador lÃƒÂ³gico."
         ),
     )
     _add_common_spi_arguments(parser)
@@ -270,7 +273,7 @@ def _build_loop_test_parser() -> argparse.ArgumentParser:
         "--address",
         type=_parse_register_name,
         default=REG_GCONF,
-        help=("Registrador a ser escrito (alias conhecido ou endereço numérico, default: gconf)."),
+        help=("Registrador a ser escrito (alias conhecido ou endereÃƒÂ§o numÃƒÂ©rico, default: gconf)."),
     )
     parser.add_argument(
         "--value",
@@ -284,7 +287,7 @@ def _build_loop_test_parser() -> argparse.ArgumentParser:
         default=0.01,
         help=(
             "Tempo em segundos entre mensagens consecutivas (default: 0.01). "
-            "Utilize 0 para repetir o mais rápido possível."
+            "Utilize 0 para repetir o mais rÃƒÂ¡pido possÃƒÂ­vel."
         ),
     )
     parser.add_argument(
@@ -292,21 +295,21 @@ def _build_loop_test_parser() -> argparse.ArgumentParser:
         type=int,
         default=0,
         help=(
-            "Número de repetições antes de encerrar automaticamente (0 = infinito, "
+            "NÃƒÂºmero de repetiÃƒÂ§ÃƒÂµes antes de encerrar automaticamente (0 = infinito, "
             "pressione Ctrl+C para parar)."
         ),
     )
     parser.add_argument(
         "--quiet",
         action="store_true",
-        help="Não imprimir cada resposta, apenas o resumo inicial e final.",
+        help="NÃƒÂ£o imprimir cada resposta, apenas o resumo inicial e final.",
     )
     return parser
 
 
 def _build_init_stepdir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=("Aplica configurações básicas para operar o TMC5160 em STEP/DIR externo."),
+        description=("Aplica configuraÃƒÂ§ÃƒÂµes bÃƒÂ¡sicas para operar o TMC5160 em STEP/DIR externo."),
     )
     _add_common_spi_arguments(parser)
     parser.add_argument("--ihold", type=int, default=10, help="IHOLD (0-31)")
@@ -319,20 +322,20 @@ def _build_init_stepdir_parser() -> argparse.ArgumentParser:
         type=int,
         choices=[256, 128, 64, 32, 16, 8, 4, 2, 1],
         default=16,
-        help="Resolução de microstepping para pulsos STEP externos",
+        help="ResoluÃƒÂ§ÃƒÂ£o de microstepping para pulsos STEP externos",
     )
     parser.add_argument(
         "--interpolate",
         dest="interpolate",
         action="store_true",
         default=True,
-        help="Ativa interpolação (INTPOL) para 256 micropassos",
+        help="Ativa interpolaÃƒÂ§ÃƒÂ£o (INTPOL) para 256 micropassos",
     )
     parser.add_argument(
         "--no-interpolate",
         dest="interpolate",
         action="store_false",
-        help="Desativa interpolação (INTPOL=0)",
+        help="Desativa interpolaÃƒÂ§ÃƒÂ£o (INTPOL=0)",
     )
     parser.add_argument(
         "--stealth",
@@ -357,7 +360,7 @@ def _build_init_stepdir_parser() -> argparse.ArgumentParser:
         "--tpwmthrs",
         type=lambda x: int(x, 0),
         default=0x000001F4,
-        help="TPWMTHRS (limiar de StealthChop↔SpreadCycle)",
+        help="TPWMTHRS (limiar de StealthChopÃ¢â€ â€SpreadCycle)",
     )
     return parser
 
@@ -383,7 +386,7 @@ def _build_safe_off_parser() -> argparse.ArgumentParser:
         "--toff",
         type=int,
         default=0,
-        help="TOFF (0–15). Default: 0 (desliga o chopper)",
+        help="TOFF (0Ã¢â‚¬â€œ15). Default: 0 (desliga o chopper)",
     )
     parser.add_argument(
         "--clear-gstat",
@@ -396,7 +399,7 @@ def _build_safe_off_parser() -> argparse.ArgumentParser:
 def _build_ultrafrio_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Aplica preset ultra-frio: SpreadCycle, 1/16+interpolação, TOFF/HEND ajustados, "
+            "Aplica preset ultra-frio: SpreadCycle, 1/16+interpolaÃƒÂ§ÃƒÂ£o, TOFF/HEND ajustados, "
             "correntes baixas e GLOBAL_SCALER.")
     )
     _add_common_spi_arguments(parser)
@@ -410,20 +413,20 @@ def _build_ultrafrio_parser() -> argparse.ArgumentParser:
         type=int,
         choices=[256, 128, 64, 32, 16, 8, 4, 2, 1],
         default=16,
-        help="Resolução de microstepping",
+        help="ResoluÃƒÂ§ÃƒÂ£o de microstepping",
     )
     parser.add_argument(
         "--interpolate",
         dest="interpolate",
         action="store_true",
         default=True,
-        help="Ativa interpolação (INTPOL=1) para 256 µsteps",
+        help="Ativa interpolaÃƒÂ§ÃƒÂ£o (INTPOL=1) para 256 Ã‚Âµsteps",
     )
     parser.add_argument(
         "--no-interpolate",
         dest="interpolate",
         action="store_false",
-        help="Desativa interpolação (INTPOL=0)",
+        help="Desativa interpolaÃƒÂ§ÃƒÂ£o (INTPOL=0)",
     )
     parser.add_argument("--toff", type=int, default=5, help="CHOPCONF.TOFF (0-15)")
     parser.add_argument("--hstrt", type=int, default=5, help="CHOPCONF.HSTRT (0-7)")
@@ -439,7 +442,7 @@ def _build_ultrafrio_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--clear-gstat",
         action="store_true",
-        help="Limpa GSTAT (0x07) antes de aplicar as configurações",
+        help="Limpa GSTAT (0x07) antes de aplicar as configuraÃƒÂ§ÃƒÂµes",
     )
     return parser
 
@@ -448,17 +451,17 @@ def _build_status_compact_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Mostra o status resumido dos drivers (byte de status SPI, bytes brutos), "
-            "e se houver driver_error, lê GSTAT/DRV_STATUS para diagnóstico."
+            "e se houver driver_error, lÃƒÂª GSTAT/DRV_STATUS para diagnÃƒÂ³stico."
         ),
     )
-    # Para este comando, deixe --dev opcional e ofereça --devs (lista)
+    # Para este comando, deixe --dev opcional e ofereÃƒÂ§a --devs (lista)
     parser.add_argument("--bus", type=int, default=0, help="Barramento SPI (default: 0)")
     parser.add_argument("--dev", type=int, default=None, help="Dispositivo SPI (opcional)")
     parser.add_argument(
         "--devs",
         type=str,
         default=None,
-        help="Lista de dispositivos CS separada por vírgula (ex.: 1,2,3). Ignorado se --dev for informado.",
+        help="Lista de dispositivos CS separada por vÃƒÂ­rgula (ex.: 1,2,3). Ignorado se --dev for informado.",
     )
     parser.add_argument(
         "--speed",
@@ -477,8 +480,8 @@ def _build_status_compact_parser() -> argparse.ArgumentParser:
 def _build_motion_params_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Lê parâmetros de movimentação do TMC5160 (modo, microstepping, CHOPCONF, correntes, GLOBALSCALER).\n"
-            "Observação: IHOLD_IRUN/TPOWERDOWN/PWMCONF podem ser somente-escrita no 5160; leitura tende a 0."
+            "LÃƒÂª parÃƒÂ¢metros de movimentaÃƒÂ§ÃƒÂ£o do TMC5160 (modo, microstepping, CHOPCONF, correntes, GLOBALSCALER).\n"
+            "ObservaÃƒÂ§ÃƒÂ£o: IHOLD_IRUN/TPOWERDOWN/PWMCONF podem ser somente-escrita no 5160; leitura tende a 0."
         ),
     )
     _add_common_spi_arguments(parser)
@@ -502,6 +505,7 @@ def _collect_overrides(args: argparse.Namespace) -> List[Tuple[int, int]]:
         "chopconf": args.chopconf,
         "pwmconf": args.pwmconf,
     }
+        "globalscaler": args.globalscaler,
 
     for name, value in option_map.items():
         if value is None:
@@ -525,7 +529,7 @@ def _report_missing_device(
 ) -> int:
     available = [str(path) for path in device_finder()]
     if available:
-        available_hint = "Dispositivos disponíveis: {}. ".format(", ".join(sorted(available)))
+        available_hint = "Dispositivos disponÃƒÂ­veis: {}. ".format(", ".join(sorted(available)))
     else:
         available_hint = "Nenhum dispositivo /dev/spidev* encontrado no sistema. "
 
@@ -538,7 +542,7 @@ def _report_missing_device(
 
     print(
         (
-            "Erro: dispositivo SPI '{spi}' não encontrado. {available}"
+            "Erro: dispositivo SPI '{spi}' nÃƒÂ£o encontrado. {available}"
             "Habilite o overlay SPI correspondente (ex.: {overlay}) ou ajuste --bus/--dev."
         ).format(spi=spi_node, available=available_hint, overlay=overlay_hint),
         file=sys.stderr,
@@ -548,7 +552,7 @@ def _report_missing_device(
 
 def _report_permission_denied(spi_node: str) -> int:
     print(
-        "Erro: permissão negada ao acessar '{spi}'. Execute o comando com sudo ou ajuste as "
+        "Erro: permissÃƒÂ£o negada ao acessar '{spi}'. Execute o comando com sudo ou ajuste as "
         "regras de acesso (ex.: grupo 'spi').".format(spi=spi_node),
         file=sys.stderr,
     )
@@ -610,7 +614,7 @@ def _run_motion_params(
     try:
         with configurator as driver:  # type: ignore[assignment]
             if args.clear_gstat:
-                # Limpa GSTAT para evitar flags antigas na sessão
+                # Limpa GSTAT para evitar flags antigas na sessÃƒÂ£o
                 driver.write_register(REG_GSTAT, 0x00000007)
 
             # Leitura dos registradores relevantes
@@ -619,13 +623,13 @@ def _run_motion_params(
             # Write-only em muitos 5160; ainda tentamos ler e avisamos
             r_ihir = driver.read_register(REG_IHOLD_IRUN)
             r_tpwd = driver.read_register(REG_TPOWERDOWN)
-            # GLOBAL_SCALER (0x0B) — pode ser R/W dependendo da variante
+            # GLOBAL_SCALER (0x0B) Ã¢â‚¬â€ pode ser R/W dependendo da variante
             try:
                 r_gs = driver.read_register(REG_GLOBAL_SCALER)
             except Exception:
                 r_gs = None
 
-            # Decodificação básica
+            # DecodificaÃƒÂ§ÃƒÂ£o bÃƒÂ¡sica
             gconf = r_gconf.value
             chop = r_chop.value
             ihir = r_ihir.value
@@ -650,13 +654,13 @@ def _run_motion_params(
             tpwd_ticks = tpwd & 0xFF
             tpwd_ms = (tpwd_ticks * (2 ** 18) / 12_000_000.0) * 1000.0 if tpwd_ticks else 0.0
 
-            print(f"Parâmetros (bus={args.bus}, dev={args.dev})")
+            print(f"ParÃƒÂ¢metros (bus={args.bus}, dev={args.dev})")
             print(f"- Modo             : {'SpreadCycle' if en_pwm_mode == 0 else 'StealthChop (EN_PWM_MODE=1)'}")
             if microsteps:
                 print(f"- Microstep        : 1/{microsteps}  (MRES={mres})")
             else:
                 print(f"- Microstep        : MRES={mres} (valor fora da faixa esperada)")
-            print(f"- Interpolação     : {'ON' if intpol else 'OFF'} (INTPOL={intpol})")
+            print(f"- InterpolaÃƒÂ§ÃƒÂ£o     : {'ON' if intpol else 'OFF'} (INTPOL={intpol})")
             print(f"- VSENSE           : {vsense}  (0=0,325 V; 1=0,18 V)")
             print(f"- TOFF             : {toff}")
             print(f"- TBL              : {tbl}")
@@ -670,32 +674,32 @@ def _run_motion_params(
             print(f"- IHOLDDELAY       : {iholddelay}{note_wr}")
 
             if gs is None:
-                print(f"- GLOBALSCALER     : N/D (não lido)")
+                print(f"- GLOBALSCALER     : N/D (nÃƒÂ£o lido)")
             else:
                 print(f"- GLOBALSCALER     : {gs & 0xFF}")
 
             print(f"- TPOWERDOWN       : {tpwd_ticks} (~{tpwd_ms:.1f} ms){note_wr}")
 
-            # Recomendações (perfil ultra-frio)
+            # RecomendaÃƒÂ§ÃƒÂµes (perfil ultra-frio)
             print("Recomendado (ultra-frio):")
             print("  - Modo           : SpreadCycle")
             print("  - Microstep      : 1/16 + INTPOL=1")
             print("  - VSENSE         : 0 (0,325 V)")
             print("  - TOFF/TBL       : 5 / 2")
-            print("  - HSTRT/HEND     : 5 / 2 (ajuste fino ±1)")
-            print("  - IRUN/IHOLD     : 1 / 1 (diagnóstico; ajuste conforme torque)")
-            print("  - IHOLDDELAY     : 4–8")
+            print("  - HSTRT/HEND     : 5 / 2 (ajuste fino Ã‚Â±1)")
+            print("  - IRUN/IHOLD     : 1 / 1 (diagnÃƒÂ³stico; ajuste conforme torque)")
+            print("  - IHOLDDELAY     : 4Ã¢â‚¬â€œ8")
             print("  - GLOBALSCALER   : 32 (ponto de partida)")
             print("  - TPOWERDOWN     : 20 (~2 s)")
 
     except FileNotFoundError:
-        print(f"Dispositivo /dev/spidev{args.bus}.{args.dev} não encontrado")
+        print(f"Dispositivo /dev/spidev{args.bus}.{args.dev} nÃƒÂ£o encontrado")
         return 1
     except PermissionError:
-        print(f"Permissão negada em /dev/spidev{args.bus}.{args.dev}")
+        print(f"PermissÃƒÂ£o negada em /dev/spidev{args.bus}.{args.dev}")
         return 1
     except RuntimeError as exc:
-        # Mantenha leitura parcial para auxiliar diagnóstico
+        # Mantenha leitura parcial para auxiliar diagnÃƒÂ³stico
         print(f"Erro durante leitura: {exc}")
         return 1
 
@@ -732,7 +736,7 @@ def _run_configure(
         responses: List[TMC5160TransferResult] = []
         if not args.no_defaults:
             count = len(preset.writes)
-            print(f"Aplicando preset padrão ({count} registradores)")
+            print(f"Aplicando preset padrÃƒÂ£o ({count} registradores)")
             responses.extend(driver.configure())
         if overrides:
             print("Aplicando ajustes adicionais:")
@@ -740,7 +744,7 @@ def _run_configure(
                 print(f" - 0x{address:02X} = 0x{value:08X}")
             responses.extend(driver.apply_registers(overrides))
         else:
-            print("Nenhum ajuste adicional informado; mantendo preset padrão.")
+            print("Nenhum ajuste adicional informado; mantendo preset padrÃƒÂ£o.")
 
         if responses:
             print("Respostas do TMC5160:")
@@ -749,7 +753,7 @@ def _run_configure(
                     print(_format_response(result))
                     result.raise_on_faults()
             except RuntimeError as exc:
-                # Diagnóstico detalhado com base em GSTAT e DRV_STATUS
+                # DiagnÃƒÂ³stico detalhado com base em GSTAT e DRV_STATUS
                 try:
                     gstat_read = driver.read_register(REG_GSTAT)
                     drv_read = driver.read_register(0x6F)
@@ -764,7 +768,7 @@ def _run_configure(
                     details.append(
                         f"DRV_STATUS=0x{drv_val:08X}: " + ("; ".join(drv_text) if drv_text else "")
                     )
-                    raise RuntimeError(str(exc) + " | Diagnóstico: " + " | ".join(details)) from exc
+                    raise RuntimeError(str(exc) + " | DiagnÃƒÂ³stico: " + " | ".join(details)) from exc
                 except Exception:
                     raise
 
@@ -772,7 +776,7 @@ def _run_configure(
         args,
         configurator,
         device_finder,
-        success_message="Configuração concluída.",
+        success_message="ConfiguraÃƒÂ§ÃƒÂ£o concluÃƒÂ­da.",
         operation=_operation,
     )
 
@@ -799,7 +803,7 @@ def _run_status(
     def _operation(driver):
         print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160")
         if args.clear_gstat:
-            print("Executando sequência clear-GSTAT:")
+            print("Executando sequÃƒÂªncia clear-GSTAT:")
             dummy = driver.read_register(REG_GCONF)
             print(_format_read_result(dummy))
             gstat_before = driver.read_register(REG_GSTAT)
@@ -825,7 +829,7 @@ def _run_status(
         if registers:
             print(f"Consultando registradores: {register_list}")
         else:
-            print("Nenhum registrador informado; nada será lido.")
+            print("Nenhum registrador informado; nada serÃƒÂ¡ lido.")
             return
 
         results = driver.read_registers(registers)
@@ -838,7 +842,7 @@ def _run_status(
         args,
         configurator,
         device_finder,
-        success_message="Consulta concluída.",
+        success_message="Consulta concluÃƒÂ­da.",
         operation=_operation,
     )
 
@@ -857,7 +861,7 @@ def _run_loop_test(
     if args.interval < 0:
         raise CLIError("O intervalo entre mensagens deve ser maior ou igual a zero")
     if args.iterations < 0:
-        raise CLIError("O número de repetições deve ser zero (infinito) ou positivo")
+        raise CLIError("O nÃƒÂºmero de repetiÃƒÂ§ÃƒÂµes deve ser zero (infinito) ou positivo")
 
     configurator = configurator_factory(
         bus=args.bus,
@@ -870,18 +874,18 @@ def _run_loop_test(
 
     def _operation(driver):
         print(
-            "Abrindo SPI bus={bus} dev={dev} a {speed} Hz para gerar padrão de teste".format(
+            "Abrindo SPI bus={bus} dev={dev} a {speed} Hz para gerar padrÃƒÂ£o de teste".format(
                 bus=args.bus, dev=args.dev, speed=args.speed
             )
         )
         if args.iterations:
-            print(f"Repetições solicitadas: {args.iterations}")
+            print(f"RepetiÃƒÂ§ÃƒÂµes solicitadas: {args.iterations}")
         else:
-            print("Repetições solicitadas: infinito (interrompa com Ctrl+C)")
+            print("RepetiÃƒÂ§ÃƒÂµes solicitadas: infinito (interrompa com Ctrl+C)")
         if args.interval > 0:
             print(f"Intervalo entre mensagens: {args.interval:.6f} s")
         else:
-            print("Intervalo entre mensagens: sem pausa (taxa máxima permitida pela SPI)")
+            print("Intervalo entre mensagens: sem pausa (taxa mÃƒÂ¡xima permitida pela SPI)")
 
         print(
             "Registrador {name} (0x{addr:02X}) <= 0x{value:08X}".format(
@@ -906,17 +910,17 @@ def _run_loop_test(
                 if args.interval > 0:
                     time.sleep(args.interval)
         except KeyboardInterrupt:
-            print(f"Loop interrompido pelo usuário após {count} iterações.")
+            print(f"Loop interrompido pelo usuÃƒÂ¡rio apÃƒÂ³s {count} iteraÃƒÂ§ÃƒÂµes.")
             return False
 
-        print(f"Loop concluído após {count} iterações.")
+        print(f"Loop concluÃƒÂ­do apÃƒÂ³s {count} iteraÃƒÂ§ÃƒÂµes.")
         return True
 
     return _run_spi_operation(
         args,
         configurator,
         device_finder,
-        success_message="Padrão de teste finalizado.",
+        success_message="PadrÃƒÂ£o de teste finalizado.",
         operation=_operation,
     )
 
@@ -930,7 +934,7 @@ def _run_safe_off(
     parser = _build_safe_off_parser()
     args = parser.parse_args(list(argv))
 
-    # Não aplicar preset no modo seguro
+    # NÃƒÂ£o aplicar preset no modo seguro
     configurator = configurator_factory(
         bus=args.bus,
         device=args.dev,
@@ -960,7 +964,7 @@ def _run_safe_off(
         # CHOPCONF[3:0] = TOFF
         new_chop = (chop & ~0xF) | (int(args.toff) & 0xF)
 
-        # PWMCONF: FREEWHEEL em [21:20]; também zera AUTOSCALE(18)/AUTOGRAD(19)
+        # PWMCONF: FREEWHEEL em [21:20]; tambÃƒÂ©m zera AUTOSCALE(18)/AUTOGRAD(19)
         new_pwm = (pwm & ~(0b11 << 20) & ~(1 << 18) & ~(1 << 19)) | (
             (int(args.freewheel) & 0b11) << 20
         )
@@ -1051,7 +1055,7 @@ def _run_preset_ultrafrio(
 def _build_chopconf_set_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Ajusta campos específicos de CHOPCONF preservando os demais (máscara/merge)."
+            "Ajusta campos especÃƒÂ­ficos de CHOPCONF preservando os demais (mÃƒÂ¡scara/merge)."
         ),
     )
     _add_common_spi_arguments(parser)
@@ -1061,7 +1065,7 @@ def _build_chopconf_set_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--verify",
         action="store_true",
-        help="Lê CHOPCONF após a escrita para confirmar",
+        help="LÃƒÂª CHOPCONF apÃƒÂ³s a escrita para confirmar",
     )
     return parser
 
@@ -1111,13 +1115,13 @@ def _run_chopconf_set(
 
         print(
             (
-                "CHOPCONF antes: 0x{old:08X}  →  aplicando máscara: "
+                "CHOPCONF antes: 0x{old:08X}  Ã¢â€ â€™  aplicando mÃƒÂ¡scara: "
                 "TOFF={toff}, TBL={tbl}, HSTRT={hstrt}"
             ).format(
                 old=old,
-                toff=(toff if toff is not None else '—'),
-                tbl=(tbl if tbl is not None else '—'),
-                hstrt=(hstrt if hstrt is not None else '—'),
+                toff=(toff if toff is not None else 'Ã¢â‚¬â€'),
+                tbl=(tbl if tbl is not None else 'Ã¢â‚¬â€'),
+                hstrt=(hstrt if hstrt is not None else 'Ã¢â‚¬â€'),
             )
         )
         resp = driver.write_register(REG_CHOPCONF, new)
@@ -1155,7 +1159,7 @@ def _run_chopconf_set(
             REG_GCONF,
             REG_CHOPCONF,
         ]
-        print("Leituras de verificação:")
+        print("Leituras de verificaÃƒÂ§ÃƒÂ£o:")
         results = driver.read_registers(verify_regs)
         for r in results:
             print(_format_read_result(r))
@@ -1188,33 +1192,33 @@ def _format_status_flags(byte: int) -> str:
 def _classify_drv_gstat(gstat_val: int, drv_val: int) -> str:
     # DRV_STATUS dominant failures
     if drv_val & (1 << 26):
-        return "Sobretemperatura (OT): reduza IRUN e melhore a dissipação"
+        return "Sobretemperatura (OT): reduza IRUN e melhore a dissipaÃƒÂ§ÃƒÂ£o"
     if drv_val & (1 << 25):
-        return "Pré‑aviso de sobretemperatura (OTPW): monitore temperatura/corrente"
+        return "PrÃƒÂ©Ã¢â‚¬â€˜aviso de sobretemperatura (OTPW): monitore temperatura/corrente"
     if drv_val & (1 << 24):
-        return "Curto à terra na fase A (S2GA): verifique fiação/módulo"
+        return "Curto ÃƒÂ  terra na fase A (S2GA): verifique fiaÃƒÂ§ÃƒÂ£o/mÃƒÂ³dulo"
     if drv_val & (1 << 23):
-        return "Curto à terra na fase B (S2GB): verifique fiação/módulo"
+        return "Curto ÃƒÂ  terra na fase B (S2GB): verifique fiaÃƒÂ§ÃƒÂ£o/mÃƒÂ³dulo"
     if drv_val & (1 << 22):
-        return "Curto à alimentação na fase A (S2VSA): verifique fiação/módulo"
+        return "Curto ÃƒÂ  alimentaÃƒÂ§ÃƒÂ£o na fase A (S2VSA): verifique fiaÃƒÂ§ÃƒÂ£o/mÃƒÂ³dulo"
     if drv_val & (1 << 21):
-        return "Curto à alimentação na fase B (S2VSB): verifique fiação/módulo"
+        return "Curto ÃƒÂ  alimentaÃƒÂ§ÃƒÂ£o na fase B (S2VSB): verifique fiaÃƒÂ§ÃƒÂ£o/mÃƒÂ³dulo"
     if drv_val & (1 << 20):
-        return "Open‑load na fase A (OLA): motor/cabo desconectado ou intermitente"
+        return "OpenÃ¢â‚¬â€˜load na fase A (OLA): motor/cabo desconectado ou intermitente"
     if drv_val & (1 << 19):
-        return "Open‑load na fase B (OLB): motor/cabo desconectado ou intermitente"
+        return "OpenÃ¢â‚¬â€˜load na fase B (OLB): motor/cabo desconectado ou intermitente"
 
     # GSTAT
     if gstat_val & (1 << 2):
-        return "UV_CP (subtensão do charge‑pump): confira VM/ENN/partida"
+        return "UV_CP (subtensÃƒÂ£o do chargeÃ¢â‚¬â€˜pump): confira VM/ENN/partida"
     if gstat_val & (1 << 1):
         return "DRV_ERR latched: ver DRV_STATUS para a causa"
     if gstat_val & (1 << 0):
-        return "RESET recente: limpe GSTAT ou ignore se já limpo"
+        return "RESET recente: limpe GSTAT ou ignore se jÃƒÂ¡ limpo"
 
     # Nothing found in regs
     if drv_val & (1 << 31):
-        return "Standstill (STST) sem falhas: provável 'driver_error' residual do status SPI"
+        return "Standstill (STST) sem falhas: provÃƒÂ¡vel 'driver_error' residual do status SPI"
     return "Sem falhas em GSTAT/DRV_STATUS (driver_error apenas no byte de status SPI)"
 
 
@@ -1227,9 +1231,9 @@ def _bin32(v: int) -> str:
 
 
 def _bin_with_bracket(value: int, total_bits: int, bit_start: int, bit_end: int | None = None) -> str:
-    """Renderiza o valor em binário e destaca [entre colchetes] o(s) bit(s) de interesse.
+    """Renderiza o valor em binÃƒÂ¡rio e destaca [entre colchetes] o(s) bit(s) de interesse.
 
-    Os bits são indexados MSB=total_bits-1 ... LSB=0, igual aos mapeamentos do datasheet.
+    Os bits sÃƒÂ£o indexados MSB=total_bits-1 ... LSB=0, igual aos mapeamentos do datasheet.
     """
     if bit_end is None:
         bit_end = bit_start
@@ -1239,14 +1243,14 @@ def _bin_with_bracket(value: int, total_bits: int, bit_start: int, bit_end: int 
         return _bin32(value) if total_bits == 32 else _bin8(value)
     # MSB primeiro
     bits = f"{value & ((1<<total_bits)-1):0{total_bits}b}"
-    # Converter índice de bit (MSB=total_bits-1) para índice de string (0..total_bits-1)
+    # Converter ÃƒÂ­ndice de bit (MSB=total_bits-1) para ÃƒÂ­ndice de string (0..total_bits-1)
     i0 = total_bits - 1 - bit_start
     i1 = total_bits - 1 - bit_end
     i_min, i_max = min(i0, i1), max(i0, i1)
     left = bits[:i_min]
     mid = bits[i_min:i_max+1]
     right = bits[i_max+1:]
-    # Inserir espaço antes e depois dos colchetes para evidenciar a janela
+    # Inserir espaÃƒÂ§o antes e depois dos colchetes para evidenciar a janela
     return "0b" + left + (" " if left else "") + "[" + mid + "]" + (" " if right else "") + right
 
 
@@ -1254,7 +1258,7 @@ def _format_status_bitlist(byte: int) -> str:
     labels = {
         7: ("status_stop_r", "fim de curso R"),
         6: ("status_stop_l", "fim de curso L"),
-        5: ("position_reached", "posição atingida"),
+        5: ("position_reached", "posiÃƒÂ§ÃƒÂ£o atingida"),
         4: ("velocity_reached", "velocidade atingida"),
         3: ("standstill", "parado"),
         2: ("stallguard", "stallguard"),
@@ -1275,13 +1279,13 @@ def _format_drvstatus_bitlist(value: int) -> str:
     mapping = [
         (31, "STST", "standstill"),
         (26, "OT", "sobretemperatura"),
-        (25, "OTPW", "pré‑aviso sobretemp"),
-        (24, "S2GA", "curto à terra fase A"),
-        (23, "S2GB", "curto à terra fase B"),
-        (22, "S2VSA", "curto à alimentação A"),
-        (21, "S2VSB", "curto à alimentação B"),
-        (20, "OLA", "open‑load fase A"),
-        (19, "OLB", "open‑load fase B"),
+        (25, "OTPW", "prÃƒÂ©Ã¢â‚¬â€˜aviso sobretemp"),
+        (24, "S2GA", "curto ÃƒÂ  terra fase A"),
+        (23, "S2GB", "curto ÃƒÂ  terra fase B"),
+        (22, "S2VSA", "curto ÃƒÂ  alimentaÃƒÂ§ÃƒÂ£o A"),
+        (21, "S2VSB", "curto ÃƒÂ  alimentaÃƒÂ§ÃƒÂ£o B"),
+        (20, "OLA", "openÃ¢â‚¬â€˜load fase A"),
+        (19, "OLB", "openÃ¢â‚¬â€˜load fase B"),
     ]
     lines = []
     for bit, name, desc in mapping:
@@ -1294,7 +1298,7 @@ def _format_drvstatus_bitlist(value: int) -> str:
 
 def _format_gstat_bitlist(value: int) -> str:
     mapping = [
-        (2, "UV_CP", "subtensão charge‑pump"),
+        (2, "UV_CP", "subtensÃƒÂ£o chargeÃ¢â‚¬â€˜pump"),
         (1, "DRV_ERR", "falha latched"),
         (0, "RESET", "reset detectado"),
     ]
@@ -1323,7 +1327,7 @@ def _run_status_compact(
         try:
             devs = [int(x.strip()) for x in str(args.devs).split(",") if x.strip()]
         except Exception:
-            print("Erro: formato inválido em --devs (use ex.: 1,2,3)")
+            print("Erro: formato invÃƒÂ¡lido em --devs (use ex.: 1,2,3)")
             return 1
         if not devs:
             devs = [1, 2, 3]
@@ -1375,8 +1379,8 @@ def _run_status_compact(
                 print(f"  frame_req : {req_bin}")
                 print(f"  frame_resp: {rep_bin}")
 
-                # Se driver_error aparecer no byte de status, coletar diagnóstico
-                # e marcar ERRO somente quando houver indícios reais conforme o MD:
+                # Se driver_error aparecer no byte de status, coletar diagnÃƒÂ³stico
+                # e marcar ERRO somente quando houver indÃƒÂ­cios reais conforme o MD:
                 # GSTAT: DRV_ERR/UV_CP; DRV_STATUS: OT/OTPW/S2G*/S2VS*/OL*
                 confirmed_error = False
                 if (s_req & 0x02) or (s_rep & 0x02):
@@ -1391,11 +1395,11 @@ def _run_status_compact(
                     if confirmed_error:
                         print("  ERRO: " + _classify_drv_gstat(g.value, d.value))
                 # Em seguida, mostra o status_req e flags
-                print(f"  status_req: {_bin8(s_req)} → [{_format_status_flags(s_req)}]")
+                print(f"  status_req: {_bin8(s_req)} Ã¢â€ â€™ [{_format_status_flags(s_req)}]")
                 print(_format_status_bitlist(s_req))
                 # Agora mostra status final (reply) e flags somente se diferente
                 if (s_rep != s_req) or (rep_bytes != req_bytes):
-                    print(f"  status    : {_bin8(s_rep)} → [{_format_status_flags(s_rep)}]")
+                    print(f"  status    : {_bin8(s_rep)} Ã¢â€ â€™ [{_format_status_flags(s_rep)}]")
                     print(_format_status_bitlist(s_rep))
                 if (s_req & 0x02) or (s_rep & 0x02):
                     print(f"  Diag GSTAT:")
@@ -1410,13 +1414,13 @@ def _run_status_compact(
                 if confirmed_error:
                     any_error = True
         except FileNotFoundError:
-            print(f"- CS {dev}: dispositivo /dev/spidev{args.bus}.{dev} não encontrado")
+            print(f"- CS {dev}: dispositivo /dev/spidev{args.bus}.{dev} nÃƒÂ£o encontrado")
             continue
         except PermissionError:
-            print(f"- CS {dev}: permissão negada em /dev/spidev{args.bus}.{dev}")
+            print(f"- CS {dev}: permissÃƒÂ£o negada em /dev/spidev{args.bus}.{dev}")
             continue
         except RuntimeError as exc:
-            # Não abortar a varredura dos demais
+            # NÃƒÂ£o abortar a varredura dos demais
             print(f"- CS {dev}: erro durante leitura: {exc}")
             continue
 
@@ -1440,14 +1444,14 @@ def run(
     if argv_list and argv_list[0] == "help":
         print(
             "Uso:\n"
-            "  configure [opções]         Configura registradores\n"
-            "  status [opções]            Lê registradores (suporta --clear-gstat)\n"
-            "  loop-test [opções]         Gera padrão de escrita contínuo\n"
-            "  init-stepdir [opções]      Aplica preset para STEP/DIR externo\n"
-            "  safe-off [opções]          Zera correntes, TOFF=0 e FREEWHEEL\n"
-            "  preset-ultrafrio [opções]  Aplica perfil ultra-frio (SpreadCycle/1\x2f16/TOFF=5/HEND=2)\n"
-            "  motion-params [opções]     Lê parâmetros que definem a movimentação (modo, µstep, chopper, correntes)\n"
-            "  status-compact [opções]    Status resumido 1 ou 1,2,3 (bus 0) com diag se driver_error\n"
+            "  configure [opÃƒÂ§ÃƒÂµes]         Configura registradores\n"
+            "  status [opÃƒÂ§ÃƒÂµes]            LÃƒÂª registradores (suporta --clear-gstat)\n"
+            "  loop-test [opÃƒÂ§ÃƒÂµes]         Gera padrÃƒÂ£o de escrita contÃƒÂ­nuo\n"
+            "  init-stepdir [opÃƒÂ§ÃƒÂµes]      Aplica preset para STEP/DIR externo\n"
+            "  safe-off [opÃƒÂ§ÃƒÂµes]          Zera correntes, TOFF=0 e FREEWHEEL\n"
+            "  preset-ultrafrio [opÃƒÂ§ÃƒÂµes]  Aplica perfil ultra-frio (SpreadCycle/1\x2f16/TOFF=5/HEND=2)\n"
+            "  motion-params [opÃƒÂ§ÃƒÂµes]     LÃƒÂª parÃƒÂ¢metros que definem a movimentaÃƒÂ§ÃƒÂ£o (modo, Ã‚Âµstep, chopper, correntes)\n"
+            "  status-compact [opÃƒÂ§ÃƒÂµes]    Status resumido 1 ou 1,2,3 (bus 0) com diag se driver_error\n"
         )
         return 0
 
@@ -1511,7 +1515,7 @@ def run(
             device_finder=device_finder,
         )
 
-    # Fallback: se o usuário passou flags de CHOPCONF sem subcomando, trata como chopconf-set
+    # Fallback: se o usuÃƒÂ¡rio passou flags de CHOPCONF sem subcomando, trata como chopconf-set
     if argv_list and any(arg.startswith("--toff") or arg.startswith("--tbl") or arg.startswith("--hstrt") for arg in argv_list):
         return _run_chopconf_set(
             argv_list,
@@ -1523,7 +1527,7 @@ def run(
     if argv_list and argv_list[0] == "configure":
         argv_list = argv_list[1:]
 
-    # Padrão: configurar
+    # PadrÃƒÂ£o: configurar
     return _run_configure(
         argv_list,
         configurator_factory=configurator_factory,
@@ -1531,7 +1535,7 @@ def run(
     )
 
 
-def main() -> int:  # pragma: no cover - camada fina de execução
+def main() -> int:  # pragma: no cover - camada fina de execuÃƒÂ§ÃƒÂ£o
     try:
         return run()
     except CLIError as exc:

@@ -202,6 +202,24 @@ static inline int8_t motion_clamp_error(int32_t value) {
     return (int8_t)value;
 }
 
+/* Soma restante (em passos) no eixo, incluindo segmento ativo + fila
+ * Usado para decidir desaceleração suave no final da lista de movimentos. */
+static uint32_t motion_remaining_steps_total_for_axis(uint8_t axis)
+{
+    uint32_t rem = 0u;
+    if (axis < MOTION_AXIS_COUNT) {
+        const motion_axis_state_t *ax = &g_axis_state[axis];
+        if (ax->total_steps > ax->emitted_steps)
+            rem += (ax->total_steps - ax->emitted_steps);
+    }
+    for (uint8_t i = 0; i < g_queue_count; ++i) {
+        uint8_t idxq = (uint8_t)((g_queue_head + i) % MOTION_QUEUE_CAPACITY);
+        const move_queue_add_req_t *q = &g_queue[idxq].req;
+        rem += motion_total_for_axis(q, axis);
+    }
+    return rem;
+}
+
 /* =======================
  *  Status e fila
  * ======================= */
@@ -333,7 +351,10 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
             else              ax->queue_inc_q16 = Q16_DIV_UINT(v_sps, MOTION_TIM6_HZ);
         }
         ax->v_target_sps      = ((uint32_t)velTick) * 1000u;  /* steps/s alvo (derivado do seu campo) */
-        ax->v_actual_sps      = 0u;
+        /* Preserva v_actual_sps ao encadear segmentos (rampa só no início da lista) */
+        if (g_status.state != MOTION_RUNNING) {
+            ax->v_actual_sps  = 0u;
+        }
         ax->accel_sps2        = DEMO_ACCEL_SPS2;
 
         motion_hw_step_low(axis);
@@ -670,13 +691,50 @@ void motion_on_tim7_tick(void)
             ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
         }
     }
-    /* Caminho da fila: define incremento DDA a partir de velocity_per_tick */
+    /* Caminho da fila: rampa trapezoidal (acelera/cruza/desacelera) e define incremento DDA */
     if (g_status.state == MOTION_RUNNING && g_has_active_segment && !g_demo_continuous) {
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
             motion_axis_state_t *ax = &g_axis_state[axis];
-            if (ax->emitted_steps >= ax->total_steps) continue;
-            uint32_t v_sps = ((uint32_t)ax->velocity_per_tick) * 1000u;
-            ax->dda_inc_q16 = Q16_DIV_UINT(v_sps, MOTION_TIM6_HZ);
+            /* Mesmo que o segmento ativo para este eixo tenha zerado, podemos ter
+               passos remanescentes na fila — mantemos a rampa global da lista. */
+
+            uint32_t v_cmd_sps = ((uint32_t)ax->velocity_per_tick) * 1000u; /* alvo/cruzeiro */
+            uint32_t a_sps2    = (ax->accel_sps2 > 0u) ? ax->accel_sps2 : DEMO_ACCEL_SPS2;
+            uint32_t dv        = a_sps2 / 1000u; /* Δv por tick (~1ms) */
+            if (dv == 0u) dv = 1u;
+
+            /* Distância restante total (ativo + fila) em passos */
+            uint32_t rem_steps = motion_remaining_steps_total_for_axis(axis);
+
+            /* Distância necessária para frear de v para 0: s = v^2 / (2a) */
+            uint32_t v_now = ax->v_actual_sps;
+            uint32_t s_brake = 0u;
+            if (a_sps2 > 0u && v_now > 0u) {
+                uint64_t vv = (uint64_t)v_now * (uint64_t)v_now;
+                uint64_t denom = (uint64_t)(2u * a_sps2);
+                s_brake = (uint32_t)(vv / denom);
+            }
+
+            /* Política de rampa:
+             * - Se já estamos perto do final (rem_steps <= s_brake): desacelera.
+             * - Caso contrário, acelera até v_cmd_sps; se passou, reduz até v_cmd_sps. */
+            if (rem_steps <= s_brake) {
+                if (v_now > dv) ax->v_actual_sps = v_now - dv; else ax->v_actual_sps = 0u;
+            } else if (v_now < v_cmd_sps) {
+                uint32_t v = v_now + dv;
+                ax->v_actual_sps = (v > v_cmd_sps) ? v_cmd_sps : v;
+            } else if (v_now > v_cmd_sps) {
+                uint32_t v = (v_now > dv) ? (v_now - dv) : 0u;
+                ax->v_actual_sps = (v < v_cmd_sps) ? v_cmd_sps : v;
+            } else {
+                /* v_now == v_cmd_sps */
+            }
+
+            /* Se não há mais nada a emitir neste eixo, força zero */
+            if (rem_steps == 0u) ax->v_actual_sps = 0u;
+
+            /* Incremento do DDA a 50 kHz */
+            ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
         }
     }
     
