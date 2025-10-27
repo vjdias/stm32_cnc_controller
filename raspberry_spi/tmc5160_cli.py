@@ -574,17 +574,15 @@ def run_status(argv: Sequence[str]) -> int:
                 payload["gstat"] = {
                     "value": r_g.value,
                     "value_hex": f"0x{r_g.value:08X}",
-                    "bin32": _bin32(r_g.value),
-                    "req_bin5": _bin5_bytes(r_g.request.response),
-                    "resp_bin5": _bin5_bytes(r_g.reply.response),
+                    "req": _bin5_bytes(r_g.request.response),
+                    "resp": _bin5_bytes(r_g.reply.response),
                 }
             if r_d is not None:
                 payload["drv_status"] = {
                     "value": r_d.value,
                     "value_hex": f"0x{r_d.value:08X}",
-                    "bin32": _bin32(r_d.value),
-                    "req_bin5": _bin5_bytes(r_d.request.response),
-                    "resp_bin5": _bin5_bytes(r_d.reply.response),
+                    "req": _bin5_bytes(r_d.request.response),
+                    "resp": _bin5_bytes(r_d.reply.response),
                 }
             if not getattr(args, "errors", False):
                 regs_out = []
@@ -594,8 +592,8 @@ def run_status(argv: Sequence[str]) -> int:
                         "address": r.address,
                         "value": r.value,
                         "value_hex": f"0x{r.value:08X}",
-                        "req_bin5": _bin5_bytes(r.request.response),
-                        "resp_bin5": _bin5_bytes(r.reply.response),
+                        "req": _bin5_bytes(r.request.response),
+                        "resp": _bin5_bytes(r.reply.response),
                     })
                 payload["registers"] = regs_out
             print(_json.dumps(payload, ensure_ascii=False, indent=2))
@@ -608,13 +606,13 @@ def run_status(argv: Sequence[str]) -> int:
             if r_g is not None:
                 print(f"- GSTAT (0x01) => 0x{r_g.value:08X}")
                 print(f"  binario: {_bin32(r_g.value)}")
-                print(f"  req (5B): {_bin5_bytes(r_g.request.response)}")
-                print(f"  resp(5B): {_bin5_bytes(r_g.reply.response)}")
+                print(f"  req: {_bin5_bytes(r_g.request.response)}")
+                print(f"  resp): {_bin5_bytes(r_g.reply.response)}")
             if r_d is not None:
                 print(f"- DRV_STATUS (0x6F) => 0x{r_d.value:08X}")
                 print(f"  binario: {_bin32(r_d.value)}")
-                print(f"  req (5B): {_bin5_bytes(r_d.request.response)}")
-                print(f"  resp(5B): {_bin5_bytes(r_d.reply.response)}")
+                print(f"  req: {_bin5_bytes(r_d.request.response)}")
+                print(f"  resp: {_bin5_bytes(r_d.reply.response)}")
             if errors:
                 print("Erros detectados:")
                 for e in errors:
@@ -625,8 +623,8 @@ def run_status(argv: Sequence[str]) -> int:
         # Caso padrão: imprime registradores + binários + resumo de erros
         for r in results:
             print(_format_read_result(r))
-            print(f"  Requisicao binaria (5B): {_bin5_bytes(r.request.response)}")
-            print(f"  Resposta   binaria (5B): {_bin5_bytes(r.reply.response)}")
+            print(f"  Requisicao binaria: {_bin5_bytes(r.request.response)}")
+            print(f"  Resposta   binaria: {_bin5_bytes(r.reply.response)}")
         if errors:
             print("Erros detectados:")
             for e in errors:
@@ -804,10 +802,10 @@ def run_errors(argv: Sequence[str]) -> int:
             errors = _summarize_errors(r_gstat.value, r_drv.value)
             print(f"- GSTAT (0x01) => 0x{r_gstat.value:08X}")
             print(f"  binario: {_bin32(r_gstat.value)}")
-            print(f"  resposta (5B): {_bin5_bytes(r_gstat.reply.response)}")
+            print(f"  resposta: {_bin5_bytes(r_gstat.reply.response)}")
             print(f"- DRV_STATUS (0x6F) => 0x{r_drv.value:08X}")
             print(f"  binario: {_bin32(r_drv.value)}")
-            print(f"  resposta (5B): {_bin5_bytes(r_drv.reply.response)}")
+            print(f"  resposta: {_bin5_bytes(r_drv.reply.response)}")
             if errors:
                 print("Erros detectados:")
                 for e in errors:
