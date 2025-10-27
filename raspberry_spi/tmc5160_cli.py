@@ -5,7 +5,7 @@
 Permite ajustar mútiplos parmetros de forma unitaria ou combinada, com
 validação de faixas e checagem de segurança de corrente (I_rms <= 2 A por padrão).
 
-Uso rÃ¡pido:
+Uso rapido:
   - Ajustar MRES=1/256 e TOFF=3, preservando demais campos:
       python3 -m raspberry_spi.tmc5160_cli set --bus 0 --dev 3 \
           --microsteps 256 --toff 3
@@ -190,6 +190,8 @@ def _build_set_parser() -> argparse.ArgumentParser:
     # Segurança/calculo
     p.add_argument("--sense-resistor", type=float, default=0.075, help="R_SENSE em ohms (default: 0.075)")
     p.add_argument("--max-irms", type=float, default=2.0, help="Corrente RMS mÃ¡xima permitida (A). Default: 2.0")
+    # SaÃ­da estruturada
+    p.add_argument("--json", action="store_true", help="Saida JSON estruturada do que foi aplicado")
 
     # GLOBALSCALER (0x0B)
     p.add_argument("--globalscaler", type=int, help="GLOBALSCALER (0 ou 32..255; 0 equivale a 256)")
@@ -361,15 +363,17 @@ def run_set(argv: Sequence[str]) -> int:
         prev_gs, prev_irun = 256, 0
     gs_eff = gs if gs is not None else prev_gs
     irun_eff = irun if irun is not None else prev_irun
+    irms_est = None
     try:
         irms_est = estimate_irms(gs_eff, irun_eff, r_sense=args.sense_resistor)
-        print(
-            "IRMS estimada com GS={} e IRUN={} (R_SENSE={} ohm): {:.2f} A".format(
-                gs_eff, irun_eff, args.sense_resistor, irms_est
+        if not getattr(args, "json", False):
+            print(
+                "IRMS estimada com GS={} e IRUN={} (R_SENSE={} ohm): {:.2f} A".format(
+                    gs_eff, irun_eff, args.sense_resistor, irms_est
+                )
             )
-        )
     except Exception:
-        pass
+        irms_est = None
 
     # GLOBALSCALER (0x0B) â€” write-only
     if gs is not None:
@@ -506,7 +510,25 @@ def run_set(argv: Sequence[str]) -> int:
 
     # Aplicar
     if not writes:
-        print("Nada a escrever. Informe parÃ¢metros com --param valor")
+        if getattr(args, "json", False):
+            import json as _json
+            payload = {
+                "bus": args.bus,
+                "dev": args.dev,
+                "speed": args.speed,
+                "irms": {
+                    "gs": gs_eff,
+                    "irun": irun_eff,
+                    "r_sense": args.sense_resistor,
+                    "estimate": irms_est,
+                },
+                "writes": [],
+                "ok": False,
+                "error": "Nada a escrever. Informe parâmetros com --param valor",
+            }
+            print(_json.dumps(payload, ensure_ascii=False))
+        else:
+            print("Nada a escrever. Informe parÃ¢metros com --param valor")
         return 1
 
     configurator = TMC5160Configurator(
@@ -518,12 +540,52 @@ def run_set(argv: Sequence[str]) -> int:
 
     with configurator as driver:  # type: ignore
         _record_writes(args.bus, args.dev, writes)
-        print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para aplicar parÃ¢metros")
-        for addr, val in writes:
-            print(f" - 0x{addr:02X} = 0x{val:08X}")
+        if not getattr(args, "json", False):
+            print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para aplicar parÃ¢metros")
+            for addr, val in writes:
+                print(f" - 0x{addr:02X} = 0x{val:08X}")
         res = driver.apply_registers(writes)
-        for r in res:
-            print(f"  -> 0x{r.address:02X} <= 0x{r.value:08X}  status=0x{r.status.raw:02X}")
+        if getattr(args, "json", False):
+            import json as _json
+            payload = {
+                "bus": args.bus,
+                "dev": args.dev,
+                "speed": args.speed,
+                "irms": {
+                    "gs": gs_eff,
+                    "irun": irun_eff,
+                    "r_sense": args.sense_resistor,
+                    "estimate": irms_est,
+                },
+                "writes": [
+                    {
+                        "address": int(addr),
+                        "address_hex": f"0x{addr:02X}",
+                        "name": REG_NAMES.get(addr, None),
+                        "value": int(val),
+                        "value_hex": f"0x{val:08X}",
+                        "value_bin": _bin32(int(val)),
+                    }
+                    for addr, val in writes
+                ],
+                "results": [
+                    {
+                        "address": (int(r.address) & 0x7F),
+                        "address_hex": f"0x{(int(r.address) & 0x7F):02X}",
+                        "status": int(r.status.raw),
+                        "status_hex": f"0x{int(r.status.raw):02X}",
+                        "response": r.raw_hex,
+                        "previous_data": int(r.previous_data),
+                        "previous_data_hex": f"0x{int(r.previous_data):08X}",
+                    }
+                    for r in res
+                ],
+                "ok": True,
+            }
+            print(_json.dumps(payload, ensure_ascii=False))
+        else:
+            for r in res:
+                print(f"  -> 0x{r.address:02X} <= 0x{r.value:08X}  status=0x{r.status.raw:02X}")
     return 0
 
 
@@ -531,7 +593,7 @@ def _format_read_result(res: TMC5160ReadResult) -> str:
     name = {REG_GCONF:"GCONF", REG_CHOPCONF:"CHOPCONF", REG_DRV_STATUS:"DRV_STATUS", REG_GSTAT:"GSTAT"}.get(res.address, f"0x{res.address:02X}")
     lines = [
         f"{name} (0x{res.address:02X}) => 0x{res.value:08X}",
-        f"  Requisição: status=0x{res.request.status.raw:02X}, resposta={res.request.raw_hex}",
+        f"  Requisição  : status=0x{res.request.status.raw:02X}, resposta={res.request.raw_hex}",
         f"  Resposta útil: status=0x{res.reply.status.raw:02X}, resposta={res.reply.raw_hex}",
     ]
     dec = decode_register_value(res.address, res.value)
@@ -930,4 +992,3 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
