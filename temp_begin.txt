@@ -1,0 +1,48 @@
+static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
+    if (!seg) return;
+
+    g_has_active_segment = 1u;
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        motion_axis_state_t *ax = &g_axis_state[axis];
+        uint32_t total   = motion_total_for_axis(seg, axis);
+        uint16_t velTick = motion_velocity_for_axis(seg, axis);
+
+        ax->total_steps       = total;
+        ax->target_steps      = 0u;
+        ax->emitted_steps     = 0u;
+
+        ax->velocity_per_tick = velTick;
+        ax->kp = motion_kp_for_axis(seg, axis);
+        ax->ki = motion_ki_for_axis(seg, axis);
+        ax->kd = motion_kd_for_axis(seg, axis);
+
+        /* guardas para atender DIR/ENABLE timings do TMC5160 */
+        ax->step_high         = 0u;
+        ax->step_low          = 0u; /* tLOW inicia zerado; será aplicado após o 1º pulso */
+        ax->en_settle_ticks   = (total > 0u) ? MOTION_ENABLE_SETTLE_TICKS : 0u;
+        ax->dir_settle_ticks  = MOTION_DIR_SETUP_TICKS;
+
+        /* zera DDA/rampa (não atrapalha caminho de fila) */
+        ax->dda_accum_q16     = 0u;
+        ax->dda_inc_q16       = 0u;
+        ax->v_target_sps      = ((uint32_t)velTick) * 1000u;  /* steps/s alvo (derivado do seu campo) */
+        ax->v_actual_sps      = 0u;
+        ax->accel_sps2        = DEMO_ACCEL_SPS2;
+
+        motion_hw_step_low(axis);
+        motion_hw_set_dir(axis, (uint8_t)((seg->dirMask >> axis) & 0x1u));
+
+        if (total > 0u) motion_hw_enable(axis, 1u);
+        else            motion_hw_enable(axis, 0u);
+
+        g_encoder_origin[axis] = g_encoder_position[axis];
+    }
+#if MOTION_DEBUG_FLOW
+    printf("[FLOW begin_segment dirMask=0x%02X V(x,y,z)=(%u,%u,%u) S(x,y,z)=(%lu,%lu,%lu) ]\r\n",
+           (unsigned)seg->dirMask,
+           (unsigned)seg->vx, (unsigned)seg->vy, (unsigned)seg->vz,
+           (unsigned long)motion_total_for_axis(seg, AXIS_X),
+           (unsigned long)motion_total_for_axis(seg, AXIS_Y),
+           (unsigned long)motion_total_for_axis(seg, AXIS_Z));
+#endif
+}

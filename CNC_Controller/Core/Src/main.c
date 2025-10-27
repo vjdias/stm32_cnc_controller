@@ -111,12 +111,11 @@ int main(void)
     board_config_apply_motion_gpio();
     board_config_force_encoder_quadrature();
     board_config_apply_interrupt_priorities();
-    //board_config_apply_spi_dma_profile();
     app_init();
     // Inicia timers do laço de passos (TIM6) e controle/status (TIM7)
     HAL_TIM_Base_Start_IT(&htim6);
     HAL_TIM_Base_Start_IT(&htim7);
-    motion_demo_set_continuous(1);
+    //motion_demo_set_continuous(1);    /* Demo contínuo desativado: SPI controla movimento */
   /* USER CODE END 2 */
 
   /* Infinite loop */

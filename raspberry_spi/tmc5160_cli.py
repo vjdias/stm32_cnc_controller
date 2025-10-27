@@ -1055,6 +1055,7 @@ def _build_chopconf_set_parser() -> argparse.ArgumentParser:
         ),
     )
     _add_common_spi_arguments(parser)
+    parser.add_argument("--toff", type=int, default=None, help="TOFF (0-15)")
     parser.add_argument("--tbl", type=int, default=None, help="TBL (0-3)")
     parser.add_argument("--hstrt", type=int, default=None, help="HSTRT (0-7)")
     parser.add_argument(
@@ -1074,10 +1075,14 @@ def _run_chopconf_set(
     parser = _build_chopconf_set_parser()
     args = parser.parse_args(list(argv))
 
+    toff = args.toff
     tbl = args.tbl
     hstrt = args.hstrt
-    if tbl is None and hstrt is None:
-        print("Nada a fazer: informe ao menos --tbl ou --hstrt")
+    if toff is None and tbl is None and hstrt is None:
+        print("Nada a fazer: informe ao menos --toff, --tbl ou --hstrt")
+        return 1
+    if toff is not None and not (0 <= int(toff) <= 15):
+        print("--toff fora da faixa (0-15)")
         return 1
     if tbl is not None and not (0 <= int(tbl) <= 3):
         print("--tbl fora da faixa (0-3)")
@@ -1097,13 +1102,23 @@ def _run_chopconf_set(
         before = driver.read_register(REG_CHOPCONF)
         old = before.value
         new = int(old)
+        if toff is not None:
+            new = (new & ~0xF) | (int(toff) & 0xF)
         if tbl is not None:
             new = (new & ~(0x3 << 15)) | ((int(tbl) & 0x3) << 15)
         if hstrt is not None:
             new = (new & ~(0x7 << 4)) | ((int(hstrt) & 0x7) << 4)
 
         print(
-            f"CHOPCONF antes: 0x{old:08X}  →  aplicando máscara: TBL={tbl if tbl is not None else '—'}, HSTRT={hstrt if hstrt is not None else '—'}"
+            (
+                "CHOPCONF antes: 0x{old:08X}  →  aplicando máscara: "
+                "TOFF={toff}, TBL={tbl}, HSTRT={hstrt}"
+            ).format(
+                old=old,
+                toff=(toff if toff is not None else '—'),
+                tbl=(tbl if tbl is not None else '—'),
+                hstrt=(hstrt if hstrt is not None else '—'),
+            )
         )
         resp = driver.write_register(REG_CHOPCONF, new)
         print(_format_response(resp))
