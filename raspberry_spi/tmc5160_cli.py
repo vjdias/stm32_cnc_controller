@@ -531,7 +531,7 @@ def _format_read_result(res: TMC5160ReadResult) -> str:
     name = {REG_GCONF:"GCONF", REG_CHOPCONF:"CHOPCONF", REG_DRV_STATUS:"DRV_STATUS", REG_GSTAT:"GSTAT"}.get(res.address, f"0x{res.address:02X}")
     lines = [
         f"{name} (0x{res.address:02X}) => 0x{res.value:08X}",
-        f"  Requisição  : status=0x{res.request.status.raw:02X}, resposta={res.request.raw_hex}",
+        f"  Requisição: status=0x{res.request.status.raw:02X}, resposta={res.request.raw_hex}",
         f"  Resposta útil: status=0x{res.reply.status.raw:02X}, resposta={res.reply.raw_hex}",
     ]
     dec = decode_register_value(res.address, res.value)
