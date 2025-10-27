@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""CLI avanÃ§ada para configurar o TMC5160 (ajuste validado por datasheet).
+
+Permite ajustar mÃºltiplos parÃ¢metros de forma unitÃ¡ria ou combinada, com
+validaÃ§Ã£o de faixas e checagem de seguranÃ§a de corrente (I_rms <= 2 A por padrÃ£o).
+
+Uso rÃ¡pido:
+  - Ajustar MRES=1/256 e TOFF=3, preservando demais campos:
+      python3 -m raspberry_spi.tmc5160_cli set --bus 0 --dev 3 \
+          --microsteps 256 --toff 3
+
+  - Limitar corrente: GLOBALSCALER=32, IRUN=8, IHOLD=2, TPOWERDOWN=0x14:
+      python3 -m raspberry_spi.tmc5160_cli set --bus 0 --dev 3 \
+          --globalscaler 32 --irun 8 --ihold 2 --ihold-delay 6 --tpowerdown 0x14
+
+  - Status resumido (legÃ­vel):
+      python3 -m raspberry_spi.tmc5160_cli status --bus 0 --dev 3
+"""
+from __future__ import annotations
+
+import argparse
+import math
+from typing import Iterable, List, Optional, Sequence, Tuple
+
+try:
+    import sys
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+except Exception:
+    pass
+
+try:
+    from .tmc5160 import (
+        REG_GCONF,
+        REG_GSTAT,
+        REG_GLOBAL_SCALER,
+        REG_IHOLD_IRUN,
+        REG_TPOWERDOWN,
+        REG_TPWMTHRS,
+        REG_CHOPCONF,
+        REG_COOLCONF,
+        REG_PWMCONF,
+        REG_DRV_STATUS,
+        REG_DRV_CONF,
+        REG_SHORT_CONF,
+        TMC5160Configurator,
+        TMC5160RegisterPreset,
+        TMC5160ReadResult,
+        decode_register_value,
+    )
+except Exception:  # execuÃ§Ã£o direta
+    from tmc5160 import (  # type: ignore
+        REG_GCONF,
+        REG_GSTAT,
+        REG_GLOBAL_SCALER,
+        REG_IHOLD_IRUN,
+        REG_TPOWERDOWN,
+        REG_TPWMTHRS,
+        REG_CHOPCONF,
+        REG_COOLCONF,
+        REG_PWMCONF,
+        REG_DRV_STATUS,
+        REG_DRV_CONF,
+        REG_SHORT_CONF,
+        TMC5160Configurator,
+        TMC5160RegisterPreset,
+        TMC5160ReadResult,
+        decode_register_value,
+    )
+
+
+# --------- Utilidades de conversÃ£o/validaÃ§Ã£o ---------
+def clamp(v: int, lo: int, hi: int) -> int:
+    return hi if v > hi else lo if v < lo else v
+
+
+def microsteps_to_mres(ms: int) -> int:
+    table = {256: 0, 128: 1, 64: 2, 32: 3, 16: 4, 8: 5, 4: 6, 2: 7, 1: 8}
+    if ms not in table:
+        raise ValueError("microsteps deve ser um de: 256,128,64,32,16,8,4,2,1")
+    return table[ms]
+
+
+def mres_to_microsteps(code: int) -> Optional[int]:
+    rev = {0: 256, 1: 128, 2: 64, 3: 32, 4: 16, 5: 8, 6: 4, 7: 2, 8: 1}
+    return rev.get(code)
+
+
+def estimate_irms(globalscaler: int, cs: int, r_sense: float = 0.075, v_fs: float = 0.325) -> float:
+    """Estimativa de I_rms conforme modelagem usada no projeto.
+
+    I_fs_rms = (GS/256) * V_fs / (R_sense*sqrt(2))
+    I_rms    = I_fs_rms * (CS+1)/32
+    """
+    gs = 256 if globalscaler == 0 else globalscaler
+    cs = clamp(int(cs), 0, 31)
+    i_fs_rms = (gs / 256.0) * (v_fs / (r_sense * math.sqrt(2.0)))
+    return i_fs_rms * ((cs + 1) / 32.0)
+
+
+# --------- PersistÃªncia de Ãºltimos valores escritos (para W-only) ---------
+import json
+from pathlib import Path
+
+STATE_DIR = Path.home() / ".config" / "tmc5160_tuner"
+STATE_FILE = STATE_DIR / "state.json"
+
+# Registradores write-only que queremos reapresentar no status
+WRITE_ONLY_REGS = (
+    REG_GLOBAL_SCALER,      # 0x0B
+    REG_IHOLD_IRUN,         # 0x10
+    REG_TPOWERDOWN,         # 0x11
+    REG_TPWMTHRS,           # 0x13
+    0x14,                   # TCOOLTHRS
+    0x15,                   # THIGH
+    REG_COOLCONF,           # 0x6D
+    REG_PWMCONF,            # 0x70
+    REG_DRV_CONF,           # 0x0A
+    REG_SHORT_CONF,         # 0x09

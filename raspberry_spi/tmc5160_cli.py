@@ -7,21 +7,28 @@ validaÃ§Ã£o de faixas e checagem de seguranÃ§a de corrente (I_rms <= 2 A p
 
 Uso rÃ¡pido:
   - Ajustar MRES=1/256 e TOFF=3, preservando demais campos:
-      python3 -m raspberry_spi.tmc5160_tuner_cli set --bus 0 --dev 3 \
+      python3 -m raspberry_spi.tmc5160_cli set --bus 0 --dev 3 \
           --microsteps 256 --toff 3
 
   - Limitar corrente: GLOBALSCALER=32, IRUN=8, IHOLD=2, TPOWERDOWN=0x14:
-      python3 -m raspberry_spi.tmc5160_tuner_cli set --bus 0 --dev 3 \
+      python3 -m raspberry_spi.tmc5160_cli set --bus 0 --dev 3 \
           --globalscaler 32 --irun 8 --ihold 2 --ihold-delay 6 --tpowerdown 0x14
 
   - Status resumido (legÃ­vel):
-      python3 -m raspberry_spi.tmc5160_tuner_cli status --bus 0 --dev 3
+      python3 -m raspberry_spi.tmc5160_cli status --bus 0 --dev 3
 """
 from __future__ import annotations
 
 import argparse
 import math
 from typing import Iterable, List, Optional, Sequence, Tuple
+import os, sys
+
+# Garante que o diretório deste arquivo está no sys.path para evitar
+# importar um tmc5160.py de outro local (ex.: diretório raiz do repo).
+_HERE = os.path.dirname(__file__)
+if _HERE and _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
 
 try:
     import sys
@@ -339,6 +346,29 @@ def run_set(argv: Sequence[str]) -> int:
 
     writes: List[Tuple[int, int]] = []
 
+    # Estimativa de IRMS para informar sempre no set()
+    # Usa valores novos (se passados) ou os ultimos persistidos (state.json).
+    try:
+        state = _load_state()
+        key = f"{args.bus}.{args.dev}"
+        prev = state.get(key, {}) if isinstance(state, dict) else {}
+        prev_gs = int(prev.get("0x0B", 256))
+        prev_ihold_irun = int(prev.get("0x10", 0))
+        prev_irun = (prev_ihold_irun >> 8) & 0x1F
+    except Exception:
+        prev_gs, prev_irun = 256, 0
+    gs_eff = gs if gs is not None else prev_gs
+    irun_eff = irun if irun is not None else prev_irun
+    try:
+        irms_est = estimate_irms(gs_eff, irun_eff, r_sense=args.sense_resistor)
+        print(
+            "IRMS estimada com GS={} e IRUN={} (R_SENSE={} ohm): {:.2f} A".format(
+                gs_eff, irun_eff, args.sense_resistor, irms_est
+            )
+        )
+    except Exception:
+        pass
+
     # GLOBALSCALER (0x0B) â€” write-only
     if gs is not None:
         if not (gs == 0 or 32 <= gs <= 255):
@@ -621,6 +651,93 @@ def run_get(argv: Sequence[str]) -> int:
     return 0
 
 
+def _build_security_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Security operations for TMC5160")
+    _add_common_spi_arguments(p)
+    p.add_argument(
+        "mode",
+        choices=["off", "on"],
+        help=(
+            "off: desabilita corrente (IHOLD/IRUN=0, FREEWHEEL=3, TOFF=0); "
+            "on: preset seguro (IHOLD/IRUN=0, FREEWHEEL=0, TOFF=3)."
+        ),
+    )
+    return p
+
+
+def run_security(argv: Sequence[str]) -> int:
+    p = _build_security_parser()
+    args = p.parse_args(list(argv))
+
+    # Modo OFF: desabilitar corrente e chopper; Modo ON: preset seguro
+    writes: List[Tuple[int, int]] = []
+
+    if args.mode == "off":
+        # 1) Zero currents (IHOLD/IRUN = 0)
+        writes.append((REG_IHOLD_IRUN, 0x00000000))
+        # 2) PWMCONF: FREEWHEEL=3 (freewheeling)
+        pwm_val = (3 & 0x3) << 20
+        writes.append((REG_PWMCONF, pwm_val))
+        # 3) CHOPCONF: TOFF=0 (disable chopper/outputs)
+        with TMC5160Configurator(
+            bus=args.bus,
+            device=args.dev,
+            speed_hz=args.speed,
+            register_preset=TMC5160RegisterPreset(writes=tuple()),
+        ) as d:
+            old_chop = d.read_register(REG_CHOPCONF).value
+        new_chop = (old_chop & ~0x0F) | 0x00
+        writes.append((REG_CHOPCONF, new_chop))
+        action_desc = "aplicar security off"
+    else:
+        # Security ON: preset seguro de baixa corrente e chopper ativo
+        # GLOBALSCALER baixo (32), IHOLD/IRUN mínimos, FREEWHEEL=0, TOFF=3, TBL=2, HSTRT/HEND=5/2,
+        # MRES=1/16 com interpolação.
+        writes.append((REG_GLOBAL_SCALER, 32))  # 0x20
+        # iholddelay=6, irun=0, ihold=0 (corrente mínima 1/32)
+        writes.append((REG_IHOLD_IRUN, (6 << 16)))
+        # PWMCONF default seguro (autoscale/autograd ON, freewheel=0, ofs/grad moderados)
+        writes.append((REG_PWMCONF, 0xC10D0024))
+        # Monta CHOPCONF seguro
+        toff = 3
+        hstrt = 5
+        hend = 2
+        tbl = 2
+        mres = 4  # 1/16
+        intpol = 1
+        chop = 0
+        chop |= (toff & 0x0F)
+        chop |= (hstrt & 0x07) << 4
+        chop |= (hend & 0x0F) << 7
+        chop |= (tbl & 0x03) << 15
+        chop |= (mres & 0x0F) << 24
+        chop |= (intpol & 0x01) << 28
+        writes.append((REG_CHOPCONF, chop))
+        action_desc = "aplicar security on (preset seguro)"
+
+    configurator = TMC5160Configurator(
+        bus=args.bus,
+        device=args.dev,
+        speed_hz=args.speed,
+        register_preset=TMC5160RegisterPreset(writes=tuple()),
+    )
+    with configurator as driver:  # type: ignore
+        print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para {action_desc}")
+        _record_writes(args.bus, args.dev, writes)
+        for addr, val in writes:
+            print(f" - 0x{addr:02X} = 0x{val:08X}")
+        res = driver.apply_registers(writes)
+        for r in res:
+            print(f"  -> 0x{r.address:02X} <= 0x{r.value:08X}  status=0x{r.status.raw:02X}")
+    if args.mode == "off":
+        print("Security off aplicado: IHOLD/IRUN=0, PWM FREEWHEEL=3, CHOPCONF.TOFF=0.")
+        print("Motores sem corrente. Para reativar, use 'security on' ou 'set'.")
+    else:
+        print("Security on aplicado: GS=32, IHOLD/IRUN=0, TOFF=3, TBL=2, HSTRT/HEND=5/2, MRES=1/16 + INTPOL.")
+        print("Sistema em estado seguro com corrente mínima e chopper ligado.")
+    return 0
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     import sys
     if argv is None:
@@ -635,6 +752,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return run_status(rest)
     if cmd == "get":
         return run_get(rest)
+    if cmd == "security":
+        return run_security(rest)
     print("Comando desconhecido:", cmd)
     return 1
 
