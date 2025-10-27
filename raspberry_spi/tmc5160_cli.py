@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""CLI avanÃ§ada para configurar o TMC5160 (ajuste validado por datasheet).
+"""CLI para configurar o TMC5160 (ajuste validado por datasheet).
 
-Permite ajustar mÃºltiplos parÃ¢metros de forma unitÃ¡ria ou combinada, com
-validaÃ§Ã£o de faixas e checagem de seguranÃ§a de corrente (I_rms <= 2 A por padrÃ£o).
+Permite ajustar mútiplos parmetros de forma unitaria ou combinada, com
+validação de faixas e checagem de segurança de corrente (I_rms <= 2 A por padrão).
 
 Uso rÃ¡pido:
   - Ajustar MRES=1/256 e TOFF=3, preservando demais campos:
@@ -14,7 +14,7 @@ Uso rÃ¡pido:
       python3 -m raspberry_spi.tmc5160_cli set --bus 0 --dev 3 \
           --globalscaler 32 --irun 8 --ihold 2 --ihold-delay 6 --tpowerdown 0x14
 
-  - Status resumido (legÃ­vel):
+  - Status resumido (legí­vel):
       python3 -m raspberry_spi.tmc5160_cli status --bus 0 --dev 3
 """
 from __future__ import annotations
@@ -327,7 +327,7 @@ def _saturate_and_validate_currents(args, gs: Optional[int], ihold: Optional[int
     if irun is not None and not (0 <= irun <= 31):
         raise ValueError("irun deve ser 0..31")
 
-    # Checagem de seguranÃ§a I_rms para IRUN
+    # Checagem de segurança I_rms para IRUN
     if gs is not None and irun is not None:
         irms = estimate_irms(gs, irun, r_sense=args.sense_resistor)
         if irms > args.max_irms:
@@ -530,13 +530,13 @@ def run_set(argv: Sequence[str]) -> int:
 def _format_read_result(res: TMC5160ReadResult) -> str:
     name = {REG_GCONF:"GCONF", REG_CHOPCONF:"CHOPCONF", REG_DRV_STATUS:"DRV_STATUS", REG_GSTAT:"GSTAT"}.get(res.address, f"0x{res.address:02X}")
     lines = [
-        f"- {name} (0x{res.address:02X}) => 0x{res.value:08X}",
+        f"{name} (0x{res.address:02X}) => 0x{res.value:08X}",
         f"  Requisição  : status=0x{res.request.status.raw:02X}, resposta={res.request.raw_hex}",
         f"  Resposta útil: status=0x{res.reply.status.raw:02X}, resposta={res.reply.raw_hex}",
     ]
     dec = decode_register_value(res.address, res.value)
     if dec:
-        lines.append("Tradução:")
+        lines.append("  Tradução:")
         for d in dec:
             lines.append(f"    - {d}")
     return "\n".join(lines)
@@ -753,7 +753,7 @@ def run_get(argv: Sequence[str]) -> int:
         for name, addr in req_addrs:
             try:
                 r = driver.read_register(addr)
-                print(f"- {name} (0x{addr:02X}) => 0x{r.value:08X}")
+                print(f"{name} (0x{addr:02X}) => 0x{r.value:08X}")
                 print(f"  binário: {_bin32(r.value)}")
                 dec = decode_register_value(addr, r.value)
                 if dec:
@@ -911,7 +911,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     if not argv:
-        print("Uso: set|status [opÃ§Ãµes] (use --help em cada subcomando)")
+        print("Uso: set|status [opções] (use --help em cada subcomando)")
         return 1
     cmd, *rest = list(argv)
     if cmd == "set":
