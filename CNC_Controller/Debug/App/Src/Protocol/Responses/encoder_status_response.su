@@ -1,0 +1,9 @@
+../App/Inc/Protocol/Responses/../frame_defs.h:99:19:has_header_tail	24	static
+../App/Inc/Protocol/Responses/../frame_defs.h:108:24:be32_read	16	static
+../App/Inc/Protocol/Responses/../frame_defs.h:116:20:be32_write	16	static
+../App/Inc/Protocol/Responses/../frame_defs.h:150:20:resp_init	16	static
+../App/Inc/Protocol/Responses/../frame_defs.h:157:20:resp_set_tail	16	static
+../App/Inc/Protocol/Responses/../frame_defs.h:174:19:frame_expect_resp	24	static
+../App/Src/Protocol/Responses/encoder_status_response.c:3:5:encoder_status_resp_encoder	24	static
+../App/Src/Protocol/Responses/encoder_status_response.c:18:5:encoder_status_resp_decoder	32	static
+../App/Src/Protocol/Responses/encoder_status_response.c:33:23:encoder_status_resp_make_default	48	static

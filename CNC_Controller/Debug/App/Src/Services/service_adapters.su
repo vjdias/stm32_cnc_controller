@@ -6,5 +6,8 @@
 ../App/Src/Services/service_adapters.c:29:13:h_move_end	24	static
 ../App/Src/Services/service_adapters.c:33:13:h_led_ctrl	24	static
 ../App/Src/Services/service_adapters.c:37:13:h_fpga_status	24	static
-../App/Src/Services/service_adapters.c:43:13:h_test_hello	24	static
-../App/Src/Services/service_adapters.c:48:6:services_register_handlers	16	static
+../App/Src/Services/service_adapters.c:44:13:h_set_origin	24	static
+../App/Src/Services/service_adapters.c:47:13:h_encoder_status	24	static
+../App/Src/Services/service_adapters.c:50:13:h_set_microsteps	24	static
+../App/Src/Services/service_adapters.c:54:13:h_test_hello	24	static
+../App/Src/Services/service_adapters.c:59:6:services_register_handlers	16	static

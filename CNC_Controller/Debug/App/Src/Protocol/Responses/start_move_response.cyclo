@@ -1,7 +1,7 @@
-../App/Inc/Protocol/Responses/../frame_defs.h:93:19:has_header_tail	5
-../App/Inc/Protocol/Responses/../frame_defs.h:144:20:resp_init	1
-../App/Inc/Protocol/Responses/../frame_defs.h:151:20:resp_set_tail	1
-../App/Inc/Protocol/Responses/../frame_defs.h:168:19:frame_expect_resp	5
+../App/Inc/Protocol/Responses/../frame_defs.h:99:19:has_header_tail	5
+../App/Inc/Protocol/Responses/../frame_defs.h:150:20:resp_init	1
+../App/Inc/Protocol/Responses/../frame_defs.h:157:20:resp_set_tail	1
+../App/Inc/Protocol/Responses/../frame_defs.h:174:19:frame_expect_resp	5
 ../App/Src/Protocol/Responses/start_move_response.c:3:5:start_move_resp_decoder	4
 ../App/Src/Protocol/Responses/start_move_response.c:13:5:start_move_resp_encoder	4
 ../App/Src/Protocol/Responses/start_move_response.c:22:9:start_move_resp_calc_parity	1

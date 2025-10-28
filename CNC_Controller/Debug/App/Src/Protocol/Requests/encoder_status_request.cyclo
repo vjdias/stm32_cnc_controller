@@ -1,0 +1,10 @@
+../App/Inc/Protocol/Requests/../frame_defs.h:99:19:has_header_tail	5
+../App/Inc/Protocol/Requests/../frame_defs.h:146:20:req_init	1
+../App/Inc/Protocol/Requests/../frame_defs.h:154:20:req_set_tail	1
+../App/Inc/Protocol/Requests/../frame_defs.h:165:19:frame_expect_req	5
+../App/Src/Protocol/Requests/encoder_status_request.c:3:5:encoder_status_req_decoder	4
+../App/Src/Protocol/Requests/encoder_status_request.c:10:5:encoder_status_req_encoder	4
+../App/Src/Protocol/Requests/encoder_status_request.c:17:9:encoder_status_req_calc_parity	1
+../App/Src/Protocol/Requests/encoder_status_request.c:20:5:encoder_status_req_check_parity	1
+../App/Src/Protocol/Requests/encoder_status_request.c:23:5:encoder_status_req_set_parity	1
+../App/Src/Protocol/Requests/encoder_status_request.c:26:22:encoder_status_req_make_default	1

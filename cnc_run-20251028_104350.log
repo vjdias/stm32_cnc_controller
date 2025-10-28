@@ -1,0 +1,5 @@
+2025-10-28 10:43:50,302 [INFO] Iniciando cnc_cli (cfg=C:\Users\Valdir\Documents\Develop\cnc\stm32_cnc_controller\raspberry_spi\application.cfg)
+2025-10-28 10:43:50,304 [INFO] G-code bbox (x0,x1,y0,y1,z0,z1): (0.0, 5.0, 0.0, 5.0, 0.0, 1.0)
+2025-10-28 10:43:50,305 [INFO] Segmentos (G0/G1) extraídos: 6
+2025-10-28 10:43:50,305 [INFO] Rampa habilitada: accel=100.0 mm/s^2, decel=100.0 mm/s^2, parts=8
+2025-10-28 10:43:50,305 [INFO] Job size (mm): X=5.000, Y=5.000, Z=1.000

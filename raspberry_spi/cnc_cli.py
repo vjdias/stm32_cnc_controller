@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""CLI 'cnc_cli' para executar STL via STM32 + TMC5160 com monitoramento e sinalização por LED.
+"""CLI 'cnc_cli' para executar G-code (G0/G1) via STM32 + TMC5160 com monitoramento e sinalização por LED.
 
 Estados do LED (LED1 via STM32):
  - Em execução normal: pisca (modo=2) a 1 Hz
  - Falha: aceso (modo=1)
  - Sucesso: apagado (modo=0)
+
+Observações sobre o G-code aceito (mínimo):
+ - Suporta apenas movimentos lineares G0/G1 com eixos X/Y/Z e feed F.
+ - Assume unidades em milímetros; F interpretado como mm/s (fallback: --feed).
+ - Modos G90 (absoluto) e G91 (relativo) reconhecidos. Demais códigos são ignorados.
 """
 from __future__ import annotations
 
@@ -30,6 +35,7 @@ try:
         REQ_MOVE_END,
         REQ_SET_ORIGIN,
         REQ_ENCODER_STATUS,
+        REQ_SET_MICROSTEPS,
     )  # type: ignore
     from .tmc5160.tmc5160 import (
         TMC5160Configurator,
@@ -50,6 +56,7 @@ except Exception:  # execução direta fora do pacote
         REQ_MOVE_END,
         REQ_SET_ORIGIN,
         REQ_ENCODER_STATUS,
+        REQ_SET_MICROSTEPS,
     )
     from raspberry_spi.tmc5160.tmc5160 import (  # type: ignore
         TMC5160Configurator,
@@ -62,38 +69,89 @@ except Exception:  # execução direta fora do pacote
     )
 
 
-# ---------------- STL (ASCII) mínimo ----------------
+# ---------------- G-code mínimo (G0/G1) ----------------
 @dataclass
 class Triangle:
+    # Mantido apenas para compatibilidade de imports antigos (não usado)
     v1: Tuple[float, float, float]
     v2: Tuple[float, float, float]
     v3: Tuple[float, float, float]
 
 
-def parse_stl_ascii(path: Path) -> List[Triangle]:
-    tris: List[Triangle] = []
-    cur: List[Tuple[float, float, float]] = []
+def parse_gcode_linear(path: Path, *, default_feed: float) -> Tuple[List["Segment"], Tuple[float,float,float,float,float,float]]:
+    """Extrai segmentos lineares de um arquivo G-code.
+
+    Suporta G0/G1 com X/Y/Z (float) e F (feed). Assume mm/s no F; quando ausente,
+    usa default_feed. Reconhece G90/G91 (absoluto/relativo). Ignora demais comandos.
+
+    Retorna (segments, (x0,x1,y0,y1,z0,z1)).
+    """
+    segs: List[Segment] = []
+    # Posição atual e feed corrente
+    x = y = z = 0.0
+    feed = float(default_feed)
+    abs_mode = True  # G90
+    min_x = max_x = x
+    min_y = max_y = y
+    min_z = max_z = z
+
+    def update_bbox(nx: float, ny: float, nz: float) -> None:
+        nonlocal min_x, max_x, min_y, max_y, min_z, max_z
+        min_x = min(min_x, nx); max_x = max(max_x, nx)
+        min_y = min(min_y, ny); max_y = max(max_y, ny)
+        min_z = min(min_z, nz); max_z = max(max_z, nz)
+
     for raw in path.read_text(errors="replace").splitlines():
         line = raw.strip()
-        if line.startswith("vertex"):
-            _, xs, ys, zs = line.split()
-            cur.append((float(xs), float(ys), float(zs)))
-            if len(cur) == 3:
-                tris.append(Triangle(cur[0], cur[1], cur[2]))
-                cur = []
-    return tris
+        if not line:
+            continue
+        # Remove comentários iniciados por ';' ou linha inteira entre parênteses
+        if line.startswith("("):
+            continue
+        if ";" in line:
+            line = line.split(";", 1)[0].strip()
+        if not line:
+            continue
+        up = line.upper()
+        # Modos
+        if "G90" in up:
+            abs_mode = True
+            # Continua para permitir G1 na mesma linha (raro)
+        if "G91" in up:
+            abs_mode = False
+        # Movimento linear
+        if ("G0" in up) or ("G1" in up) or ("G00" in up) or ("G01" in up):
+            nx, ny, nz = x, y, z
+            nf = feed
+            # Tokeniza por espaços
+            for tok in up.split():
+                if not tok:
+                    continue
+                c = tok[0]
+                try:
+                    val = float(tok[1:])
+                except Exception:
+                    continue
+                if c == "X":
+                    nx = (val if abs_mode else (x + val))
+                elif c == "Y":
+                    ny = (val if abs_mode else (y + val))
+                elif c == "Z":
+                    nz = (val if abs_mode else (z + val))
+                elif c == "F":
+                    nf = float(val)
+            dx, dy, dz = (nx - x), (ny - y), (nz - z)
+            if dx != 0.0 or dy != 0.0 or dz != 0.0:
+                segs.append(Segment(dx=dx, dy=dy, dz=dz, feed=(nf if nf > 0 else default_feed)))
+                x, y, z = nx, ny, nz
+                update_bbox(x, y, z)
+        # Demais linhas ignoradas
+        else:
+            continue
 
-
-def bounds(tris: Iterable[Triangle]) -> Tuple[float, float, float, float, float, float]:
-    xs: List[float] = []
-    ys: List[float] = []
-    zs: List[float] = []
-    for t in tris:
-        for (x, y, z) in (t.v1, t.v2, t.v3):
-            xs.append(x)
-            ys.append(y)
-            zs.append(z)
-    return (min(xs), max(xs), min(ys), max(ys), min(zs), max(zs))
+    # Garante bbox válido ao menos no ponto inicial
+    bbox = (min_x, max_x, min_y, max_y, min_z, max_z)
+    return segs, bbox
 
 
 # ---------------- Path simples (raster) ----------------
@@ -542,18 +600,16 @@ def _admin_dispatch(argv: Sequence[str]) -> Optional[int]:
     return 1
 
 
-# ---------------- CLI (execução STL) ----------------
+# ---------------- CLI (execução G-code) ----------------
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Executa STL como movimentos (STM32 + TMC5160) com LED de status")
-    p.add_argument("stl", help="Caminho do arquivo STL (ASCII)")
+    p = argparse.ArgumentParser(description="Executa G-code (G0/G1) em STM32 + TMC5160 com LED de status")
+    p.add_argument("gcode", help="Caminho do arquivo G-code (mínimo: G0/G1 X/Y/Z F; G90/G91)")
     p.add_argument("--config", type=str, default="application.cfg", help="Arquivo JSON com configurações (default: application.cfg)")
     # Mapeamento
     p.add_argument("--steps-x", type=float, default=None, help="steps/mm em X (cfg: steps-per-mm.x; default: 80)")
     p.add_argument("--steps-y", type=float, default=None, help="steps/mm em Y (cfg: steps-per-mm.y; default: 80)")
     p.add_argument("--steps-z", type=float, default=None, help="steps/mm em Z (cfg: steps-per-mm.z; default: 400)")
-    p.add_argument("--layer", type=float, default=None, help="Altura de camada em mm (cfg: slicing.layer; default: 1.0)")
-    p.add_argument("--line-step", type=float, default=None, help="Passo entre linhas em Y em mm (cfg: slicing.line_step; default: 1.0)")
-    p.add_argument("--feed", type=float, default=None, help="Velocidade nominal (mm/s) (cfg: motion.feed; default: 5.0)")
+    p.add_argument("--feed", type=float, default=None, help="Velocidade padrão (mm/s) se linha não tiver F (cfg: motion.feed; default: 5.0)")
     # Rampas (perfil trapezoidal simplificado no cliente)
     p.add_argument("--accel", type=float, default=None, help="Aceleração (mm/s^2) (cfg: ramp.accel; default: 0=sem rampa)")
     p.add_argument("--decel", type=float, default=None, help="Desaceleração (mm/s^2) (cfg: ramp.decel; default: accel)")
@@ -684,8 +740,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     steps_x = float(args.steps_x) if args.steps_x is not None else float(_cfg(["steps-per-mm","x"], _cfg(["steps","x"], 80.0)))
     steps_y = float(args.steps_y) if args.steps_y is not None else float(_cfg(["steps-per-mm","y"], _cfg(["steps","y"], 80.0)))
     steps_z = float(args.steps_z) if args.steps_z is not None else float(_cfg(["steps-per-mm","z"], _cfg(["steps","z"], 400.0)))
-    layer_h = float(args.layer) if args.layer is not None else float(_cfg(["slicing","layer"], 1.0))
-    line_step = float(args.line_step) if args.line_step is not None else float(_cfg(["slicing","line_step"], 1.0))
     feed = float(args.feed) if args.feed is not None else float(_cfg(["motion","feed"], 5.0))
     accel = float(args.accel) if args.accel is not None else float(_cfg(["ramp","accel"], 0.0))
     decel = float(args.decel) if args.decel is not None else float(_cfg(["ramp","decel"], accel if accel > 0 else 0.0))
@@ -706,25 +760,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     logger = _setup_logger(log_file)
     present = cfg_path if cfg else 'none'
     _log_print(logger, f"Iniciando cnc_cli (cfg={present})")
-    stl_path = Path(args.stl)
-    if not stl_path.exists():
-        _log_print(logger, f"STL inexistente: {stl_path}")
+    gcode_path = Path(args.gcode)
+    if not gcode_path.exists():
+        _log_print(logger, f"G-code inexistente: {gcode_path}")
         return 2
     try:
-        tris = parse_stl_ascii(stl_path)
+        segments, bb = parse_gcode_linear(gcode_path, default_feed=feed)
     except Exception as exc:
-        _log_print(logger, f"Falha ao ler STL ASCII: {exc}")
+        _log_print(logger, f"Falha ao ler G-code: {exc}")
         return 2
-    if not tris:
-        _log_print(logger, "STL não possui triângulos (ou formato não suportado)")
-        return 2
-    bb = bounds(tris)
-    _log_print(logger, f"Bounding box (x0,x1,y0,y1,z0,z1): {bb}")
-    segments = plan_raster(bb, layer_h=layer_h, line_step=line_step, travel=feed)
+    x0, x1, y0, y1, z0, z1 = bb
+    _log_print(logger, f"G-code bbox (x0,x1,y0,y1,z0,z1): {(x0,x1,y0,y1,z0,z1)}")
+    _log_print(logger, f"Segmentos (G0/G1) extraídos: {len(segments)}")
     if accel > 0 or decel > 0:
         _log_print(logger, f"Rampa habilitada: accel={accel} mm/s^2, decel={decel} mm/s^2, parts={ramp_segments}")
     # Validação de soft-limits (tamanho do job)
-    x0, x1, y0, y1, z0, z1 = bb
     size_x = abs(x1 - x0)
     size_y = abs(y1 - y0)
     size_z = abs(z1 - z0)
@@ -738,9 +788,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         lim_errors.append(f"Z job={size_z:.3f} > max_z={float(max_z):.3f}")
     if lim_errors:
         _log_print(logger, "Soft-limit violado: " + "; ".join(lim_errors))
-        _log_print(logger, "Ajuste o STL, origem ou machine.max.* no application.cfg")
+        _log_print(logger, "Ajuste o G-code, origem ou machine.max.* no application.cfg")
         return 4
-    _log_print(logger, f"Segmentos planejados: {len(segments)}")
     if args.dry_run:
         return 0
 

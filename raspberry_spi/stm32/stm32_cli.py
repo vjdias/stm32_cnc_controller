@@ -178,6 +178,14 @@ class STM32Client:
                 time.sleep(settle_delay_s)
         raise TimeoutError("Resposta não encontrada após polling SPI.")
 
+    def close(self) -> None:  # pragma: no cover - depende de hardware
+        try:
+            spi = getattr(self, "spi", None)
+            if spi is not None:
+                spi.close()
+        except Exception:
+            pass
+
 
 def _parse_byte(value: str) -> int:
     try:

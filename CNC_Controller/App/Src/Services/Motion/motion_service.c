@@ -24,6 +24,7 @@
 #include "Protocol/Responses/set_origin_response.h"
 #include "Protocol/Requests/encoder_status_request.h"
 #include "Protocol/Responses/encoder_status_response.h"
+#include "Protocol/Requests/set_microsteps_request.h"
 
 LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
@@ -1008,7 +1009,7 @@ void motion_on_set_origin(const uint8_t *frame, uint32_t len) {
     if (set_origin_resp_encoder(&resp, raw, sizeof raw) == PROTO_OK) {
         (void)app_resp_push(raw, (uint32_t)sizeof raw);
     }
-    LOGT_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_origin", "mask=0x%02X mode=%u", (unsigned)req.mask, (unsigned)req.mode);
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_origin", "mask=0x%02X mode=%u", (unsigned)req.mask, (unsigned)req.mode);
 }
 
 void motion_on_encoder_status(const uint8_t *frame, uint32_t len) {
@@ -1056,7 +1057,7 @@ void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
     uint16_t ms = (req.microsteps == 0u) ? 1u : req.microsteps;
     if (ms > 256u) ms = 256u;
     g_microstep_factor = ms;
-    LOGT_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "ms=%u", (unsigned)ms);
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "ms=%u", (unsigned)ms);
 }
 
 /* =====================================================================
