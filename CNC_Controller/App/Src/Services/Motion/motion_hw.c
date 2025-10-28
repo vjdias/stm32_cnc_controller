@@ -18,7 +18,7 @@ static const motion_axis_hw_t g_axis[MOTION_AXIS_COUNT] = {
     // Y
     { GPIOB, GPIO_PIN_0, GPIOB, GPIO_PIN_2, GPIOC, GPIO_PIN_5, &htim5, 32u },
     // Z
-    { GPIOB, GPIO_PIN_1, GPIOA, GPIO_PIN_2, GPIOA, GPIO_PIN_8, &htim3, 16u },
+    { GPIOB, GPIO_PIN_1, GPIOA, GPIO_PIN_2, GPIOD, GPIO_PIN_5, &htim3, 16u },
 };
 
 static inline void gpio_bsrr_set(GPIO_TypeDef *port, uint16_t pin)

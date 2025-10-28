@@ -53,7 +53,7 @@ static const motion_axis_hw_t g_axis_hw[MOTION_AXIS_COUNT] =
 				{ GPIOB, GPIO_PIN_4, GPIOA, GPIO_PIN_3, GPIOC, GPIO_PIN_4,
 						&htim2, 32u }, { GPIOB, GPIO_PIN_0, GPIOB, GPIO_PIN_2,
 						GPIOC, GPIO_PIN_5, &htim5, 32u }, { GPIOB, GPIO_PIN_1,
-						GPIOA, GPIO_PIN_2, GPIOA, GPIO_PIN_8, &htim3, 16u }, };
+						GPIOA, GPIO_PIN_2, GPIOD, GPIO_PIN_5, &htim3, 16u }, };
 static motion_status_t g_status;
 static motion_axis_state_t g_axis_state[MOTION_AXIS_COUNT];
 static volatile uint8_t g_has_active_segment = 0u;
