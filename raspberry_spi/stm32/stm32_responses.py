@@ -109,11 +109,15 @@ class STM32ResponseDecoder:
 
     @staticmethod
     def start_move(raw: List[int]) -> Dict[str, Any]:
-        # Aceita 4 (legado) ou 5 bytes (com status)
+        # Aceita 4 (legado), 5 (status) ou 6 bytes (status + depth)
         if not raw or raw[0] != RESP_HEADER or raw[-1] != RESP_TAIL or raw[1] != RESP_START_MOVE:
             raise ValueError("StartMove inválida")
         status = raw[3] if len(raw) >= 5 else 0
-        return {"type": raw[1], "frameId": raw[2], "status": status}
+        depth = raw[4] if len(raw) >= 6 else None
+        out = {"type": raw[1], "frameId": raw[2], "status": status}
+        if depth is not None:
+            out["depth"] = depth
+        return out
 
     @staticmethod
     def move_end(raw: List[int]) -> Dict[str, Any]:
@@ -126,8 +130,8 @@ class STM32ResponseDecoder:
     SPECS: Dict[int, ResponseSpec] = {
         REQ_LED_CTRL: ResponseSpec(RESP_LED_CTRL, 7, led.__func__),
         REQ_MOVE_QUEUE_ADD: ResponseSpec(RESP_MOVE_QUEUE_ADD_ACK, 6, queue_add_ack.__func__),
-        # Comprimento esperado usado como pista; extração é tolerante (4 ou 5)
-        REQ_START_MOVE: ResponseSpec(RESP_START_MOVE, 5, start_move.__func__),
+        # Comprimento esperado usado como pista; extração é tolerante (4, 5 ou 6)
+        REQ_START_MOVE: ResponseSpec(RESP_START_MOVE, 6, start_move.__func__),
         REQ_MOVE_END: ResponseSpec(RESP_MOVE_END, 5, move_end.__func__),
         # Placeholder comprimentos alinhados com os decoders abaixo.
         # set_origin: [HDR,TYPE,frameId, x0(4), y0(4), z0(4), TAIL] => 16 bytes

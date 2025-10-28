@@ -77,7 +77,7 @@ e fornece sa\'idas em quadratura \textbf{A} e \textbf{B} mais \textbf{N}
   radial 80\,N; rota\c{c}\~ao m\'axima 6000\,rpm; m\'odulo 28\,mm\,\(\times\)\,28\,mm\,\(\times\)\,18\,mm (aprox.).
 
 Integra\c{c}\~ao com o firmware: conectar A/B aos temporizadores do STM32 em modo
-\emph{encoder} (por exemplo, LPTIM1/TIM3/TIM5) e o \emph{index} N a uma entrada
+\emph{encoder} (por exemplo, TIM2/TIM3/TIM5) e o \emph{index} N a uma entrada
 de reset/captura para refer\^encia de zero. Converter contagens em \^angulo via
 \(\theta = 360\,^{\circ} \cdot \text{count}/\text{CPR}\). Neste TCC foi utilizada a
 variante \textbf{TMCS-28-10k} (c\'odigo TMCS-28-x-10000-AT-01), com

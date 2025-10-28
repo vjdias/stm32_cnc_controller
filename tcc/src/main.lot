@@ -9,8 +9,9 @@
 \contentsline {table}{\numberline {2.6}{\ignorespaces Quadro de escrita TMC5160 (5 bytes, big-endian).}}{9}{table.caption.20}%
 \contentsline {table}{\numberline {2.7}{\ignorespaces Quadro de leitura TMC5160 (5 bytes, big-endian; resposta no ciclo seguinte).}}{9}{table.caption.21}%
 \contentsline {table}{\numberline {2.8}{\ignorespaces Exemplos de acessos SPI ao TMC5160.}}{10}{table.caption.22}%
-\contentsline {table}{\numberline {2.9}{\ignorespaces Registros STM32 L4 utilizados neste trabalho (ver \cite {st_an4013,stm32l4_rm}).}}{11}{table.caption.23}%
-\contentsline {table}{\numberline {2.10}{\ignorespaces Registros TMC5160 utilizados neste trabalho (ver \cite {tmc5160_ds}).}}{12}{table.caption.24}%
+\contentsline {table}{\numberline {2.9}{\ignorespaces Estimativa da corrente mínima prática (\(I_{RMS}\)).}}{13}{table.caption.24}%
+\contentsline {table}{\numberline {2.10}{\ignorespaces Registros STM32 L4 utilizados neste trabalho (ver \cite {st_an4013,stm32l4_rm}).}}{14}{table.caption.25}%
+\contentsline {table}{\numberline {2.11}{\ignorespaces Registros TMC5160 utilizados neste trabalho (ver \cite {tmc5160_ds}).}}{15}{table.caption.26}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }

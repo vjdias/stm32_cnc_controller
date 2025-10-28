@@ -4,21 +4,23 @@ int start_move_resp_decoder(const uint8_t *raw, uint32_t len,
 		start_move_resp_t *out) {
 	if (!raw || !out)
 		return PROTO_ERR_ARG;
-	int st = frame_expect_resp(raw, len, RESP_START_MOVE, 5);
+	int st = frame_expect_resp(raw, len, RESP_START_MOVE, 6);
 	if (st != PROTO_OK)
 		return st;
 	out->frameId = raw[2];
 	out->status = raw[3];
+	out->depth  = raw[4];
 	return PROTO_OK;
 }
 int start_move_resp_encoder(const start_move_resp_t *in, uint8_t *raw,
 		uint32_t len) {
-	if (!raw || !in || len < 5)
+	if (!raw || !in || len < 6)
 		return PROTO_ERR_ARG;
 	resp_init(raw, RESP_START_MOVE);
 	raw[2] = in->frameId;
 	raw[3] = in->status;
-	resp_set_tail(raw, 4);
+	raw[4] = in->depth;
+	resp_set_tail(raw, 5);
 	return PROTO_OK;
 }
 uint8_t start_move_resp_calc_parity(const start_move_resp_t *in) {

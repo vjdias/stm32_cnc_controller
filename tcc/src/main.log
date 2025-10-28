@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  21 OCT 2025 02:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  28 OCT 2025 17:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -715,7 +715,7 @@ rtuges.trsl' found. on input line 23.
 \openout2 = `Identificacao.aux'.
 
 (Identificacao.tex)
-<Cap00/IC.jpg, id=150, 1185.42876pt x 1185.42876pt>
+<Cap00/IC.jpg, id=182, 1185.42876pt x 1185.42876pt>
 File: Cap00/IC.jpg Graphic file (type jpg)
 <use Cap00/IC.jpg>
 Package pdftex.def Info: Cap00/IC.jpg  used on input line 26.
@@ -817,13 +817,13 @@ l.32 \agradecimentos
 
 
 ] (main.lot
-Underfull \hbox (badness 10000) in paragraph at lines 12--12
+Underfull \hbox (badness 10000) in paragraph at lines 13--13
  [][] [][]\OT1/cmr/m/n/12 Registros STM32 L4 uti-li-za-dos neste tra-ba-lho (ve
 r 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 13--13
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
  [][] [][]\OT1/cmr/m/n/12 Registros TMC5160 uti-li-za-dos neste tra-ba-lho (ver
  
  []
@@ -907,7 +907,19 @@ LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10> not available
 
 [8]) (Cap02/DriversTMC.tex
 
-[9]) (Cap02/RegTables.tex
+[9]) (Cap02/MotorPassoNema23.tex
+
+[10]
+
+[11]
+
+[12]) (Cap02/RegTables.tex
+Underfull \hbox (badness 10000) in paragraph at lines 12--12
+[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros STM32 L4 uti-li-za-dos neste tra-ba
+-lho (ver
+ []
+
+
 Underfull \hbox (badness 4328) in paragraph at lines 34--34
 []|\OT1/cmr/m/n/10 Prescaler para $1$$[]$
  []
@@ -964,9 +976,9 @@ Underfull \hbox (badness 10000) in paragraph at lines 34--34
 
 
 
-[10]
+[13]
 Underfull \hbox (badness 10000) in paragraph at lines 41--41
-[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
+[]\OT1/cmr/m/n/12 Tabela 2.11: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
 lho (ver
  []
 
@@ -977,13 +989,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 57--57
 
 
 
-[11])
+[14])
 
-[12] (Cap03/Capitulo3.tex
+[15] (Cap03/Capitulo3.tex
 Cap\'{\i }tulo 3.
 ) (Cap03/ArquiteturaHardware.tex
 
-[13
+[16
 
 
 ]
@@ -995,27 +1007,27 @@ encia e in-ter-fa-ces
 
 
 
-[14])
+[17])
 
-[15] (Cap04/Capitulo4.tex
+[18] (Cap04/Capitulo4.tex
 Cap\'{\i }tulo 4.
 
 
-[16
+[19
 
 
 ])
 
-[17] (Cap05/Capitulo5.tex
+[20] (Cap05/Capitulo5.tex
 Cap\'{\i }tulo 5.
 )
 
-[18
+[21
 
 
 ] (main.bbl
 
-[19
+[22
 
 
 ]
@@ -1025,7 +1037,7 @@ Underfull \hbox (badness 3009) in paragraph at lines 94--98
 
 )
 
-[20] (main.aux (Identificacao.aux))
+[23] (main.aux (Identificacao.aux))
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
@@ -1035,43 +1047,51 @@ L3 programming layer <2025-09-02>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 0B1BD9034932B6E62C8BFF2FB6E56B11;6231.
+(rerunfilecheck)             Checksum: D238801D76A331DF3EFF9D50BD653D63;8477.
  ) 
 Here is how much of TeX's memory you used:
- 20312 strings out of 468081
- 385930 string characters out of 5425304
+ 20366 strings out of 468081
+ 386770 string characters out of 5425304
  889942 words of memory out of 5000000
- 48503 multiletter control sequences out of 15000+600000
- 643157 words of font info for 96 fonts, out of 8000000 for 9000
+ 48534 multiletter control sequences out of 15000+600000
+ 646760 words of font info for 108 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,85p,318b,1188s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,15n,85p,539b,1186s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tct
 i1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
-600\tcrm1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
-/ec/dpi600\tcrm1200.pk><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/typ
-e1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Progr
-ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Lo
-cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdi
-r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/U
-sers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12
-.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts
-/cm/cmmi8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public
-/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/typ
-e1/public/amsfonts/cm/cmr12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/
-fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Valdir/AppData/Local/Programs
-/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/
-Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppD
-ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/V
-aldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C
-:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmt
-i10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
-nts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmtt10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/font
-s/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on main.pdf (35 pages, 839070 bytes).
+600\tcbx1200.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
+/ec/dpi600\tcbx1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/j
+knappen/ec/dpi600\tcbx1440.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/l
+jfour/jknappen/ec/dpi600\tcbx1728.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fon
+ts/pk/ljfour/jknappen/ec/dpi600\tcsl1200.pk> <C:\Users\Valdir\AppData\Local\MiK
+TeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk> <C:\Users\Valdir\AppData\Lo
+cal\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk><C:/Users/Valdir/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/V
+aldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><
+C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cm
+bx7.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
+nts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/pub
+lic/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fon
+ts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Valdir/AppData/Local/Programs/
+MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Valdir/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/Valdir/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Va
+ldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:
+/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr1
+2.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/cm/cmr7.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public
+/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
+1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Valdir/AppData/Loc
+al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/Valdir/A
+ppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/User
+s/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pf
+b><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
+/cmtt12.pfb>
+Output written on main.pdf (38 pages, 897316 bytes).
 PDF statistics:
- 565 PDF objects out of 1000 (max. 8388607)
- 114 named destinations out of 1000 (max. 500000)
- 302 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 665 PDF objects out of 1000 (max. 8388607)
+ 127 named destinations out of 1000 (max. 500000)
+ 366 words of extra memory for PDF output out of 10000 (max. 10000000)
 

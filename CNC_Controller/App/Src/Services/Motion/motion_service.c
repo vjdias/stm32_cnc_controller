@@ -504,9 +504,9 @@ static void motion_send_queue_status_response(uint8_t frame_id) {
     }
 }
 
-static void motion_send_start_response(uint8_t frame_id, uint8_t status) {
-    uint8_t raw[5];
-    start_move_resp_t resp; resp.frameId = frame_id; resp.status = status;
+static void motion_send_start_response(uint8_t frame_id, uint8_t status, uint8_t depth) {
+    uint8_t raw[6];
+    start_move_resp_t resp; resp.frameId = frame_id; resp.status = status; resp.depth = depth;
     if (start_move_resp_encoder(&resp, raw, sizeof raw) != PROTO_OK) return;
     if (app_resp_push(raw, (uint32_t)sizeof raw) != PROTO_OK) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "start", "resp_queue_full");
@@ -950,7 +950,7 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
     (void)HAL_TIM_Base_Start_IT(&htim6);
     (void)HAL_TIM_Base_Start_IT(&htim7);
 
-    motion_send_start_response(req.frameId, started ? 0u : 1u);
+    motion_send_start_response(req.frameId, started ? 0u : 1u, g_status.queue_depth);
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "start_move", started ? "running" : "ignored");
 #if MOTION_DEBUG_FLOW
     printf("[FLOW start_move %s]\r\n", started ? "running" : "ignored");

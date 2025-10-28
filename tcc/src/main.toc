@@ -16,23 +16,32 @@
 \contentsline {subsection}{\numberline {2.8.1}TMC5160}{9}{subsection.2.8.1}%
 \contentsline {subsection}{\numberline {2.8.2}TMCS-28 (Trinamic/Analog Devices)}{10}{subsection.2.8.2}%
 \contentsline {subsection}{\numberline {2.8.3}Implic\c {c}\~oes de projeto}{10}{subsection.2.8.3}%
-\contentsline {section}{\numberline {2.9}Registros de Configura\c {c}\~ao Utilizados}{10}{section.2.9}%
-\contentsline {subsection}{\numberline {2.9.1}STM32L475}{11}{subsection.2.9.1}%
-\contentsline {subsection}{\numberline {2.9.2}TMC5160}{12}{subsection.2.9.2}%
-\contentsline {chapter}{\numberline {3}Metodologia}{13}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Roteiro incremental de bring-up}{13}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Arquitetura de software}{13}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Procedimentos de teste}{14}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Arquitetura de Hardware}{14}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Vis\~ao geral do sistema}{14}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Alimenta\c {c}\~ao e EMC}{14}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Drivers TMC5160}{14}{subsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.4.4}Encoder \'{o}ptico TMCS-28}{14}{subsection.3.4.4}%
-\contentsline {subsection}{\numberline {3.4.5}Intertravamentos e seguran\c {c}a}{15}{subsection.3.4.5}%
-\contentsline {subsection}{\numberline {3.4.6}PCB, cabeamento e montagem}{15}{subsection.3.4.6}%
-\contentsline {chapter}{\numberline {4}Resultados e Discussão}{16}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{16}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{16}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{16}{section.4.3}%
-\contentsline {chapter}{\numberline {5}Conclusão}{18}{chapter.5}%
-\contentsline {chapter}{Bibliografia}{19}{chapter.5}%
+\contentsline {section}{\numberline {2.9}Motores de Passo NEMA 23, Passo de 0{,}9\textdegree {} e Seleção da Corrente $I_{RMS}$}{11}{section.2.9}%
+\contentsline {subsection}{\numberline {2.9.1}NEMA 23: geometria e implicações mecânicas}{11}{subsection.2.9.1}%
+\contentsline {subsection}{\numberline {2.9.2}Passo elétrico: 1{,}8\textdegree {} vs 0{,}9\textdegree {}}{11}{subsection.2.9.2}%
+\contentsline {paragraph}{Efeitos práticos do passo de 0{,}9\textdegree {}.}{11}{section*.23}%
+\contentsline {subsection}{\numberline {2.9.3}Microstepping, suavidade e taxa de passos}{11}{subsection.2.9.3}%
+\contentsline {subsection}{\numberline {2.9.4}Parâmetros elétricos e modelo de primeira ordem}{12}{subsection.2.9.4}%
+\contentsline {subsection}{\numberline {2.9.5}Torques relevantes}{12}{subsection.2.9.5}%
+\contentsline {subsection}{\numberline {2.9.6}Resumo para os motores usados}{12}{subsection.2.9.6}%
+\contentsline {subsection}{\numberline {2.9.7}Fundamentação teórica para a seleção de $I_{RMS}$}{12}{subsection.2.9.7}%
+\contentsline {section}{\numberline {2.10}Registros de Configura\c {c}\~ao Utilizados}{13}{section.2.10}%
+\contentsline {subsection}{\numberline {2.10.1}STM32L475}{14}{subsection.2.10.1}%
+\contentsline {subsection}{\numberline {2.10.2}TMC5160}{15}{subsection.2.10.2}%
+\contentsline {chapter}{\numberline {3}Metodologia}{16}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Roteiro incremental de bring-up}{16}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Arquitetura de software}{16}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Procedimentos de teste}{17}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Arquitetura de Hardware}{17}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Vis\~ao geral do sistema}{17}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Alimenta\c {c}\~ao e EMC}{17}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Drivers TMC5160}{17}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Encoder \'{o}ptico TMCS-28}{17}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Intertravamentos e seguran\c {c}a}{18}{subsection.3.4.5}%
+\contentsline {subsection}{\numberline {3.4.6}PCB, cabeamento e montagem}{18}{subsection.3.4.6}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{19}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{19}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{19}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{19}{section.4.3}%
+\contentsline {chapter}{\numberline {5}Conclusão}{21}{chapter.5}%
+\contentsline {chapter}{Bibliografia}{22}{chapter.5}%

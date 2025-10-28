@@ -1,4 +1,4 @@
-// START_MOVE (5 bytes) — 0x03
+// START_MOVE (6 bytes) — 0x03
 #pragma once
 #include <stdint.h>
 #include "../frame_defs.h"
@@ -6,6 +6,7 @@
 typedef struct {
 	uint8_t frameId;
     uint8_t status;   // 0=started, 1=ignored/busy/unsafe
+    uint8_t depth;    // profundidade da fila no início (itens pendentes)
 } start_move_resp_t;
 
 int start_move_resp_decoder(const uint8_t *raw, uint32_t len,
