@@ -30,7 +30,7 @@ static const motion_axis_hw_t g_axis[MOTION_AXIS_COUNT] = {
     { GPIOB, GPIO_PIN_0, GPIOB, GPIO_PIN_2, GPIOC, GPIO_PIN_5,
       MOTION_ENCODER_TYPE_LPTIM, NULL, &hlptim1, 16u },
     // Z -> TIM5 em PA0/PA1 (32 bits)
-    { GPIOB, GPIO_PIN_1, GPIOA, GPIO_PIN_2, GPIOA, GPIO_PIN_8,
+    { GPIOB, GPIO_PIN_1, GPIOA, GPIO_PIN_2, GPIOD, GPIO_PIN_5,
       MOTION_ENCODER_TYPE_TIM, &htim5, NULL, 32u },
 };
 
