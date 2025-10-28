@@ -35,9 +35,20 @@ static void h_led_ctrl(router_t *r, const uint8_t *f, uint32_t l) {
 	led_on_led_ctrl(f, l);
 }
 static void h_fpga_status(router_t *r, const uint8_t *f, uint32_t l) {
-	(void) r;
-	(void) f;
-	(void) l; /* opcional */
+    (void) r;
+    (void) f;
+    (void) l; /* opcional */
+}
+
+// Novos serviços: set_origin e encoder_status (telemetria)
+static void h_set_origin(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_set_origin(f, l);
+}
+static void h_encoder_status(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_encoder_status(f, l);
+}
+static void h_set_microsteps(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_set_microsteps(f, l);
 }
 
 static void h_test_hello(router_t *r, const uint8_t *f, uint32_t l) {
@@ -54,7 +65,10 @@ void services_register_handlers(router_handlers_t *h) {
 	h->on_move_home = h_move_home;
 	h->on_move_probe_level = h_move_probe_level;
 	h->on_move_end = h_move_end;
-	h->on_led_ctrl = h_led_ctrl;
-	h->on_fpga_status = h_fpga_status;
-	h->on_test_hello = h_test_hello;
+    h->on_led_ctrl = h_led_ctrl;
+    h->on_fpga_status = h_fpga_status;
+    h->on_set_origin = h_set_origin;
+    h->on_encoder_status = h_encoder_status;
+    h->on_set_microsteps = h_set_microsteps;
+    h->on_test_hello = h_test_hello;
 }

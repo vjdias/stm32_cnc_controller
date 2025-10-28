@@ -4,7 +4,7 @@ int fpga_status_req_decoder(const uint8_t *raw, uint32_t len,
 		fpga_status_req_t *out) {
 	if (!raw || !out)
 		return PROTO_ERR_ARG;
-	int st = frame_expect_req(raw, len, REQ_FPGA_STATUS, 4);
+	int st = frame_expect_req(raw, len, REQ_STM32_STATUS, 4);
 	if (st != PROTO_OK)
 		return st;
 	out->frameId = raw[2];
@@ -15,7 +15,7 @@ int fpga_status_req_encoder(const fpga_status_req_t *in, uint8_t *raw,
 		uint32_t len) {
 	if (!raw || !in || len < 4)
 		return PROTO_ERR_ARG;
-	req_init(raw, REQ_FPGA_STATUS);
+	req_init(raw, REQ_STM32_STATUS);
 	raw[2] = in->frameId;
 	req_set_tail(raw, 3);
 	return PROTO_OK;

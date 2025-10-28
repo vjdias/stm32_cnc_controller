@@ -20,10 +20,13 @@ classifiers = [
 ]
 
 [project.scripts]
-tmc5160-cli = "raspberry_spi.tmc5160_cli:main"
-tmc5160 = "raspberry_spi.tmc5160_cli:main"
+tmc5160-cli = "raspberry_spi.tmc5160.tmc5160_cli:main"
+tmc5160 = "raspberry_spi.tmc5160.tmc5160_cli:main"
+stm32-cli = "raspberry_spi.stm32.stm32_cli:main"
+stm32_cli = "raspberry_spi.stm32.stm32_cli:main"
+cnc-cli = "raspberry_spi.cnc_cli:main"
+cnc_cli = "raspberry_spi.cnc_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["raspberry_spi*"]
-

@@ -16,7 +16,10 @@ typedef enum {
         REQ_MOVE_PROBE_LEVEL = 0x05,
         REQ_MOVE_END = 0x06,
         REQ_LED_CTRL = 0x07,
-        REQ_FPGA_STATUS = 0x20,
+        REQ_STM32_STATUS = 0x20,
+        REQ_SET_ORIGIN = 0x24,
+        REQ_ENCODER_STATUS = 0x25,
+        REQ_SET_MICROSTEPS = 0x26,
         REQ_TEST_HELLO = 0x68,
 } req_msg_type_t;
 
@@ -31,6 +34,9 @@ typedef enum {
         RESP_LED_CTRL = 0x07,
         RESP_FPGA_STATUS = 0x20,
         RESP_HOME_STATUS = 0x21,
+        RESP_SET_ORIGIN = 0x24,
+        RESP_ENCODER_STATUS = 0x25,
+        RESP_SET_MICROSTEPS = 0x26,
         RESP_TEST_HELLO = 0x68,
 } resp_msg_type_t;
 
