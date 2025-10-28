@@ -1,10 +1,11 @@
-// MOVE_END (4 bytes) — 0x06
+// MOVE_END (5 bytes) — 0x06
 #pragma once
 #include <stdint.h>
 #include "../frame_defs.h"
 
 typedef struct {
 	uint8_t frameId;
+    uint8_t status;   // 0=natural_done, 1=stopped/aborted, 2=emergency
 } move_end_resp_t;
 
 int move_end_resp_decoder(const uint8_t *raw, uint32_t len,

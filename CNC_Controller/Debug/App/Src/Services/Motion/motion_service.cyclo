@@ -34,6 +34,6 @@
 ../App/Src/Services/Motion/motion_service.c:1068:6:motion_demo_set_enabled	7
 ../App/Src/Services/Motion/motion_service.c:1102:6:motion_demo_set_continuous	5
 ../App/Src/Services/Motion/motion_service.c:1153:6:HAL_TIM_PeriodElapsedCallback	4
-../App/Src/Services/Motion/motion_service.c:1164:6:motion_emergency_stop	1
-../App/Src/Services/Motion/motion_service.c:1183:9:motion_demo_is_active	2
-../App/Src/Services/Motion/motion_service.c:1188:6:motion_demo_cycle_speed	4
+../App/Src/Services/Motion/motion_service.c:1164:6:motion_emergency_stop	2
+../App/Src/Services/Motion/motion_service.c:1187:9:motion_demo_is_active	2
+../App/Src/Services/Motion/motion_service.c:1192:6:motion_demo_cycle_speed	4

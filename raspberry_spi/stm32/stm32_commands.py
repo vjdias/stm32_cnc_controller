@@ -17,6 +17,7 @@ if __package__:
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
         REQ_TEST_HELLO,
+        RESP_MOVE_END,
         bits_str,
     )
     from .stm32_requests import STM32RequestBuilder
@@ -33,6 +34,7 @@ else:
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
         REQ_TEST_HELLO,
+        RESP_MOVE_END,
         bits_str,
     )
     from stm32_requests import STM32RequestBuilder  # type: ignore
@@ -144,7 +146,24 @@ class STM32CommandExecutor:
 
     def start_move(self, args: argparse.Namespace) -> None:
         request = STM32RequestBuilder.start_move(args.frame_id)
-        self._execute_request(REQ_START_MOVE, request, args)
+        ack = self._execute_request(REQ_START_MOVE, request, args)
+        # Opcional: aguarda MOVE_END após ack
+        try:
+            wait_end = bool(getattr(args, "wait_end", False))
+        except Exception:
+            wait_end = False
+        if wait_end and isinstance(ack, dict) and int(ack.get("status", 0)) == 0:
+            # Poll passivo por MOVE_END
+            timeout_s = float(getattr(args, "end_timeout", 60.0) or 60.0)
+            settle = float(getattr(args, "settle_delay", 0.002) or 0.002)
+            tries = max(1, int(timeout_s / max(0.001, settle)))
+            try:
+                raw = self.client.poll_for(RESP_MOVE_END, expected_len=5, tries=tries, settle_delay_s=settle)
+                spec = STM32ResponseDecoder.SPECS[REQ_MOVE_END]
+                decoded = spec.decoder(raw)
+                print(decoded)
+            except Exception as exc:
+                print("Aviso: MOVE_END não recebido:", exc)
 
     def end_move(self, args: argparse.Namespace) -> None:
         request = STM32RequestBuilder.move_end(args.frame_id)

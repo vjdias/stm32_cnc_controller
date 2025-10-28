@@ -109,23 +109,26 @@ class STM32ResponseDecoder:
 
     @staticmethod
     def start_move(raw: List[int]) -> Dict[str, Any]:
-        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 4)
-        if raw[1] != RESP_START_MOVE:
+        # Aceita 4 (legado) ou 5 bytes (com status)
+        if not raw or raw[0] != RESP_HEADER or raw[-1] != RESP_TAIL or raw[1] != RESP_START_MOVE:
             raise ValueError("StartMove inválida")
-        return {"type": raw[1], "frameId": raw[2]}
+        status = raw[3] if len(raw) >= 5 else 0
+        return {"type": raw[1], "frameId": raw[2], "status": status}
 
     @staticmethod
     def move_end(raw: List[int]) -> Dict[str, Any]:
-        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 4)
-        if raw[1] != RESP_MOVE_END:
+        # Aceita 4 (legado) ou 5 bytes (com status)
+        if not raw or raw[0] != RESP_HEADER or raw[-1] != RESP_TAIL or raw[1] != RESP_MOVE_END:
             raise ValueError("MoveEnd inválida")
-        return {"type": raw[1], "frameId": raw[2]}
+        status = raw[3] if len(raw) >= 5 else 0
+        return {"type": raw[1], "frameId": raw[2], "status": status}
 
     SPECS: Dict[int, ResponseSpec] = {
         REQ_LED_CTRL: ResponseSpec(RESP_LED_CTRL, 7, led.__func__),
         REQ_MOVE_QUEUE_ADD: ResponseSpec(RESP_MOVE_QUEUE_ADD_ACK, 6, queue_add_ack.__func__),
-        REQ_START_MOVE: ResponseSpec(RESP_START_MOVE, 4, start_move.__func__),
-        REQ_MOVE_END: ResponseSpec(RESP_MOVE_END, 4, move_end.__func__),
+        # Comprimento esperado usado como pista; extração é tolerante (4 ou 5)
+        REQ_START_MOVE: ResponseSpec(RESP_START_MOVE, 5, start_move.__func__),
+        REQ_MOVE_END: ResponseSpec(RESP_MOVE_END, 5, move_end.__func__),
         # Placeholder comprimentos alinhados com os decoders abaixo.
         # set_origin: [HDR,TYPE,frameId, x0(4), y0(4), z0(4), TAIL] => 16 bytes
         REQ_SET_ORIGIN: ResponseSpec(RESP_SET_ORIGIN, 16, None),

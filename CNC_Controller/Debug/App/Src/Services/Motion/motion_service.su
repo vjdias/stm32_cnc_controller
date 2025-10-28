@@ -18,8 +18,8 @@
 ../App/Src/Services/Motion/motion_service.c:428:13:motion_update_encoders	88	static
 ../App/Src/Services/Motion/motion_service.c:474:13:motion_send_queue_add_ack	40	static
 ../App/Src/Services/Motion/motion_service.c:486:13:motion_send_queue_status_response	48	static
-../App/Src/Services/Motion/motion_service.c:507:13:motion_send_start_response	32	static
-../App/Src/Services/Motion/motion_service.c:516:13:motion_send_move_end_response	32	static
+../App/Src/Services/Motion/motion_service.c:507:13:motion_send_start_response	40	static
+../App/Src/Services/Motion/motion_service.c:516:13:motion_send_move_end_response	40	static
 ../App/Src/Services/Motion/motion_service.c:529:6:motion_service_init	40	static
 ../App/Src/Services/Motion/motion_service.c:570:24:motion_status_get	4	static
 ../App/Src/Services/Motion/motion_service.c:580:6:motion_on_tim6_tick	88	static
@@ -35,5 +35,5 @@
 ../App/Src/Services/Motion/motion_service.c:1102:6:motion_demo_set_continuous	32	static
 ../App/Src/Services/Motion/motion_service.c:1153:6:HAL_TIM_PeriodElapsedCallback	16	static
 ../App/Src/Services/Motion/motion_service.c:1164:6:motion_emergency_stop	16	static
-../App/Src/Services/Motion/motion_service.c:1183:9:motion_demo_is_active	4	static
-../App/Src/Services/Motion/motion_service.c:1188:6:motion_demo_cycle_speed	16	static
+../App/Src/Services/Motion/motion_service.c:1187:9:motion_demo_is_active	4	static
+../App/Src/Services/Motion/motion_service.c:1192:6:motion_demo_cycle_speed	16	static

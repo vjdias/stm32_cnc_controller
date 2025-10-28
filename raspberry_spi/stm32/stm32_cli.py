@@ -89,6 +89,11 @@ def _validate_handshake_frame(tx_frame: List[int], handshake_frame: List[int], p
 
 
 def _extract_response_frame(rx_frame: List[int], expected_len: int, expected_type: int) -> List[int] | None:
+    """Extrai um frame de resposta procurando por HEADER..TAIL do tipo esperado.
+
+    Compatível com respostas de comprimento variável (ex.: 4 ou 5 bytes),
+    tentando primeiro `expected_len` e, se não casar, procurando o próximo TAIL.
+    """
     if expected_len <= 0 or not rx_frame:
         return None
     normalized = [b & 0xFF for b in rx_frame]
@@ -98,12 +103,31 @@ def _extract_response_frame(rx_frame: List[int], expected_len: int, expected_typ
         if 0x5A in normalized:
             raise BufferError("STM32 respondeu BUSY (0x5A) durante o polling da resposta.")
         return None
+
+    # 1) Tenta extração rígida com expected_len
     end_idx = header_idx + expected_len
-    if end_idx > len(normalized):
-        return None
-    frame = normalized[header_idx:end_idx]
-    if len(frame) == expected_len and frame[0] == RESP_HEADER and frame[-1] == RESP_TAIL and frame[1] == expected_type:
-        return frame
+    if end_idx <= len(normalized):
+        frame = normalized[header_idx:end_idx]
+        if (
+            len(frame) == expected_len
+            and frame[0] == RESP_HEADER
+            and frame[-1] == RESP_TAIL
+            and frame[1] == expected_type
+        ):
+            return frame
+
+    # 2) Flexível: procura TAIL nas próximas posições e valida tipo
+    # Varre até 12 bytes adiante do HEADER para achar um TAIL válido
+    search_max = min(len(normalized) - 1, header_idx + max(expected_len, 12))
+    for tail_idx in range(header_idx + 3, search_max + 1):
+        if normalized[tail_idx] != RESP_TAIL:
+            continue
+        # Checa tipo esperado logo após HEADER
+        if header_idx + 1 < len(normalized) and normalized[header_idx + 1] == expected_type:
+            candidate = normalized[header_idx : tail_idx + 1]
+            # Mínimo de 4 bytes [HDR,TYPE,*,TAIL]
+            if len(candidate) >= 4:
+                return candidate
     return None
 
 
@@ -177,6 +201,29 @@ class STM32Client:
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
         raise TimeoutError("Resposta não encontrada após polling SPI.")
+
+    def poll_for(
+        self,
+        expected_response_type: int,
+        *,
+        expected_len: int,
+        tries: int = 100,
+        settle_delay_s: float = 0.01,
+        poll_byte: int = SPI_DMA_CLIENT_POLL_BYTE,
+    ) -> List[int]:  # pragma: no cover - depende de hardware
+        """Faz polling do buffer DMA do STM32 até encontrar o tipo de resposta esperado.
+
+        Não envia nenhum comando, apenas quadros de polling (byte repetido).
+        """
+        payload_len = 1
+        for _ in range(max(1, tries)):
+            rx = self._xfer(_build_spi_dma_frame([poll_byte] * payload_len))
+            r = _extract_response_frame(rx, expected_len, expected_response_type)
+            if r is not None:
+                return r
+            if settle_delay_s > 0:
+                time.sleep(settle_delay_s)
+        raise TimeoutError("Polling atingiu o limite sem encontrar a resposta esperada.")
 
     def close(self) -> None:  # pragma: no cover - depende de hardware
         try:
@@ -355,6 +402,8 @@ def build_parser() -> argparse.ArgumentParser:
     start_move = sub.add_parser("start-move", help="Iniciar execução")
     _common_args(start_move, include_tries=True, include_settle_delay=True)
     start_move.add_argument("--frame-id", type=int, required=True)
+    start_move.add_argument("--wait-end", action="store_true", help="Aguarda e imprime RESP_MOVE_END após o ack do start")
+    start_move.add_argument("--end-timeout", type=float, default=60.0, help="Tempo máximo (s) aguardando MOVE_END quando --wait-end")
     start_move.set_defaults(handler="start_move", needs_client=True)
 
     end_move = sub.add_parser("end-move", help="Finalizar execução")

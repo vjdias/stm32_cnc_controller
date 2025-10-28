@@ -504,18 +504,18 @@ static void motion_send_queue_status_response(uint8_t frame_id) {
     }
 }
 
-static void motion_send_start_response(uint8_t frame_id) {
-    uint8_t raw[4];
-    start_move_resp_t resp = { frame_id };
+static void motion_send_start_response(uint8_t frame_id, uint8_t status) {
+    uint8_t raw[5];
+    start_move_resp_t resp; resp.frameId = frame_id; resp.status = status;
     if (start_move_resp_encoder(&resp, raw, sizeof raw) != PROTO_OK) return;
     if (app_resp_push(raw, (uint32_t)sizeof raw) != PROTO_OK) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "start", "resp_queue_full");
     }
 }
 
-static void motion_send_move_end_response(uint8_t frame_id) {
-    uint8_t raw[4];
-    move_end_resp_t resp = { frame_id };
+static void motion_send_move_end_response(uint8_t frame_id, uint8_t status) {
+    uint8_t raw[5];
+    move_end_resp_t resp; resp.frameId = frame_id; resp.status = status;
     if (move_end_resp_encoder(&resp, raw, sizeof raw) != PROTO_OK) return;
     if (app_resp_push(raw, (uint32_t)sizeof raw) != PROTO_OK) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "move_end", "resp_queue_full");
@@ -685,7 +685,7 @@ void motion_on_tim6_tick(void)
                 g_has_active_segment = 0u;
                 motion_stop_all_axes_locked();
                 g_status.state = MOTION_DONE;
-                motion_send_move_end_response(g_active_frame_id);
+                motion_send_move_end_response(g_active_frame_id, 0u /* natural_done */);
 #if MOTION_DEBUG_ENCODERS
                 printf("[ENC DONE abs=(%ld,%ld,%ld) rel=(%ld,%ld,%ld) target=(%lu,%lu,%lu)]\r\n",
                        (long)g_enc_abs32[AXIS_X],
@@ -950,7 +950,7 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
     (void)HAL_TIM_Base_Start_IT(&htim6);
     (void)HAL_TIM_Base_Start_IT(&htim7);
 
-    motion_send_start_response(req.frameId);
+    motion_send_start_response(req.frameId, started ? 0u : 1u);
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "start_move", started ? "running" : "ignored");
 #if MOTION_DEBUG_FLOW
     printf("[FLOW start_move %s]\r\n", started ? "running" : "ignored");
@@ -971,7 +971,7 @@ void motion_on_move_end(const uint8_t *frame, uint32_t len) {
     motion_refresh_status_locked();
     motion_unlock(primask);
 
-    motion_send_move_end_response(req.frameId);
+    motion_send_move_end_response(req.frameId, 1u /* stopped by host */);
 
     primask = motion_lock();
     g_status.state = MOTION_IDLE;
@@ -1178,6 +1178,10 @@ void motion_emergency_stop(void)
     g_status.state = MOTION_IDLE;
     motion_refresh_status_locked();
     motion_unlock(primask);
+    /* Notifica término por emergência (se houver frame ativo) */
+    if (g_active_frame_id) {
+        motion_send_move_end_response(g_active_frame_id, 2u /* emergency */);
+    }
 }
 
 uint8_t motion_demo_is_active(void)
