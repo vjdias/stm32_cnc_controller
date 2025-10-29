@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import matplotlib.ticker as mticker
 
 # Parameters from the firmware
 TOTAL_STEPS = 150000
@@ -57,22 +58,25 @@ for i in range(1, len(distance_points)):
     if distance_points_floor[i] > distance_points_floor[i-1]:
         num_new_pulses = int(distance_points_floor[i] - distance_points_floor[i-1])
         for j in range(num_new_pulses):
-            frac = ((distance_points_floor[i-1] + 1 + j) - distance_points[i-1]) / (distance_points[i] - distance_points[i-1]) if (distance_points[i] - distance_points[i-1]) > 0 else 0
+            den = distance_points[i] - distance_points[i-1]
+            frac = ((distance_points_floor[i-1] + 1 + j) - distance_points[i-1]) / den if den > 0 else 0
             t_pulse = time_points[i-1] + frac * TIME_STEP_S
             if t_pulse <= time_points[i]:
                  pulse_times.append(t_pulse)
 
-# Define as janelas de tempo para o zoom (50ms de duração)
+# Define as janelas de tempo para o zoom (4ms de duração)
+win_duration = 0.004
+
+# Calcula tempos da rampa para posicionar as janelas
 time_to_accel = MAX_VELOCITY_SPS / ACCEL_SPS2
 steps_for_accel = ACCEL_SPS2 * (time_to_accel**2) / 2
 steps_on_plateau = TOTAL_STEPS - (2 * steps_for_accel)
 time_on_plateau = steps_on_plateau / MAX_VELOCITY_SPS if MAX_VELOCITY_SPS > 0 else 0
-win_duration = 0.05
 
 windows = [
-    (time_to_accel * 0.3, 'Aceleração', 'green', ax_zoom1),
-    (time_to_accel + time_on_plateau * 0.5, 'Vel. Máxima', 'blue', ax_zoom2),
-    (time_to_accel + time_on_plateau + time_to_accel * 0.5, 'Desaceleração', 'red', ax_zoom3)
+    (0.396, 'Aceleração', 'green', ax_zoom1),
+    (time_to_accel + time_on_plateau / 2, 'Vel. Máxima', 'blue', ax_zoom2),
+    (time_to_accel + time_on_plateau + time_to_accel / 2, 'Desaceleração', 'red', ax_zoom3)
 ]
 
 for start, label, color, ax in windows:
@@ -84,6 +88,13 @@ for start, label, color, ax in windows:
     ax.set_yticks([])
     ax.set_xlim(start, end)
     ax.grid(True, axis='x', linestyle=':')
+    
+    # Formata o eixo X para mostrar milissegundos com 3 casas decimais
+    ax.xaxis.set_major_formatter(mticker.FormatStrFormatter('%.3f'))
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=4, prune='both'))
+    plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
+
+    # Adiciona a região sombreada no gráfico de velocidade
     ax1.axvspan(start, end, color=color, alpha=0.2)
     ax1.text(start + win_duration/2, 1000, label.replace(' ', '\n'), ha='center', va='bottom', color=color, fontsize=9)
 
