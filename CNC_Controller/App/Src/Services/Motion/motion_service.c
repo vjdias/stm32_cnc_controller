@@ -127,9 +127,9 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
 #define MOTION_PI_I_CLAMP            (200000)
 #define MOTION_PI_CORR_MAX_SPS       (MOTION_MAX_SPS)
 // Controle PI desativado por padrão (somente telemetria)
-#ifndef MOTION_PI_ENABLE
+//#ifndef MOTION_PI_ENABLE
 #define MOTION_PI_ENABLE 1
-#endif
+//#endif
 
 /* =======================
  *  Calibração simples (sem floats)
@@ -139,19 +139,19 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
  * Ajuste MICROSTEP_FACTOR se o TMC estiver configurado com microstepping
  * (ex.: 16 => 6400 passos/rotação no DDA).
  */
-#ifndef MICROSTEP_FACTOR
-#define MICROSTEP_FACTOR 1u
-#endif
+//#ifndef MICROSTEP_FACTOR
+#define MICROSTEP_FACTOR 256
+//#endif
 #define STEPS_PER_REV_BASE   400u
 #define DDA_STEPS_PER_REV    (STEPS_PER_REV_BASE * MICROSTEP_FACTOR)
 /* Encoders por rotação (fornecido): X/Z = 40000, Y = 2500 */
-static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 2500u, 40000u };
+static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 2500u, 40000u}; // X,Y,Z 
 static volatile uint16_t g_microstep_factor = MICROSTEP_FACTOR;
 static inline uint32_t dda_steps_per_rev(void) { return STEPS_PER_REV_BASE * (uint32_t)g_microstep_factor; }
 
 /* Deadband em passos para o PI de posição (evita tremor próximo de zero) */
 #ifndef MOTION_PI_DEADBAND_STEPS
-#define MOTION_PI_DEADBAND_STEPS 1
+#define MOTION_PI_DEADBAND_STEPS 10
 #endif
 
 /* Derivada filtrada (para reduzir ruído do encoder no D-term) */
