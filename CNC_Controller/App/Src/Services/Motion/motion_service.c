@@ -46,6 +46,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define Q16_1                          (1u<<16)
 #define Q16_FROM_UINT(x)               ((uint32_t)(x) << 16)
 #define Q16_DIV_UINT(numer,den)        ((uint32_t)(((uint64_t)(numer) << 16) / (uint32_t)(den)))
+#define Q15_ONE                        (1u<<15)
 #ifndef MOTION_DEBUG_ENCODERS
 #define MOTION_DEBUG_ENCODERS          1
 #endif
@@ -130,6 +131,11 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
 #ifndef MOTION_PI_ENABLE
 #define MOTION_PI_ENABLE 1
 #endif
+
+/* Sincronização cruzada (reduz velocidade global quando algum eixo atrasa) */
+#define MOTION_SYNC_PROGRESS_MIN_STEPS   50u
+#define MOTION_SYNC_TRIGGER_DELTA_Q15    (Q15_ONE / 50u)   /* ~2% */
+#define MOTION_SYNC_MIN_SCALE_Q15        (Q15_ONE / 2u)    /* não reduz abaixo de 50% */
 
 /* =======================
  *  Calibração simples (sem floats)
@@ -746,41 +752,47 @@ void motion_on_tim7_tick(void)
     }
     /* Caminho da fila: rampa trapezoidal (acelera/cruza/desacelera) e define incremento DDA */
     if (g_status.state == MOTION_RUNNING && g_has_active_segment && !g_demo_continuous) {
+        uint32_t v_cmd_nom[MOTION_AXIS_COUNT] = {0u};
+        uint8_t  sync_candidate_count = 0u;
+        uint32_t sync_min_ratio_q15 = Q15_ONE;
+
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
             motion_axis_state_t *ax = &g_axis_state[axis];
             /* Mesmo que o segmento ativo para este eixo tenha zerado, podemos ter
                passos remanescentes na fila — mantemos a rampa global da lista. */
 
             uint32_t v_cmd_sps = ((uint32_t)ax->velocity_per_tick) * 1000u; /* alvo/cruzeiro */
+
+            int32_t desired_steps = (int32_t)ax->target_steps;
+            int32_t actual_steps = desired_steps;
+            if (ENC_COUNTS_PER_REV[axis] > 0u) {
+                int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
+                int64_t num = enc_rel * (int64_t)dda_steps_per_rev();
+                int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
+                if (q > INT32_MAX) q = INT32_MAX;
+                else if (q < INT32_MIN) q = INT32_MIN;
+                actual_steps = (int32_t)q;
+            }
+            int32_t err = desired_steps - actual_steps;
+
             /* PI de posição: ajusta v_cmd_sps com base no erro posicional */
 #if MOTION_PI_ENABLE
             if ((ax->kp | ax->ki | ax->kd) != 0u) {
-                /* desired (em passos DDA) vs actual convertido de contagens do encoder para passos DDA */
-                int32_t desired = (int32_t)ax->target_steps;
-                int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
-                /* actual_steps ≈ enc_rel * (DDA_STEPS_PER_REV / ENC_COUNTS_PER_REV) */
-                int64_t num = enc_rel * (int64_t)dda_steps_per_rev();
-                int32_t actual = 0;
-                if (ENC_COUNTS_PER_REV[axis] > 0u) {
-                    int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
-                    if (q > INT32_MAX) q = INT32_MAX; else if (q < INT32_MIN) q = INT32_MIN;
-                    actual = (int32_t)q;
-                }
-                int32_t err = desired - actual;
+                int32_t pi_err = err;
                 /* Deadband simples */
-                if (err > -((int32_t)MOTION_PI_DEADBAND_STEPS) && err < (int32_t)MOTION_PI_DEADBAND_STEPS) {
-                    err = 0;
+                if (pi_err > -((int32_t)MOTION_PI_DEADBAND_STEPS) && pi_err < (int32_t)MOTION_PI_DEADBAND_STEPS) {
+                    pi_err = 0;
                 }
                 /* Integral com anti-windup (em unidades de passos) */
-                int32_t iacc = g_pi_i_accum[axis] + err;
+                int32_t iacc = g_pi_i_accum[axis] + pi_err;
                 if (iacc > MOTION_PI_I_CLAMP) iacc = MOTION_PI_I_CLAMP;
                 else if (iacc < -MOTION_PI_I_CLAMP) iacc = -MOTION_PI_I_CLAMP;
-                int32_t draw = err - g_pi_prev_err[axis];
-                g_pi_prev_err[axis] = err;
+                int32_t draw = pi_err - g_pi_prev_err[axis];
+                g_pi_prev_err[axis] = pi_err;
                 /* Derivada filtrada: g_pi_d_filt += (draw - g_pi_d_filt) >> alpha */
                 const int32_t alpha = 8; /* filtro leve (1..16) */
                 g_pi_d_filt[axis] = g_pi_d_filt[axis] + ((draw - g_pi_d_filt[axis]) >> alpha);
-                int32_t pterm = ((int32_t)ax->kp * err) >> MOTION_PI_SHIFT;      /* steps/s */
+                int32_t pterm = ((int32_t)ax->kp * pi_err) >> MOTION_PI_SHIFT;      /* steps/s */
                 int32_t iterm = ((int32_t)ax->ki * iacc) >> MOTION_PI_SHIFT;     /* steps/s */
                 int32_t dterm = (ax->kd != 0u) ? (((int32_t)ax->kd * g_pi_d_filt[axis]) >> MOTION_PI_SHIFT) : 0; /* steps/s */
                 int32_t corr = pterm + iterm + dterm; /* correção em steps/s */
@@ -796,6 +808,42 @@ void motion_on_tim7_tick(void)
                 }
             }
 #endif
+
+            v_cmd_nom[axis] = v_cmd_sps;
+
+            if (ENC_COUNTS_PER_REV[axis] > 0u && ax->total_steps > 0u && ax->emitted_steps < ax->total_steps) {
+                uint32_t desired_abs = ax->target_steps;
+                if (desired_abs >= MOTION_SYNC_PROGRESS_MIN_STEPS && desired_abs > 0u) {
+                    uint32_t actual_abs = (uint32_t)((actual_steps >= 0) ? actual_steps : -actual_steps);
+                    uint32_t ratio_q15 = Q15_ONE;
+                    if (actual_abs < desired_abs) {
+                        ratio_q15 = (uint32_t)(((uint64_t)actual_abs << 15) / (uint64_t)desired_abs);
+                    }
+                    if (ratio_q15 < sync_min_ratio_q15) sync_min_ratio_q15 = ratio_q15;
+                    ++sync_candidate_count;
+                }
+            }
+        }
+
+        uint32_t sync_scale_q15 = Q15_ONE;
+        if (sync_candidate_count) {
+            uint32_t trigger = Q15_ONE - MOTION_SYNC_TRIGGER_DELTA_Q15;
+            if (sync_min_ratio_q15 < trigger) {
+                if (sync_min_ratio_q15 < MOTION_SYNC_MIN_SCALE_Q15) {
+                    sync_scale_q15 = MOTION_SYNC_MIN_SCALE_Q15;
+                } else {
+                    sync_scale_q15 = sync_min_ratio_q15;
+                }
+            }
+        }
+
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            motion_axis_state_t *ax = &g_axis_state[axis];
+            uint32_t v_cmd_sps = v_cmd_nom[axis];
+            if (sync_scale_q15 < Q15_ONE) {
+                v_cmd_sps = (uint32_t)(((uint64_t)v_cmd_sps * sync_scale_q15) >> 15);
+            }
+
             uint32_t a_sps2    = (ax->accel_sps2 > 0u) ? ax->accel_sps2 : DEMO_ACCEL_SPS2;
 
             /* Distância restante total (ativo + fila) em passos */
