@@ -3,13 +3,21 @@ import numpy as np
 import os
 import matplotlib.ticker as mticker
 
-# Parameters from the firmware
-TOTAL_STEPS = 150000
-ACCEL_SPS2 = 20000  # steps/s^2
-MAX_VELOCITY_SPS = 25000  # steps/s
-TIME_STEP_S = 0.001  # 1ms from TIM7
+# --- Parâmetros idênticos ao motion_service.c ---
+# Timings e Frequências
+MOTION_TIM6_HZ = 50000
+MOTION_STEP_HIGH_TICKS = 1
+MOTION_STEP_LOW_TICKS = 1
+TIME_STEP_S = 0.001  # Tick do TIM7 (1ms)
 
-# --- Simulation ---
+# Parâmetros da Rampa
+TOTAL_STEPS = 150000
+ACCEL_SPS2 = 200000  # Corrigido para o valor do firmware (DEMO_ACCEL_SPS2)
+
+# Calcula a velocidade máxima a partir dos parâmetros base, como no firmware
+MAX_VELOCITY_SPS = MOTION_TIM6_HZ / (MOTION_STEP_HIGH_TICKS + MOTION_STEP_LOW_TICKS)
+
+# --- Simulação ---
 time_points = [0]
 velocity_points = [0]
 distance_points = [0]
@@ -40,14 +48,14 @@ ax_zoom1 = fig.add_subplot(gs[1, 0])
 ax_zoom2 = fig.add_subplot(gs[1, 1])
 ax_zoom3 = fig.add_subplot(gs[1, 2])
 
-fig.suptitle('Análise do Perfil de Movimento e Densidade de Pulsos', fontsize=16)
+fig.suptitle('Análise do Perfil de Movimento e Densidade de Pulsos (Fiel ao Firmware)', fontsize=16)
 
 # --- Subplot 1: Perfil de Velocidade ---
 ax1.plot(time_points, velocity_points, label='Velocidade (steps/s)', color='dodgerblue')
 ax1.set_title('Perfil de Velocidade Trapezoidal')
 ax1.set_ylabel('Velocidade (steps/s)')
 ax1.grid(True, linestyle=':')
-ax1.axhline(y=MAX_VELOCITY_SPS, color='r', linestyle='--', label=f'Velocidade Máxima ({MAX_VELOCITY_SPS} steps/s)')
+ax1.axhline(y=MAX_VELOCITY_SPS, color='r', linestyle='--', label=f'V_max Calculada ({int(MAX_VELOCITY_SPS)} steps/s)')
 ax1.legend()
 
 # --- Subplots de Zoom: Trem de Pulsos ---
@@ -64,19 +72,18 @@ for i in range(1, len(distance_points)):
             if t_pulse <= time_points[i]:
                  pulse_times.append(t_pulse)
 
-# Define as janelas de tempo para o zoom (4ms de duração)
-win_duration = 0.004
+# Define as janelas de tempo para o zoom (agora na nova escala de tempo)
+win_duration = 0.004 # 4ms
 
-# Calcula tempos da rampa para posicionar as janelas
 time_to_accel = MAX_VELOCITY_SPS / ACCEL_SPS2
 steps_for_accel = ACCEL_SPS2 * (time_to_accel**2) / 2
 steps_on_plateau = TOTAL_STEPS - (2 * steps_for_accel)
 time_on_plateau = steps_on_plateau / MAX_VELOCITY_SPS if MAX_VELOCITY_SPS > 0 else 0
 
 windows = [
-    (0.396, 'Aceleração', 'green', ax_zoom1),
-    (time_to_accel + time_on_plateau / 2, 'Vel. Máxima', 'blue', ax_zoom2),
-    (time_to_accel + time_on_plateau + time_to_accel / 2, 'Desaceleração', 'red', ax_zoom3)
+    (time_to_accel * 0.5, 'Aceleração', 'green', ax_zoom1), # Meio da rampa de subida
+    (time_to_accel + time_on_plateau / 2, 'Vel. Máxima', 'blue', ax_zoom2), # Meio do platô
+    (time_to_accel + time_on_plateau + time_to_accel * 0.5, 'Desaceleração', 'red', ax_zoom3) # Meio da rampa de descida
 ]
 
 for start, label, color, ax in windows:
@@ -89,12 +96,10 @@ for start, label, color, ax in windows:
     ax.set_xlim(start, end)
     ax.grid(True, axis='x', linestyle=':')
     
-    # Formata o eixo X para mostrar milissegundos com 3 casas decimais
     ax.xaxis.set_major_formatter(mticker.FormatStrFormatter('%.3f'))
     ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=4, prune='both'))
     plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
-    # Adiciona a região sombreada no gráfico de velocidade
     ax1.axvspan(start, end, color=color, alpha=0.2)
     ax1.text(start + win_duration/2, 1000, label.replace(' ', '\n'), ha='center', va='bottom', color=color, fontsize=9)
 

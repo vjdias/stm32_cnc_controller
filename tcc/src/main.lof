@@ -3,6 +3,7 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{19}{figure.caption.27}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware.}}{21}{figure.caption.29}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}}{20}{figure.caption.29}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware.}}{21}{figure.caption.30}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }

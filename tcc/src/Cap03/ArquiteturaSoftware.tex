@@ -62,6 +62,15 @@ Quando \texttt{intpol}=1 em \texttt{CHOPCONF}, o TMC5160 interpola cada pulso de
 \section{DDA em Ponto Fixo (TIM6 @ 50\,kHz)}
 \label{sec:dda}
 
+A Figura~\ref{fig:firmware_dda_sim} ilustra o funcionamento interno do DDA para um movimento de 7 passos em X e 4 em Y, conforme implementado no firmware. A cada tick do temporizador (eixo horizontal), os acumuladores de fase de X e Y s\~ao incrementados por valores fixos, proporcionais \`as suas respectivas velocidades. O eixo X, sendo mais r\'apido para este vetor, tem um incremento maior e seu acumulador transborda (\emph{overflow}) mais frequentemente. Cada transbordamento, marcado pela volta do acumulador a zero no gr\'afico superior, corresponde \`a gera\c{c}\~ao de um pulso STEP para o eixo, como visto no gr\'afico inferior. Ao final do processo, 7 pulsos foram gerados para X e 4 para Y, distribu\'idos no tempo de forma a manter a trajet\'oria da reta definida pelo host.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Cap03/firmware_dda_simulation.png}
+    \caption{Simula\c{c}\~ao da opera\c{c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c{c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}
+    \label{fig:firmware_dda_sim}
+\end{figure}
+
 O gerador de passos usa um DDA Q16.16. Para cada eixo $i$, mantemos:
 \begin{itemize}
   \item acumulador \texttt{dda\_accum\_q16} e incremento \texttt{dda\_inc\_q16};
