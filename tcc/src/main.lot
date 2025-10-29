@@ -13,5 +13,7 @@
 \contentsline {table}{\numberline {2.10}{\ignorespaces Registros STM32 L4 utilizados neste trabalho (ver \cite {st_an4013,stm32l4_rm}).}}{14}{table.caption.25}%
 \contentsline {table}{\numberline {2.11}{\ignorespaces Registros TMC5160 utilizados neste trabalho (ver \cite {tmc5160_ds}).}}{15}{table.caption.26}%
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Tempos de STEP/DIR: TMC5160 (datasheet) vs. implementa\c {c}\~ao.}}{19}{table.caption.28}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Par\^ametros de tempo e limites usados no firmware.}}{22}{table.caption.30}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }

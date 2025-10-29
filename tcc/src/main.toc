@@ -39,9 +39,22 @@
 \contentsline {subsection}{\numberline {3.4.4}Encoder \'{o}ptico TMCS-28}{17}{subsection.3.4.4}%
 \contentsline {subsection}{\numberline {3.4.5}Intertravamentos e seguran\c {c}a}{18}{subsection.3.4.5}%
 \contentsline {subsection}{\numberline {3.4.6}PCB, cabeamento e montagem}{18}{subsection.3.4.6}%
-\contentsline {chapter}{\numberline {4}Resultados e Discussão}{19}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{19}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{19}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{19}{section.4.3}%
-\contentsline {chapter}{\numberline {5}Conclusão}{21}{chapter.5}%
-\contentsline {chapter}{Bibliografia}{22}{chapter.5}%
+\contentsline {section}{\numberline {3.5}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{18}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{18}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{19}{subsection.3.5.2}%
+\contentsline {section}{\numberline {3.6}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{19}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{20}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Controle PI de Posi\c {c}\~ao com Encoder}{21}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Fila de Movimentos e Segmenta\c {c}\~ao}{21}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Mapeamento para o TMC5160}{22}{section.3.10}%
+\contentsline {subsection}{\numberline {3.10.1}Gera\c {c}\~ao de STEP/DIR (\emph {``PWM'' de passo})}{22}{subsection.3.10.1}%
+\contentsline {subsection}{\numberline {3.10.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{22}{subsection.3.10.2}%
+\contentsline {section}{\numberline {3.11}Par\^ametros-chaves do Projeto}{22}{section.3.11}%
+\contentsline {section}{\numberline {3.12}Boas pr\'aticas e Diagn\'ostico}{22}{section.3.12}%
+\contentsline {section}{\numberline {3.13}Refer\^encias cruzadas}{23}{section.3.13}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{24}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{24}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{24}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{24}{section.4.3}%
+\contentsline {chapter}{\numberline {5}Conclusão}{26}{chapter.5}%
+\contentsline {chapter}{Bibliografia}{27}{chapter.5}%

@@ -117,19 +117,57 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4.3}Drivers TMC5160}{17}{subsection.3.4.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4.4}Encoder \'{o}ptico TMCS-28}{17}{subsection.3.4.4}\protected@file@percent }
 \citation{romeros_tcc_ifmg_2022}
+\citation{tmc5160_ds}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4.5}Intertravamentos e seguran\c {c}a}{18}{subsection.3.4.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4.6}PCB, cabeamento e montagem}{18}{subsection.3.4.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}Resultados e Discussão}{19}{chapter.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{18}{section.3.5}\protected@file@percent }
+\newlabel{sec:ctrl-visao-geral}{{3.5}{18}{Arquitetura de Controle de Movimento (Vis\~ao Geral)}{section.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Compatibilidade de \emph  {timing} com o TMC5160 (\emph  {STEP}/\emph  {DIR})}{18}{subsection.3.5.1}\protected@file@percent }
+\newlabel{subsec:tmc-step-dir}{{3.5.1}{18}{Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{subsection.3.5.1}{}}
+\citation{tmc5160_ds}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{19}{figure.caption.27}\protected@file@percent }
+\newlabel{fig:step_pulse_comparison}{{3.1}{19}{Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada}{figure.caption.27}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Tempos de STEP/DIR: TMC5160 (datasheet) vs. implementa\c {c}\~ao.}}{19}{table.caption.28}\protected@file@percent }
+\newlabel{tab:tmc-timing-vs-projeto}{{3.1}{19}{Tempos de STEP/DIR: TMC5160 (datasheet) vs. implementa\c {c}\~ao}{table.caption.28}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{19}{subsection.3.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{19}{section.3.6}\protected@file@percent }
+\newlabel{sec:dda}{{3.6}{19}{DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{section.3.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.7}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{20}{section.3.7}\protected@file@percent }
+\newlabel{sec:rampa}{{3.7}{20}{Rampa Trapezoidal (TIM7 @ 1\,kHz)}{section.3.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware.}}{21}{figure.caption.29}\protected@file@percent }
+\newlabel{fig:rampa_trapezoidal_simulada}{{3.2}{21}{Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware}{figure.caption.29}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.8}Controle PI de Posi\c {c}\~ao com Encoder}{21}{section.3.8}\protected@file@percent }
+\newlabel{sec:pi}{{3.8}{21}{Controle PI de Posi\c {c}\~ao com Encoder}{section.3.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.9}Fila de Movimentos e Segmenta\c {c}\~ao}{21}{section.3.9}\protected@file@percent }
+\newlabel{sec:fila}{{3.9}{21}{Fila de Movimentos e Segmenta\c {c}\~ao}{section.3.9}{}}
+\citation{tmc5160_ds}
+\citation{tmc5160_ds}
+\citation{tmc5160_ds}
+\@writefile{toc}{\contentsline {section}{\numberline {3.10}Mapeamento para o TMC5160}{22}{section.3.10}\protected@file@percent }
+\newlabel{sec:tmc-mapeamento}{{3.10}{22}{Mapeamento para o TMC5160}{section.3.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.10.1}Gera\c {c}\~ao de STEP/DIR (\emph  {``PWM'' de passo})}{22}{subsection.3.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.10.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{22}{subsection.3.10.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.11}Par\^ametros-chaves do Projeto}{22}{section.3.11}\protected@file@percent }
+\newlabel{sec:parametros}{{3.11}{22}{Par\^ametros-chaves do Projeto}{section.3.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Par\^ametros de tempo e limites usados no firmware.}}{22}{table.caption.30}\protected@file@percent }
+\newlabel{tab:param}{{3.2}{22}{Par\^ametros de tempo e limites usados no firmware}{table.caption.30}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.12}Boas pr\'aticas e Diagn\'ostico}{22}{section.3.12}\protected@file@percent }
+\newlabel{sec:boaspraticas}{{3.12}{22}{Boas pr\'aticas e Diagn\'ostico}{section.3.12}{}}
+\citation{stm32l4_rm}
+\citation{tmc5160_ds}
+\@writefile{toc}{\contentsline {section}{\numberline {3.13}Refer\^encias cruzadas}{23}{section.3.13}\protected@file@percent }
+\newlabel{sec:refs-cruzadas}{{3.13}{23}{Refer\^encias cruzadas}{section.3.13}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}Resultados e Discussão}{24}{chapter.4}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:resultados}{{4}{19}{Resultados e Discussão}{chapter.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{19}{section.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{19}{section.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{19}{section.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}Conclusão}{21}{chapter.5}\protected@file@percent }
+\newlabel{cap:resultados}{{4}{24}{Resultados e Discussão}{chapter.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{24}{section.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{24}{section.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{24}{section.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Conclusão}{26}{chapter.5}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:conclusao}{{5}{21}{Conclusão}{chapter.5}{}}
+\newlabel{cap:conclusao}{{5}{26}{Conclusão}{chapter.5}{}}
 \bibstyle{apalike}
 \bibdata{Ref/SampleReferences}
 \bibcite{astrom1995}{{\r A}str{\"o}m and H{\"a}gglund, 1995}
@@ -148,8 +186,8 @@
 \bibcite{stm32l4_rm}{{STMicroelectronics}, 2018a}
 \bibcite{um2153}{{STMicroelectronics}, 2018b}
 \bibcite{tmc5160_ds}{{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, }
-\@writefile{toc}{\contentsline {chapter}{Bibliografia}{22}{chapter.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{Bibliografia}{27}{chapter.5}\protected@file@percent }
 \bibcite{tmcs28_datasheet}{{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, 2022}
 \bibcite{efficient_reference}{Wang and Hu, 2016}
 \bibcite{adaptive_fuzzy_pid}{Wang et~al., 2021}
-\gdef \@abspage@last{38}
+\gdef \@abspage@last{43}
