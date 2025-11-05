@@ -6,50 +6,60 @@ from typing import List
 
 MODULE_DIR = Path(__file__).resolve().parent
 
-    if __package__:
-        from .stm32_protocol import (
-            REQ_STM32_STATUS,
-            REQ_HEADER,
-            REQ_LED_CTRL,
-            REQ_MOVE_END,
-            REQ_MOVE_HOME,
-            REQ_MOVE_PROBE_LEVEL,
-            REQ_MOVE_QUEUE_ADD,
-            REQ_MOVE_QUEUE_STATUS,
-            REQ_START_MOVE,
-            REQ_TEST_HELLO,
-            REQ_MOTION_ESTIMATE,
-            REQ_DIAG_CTRL,
-            REQ_TAIL,
-            be16_bytes,
-            be32_bytes,
-            pad_request,
-            parity_set_bit_1N,
-            parity_set_byte_1N,
-        )
-    else:
-        if str(MODULE_DIR) not in sys.path:
-            sys.path.insert(0, str(MODULE_DIR))
-        from stm32_protocol import (  # type: ignore
-            REQ_STM32_STATUS,
-            REQ_HEADER,
-            REQ_LED_CTRL,
-            REQ_MOVE_END,
-            REQ_MOVE_HOME,
-            REQ_MOVE_PROBE_LEVEL,
-            REQ_MOVE_QUEUE_ADD,
-            REQ_MOVE_QUEUE_STATUS,
-            REQ_START_MOVE,
-            REQ_TEST_HELLO,
-            REQ_MOTION_ESTIMATE,
-            REQ_DIAG_CTRL,
-            REQ_TAIL,
-            be16_bytes,
-            be32_bytes,
-            pad_request,
-            parity_set_bit_1N,
-            parity_set_byte_1N,
-        )
+if __package__:
+    from .stm32_protocol import (
+        REQ_STM32_STATUS,
+        REQ_HEADER,
+        REQ_LED_CTRL,
+        REQ_MOVE_END,
+        REQ_MOVE_HOME,
+        REQ_MOVE_PROBE_LEVEL,
+        REQ_MOVE_QUEUE_ADD,
+        REQ_MOVE_QUEUE_STATUS,
+        REQ_START_MOVE,
+        REQ_TEST_HELLO,
+        REQ_SET_ORIGIN,
+        REQ_ENCODER_STATUS,
+        REQ_SET_MICROSTEPS,
+        REQ_MOTION_ESTIMATE,
+        REQ_DIAG_CTRL,
+        REQ_SET_ENC_PPR,
+        REQ_MODEL_RUN,
+        REQ_TAIL,
+        be16_bytes,
+        be32_bytes,
+        pad_request,
+        parity_set_bit_1N,
+        parity_set_byte_1N,
+    )
+else:
+    if str(MODULE_DIR) not in sys.path:
+        sys.path.insert(0, str(MODULE_DIR))
+    from stm32_protocol import (  # type: ignore
+        REQ_STM32_STATUS,
+        REQ_HEADER,
+        REQ_LED_CTRL,
+        REQ_MOVE_END,
+        REQ_MOVE_HOME,
+        REQ_MOVE_PROBE_LEVEL,
+        REQ_MOVE_QUEUE_ADD,
+        REQ_MOVE_QUEUE_STATUS,
+        REQ_START_MOVE,
+        REQ_TEST_HELLO,
+        REQ_SET_ORIGIN,
+        REQ_ENCODER_STATUS,
+        REQ_SET_MICROSTEPS,
+        REQ_MOTION_ESTIMATE,
+        REQ_DIAG_CTRL,
+        REQ_SET_ENC_PPR,
+        REQ_MODEL_RUN,
+        REQ_TAIL,
+        be16_bytes,
+        be32_bytes,
+        pad_request,
+        parity_set_bit_1N,
+        parity_set_byte_1N,
+    )
 
 
 class STM32RequestBuilder:

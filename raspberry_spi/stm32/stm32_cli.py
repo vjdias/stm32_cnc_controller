@@ -26,6 +26,7 @@ if __package__:
         REQ_MOTION_ESTIMATE,
         REQ_DIAG_CTRL,
         REQ_SET_ENC_PPR,
+        REQ_MODEL_RUN,
     )
     from .stm32_requests import STM32RequestBuilder
 else:  # execução direta do script a partir do diretório raspberry_spi
@@ -41,6 +42,7 @@ else:  # execução direta do script a partir do diretório raspberry_spi
         REQ_MOTION_ESTIMATE,
         REQ_DIAG_CTRL,
         REQ_SET_ENC_PPR,
+        REQ_MODEL_RUN,
     )
     from stm32_requests import STM32RequestBuilder  # type: ignore
 
