@@ -19,6 +19,8 @@ if __package__:
         REQ_TEST_HELLO,
         REQ_SET_ORIGIN,
         REQ_ENCODER_STATUS,
+        REQ_MOTION_ESTIMATE,
+        REQ_DIAG_CTRL,
         RESP_HEADER,
         RESP_HOME_STATUS,
         RESP_LED_CTRL,
@@ -31,6 +33,8 @@ if __package__:
         RESP_TEST_HELLO,
         RESP_SET_ORIGIN,
         RESP_ENCODER_STATUS,
+        RESP_MOTION_ESTIMATE,
+        RESP_DIAG_CTRL,
         RESP_TAIL,
         parity_check_bit_1N,
         parity_check_byte_1N,
@@ -49,6 +53,8 @@ else:
         REQ_TEST_HELLO,
         REQ_SET_ORIGIN,
         REQ_ENCODER_STATUS,
+        REQ_MOTION_ESTIMATE,
+        REQ_DIAG_CTRL,
         RESP_HEADER,
         RESP_HOME_STATUS,
         RESP_LED_CTRL,
@@ -61,6 +67,8 @@ else:
         RESP_TEST_HELLO,
         RESP_SET_ORIGIN,
         RESP_ENCODER_STATUS,
+        RESP_MOTION_ESTIMATE,
+        RESP_DIAG_CTRL,
         RESP_TAIL,
         parity_check_bit_1N,
         parity_check_byte_1N,
@@ -138,6 +146,12 @@ class STM32ResponseDecoder:
         REQ_SET_ORIGIN: ResponseSpec(RESP_SET_ORIGIN, 16, None),
         # encoder_status: [HDR,TYPE,frameId, pidX, pidY, pidZ, delta, absX(4), absY(4), absZ(4), TAIL] => 20 bytes
         REQ_ENCODER_STATUS: ResponseSpec(RESP_ENCODER_STATUS, 20, None),
+        # motion_estimate: [HDR,TYPE,frameId, avgA(4), avgV(4), avgD(4), TAIL] => 16 bytes
+        REQ_MOTION_ESTIMATE: ResponseSpec(RESP_MOTION_ESTIMATE, 16, None),
+        # diag_ctrl: [HDR,TYPE,frameId, flags, TAIL] => 5 bytes
+        REQ_DIAG_CTRL: ResponseSpec(RESP_DIAG_CTRL, 5, None),
+        REQ_SET_ENC_PPR: ResponseSpec(RESP_SET_ENC_PPR, 9, None),
+        REQ_MODEL_RUN: ResponseSpec(RESP_MODEL_RUN, 5, None),
         # Outros tipos podem ser acrescentados aqui quando necessários.
     }
 
@@ -175,6 +189,38 @@ class STM32ResponseDecoder:
             "delta": raw[6],
             "abs": {"x": be32(7), "y": be32(11), "z": be32(15)},
         }
+
+    @staticmethod
+    def motion_estimate(raw: List[int]) -> Dict[str, Any]:
+        # Espera 16 bytes: [HDR,TYPE,frameId,avgA(4),avgV(4),avgD(4),TAIL]
+        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 16)
+        if raw[1] != RESP_MOTION_ESTIMATE:
+            raise ValueError("MotionEstimate resp inválida")
+        def be32(i: int) -> int:
+            return (raw[i] << 24) | (raw[i+1] << 16) | (raw[i+2] << 8) | raw[i+3]
+        return {
+            "type": raw[1],
+            "frameId": raw[2],
+            "avgAccel": be32(3),
+            "avgCruise": be32(7),
+            "avgDecel": be32(11),
+        }
+
+    @staticmethod
+    def diag_ctrl(raw: List[int]) -> Dict[str, Any]:
+        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 5)
+        if raw[1] != RESP_DIAG_CTRL:
+            raise ValueError("DiagCtrl resp inválida")
+        return {"type": raw[1], "frameId": raw[2], "flags": raw[3]}
+
+    @staticmethod
+    def set_enc_ppr(raw: List[int]) -> Dict[str, Any]:
+        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 9)
+        if raw[1] != RESP_SET_ENC_PPR:
+            raise ValueError("SetEncPpr resp inválida")
+        def be32(i: int) -> int:
+            return (raw[i] << 24) | (raw[i+1] << 16) | (raw[i+2] << 8) | raw[i+3]
+        return {"type": raw[1], "frameId": raw[2], "axis": raw[3], "ppr": be32(4)}
 
 
 __all__ = ["ResponseSpec", "STM32ResponseDecoder"]

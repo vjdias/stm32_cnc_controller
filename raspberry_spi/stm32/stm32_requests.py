@@ -6,46 +6,50 @@ from typing import List
 
 MODULE_DIR = Path(__file__).resolve().parent
 
-if __package__:
-    from .stm32_protocol import (
-        REQ_STM32_STATUS,
-        REQ_HEADER,
-        REQ_LED_CTRL,
-        REQ_MOVE_END,
-        REQ_MOVE_HOME,
-        REQ_MOVE_PROBE_LEVEL,
-        REQ_MOVE_QUEUE_ADD,
-        REQ_MOVE_QUEUE_STATUS,
-        REQ_START_MOVE,
-        REQ_TEST_HELLO,
-        REQ_TAIL,
-        be16_bytes,
-        be32_bytes,
-        pad_request,
-        parity_set_bit_1N,
-        parity_set_byte_1N,
-    )
-else:
-    if str(MODULE_DIR) not in sys.path:
-        sys.path.insert(0, str(MODULE_DIR))
-    from stm32_protocol import (  # type: ignore
-        REQ_STM32_STATUS,
-        REQ_HEADER,
-        REQ_LED_CTRL,
-        REQ_MOVE_END,
-        REQ_MOVE_HOME,
-        REQ_MOVE_PROBE_LEVEL,
-        REQ_MOVE_QUEUE_ADD,
-        REQ_MOVE_QUEUE_STATUS,
-        REQ_START_MOVE,
-        REQ_TEST_HELLO,
-        REQ_TAIL,
-        be16_bytes,
-        be32_bytes,
-        pad_request,
-        parity_set_bit_1N,
-        parity_set_byte_1N,
-    )
+    if __package__:
+        from .stm32_protocol import (
+            REQ_STM32_STATUS,
+            REQ_HEADER,
+            REQ_LED_CTRL,
+            REQ_MOVE_END,
+            REQ_MOVE_HOME,
+            REQ_MOVE_PROBE_LEVEL,
+            REQ_MOVE_QUEUE_ADD,
+            REQ_MOVE_QUEUE_STATUS,
+            REQ_START_MOVE,
+            REQ_TEST_HELLO,
+            REQ_MOTION_ESTIMATE,
+            REQ_DIAG_CTRL,
+            REQ_TAIL,
+            be16_bytes,
+            be32_bytes,
+            pad_request,
+            parity_set_bit_1N,
+            parity_set_byte_1N,
+        )
+    else:
+        if str(MODULE_DIR) not in sys.path:
+            sys.path.insert(0, str(MODULE_DIR))
+        from stm32_protocol import (  # type: ignore
+            REQ_STM32_STATUS,
+            REQ_HEADER,
+            REQ_LED_CTRL,
+            REQ_MOVE_END,
+            REQ_MOVE_HOME,
+            REQ_MOVE_PROBE_LEVEL,
+            REQ_MOVE_QUEUE_ADD,
+            REQ_MOVE_QUEUE_STATUS,
+            REQ_START_MOVE,
+            REQ_TEST_HELLO,
+            REQ_MOTION_ESTIMATE,
+            REQ_DIAG_CTRL,
+            REQ_TAIL,
+            be16_bytes,
+            be32_bytes,
+            pad_request,
+            parity_set_bit_1N,
+            parity_set_byte_1N,
+        )
 
 
 class STM32RequestBuilder:
@@ -177,6 +181,44 @@ class STM32RequestBuilder:
         raw[2] = frame_id & 0xFF
         raw[3] = microsteps & 0xFF
         raw[4] = REQ_TAIL
+        return pad_request(raw)
+
+    @staticmethod
+    def motion_estimate(frame_id: int) -> List[int]:
+        """Solicita estimativas médias: acel (sps^2), cruzeiro (sps), desacel (sps^2)."""
+        raw = [REQ_HEADER, REQ_MOTION_ESTIMATE, frame_id & 0xFF, REQ_TAIL]
+        return pad_request(raw)
+
+    @staticmethod
+    def diag_ctrl(frame_id: int, flags: int) -> List[int]:
+        """Controle de diagnóstico (bit0: habilita SPD via SWO)"""
+        raw = [REQ_HEADER, REQ_DIAG_CTRL, frame_id & 0xFF, flags & 0xFF, REQ_TAIL]
+        return pad_request(raw)
+
+    @staticmethod
+    def set_enc_ppr(frame_id: int, axis: int, ppr: int) -> List[int]:
+        raw = [0] * 9
+        raw[0] = REQ_HEADER
+        raw[1] = REQ_SET_ENC_PPR
+        raw[2] = frame_id & 0xFF
+        raw[3] = axis & 0xFF
+        raw[4:8] = list(be32_bytes(int(ppr) & 0xFFFFFFFF))
+        raw[8] = REQ_TAIL
+        return pad_request(raw)
+
+    @staticmethod
+    def model_run(frame_id: int, axis: int, dir_neg: bool, freq_sps: int, turns: int) -> List[int]:
+        # [HDR,TYPE,frame,axis,dir,freq(4),turns(2),TAIL] = 12 bytes
+        raw = [0] * 12
+        raw[0] = REQ_HEADER
+        raw[1] = REQ_MODEL_RUN
+        raw[2] = frame_id & 0xFF
+        raw[3] = axis & 0xFF
+        raw[4] = 1 if dir_neg else 0
+        raw[5:9] = list(be32_bytes(int(freq_sps) & 0xFFFFFFFF))
+        hi, lo = be16_bytes(int(turns) & 0xFFFF)
+        raw[9], raw[10] = hi, lo
+        raw[11] = REQ_TAIL
         return pad_request(raw)
 
 

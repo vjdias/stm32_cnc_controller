@@ -50,7 +50,15 @@ App/Src/Services/Motion/motion_service.o: \
  ../App/Inc/Protocol/Responses/set_origin_response.h \
  ../App/Inc/Protocol/Requests/encoder_status_request.h \
  ../App/Inc/Protocol/Responses/encoder_status_response.h \
- ../App/Inc/Protocol/Requests/set_microsteps_request.h
+ ../App/Inc/Protocol/Requests/set_microsteps_request.h \
+ ../App/Inc/Protocol/Requests/motion_estimate_request.h \
+ ../App/Inc/Protocol/Responses/motion_estimate_response.h \
+ ../App/Inc/Protocol/Requests/diag_ctrl_request.h \
+ ../App/Inc/Protocol/Responses/diag_ctrl_response.h \
+ ../App/Inc/Protocol/Requests/set_enc_ppr_request.h \
+ ../App/Inc/Protocol/Responses/set_enc_ppr_response.h \
+ ../App/Inc/Protocol/Requests/model_run_request.h \
+ ../App/Inc/Protocol/Responses/model_run_response.h
 ../App/Inc/app.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/main.h:
@@ -107,3 +115,11 @@ App/Src/Services/Motion/motion_service.o: \
 ../App/Inc/Protocol/Requests/encoder_status_request.h:
 ../App/Inc/Protocol/Responses/encoder_status_response.h:
 ../App/Inc/Protocol/Requests/set_microsteps_request.h:
+../App/Inc/Protocol/Requests/motion_estimate_request.h:
+../App/Inc/Protocol/Responses/motion_estimate_response.h:
+../App/Inc/Protocol/Requests/diag_ctrl_request.h:
+../App/Inc/Protocol/Responses/diag_ctrl_response.h:
+../App/Inc/Protocol/Requests/set_enc_ppr_request.h:
+../App/Inc/Protocol/Responses/set_enc_ppr_response.h:
+../App/Inc/Protocol/Requests/model_run_request.h:
+../App/Inc/Protocol/Responses/model_run_response.h:

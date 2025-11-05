@@ -425,3 +425,15 @@ No CubeIDE, adicione `App/Inc` em Paths & Symbols para os includes `protocol/...
 - [ ] USART1 VCP funcionando (printf).  
 - [ ] E-STOP/PROX em EXTI; ISR só-flag.  
 - [ ] Router SPI recebe AA..55 e responde AB..54.
+
+---
+
+## 16) Telemetria de Velocidade (SWO/UART) e CLI no Raspberry
+
+- Durante a execução de movimentos, o firmware publica (via SWO/ITM quando habilitado) linhas a cada ~100 ms no formato:
+  `SPD:<EIXO> cmd=<steps/s> meas=<steps/s> sps`
+  onde `cmd` é a frequência de comando (steps/s) e `meas` é a velocidade medida pelo encoder (contagens/s).
+- Para iniciar um movimento simples por voltas completas (ex.: 1 volta, PPR=40000) e observar as linhas `SPD:` no SWV ITM Console:
+  - `stm32-cli model-run --axis x --vx 2000 --turns 1 --ppr 40000 --microsteps 256 --wait-end --swo-print`
+- Alternativa sem SWO: rode `model-run` e, ao final, consulte as médias com:
+  - `stm32-cli model-estimate --frame-id 0x60`

@@ -1,0 +1,11 @@
+../App/Inc/Protocol/Requests/../frame_defs.h:107:19:has_header_tail	5
+../App/Inc/Protocol/Requests/../frame_defs.h:113:24:be16_read	1
+../App/Inc/Protocol/Requests/../frame_defs.h:116:24:be32_read	1
+../App/Inc/Protocol/Requests/../frame_defs.h:120:20:be16_write	1
+../App/Inc/Protocol/Requests/../frame_defs.h:124:20:be32_write	1
+../App/Inc/Protocol/Requests/../frame_defs.h:154:20:req_init	1
+../App/Inc/Protocol/Requests/../frame_defs.h:162:20:req_set_tail	1
+../App/Inc/Protocol/Requests/../frame_defs.h:173:19:frame_expect_req	5
+../App/Src/Protocol/Requests/model_run_request.c:3:5:model_run_req_decoder	4
+../App/Src/Protocol/Requests/model_run_request.c:15:5:model_run_req_encoder	4
+../App/Src/Protocol/Requests/model_run_request.c:27:17:model_run_req_make_default	1

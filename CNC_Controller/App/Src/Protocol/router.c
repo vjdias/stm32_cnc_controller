@@ -92,7 +92,11 @@ static void dispatch(router_t *r, const uint8_t *f, uint32_t len) {
         case REQ_SET_ORIGIN:         CALL(on_set_origin);         break;
         case REQ_ENCODER_STATUS:     CALL(on_encoder_status);     break;
         case REQ_SET_MICROSTEPS:     CALL(on_set_microsteps);     break;
+        case REQ_MOTION_ESTIMATE:    CALL(on_motion_estimate);    break;
+        case REQ_DIAG_CTRL:          CALL(on_diag_ctrl);          break;
         case REQ_TEST_HELLO:         CALL(on_test_hello);         break;
+        case REQ_SET_ENC_PPR:        CALL(on_set_enc_ppr);        break;
+        case REQ_MODEL_RUN:          CALL(on_model_run);          break;
         default: /* desconhecido */  break;
     }
     #undef CALL

@@ -20,6 +20,10 @@ typedef enum {
         REQ_SET_ORIGIN = 0x24,
         REQ_ENCODER_STATUS = 0x25,
         REQ_SET_MICROSTEPS = 0x26,
+        REQ_MOTION_ESTIMATE = 0x27,
+        REQ_DIAG_CTRL = 0x28,
+        REQ_SET_ENC_PPR = 0x29,
+        REQ_MODEL_RUN = 0x2A,
         REQ_TEST_HELLO = 0x68,
 } req_msg_type_t;
 
@@ -37,6 +41,10 @@ typedef enum {
         RESP_SET_ORIGIN = 0x24,
         RESP_ENCODER_STATUS = 0x25,
         RESP_SET_MICROSTEPS = 0x26,
+        RESP_MOTION_ESTIMATE = 0x27,
+        RESP_DIAG_CTRL = 0x28,
+        RESP_SET_ENC_PPR = 0x29,
+        RESP_MODEL_RUN = 0x2A,
         RESP_TEST_HELLO = 0x68,
 } resp_msg_type_t;
 

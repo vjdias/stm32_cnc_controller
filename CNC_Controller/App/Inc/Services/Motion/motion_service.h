@@ -36,6 +36,12 @@ void motion_on_set_origin(const uint8_t *frame, uint32_t len);
 void motion_on_encoder_status(const uint8_t *frame, uint32_t len);
 void motion_on_set_microsteps(const uint8_t *frame, uint32_t len);
 
+// Novos handlers para estimativa e controle de diagnósticos
+void motion_on_motion_estimate(const uint8_t *frame, uint32_t len);
+void motion_on_diag_ctrl(const uint8_t *frame, uint32_t len);
+void motion_on_set_enc_ppr(const uint8_t *frame, uint32_t len);
+void motion_on_model_run(const uint8_t *frame, uint32_t len);
+
 // Demo opcional: habilita um movimento de teste interno (sem host)
 void motion_demo_set_enabled(uint8_t enable);
 // Modo contínuo de teste: gera passos sem parar até desativar

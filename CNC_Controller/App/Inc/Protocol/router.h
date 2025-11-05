@@ -32,7 +32,11 @@ typedef struct {
         req_handler_fn on_set_origin;
         req_handler_fn on_encoder_status;
         req_handler_fn on_set_microsteps;
+        req_handler_fn on_motion_estimate;
+        req_handler_fn on_diag_ctrl;
         req_handler_fn on_test_hello;
+        req_handler_fn on_set_enc_ppr;
+        req_handler_fn on_model_run;
 } router_handlers_t;
 
 void router_init(router_t *r, response_fifo_t *resp_fifo,

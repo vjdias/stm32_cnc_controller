@@ -50,10 +50,22 @@ static void h_encoder_status(router_t *r, const uint8_t *f, uint32_t l) {
 static void h_set_microsteps(router_t *r, const uint8_t *f, uint32_t l) {
     (void) r; motion_on_set_microsteps(f, l);
 }
+static void h_motion_estimate(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_motion_estimate(f, l);
+}
+static void h_diag_ctrl(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_diag_ctrl(f, l);
+}
 
 static void h_test_hello(router_t *r, const uint8_t *f, uint32_t l) {
-	(void) r;
-	//test_spi_on_hello(f, l);
+    (void) r;
+    //test_spi_on_hello(f, l);
+}
+static void h_set_enc_ppr(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_set_enc_ppr(f, l);
+}
+static void h_model_run(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_model_run(f, l);
 }
 
 void services_register_handlers(router_handlers_t *h) {
@@ -70,5 +82,9 @@ void services_register_handlers(router_handlers_t *h) {
     h->on_set_origin = h_set_origin;
     h->on_encoder_status = h_encoder_status;
     h->on_set_microsteps = h_set_microsteps;
+    h->on_motion_estimate = h_motion_estimate;
+    h->on_diag_ctrl = h_diag_ctrl;
     h->on_test_hello = h_test_hello;
+    h->on_set_enc_ppr = h_set_enc_ppr;
+    h->on_model_run = h_model_run;
 }

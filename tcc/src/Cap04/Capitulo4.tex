@@ -15,12 +15,6 @@ segundo o tempo instrumentado na ISR. Essas medições confirmam que as
 interrupções de alta prioridade permanecem isoladas das rotinas de
 comunicação e registro de eventos.
 
-Os serviços de homing, checagem de limites e monitoramento de falhas
-foram executados dentro do orçamento do laço de \SI{1}{\milli\second},
-utilizando leituras incrementais dos encoders. Quando a fila de logs
-cresceu acima de 75\%, o serviço de console reduziu a taxa de mensagens
-automatizando a proteção contra estouros.
-
 \section{Análise do pipeline SPI}
 
 A captura do tráfego SPI revelou que cada comando completo envolve um

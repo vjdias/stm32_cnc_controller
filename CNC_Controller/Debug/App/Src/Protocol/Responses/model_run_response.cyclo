@@ -1,0 +1,7 @@
+../App/Inc/Protocol/Responses/../frame_defs.h:107:19:has_header_tail	5
+../App/Inc/Protocol/Responses/../frame_defs.h:158:20:resp_init	1
+../App/Inc/Protocol/Responses/../frame_defs.h:165:20:resp_set_tail	1
+../App/Inc/Protocol/Responses/../frame_defs.h:182:19:frame_expect_resp	5
+../App/Src/Protocol/Responses/model_run_response.c:3:5:model_run_resp_encoder	4
+../App/Src/Protocol/Responses/model_run_response.c:12:5:model_run_resp_decoder	4
+../App/Src/Protocol/Responses/model_run_response.c:21:18:model_run_resp_make_default	1

@@ -1,7 +1,7 @@
-../App/Inc/Protocol/Requests/../frame_defs.h:99:19:has_header_tail	24	static
-../App/Inc/Protocol/Requests/../frame_defs.h:146:20:req_init	16	static
-../App/Inc/Protocol/Requests/../frame_defs.h:154:20:req_set_tail	16	static
-../App/Inc/Protocol/Requests/../frame_defs.h:165:19:frame_expect_req	24	static
+../App/Inc/Protocol/Requests/../frame_defs.h:107:19:has_header_tail	24	static
+../App/Inc/Protocol/Requests/../frame_defs.h:154:20:req_init	16	static
+../App/Inc/Protocol/Requests/../frame_defs.h:162:20:req_set_tail	16	static
+../App/Inc/Protocol/Requests/../frame_defs.h:173:19:frame_expect_req	24	static
 ../App/Src/Protocol/Requests/set_microsteps_request.c:3:5:set_microsteps_req_decoder	32	static
 ../App/Src/Protocol/Requests/set_microsteps_request.c:11:5:set_microsteps_req_encoder	24	static
 ../App/Src/Protocol/Requests/set_microsteps_request.c:19:9:set_microsteps_req_calc_parity	16	static

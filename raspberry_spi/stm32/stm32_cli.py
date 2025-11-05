@@ -23,8 +23,11 @@ if __package__:
         RESP_HEADER,
         RESP_TAIL,
         REQ_SET_ORIGIN,
-        REQ_ENCODER_STATUS,
+        REQ_MOTION_ESTIMATE,
+        REQ_DIAG_CTRL,
+        REQ_SET_ENC_PPR,
     )
+    from .stm32_requests import STM32RequestBuilder
 else:  # execução direta do script a partir do diretório raspberry_spi
     if str(MODULE_DIR) not in sys.path:
         sys.path.insert(0, str(MODULE_DIR))
@@ -35,8 +38,11 @@ else:  # execução direta do script a partir do diretório raspberry_spi
         RESP_HEADER,
         RESP_TAIL,
         REQ_SET_ORIGIN,
-        REQ_ENCODER_STATUS,
+        REQ_MOTION_ESTIMATE,
+        REQ_DIAG_CTRL,
+        REQ_SET_ENC_PPR,
     )
+    from stm32_requests import STM32RequestBuilder  # type: ignore
 
 try:  # pragma: no cover - dependência externa
     import spidev  # type: ignore
@@ -446,10 +452,24 @@ def build_parser() -> argparse.ArgumentParser:
     origin.set_defaults(handler="origin_set", needs_client=True)
 
     # Encoder status (abs/rel), pid errors, delta
-    encst = sub.add_parser("enc-status", help="Consultar encoders absolutos/relativos, PID error e delta")
-    _common_args(encst, include_tries=True, include_settle_delay=True)
-    encst.add_argument("--frame-id", type=int, default=0x43)
-    encst.set_defaults(handler="encoder_status", needs_client=True)
+    # Estimativas de movimento (médias de acel/cruzeiro/desacel)
+    est = sub.add_parser("model-estimate", help="Consultar médias de aceleração, cruzeiro e desaceleração (após teste)")
+    _common_args(est, include_tries=True, include_settle_delay=True)
+    est.add_argument("--frame-id", type=int, default=0x60)
+    est.set_defaults(handler="model_estimate", needs_client=True)
+
+    # Rodar teste de movimento (um eixo) com opção de imprimir SWO
+    mv = sub.add_parser("model-run", help="Executa movimento de teste (um eixo) para estimativa de parâmetros")
+    _common_args(mv, include_tries=True, include_settle_delay=True)
+    mv.add_argument("--frame-id", type=int, default=0x50)
+    mv.add_argument("--axis", choices=("x","y","z"), default="x")
+    mv.add_argument("--neg", action="store_true", help="Direção negativa (inverte DIR do eixo)")
+    mv.add_argument("--vx", type=int, required=True, help="Velocidade em steps/s (comando)")
+    mv.add_argument("--turns", type=int, required=True, help="Número de voltas completas (1..20)")
+    mv.add_argument("--ppr", type=int, default=None, help="Pulsos do encoder por volta (default por eixo: X=40000,Y=2500,Z=40000)")
+    mv.add_argument("--swo-print", action="store_true", help="Habilita linhas SPD:<axis> via SWO durante o movimento")
+    mv.add_argument("--wait-end", action="store_true", help="Aguarda RESP_MOVE_END após iniciar")
+    mv.set_defaults(handler="move_speed", needs_client=True)
 
     return parser
 
@@ -458,17 +478,12 @@ def print_examples(_: argparse.Namespace) -> None:
     # Preferir o entrypoint instalado globalmente
     base_cmd = "stm32-cli"
     examples = [
-        (
-            "LED discreto",
-            f"{base_cmd} led-control --frame-id 1 --mask 0x01 --led1-mode 2 --led1-freq 0.5",
-        ),
-        (
-            "Adicionar movimento à fila",
-            f"{base_cmd} queue-add --frame-id 2 --dir 0x03 --vx 1000 --sx 2000 "
-            "--vy 1000 --sy 2000 --vz 500 --sz 800 --settle-delay 0.002",
-        ),
-        ("Iniciar execução", f"{base_cmd} start-move --frame-id 4"),
-        ("Finalizar execução", f"{base_cmd} end-move --frame-id 5"),
+        ("LED discreto",
+         f"{base_cmd} led-control --frame-id 1 --mask 0x01 --led1-mode 2 --led1-freq 0.5"),
+        ("Rodar teste (modelo)",
+         f"{base_cmd} model-run --axis x --vx 2000 --turns 1 --ppr 40000 --wait-end --swo-print"),
+        ("Ler estimativas",
+         f"{base_cmd} model-estimate --frame-id 0x60"),
     ]
 
     print("Comandos disponíveis e exemplos:")
@@ -707,16 +722,56 @@ def origin_set(args: argparse.Namespace) -> None:
     print(data)
 
 
-def encoder_status(args: argparse.Namespace) -> None:
+def model_estimate(args: argparse.Namespace) -> None:
     frame_id = int(getattr(args, "frame_id", 0) or 0)
-    req = STM32RequestBuilder.encoder_status(frame_id)
-    resp = _client_instance.exchange(REQ_ENCODER_STATUS, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    req = STM32RequestBuilder.motion_estimate(frame_id)
+    resp = _client_instance.exchange(REQ_MOTION_ESTIMATE, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
     try:
-        data = STM32ResponseDecoder.encoder_status(resp)
+        data = STM32ResponseDecoder.motion_estimate(resp)
     except Exception:
-        print("EncoderStatus não suportado; tente queue-status para PID.")
+        print("Resposta motion-estimate bruta:", resp)
         return
     print(data)
+
+
+def move_speed(args: argparse.Namespace) -> None:
+    # Monta um segmento simples para um único eixo com velocidade fixa
+    frame_id = int(getattr(args, "frame_id", 0) or 0)
+    axis = str(getattr(args, "axis", "x") or "x").lower()
+    neg = bool(getattr(args, "neg", False))
+    vx = int(getattr(args, "vx", 0) or 0)
+    turns = int(getattr(args, "turns", 0) or 0)
+    if turns <= 0 or vx <= 0 or turns > 20:
+        print("Erro: informe --vx>0 e --turns entre 1 e 20")
+        return
+    axis_idx = {"x": 0, "y": 1, "z": 2}[axis]
+    dir_mask = (1 << axis_idx) if neg else 0
+
+    # 1) Ajustar PPR no firmware para o eixo
+    default_ppr = {0: 40000, 1: 2500, 2: 40000}[axis_idx]
+    ppr = int(getattr(args, "ppr", default_ppr) or default_ppr)
+    req_ppr = STM32RequestBuilder.set_enc_ppr(frame_id, axis_idx, ppr)
+    _client_instance.exchange(REQ_SET_ENC_PPR, req_ppr, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    # 0) Controle de diagnóstico (SWO SPD on/off)
+    if bool(getattr(args, "swo_print", False)):
+        dreq = STM32RequestBuilder.diag_ctrl(frame_id, 0x01)
+        _client_instance.exchange(REQ_DIAG_CTRL, dreq, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    else:
+        dreq = STM32RequestBuilder.diag_ctrl(frame_id, 0x00)
+        _client_instance.exchange(REQ_DIAG_CTRL, dreq, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+
+    # 2) Envia comando RAW de execução (sem fila/CASC)
+    req = STM32RequestBuilder.model_run(frame_id, axis_idx, neg, vx, turns)
+    ack = _client_instance.exchange(REQ_MODEL_RUN, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    print("ack:", ack)
+
+    if bool(getattr(args, "wait_end", False)):
+        # O firmware encerra automaticamente quando o encoder atingir N×PPR.
+        import time as _t
+        _t.sleep(0.1 * max(1, turns))
+
+    if bool(getattr(args, "swo_print", False)):
+        print("Dica: monitore SWO por linhas 'SPD:<axis> cmd=.. meas=.. sps'.")
 
 
 def _load_cfg_with_fallback(path: str) -> tuple[dict, str]:
