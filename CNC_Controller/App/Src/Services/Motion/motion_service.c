@@ -934,6 +934,9 @@ void motion_on_tim7_tick(void)
             g_status.state = MOTION_IDLE;
             motion_refresh_status_locked();
             motion_unlock(primask);
+            // Notifica término ao host para compatibilidade com --wait-end
+            motion_send_move_end_response(g_active_frame_id, 0u /* natural_done */);
+            g_active_frame_id = 0u;
         }
         // Não executar CASC quando RAW ativo
         return;
@@ -1487,6 +1490,8 @@ void motion_on_model_run(const uint8_t *frame, uint32_t len) {
     g_raw.enc_start = (int32_t)g_encoder_position[a];
     g_raw.active = 1u;
     g_status.state = MOTION_RUNNING;
+    // Armazena frameId ativo para enviar MOVE_END ao concluir o RAW
+    g_active_frame_id = req.frameId;
     motion_unlock(primask);
 
     // Estimador só para este eixo

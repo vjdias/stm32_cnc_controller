@@ -22,11 +22,13 @@ if __package__:
         SPI_DMA_CLIENT_POLL_BYTE,
         RESP_HEADER,
         RESP_TAIL,
+        RESP_MOVE_END,
         REQ_SET_ORIGIN,
         REQ_MOTION_ESTIMATE,
         REQ_DIAG_CTRL,
         REQ_SET_ENC_PPR,
         REQ_MODEL_RUN,
+        REQ_MOVE_END,
     )
     from .stm32_requests import STM32RequestBuilder
 else:  # execução direta do script a partir do diretório raspberry_spi
@@ -38,11 +40,13 @@ else:  # execução direta do script a partir do diretório raspberry_spi
         SPI_DMA_CLIENT_POLL_BYTE,
         RESP_HEADER,
         RESP_TAIL,
+        RESP_MOVE_END,
         REQ_SET_ORIGIN,
         REQ_MOTION_ESTIMATE,
         REQ_DIAG_CTRL,
         REQ_SET_ENC_PPR,
         REQ_MODEL_RUN,
+        REQ_MOVE_END,
     )
     from stm32_requests import STM32RequestBuilder  # type: ignore
 
@@ -429,7 +433,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     # led (boot) removido
 
-    # Verificação de CS / SPI (removido)
+    # Verificação de CS / SPI
+    cs = sub.add_parser("cs-check", help="Inspeciona /dev/spidevX.Y e checa modo/bpw/CS; opcionalmente lê/toggle de GPIOs como CS manual")
+    cs.add_argument("--expected-mode", type=int, default=3, help="Modo SPI esperado (0..3). Default: 3")
+    cs.add_argument("--expected-bpw", type=int, default=8, help="Bits por palavra esperados. Default: 8")
+    cs.add_argument("--expected-active-low", action="store_true", help="Se definido, espera CS ativo-baixo")
+    cs.add_argument("--manual-cs", action="append", default=None, help="Mapa NOME=GPIO para ler/toggle CS manual (pode repetir)")
+    cs.add_argument("--toggle-test", action="store_true", help="Faz toggle alto→baixo→alto nos GPIOs com --manual-cs")
+    cs.set_defaults(handler="cs_check", needs_client=False)
     # examples removido
     # Safe-off removido
 
@@ -748,29 +759,64 @@ def move_speed(args: argparse.Namespace) -> None:
         return
     axis_idx = {"x": 0, "y": 1, "z": 2}[axis]
     dir_mask = (1 << axis_idx) if neg else 0
+    # Alinhar kwargs de troca SPI com _execute_request (tries/settle/poll control)
+    exch_kwargs = {
+        "tries": int(getattr(args, "tries", 3) or 3),
+        "settle_delay_s": float(getattr(args, "settle_delay", 0.002) or 0.002),
+    }
+    # Controle de polling
+    try:
+        if bool(getattr(args, "disable_poll", False)):
+            exch_kwargs["poll_byte"] = None
+        else:
+            pbyte = getattr(args, "poll_byte", None)
+            if pbyte is not None:
+                exch_kwargs["poll_byte"] = pbyte
+    except Exception:
+        pass
 
     # 1) Ajustar PPR no firmware para o eixo
     default_ppr = {0: 40000, 1: 2500, 2: 40000}[axis_idx]
     ppr = int(getattr(args, "ppr", default_ppr) or default_ppr)
     req_ppr = STM32RequestBuilder.set_enc_ppr(frame_id, axis_idx, ppr)
-    _client_instance.exchange(REQ_SET_ENC_PPR, req_ppr, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    try:
+        _client_instance.exchange(REQ_SET_ENC_PPR, req_ppr, **exch_kwargs)
+    except Exception as exc:
+        print(f"Aviso: set_enc_ppr falhou ({exc}); seguindo sem ajustar PPR.")
     # 0) Controle de diagnóstico (SWO SPD on/off)
     if bool(getattr(args, "swo_print", False)):
         dreq = STM32RequestBuilder.diag_ctrl(frame_id, 0x01)
-        _client_instance.exchange(REQ_DIAG_CTRL, dreq, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+        try:
+            _client_instance.exchange(REQ_DIAG_CTRL, dreq, **exch_kwargs)
+        except Exception as exc:
+            print(f"Aviso: diag_ctrl(SWO on) falhou ({exc}); prosseguindo.")
     else:
         dreq = STM32RequestBuilder.diag_ctrl(frame_id, 0x00)
-        _client_instance.exchange(REQ_DIAG_CTRL, dreq, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+        try:
+            _client_instance.exchange(REQ_DIAG_CTRL, dreq, **exch_kwargs)
+        except Exception as exc:
+            print(f"Aviso: diag_ctrl(SWO off) falhou ({exc}); prosseguindo.")
 
     # 2) Envia comando RAW de execução (sem fila/CASC)
     req = STM32RequestBuilder.model_run(frame_id, axis_idx, neg, vx, turns)
-    ack = _client_instance.exchange(REQ_MODEL_RUN, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    ack = _client_instance.exchange(REQ_MODEL_RUN, req, **exch_kwargs)
     print("ack:", ack)
 
     if bool(getattr(args, "wait_end", False)):
-        # O firmware encerra automaticamente quando o encoder atingir N×PPR.
-        import time as _t
-        _t.sleep(0.1 * max(1, turns))
+        # Aguarda RESP_MOVE_END indicando término
+        try:
+            tries = int(max(1, (10.0 * max(1, turns)) / max(0.001, float(getattr(args, "settle_delay", 0.002) or 0.002))))
+            raw_end = _client_instance.poll_for(
+                RESP_MOVE_END,
+                expected_len=5,
+                tries=tries,
+                settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002),
+                poll_byte=exch_kwargs.get("poll_byte", SPI_DMA_CLIENT_POLL_BYTE),
+            )
+            spec = STM32ResponseDecoder.SPECS[REQ_MOVE_END]
+            print(spec.decoder(raw_end))
+        except Exception as exc:
+            print("Aviso: MOVE_END não recebido:", exc)
 
     if bool(getattr(args, "swo_print", False)):
         print("Dica: monitore SWO por linhas 'SPD:<axis> cmd=.. meas=.. sps'.")
