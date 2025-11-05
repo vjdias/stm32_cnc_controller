@@ -844,10 +844,12 @@ def main(argv: Optional[List[str]] = None) -> int:
             _client_instance = client
 
         if isinstance(handler, str):
-            if executor is None:
-                handler_fn = globals().get(handler)
-            else:
+            # Prefer handler no executor; se não existir, cai para função global
+            handler_fn = None
+            if executor is not None:
                 handler_fn = getattr(executor, handler, None)
+            if handler_fn is None:
+                handler_fn = globals().get(handler)
         else:
             handler_fn = handler
 
