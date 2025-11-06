@@ -30,7 +30,7 @@ from typing import Dict, List, Tuple
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Plot encoder telemetry from SWV/ITM dump")
-    p.add_argument("--file", "-f", default="SWV_ITM_Data_Console_1.txt",
+    p.add_argument("--file", "-f", default="CNC_Controller\SWV_export\SWV_ITM_Data_Console_1.txt",
                    help="Input text file with CSV lines (default: SWV_ITM_Data_Console_1.txt)")
     p.add_argument("--outdir", "-o", default="plots",
                    help="Directory to save plots (default: plots)")
@@ -40,6 +40,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--title", default=None,
                    help="Optional title prefix for figures")
     p.add_argument("--dpi", type=int, default=110, help="PNG DPI (default: 110)")
+    p.add_argument("--print-head", type=int, default=0,
+                   help="Print first N encoder samples per axis (0=disabled)")
     return p.parse_args()
 
 
@@ -54,6 +56,7 @@ def is_debug_line(s: str) -> bool:
 
 def load_rows(path: str) -> List[Tuple[int,int,int,int]]:
     rows: List[Tuple[int,int,int,int]] = []
+    
     with open(path, "r", encoding="utf-8", errors="ignore") as fh:
         for line in fh:
             s = line.strip()
@@ -68,6 +71,7 @@ def load_rows(path: str) -> List[Tuple[int,int,int,int]]:
                 t_ms = int(parts[1], 10)
                 pos = int(parts[2], 10)
                 steps = int(parts[3], 10)
+
             except ValueError:
                 continue
             rows.append((axis, t_ms, pos, steps))
@@ -76,8 +80,10 @@ def load_rows(path: str) -> List[Tuple[int,int,int,int]]:
 
 def group_by_axis(rows: List[Tuple[int,int,int,int]]):
     axes: Dict[int, List[Tuple[int,int,int]]] = {}
+    
     for axis, t_ms, pos, steps in rows:
         axes.setdefault(axis, []).append((t_ms, pos, steps))
+        
     # sort by time
     for a in axes:
         axes[a].sort(key=lambda x: x[0])
@@ -137,6 +143,17 @@ def plot_axis(ax_id: int, series: List[Tuple[int,int,int]], offset: int, outdir:
     return outpath
 
 
+def print_head(ax_id: int, series: List[Tuple[int,int,int]], offset: int, n: int) -> None:
+    k = min(max(n, 0), len(series))
+    if k <= 0:
+        return
+    print(f"Axis {ax_id} - first {k} samples (t_ms, enc_raw, enc_adj, steps):")
+    for i in range(k):
+        t, enc_raw, steps = series[i]
+        enc_adj = max(abs(enc_raw) - offset, 0)
+        print(f"  [{i:03d}] t={t} ms  enc_raw={enc_raw}  enc_adj={enc_adj}  steps={steps}")
+
+
 def main() -> int:
     args = parse_args()
     rows = load_rows(args.file)
@@ -151,6 +168,10 @@ def main() -> int:
     print("Validation summary (strict 4-column rows only):")
     for ax_id, series in sorted(axes.items()):
         print("  " + summarize_axis(ax_id, series, off_map.get(ax_id, args.offsets[0])))
+    # Optional debug print of the first N samples per axis
+    if args.print_head and args.print_head > 0:
+        for ax_id, series in sorted(axes.items()):
+            print_head(ax_id, series, off_map.get(ax_id, args.offsets[0]), args.print_head)
     outputs: List[str] = []
     for ax_id, series in sorted(axes.items()):
         try:
