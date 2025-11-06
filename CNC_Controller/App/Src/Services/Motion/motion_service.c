@@ -59,6 +59,26 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_DEBUG_STEP_DECIM        500u
 #endif
 
+// Emissão de CSV no exato momento do STEP (TIM6)
+#ifndef MOTION_CSV_AT_STEP
+#define MOTION_CSV_AT_STEP             1u
+#endif
+#ifndef MOTION_CSV_STEP_DECIM
+#define MOTION_CSV_STEP_DECIM          100u   /* imprime a cada N passos após o primeiro */
+#endif
+
+// Amostragem periódica do CSV (em ms). Ajuste conforme necessário.
+#ifndef MOTION_CSV_SAMPLE_MS
+#define MOTION_CSV_SAMPLE_MS            1u
+#endif
+
+// Conversão de tempo baseada no clock do TIM6
+// Ex.: 50 kHz => 50 ticks por milissegundo
+#define T6_TICKS_PER_MS                 (MOTION_TIM6_HZ / 1000u)
+
+// Contador monotônico de ticks do TIM6 (incrementa a cada update)
+static volatile uint32_t g_tim6_ticks = 0u;
+
 #define DEMO_ACCEL_SPS2                200000u  /* ~50 ms p/ ir a 10k sps */
 
 /* Limite físico de passos/s com largura mínima de STEP e tLOW implícito */
@@ -163,6 +183,30 @@ static int32_t g_pi_prev_err[MOTION_AXIS_COUNT];
 // Sombras 32-bit para uso com SWV Data Trace/Graph
 volatile int32_t g_enc_abs32[MOTION_AXIS_COUNT];
 volatile int32_t g_enc_rel32[MOTION_AXIS_COUNT];
+
+// Telemetria CSV: tempo(ms) desde início da variação do encoder,
+// posição relativa do encoder e total de passos emitidos desde o início
+static volatile uint8_t  g_csv_active[MOTION_AXIS_COUNT];
+static volatile uint32_t g_csv_t0_ms[MOTION_AXIS_COUNT];
+static volatile uint32_t g_csv_stepcount[MOTION_AXIS_COUNT];
+static volatile uint32_t g_csv_next_ms[MOTION_AXIS_COUNT];
+static volatile uint8_t  g_csv_armed[MOTION_AXIS_COUNT]; // 1=armado no start_move; ativa ao primeiro STEP
+
+// Referência de tempo baseada em ticks do TIM6 (mais estável que SysTick em prints SWO)
+static volatile uint32_t g_csv_t0_t6[MOTION_AXIS_COUNT];
+static volatile uint32_t g_csv_next_t6[MOTION_AXIS_COUNT];
+
+// Forward declarations for lock helpers used below
+static inline uint32_t motion_lock(void);
+static inline void     motion_unlock(uint32_t primask);
+
+static inline void motion_csv_print(uint8_t axis, uint32_t t_ms, long rel, uint32_t steps)
+{
+    uint32_t pm = motion_lock();
+    printf("%u,%lu,%ld,%lu\r\n", (unsigned)axis,
+           (unsigned long)t_ms, rel, (unsigned long)steps);
+    motion_unlock(pm);
+}
 
 static uint32_t g_step_print_count[MOTION_AXIS_COUNT] = {0,0,0};
 
@@ -436,16 +480,7 @@ static void motion_update_encoders(void) {
             g_encoder_position[axis] += delta;
             g_encoder_delta_tick[axis] = (int32_t)delta;
 #if MOTION_DEBUG_ENCODERS
-            if (delta != 0) {
-                long abs = (long)g_encoder_position[axis];
-                long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
-                printf("[ENC axis=%u raw=%u delta=%d abs=%ld rel=%ld]\r\n",
-                       (unsigned)axis,
-                       (unsigned)now,
-                       (int)delta,
-                       abs,
-                       rel);
-            }
+            // Prints antigos removidos; CSV emitido no TIM7
 #endif
         } else {
             int32_t delta = (int32_t)(now - g_encoder_last_raw[axis]);
@@ -453,16 +488,7 @@ static void motion_update_encoders(void) {
             g_encoder_position[axis] += delta;
             g_encoder_delta_tick[axis] = delta;
 #if MOTION_DEBUG_ENCODERS
-            if (delta != 0) {
-                long abs = (long)g_encoder_position[axis];
-                long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
-                printf("[ENC axis=%u raw=%lu delta=%ld abs=%ld rel=%ld]\r\n",
-                       (unsigned)axis,
-                       (unsigned long)now,
-                       (long)delta,
-                       abs,
-                       rel);
-            }
+            // Prints antigos removidos; CSV emitido no TIM7
 #endif
         }
     }
@@ -541,6 +567,14 @@ void motion_service_init(void) {
     memset(g_origin_base32, 0, sizeof g_origin_base32);
     memset(g_pi_d_filt, 0, sizeof g_pi_d_filt);
     memset(g_v_accum, 0, sizeof g_v_accum);
+    memset((void*)g_csv_active, 0, sizeof g_csv_active);
+    memset((void*)g_csv_t0_ms, 0, sizeof g_csv_t0_ms);
+    memset((void*)g_csv_stepcount, 0, sizeof g_csv_stepcount);
+    memset((void*)g_csv_next_ms, 0, sizeof g_csv_next_ms);
+    memset((void*)g_csv_armed, 0, sizeof g_csv_armed);
+    memset((void*)g_csv_t0_t6, 0, sizeof g_csv_t0_t6);
+    memset((void*)g_csv_next_t6, 0, sizeof g_csv_next_t6);
+    g_tim6_ticks = 0u;
 
     g_status.state = MOTION_IDLE;
     g_queue_head = g_queue_tail = g_queue_count = 0u;
@@ -579,6 +613,8 @@ const motion_status_t* motion_status_get(void) {
  * ======================= */
 void motion_on_tim6_tick(void)
 {
+    // Incrementa base de tempo de 50 kHz para telemetria
+    g_tim6_ticks++;
     if (g_status.state != MOTION_RUNNING || !g_has_active_segment)
         return;
 
@@ -616,6 +652,24 @@ void motion_on_tim6_tick(void)
                 motion_hw_step_high(axis);
                 ax->step_high = MOTION_STEP_HIGH_TICKS;
                 ++ax->emitted_steps;
+                g_csv_stepcount[axis]++;
+                if (!g_csv_active[axis]) {
+                    g_csv_active[axis] = 1u;
+                    g_csv_armed[axis]  = 0u;
+                    uint32_t now_t6 = g_tim6_ticks;
+                    g_csv_t0_t6[axis] = now_t6;
+                    g_csv_next_t6[axis] = now_t6;
+                }
+#if MOTION_CSV_AT_STEP
+                if (g_csv_active[axis]) {
+                    uint32_t dt_t6 = g_tim6_ticks - g_csv_t0_t6[axis];
+                    uint32_t t_ms = dt_t6 / T6_TICKS_PER_MS;
+                    long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+                    if (g_csv_stepcount[axis] == 1u || (g_csv_stepcount[axis] % MOTION_CSV_STEP_DECIM) == 0u) {
+                        motion_csv_print(axis, t_ms, rel, g_csv_stepcount[axis]);
+                    }
+                }
+#endif
 #if MOTION_DEBUG_FLOW
                 #if MOTION_DEBUG_TIM6_PRINTS
                 if ((++g_step_print_count[axis] % MOTION_DEBUG_STEP_DECIM) == 1u) {
@@ -650,7 +704,25 @@ void motion_on_tim6_tick(void)
                     motion_hw_step_high(axis);
                     ax->step_high = MOTION_STEP_HIGH_TICKS;
                     ++ax->emitted_steps;
+                    g_csv_stepcount[axis]++;
                     ax->target_steps = ax->emitted_steps;
+                    if (g_csv_armed[axis] && !g_csv_active[axis]) {
+                        g_csv_active[axis] = 1u;
+                        g_csv_armed[axis]  = 0u;
+                        uint32_t now_t6 = g_tim6_ticks;
+                        g_csv_t0_t6[axis] = now_t6;
+                        g_csv_next_t6[axis] = now_t6;
+                    }
+#if MOTION_CSV_AT_STEP
+                    if (g_csv_active[axis]) {
+                        uint32_t dt_t6 = g_tim6_ticks - g_csv_t0_t6[axis];
+                        uint32_t t_ms = dt_t6 / T6_TICKS_PER_MS;
+                        long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+                        if (g_csv_stepcount[axis] == 1u || (g_csv_stepcount[axis] % MOTION_CSV_STEP_DECIM) == 0u) {
+                            motion_csv_print(axis, t_ms, rel, g_csv_stepcount[axis]);
+                        }
+                    }
+#endif
 #if MOTION_DEBUG_FLOW
                     #if MOTION_DEBUG_TIM6_PRINTS
                     if ((++g_step_print_count[axis] % MOTION_DEBUG_STEP_DECIM) == 1u) {
@@ -686,18 +758,12 @@ void motion_on_tim6_tick(void)
                 motion_stop_all_axes_locked();
                 g_status.state = MOTION_DONE;
                 motion_send_move_end_response(g_active_frame_id, 0u /* natural_done */);
-#if MOTION_DEBUG_ENCODERS
-                printf("[ENC DONE abs=(%ld,%ld,%ld) rel=(%ld,%ld,%ld) target=(%lu,%lu,%lu)]\r\n",
-                       (long)g_enc_abs32[AXIS_X],
-                       (long)g_enc_abs32[AXIS_Y],
-                       (long)g_enc_abs32[AXIS_Z],
-                       (long)g_enc_rel32[AXIS_X],
-                       (long)g_enc_rel32[AXIS_Y],
-                       (long)g_enc_rel32[AXIS_Z],
-                       (unsigned long)g_axis_state[AXIS_X].total_steps,
-                       (unsigned long)g_axis_state[AXIS_Y].total_steps,
-                       (unsigned long)g_axis_state[AXIS_Z].total_steps);
-#endif
+                // Fim do movimento: encerrar sessão CSV e zerar contadores
+                for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+                    g_csv_active[a] = 0u;
+                    g_csv_armed[a]  = 0u;
+                    g_csv_stepcount[a] = 0u;
+                }
             }
             motion_refresh_status_locked();
         }
@@ -714,6 +780,25 @@ void motion_on_tim6_tick(void)
 void motion_on_tim7_tick(void)
 {
     motion_update_encoders();
+
+#if (MOTION_CSV_SAMPLE_MS + 0u) > 0u
+    // Emite CSV (axis,tempo_ms,pos_rel,steps) periodicamente usando base de tempo do TIM6
+    // t_ms é relativo ao primeiro STEP (t0 capturado no próprio TIM6)
+    uint32_t now_t6 = g_tim6_ticks;
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        if (!g_csv_active[axis]) continue;
+        if ((int32_t)(now_t6 - g_csv_next_t6[axis]) >= 0) {
+            long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+            uint32_t dt_t6 = now_t6 - g_csv_t0_t6[axis];
+            uint32_t t_ms = dt_t6 / T6_TICKS_PER_MS;
+            motion_csv_print(axis, t_ms, rel, g_csv_stepcount[axis]);
+            // Agenda próximas amostras em passos de MOTION_CSV_SAMPLE_MS
+            uint32_t inc_ticks = ((uint32_t)MOTION_CSV_SAMPLE_MS) * (uint32_t)T6_TICKS_PER_MS;
+            do { g_csv_next_t6[axis] += inc_ticks; }
+            while ((int32_t)(now_t6 - g_csv_next_t6[axis]) >= 0);
+        }
+    }
+#endif
 
     // Atualiza sombras 32-bit para SWV/Data Trace (4 bytes por amostra)
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
@@ -949,6 +1034,21 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
 
     (void)HAL_TIM_Base_Start_IT(&htim6);
     (void)HAL_TIM_Base_Start_IT(&htim7);
+
+    // Arma sessões CSV para iniciarem no primeiro STEP; zera contadores
+    if (started) {
+        uint32_t pm = motion_lock();
+        for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+            g_csv_armed[a] = 1u;             // iniciar ao primeiro STEP
+            g_csv_active[a] = 0u;            // ainda não iniciou
+            g_csv_t0_ms[a]  = 0u;
+            g_csv_stepcount[a] = 0u;         // zera contador de passos
+            g_csv_next_ms[a] = 0u;           // será setado no primeiro STEP
+            g_csv_t0_t6[a] = 0u;
+            g_csv_next_t6[a] = 0u;
+        }
+        motion_unlock(pm);
+    }
 
     motion_send_start_response(req.frameId, started ? 0u : 1u, g_status.queue_depth);
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "start_move", started ? "running" : "ignored");

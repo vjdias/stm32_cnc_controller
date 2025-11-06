@@ -10,6 +10,12 @@
 #include "usart.h"
 #include "stm32l4xx.h"  // ITM_SendChar/CoreDebug/DBGMCU/TPI
 
+// Defina LOG_FORCE_UART=1 em C/C++ Build -> Symbols para forçar saída via UART,
+// mesmo quando o SWO estiver habilitado.
+#ifndef LOG_FORCE_UART
+#define LOG_FORCE_UART 0
+#endif
+
 void log_service_init(void){
     // Garante stdout sem buffer para que o printf descarregue imediatamente na UART.
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -45,10 +51,14 @@ int _write(int fd, char *ptr, int len)
     if (fd != 1 && fd != 2)
         return -1;
 
-    if (log_swo_enabled()) {
+    if (!LOG_FORCE_UART && log_swo_enabled()) {
+        // Evita interleaving de mensagens: seção crítica durante a transmissão SWO
+        uint32_t primask = __get_PRIMASK();
+        __disable_irq();
         for (int i = 0; i < len; ++i) {
             ITM_SendChar((uint32_t)ptr[i]);
         }
+        __set_PRIMASK(primask);
         return len;
     }
 
