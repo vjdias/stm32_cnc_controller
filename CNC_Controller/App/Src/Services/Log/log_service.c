@@ -52,13 +52,10 @@ int _write(int fd, char *ptr, int len)
         return -1;
 
     if (!LOG_FORCE_UART && log_swo_enabled()) {
-        // Evita interleaving de mensagens: seção crítica durante a transmissão SWO
-        uint32_t primask = __get_PRIMASK();
-        __disable_irq();
+        // Envia sem desabilitar interrupções para não afetar o tempo do TIM6
         for (int i = 0; i < len; ++i) {
             ITM_SendChar((uint32_t)ptr[i]);
         }
-        __set_PRIMASK(primask);
         return len;
     }
 

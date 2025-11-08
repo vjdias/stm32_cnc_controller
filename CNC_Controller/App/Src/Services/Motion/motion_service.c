@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include "stm32l4xx.h"  /* ITM/DBGMCU presence for optional binary SWO */
 
 #include "Services/Log/log_service.h"
 #include "Services/Motion/motion_service.h"
@@ -30,7 +31,9 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
 
 #define MOTION_AXIS_COUNT        3u
-#define MOTION_QUEUE_CAPACITY    64u
+// Aumenta a capacidade da fila de movimentos para reduzir "queue_full"
+// Cada entrada consome ~42 bytes (move_queue_add_req_t); 256 => ~10.8 KB
+#define MOTION_QUEUE_CAPACITY    256u
 
 /* =======================
  *  Timings p/ TMC5160 + DDA
@@ -59,7 +62,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_DEBUG_STEP_DECIM        500u
 #endif
 
-// Emissão de CSV no exato momento do STEP (TIM6)
+// Emissão de CSV/telemetria
 #ifndef MOTION_CSV_AT_STEP
 #define MOTION_CSV_AT_STEP             1u
 #endif
@@ -70,6 +73,28 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 // Amostragem periódica do CSV (em ms). Ajuste conforme necessário.
 #ifndef MOTION_CSV_SAMPLE_MS
 #define MOTION_CSV_SAMPLE_MS            1u
+#endif
+
+// Produção rígida a cada 1 ms no TIM6 (50 kHz) com ring buffer (SPSC)
+#ifndef MOTION_CSV_PRODUCE_IN_TIM6
+#define MOTION_CSV_PRODUCE_IN_TIM6      0u   /* amostra e imprime no TIM7, sempre após atualizar encoders */
+#endif
+#ifndef MOTION_CSV_RING_CAP
+#define MOTION_CSV_RING_CAP             512u /* 16 bytes × 512 × 3 eixos ≈ 24 KB */
+#endif
+#ifndef MOTION_CSV_DRAIN_PER_TICK
+#define MOTION_CSV_DRAIN_PER_TICK       128u /* aumenta drenagem para aliviar backlog rapidamente */
+#endif
+
+// Opções de formato/rápidez (padrões conservadores p/ compatibilidade)
+#ifndef MOTION_CSV_INCLUDE_ID
+#define MOTION_CSV_INCLUDE_ID           1u   /* adiciona um id incremental por eixo */
+#endif
+#ifndef MOTION_CSV_TIME_IN_TICKS
+#define MOTION_CSV_TIME_IN_TICKS        1u   /* 0=imprime tempo em ms (compat), 1=ticks TIM6 (mais barato) */
+#endif
+#ifndef MOTION_CSV_BIN_ITM
+#define MOTION_CSV_BIN_ITM              0u   /* 1=encaminha frame binário via ITM (menos CPU/bytes) */
 #endif
 
 // Conversão de tempo baseada no clock do TIM6
@@ -127,9 +152,9 @@ static motion_axis_state_t g_axis_state[MOTION_AXIS_COUNT];
 static volatile uint8_t g_has_active_segment = 0u;
 
 static motion_queue_entry_t g_queue[MOTION_QUEUE_CAPACITY];
-static uint8_t g_queue_head = 0u;
-static uint8_t g_queue_tail = 0u;
-static uint8_t g_queue_count = 0u;
+static uint8_t  g_queue_head  = 0u;
+static uint8_t  g_queue_tail  = 0u;
+static uint16_t g_queue_count = 0u;  /* suporta até 256 entradas */
 static uint8_t g_active_frame_id = 0u; 
 
 static int64_t  g_encoder_position[MOTION_AXIS_COUNT];
@@ -195,17 +220,104 @@ static volatile uint8_t  g_csv_armed[MOTION_AXIS_COUNT]; // 1=armado no start_mo
 // Referência de tempo baseada em ticks do TIM6 (mais estável que SysTick em prints SWO)
 static volatile uint32_t g_csv_t0_t6[MOTION_AXIS_COUNT];
 static volatile uint32_t g_csv_next_t6[MOTION_AXIS_COUNT];
+static volatile uint32_t g_csv_seq[MOTION_AXIS_COUNT]; /* id incremental por eixo */
+
+#if MOTION_CSV_PRODUCE_IN_TIM6
+typedef struct {
+    uint32_t id;      /* id incremental */
+    uint32_t t6;      /* tempo relativo em ticks do TIM6 */
+    int32_t  rel;     /* encoder relativo */
+    uint32_t steps;   /* total de steps emitidos */
+} motion_csv_sample_t;
+
+static volatile motion_csv_sample_t g_csv_ring[MOTION_AXIS_COUNT][MOTION_CSV_RING_CAP];
+static volatile uint16_t g_csv_rhead[MOTION_AXIS_COUNT];
+static volatile uint16_t g_csv_rtail[MOTION_AXIS_COUNT];
+static volatile uint32_t g_csv_next_prod_t6; /* agenda global: a cada 50 ticks (1ms) */
+
+static inline void csv_ring_reset(void)
+{
+    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+        g_csv_rhead[a] = 0u;
+        g_csv_rtail[a] = 0u;
+    }
+    g_csv_next_prod_t6 = 0u;
+}
+
+static inline void csv_ring_push(uint8_t axis, uint32_t id, uint32_t t6, int32_t rel, uint32_t steps)
+{
+    uint16_t h = g_csv_rhead[axis];
+    uint16_t n = (uint16_t)((h + 1u) % MOTION_CSV_RING_CAP);
+    if (n == g_csv_rtail[axis]) {
+        /* ring cheio: descarta o mais antigo (avança tail) para não bloquear produtor */
+        g_csv_rtail[axis] = (uint16_t)((g_csv_rtail[axis] + 1u) % MOTION_CSV_RING_CAP);
+    }
+    g_csv_ring[axis][h].id    = id;
+    g_csv_ring[axis][h].t6    = t6;
+    g_csv_ring[axis][h].rel   = rel;
+    g_csv_ring[axis][h].steps = steps;
+    g_csv_rhead[axis] = n;
+}
+
+static inline int csv_ring_pop(uint8_t axis, motion_csv_sample_t *out)
+{
+    uint16_t t = g_csv_rtail[axis];
+    if (t == g_csv_rhead[axis]) return 0;
+    if (out) {
+        * (motion_csv_sample_t*)out = g_csv_ring[axis][t];
+    }
+    g_csv_rtail[axis] = (uint16_t)((t + 1u) % MOTION_CSV_RING_CAP);
+    return 1;
+}
+#endif /* MOTION_CSV_PRODUCE_IN_TIM6 */
 
 // Forward declarations for lock helpers used below
 static inline uint32_t motion_lock(void);
 static inline void     motion_unlock(uint32_t primask);
 
-static inline void motion_csv_print(uint8_t axis, uint32_t t_ms, long rel, uint32_t steps)
+// Checagem local de habilitação do SWO/ITM (porta 0)
+static inline int motion_swo_enabled(void)
 {
-    uint32_t pm = motion_lock();
-    printf("%u,%lu,%ld,%lu\r\n", (unsigned)axis,
-           (unsigned long)t_ms, rel, (unsigned long)steps);
-    motion_unlock(pm);
+    return ((CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk) &&
+            (DBGMCU->CR & DBGMCU_CR_TRACE_IOEN) &&
+            (ITM->TCR & ITM_TCR_ITMENA_Msk) &&
+            (ITM->TER & (1UL << 0)));
+}
+
+static inline void motion_csv_print(uint8_t axis, uint32_t id, uint32_t t_val, int32_t rel, uint32_t steps)
+{
+#if MOTION_CSV_BIN_ITM
+    // Frame binário compacto: [tag(1) axis(1) id(4) t(4) rel(4) steps(4)]
+    // tag='E' (0x45) para encoder; axis=0..2
+    if (motion_swo_enabled()) {
+        ITM_SendChar('E');
+        ITM_SendChar((uint32_t)axis);
+        uint32_t v;
+        v = id;      for (int i=0;i<4;i++) ITM_SendChar((v >> (i*8)) & 0xFF);
+        v = t_val;   for (int i=0;i<4;i++) ITM_SendChar((v >> (i*8)) & 0xFF);
+        v = (uint32_t)rel; for (int i=0;i<4;i++) ITM_SendChar((v >> (i*8)) & 0xFF);
+        v = steps;   for (int i=0;i<4;i++) ITM_SendChar((v >> (i*8)) & 0xFF);
+        ITM_SendChar('\n');
+        return;
+    }
+#endif
+
+#if MOTION_CSV_INCLUDE_ID
+    // Texto: axis,id,time,rel,steps (rel como int32 para evitar wrap sem sinal)
+    printf("%u,%lu,%lu,%d,%lu\r\n",
+           (unsigned)axis,
+           (unsigned long)id,
+           (unsigned long)t_val,
+           (int)rel,
+           (unsigned long)steps);
+#else
+    // Compatibilidade: axis,time,rel,steps
+    printf("%u,%lu,%d,%lu\r\n",
+           (unsigned)axis,
+           (unsigned long)t_val,
+           (int)rel,
+           (unsigned long)steps);
+#endif
 }
 
 static uint32_t g_step_print_count[MOTION_AXIS_COUNT] = {0,0,0};
@@ -290,8 +402,8 @@ static uint32_t motion_remaining_steps_total_for_axis(uint8_t axis)
         if (ax->total_steps > ax->emitted_steps)
             rem += (ax->total_steps - ax->emitted_steps);
     }
-    for (uint8_t i = 0; i < g_queue_count; ++i) {
-        uint8_t idxq = (uint8_t)((g_queue_head + i) % MOTION_QUEUE_CAPACITY);
+    for (uint16_t i = 0; i < g_queue_count; ++i) {
+        uint8_t idxq = (uint8_t)(((uint16_t)g_queue_head + i) % MOTION_QUEUE_CAPACITY);
         const move_queue_add_req_t *q = &g_queue[idxq].req;
         rem += motion_total_for_axis(q, axis);
     }
@@ -302,7 +414,10 @@ static uint32_t motion_remaining_steps_total_for_axis(uint8_t axis)
  *  Status e fila
  * ======================= */
 static void motion_refresh_status_locked(void) {
-    g_status.queue_depth = (uint8_t)(g_queue_count + (g_has_active_segment ? 1u : 0u));
+    /* depth reportado cabe em 8 bits; faz clamp para 255 */
+    uint32_t depth32 = (uint32_t)g_queue_count + (uint32_t)(g_has_active_segment ? 1u : 0u);
+    if (depth32 > 255u) depth32 = 255u;
+    g_status.queue_depth = (uint8_t)depth32;
 
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
         const motion_axis_state_t *ax = &g_axis_state[axis];
@@ -574,7 +689,11 @@ void motion_service_init(void) {
     memset((void*)g_csv_armed, 0, sizeof g_csv_armed);
     memset((void*)g_csv_t0_t6, 0, sizeof g_csv_t0_t6);
     memset((void*)g_csv_next_t6, 0, sizeof g_csv_next_t6);
+    memset((void*)g_csv_seq, 0, sizeof g_csv_seq);
     g_tim6_ticks = 0u;
+#if MOTION_CSV_PRODUCE_IN_TIM6
+    csv_ring_reset();
+#endif
 
     g_status.state = MOTION_IDLE;
     g_queue_head = g_queue_tail = g_queue_count = 0u;
@@ -660,13 +779,20 @@ void motion_on_tim6_tick(void)
                     g_csv_t0_t6[axis] = now_t6;
                     g_csv_next_t6[axis] = now_t6;
                 }
-#if MOTION_CSV_AT_STEP
+#if MOTION_CSV_AT_STEP && !MOTION_CSV_PRODUCE_IN_TIM6
                 if (g_csv_active[axis]) {
                     uint32_t dt_t6 = g_tim6_ticks - g_csv_t0_t6[axis];
-                    uint32_t t_ms = dt_t6 / T6_TICKS_PER_MS;
-                    long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+#if MOTION_CSV_TIME_IN_TICKS
+                    uint32_t t_val = dt_t6;
+#else
+                    uint32_t t_val = dt_t6 / T6_TICKS_PER_MS;
+#endif
+                    int32_t rel = (int32_t)(g_encoder_position[axis] - g_encoder_origin[axis]);
                     if (g_csv_stepcount[axis] == 1u || (g_csv_stepcount[axis] % MOTION_CSV_STEP_DECIM) == 0u) {
-                        motion_csv_print(axis, t_ms, rel, g_csv_stepcount[axis]);
+                        uint32_t pm = motion_lock();
+                        uint32_t id = ++g_csv_seq[axis];
+                        motion_unlock(pm);
+                        motion_csv_print(axis, id, t_val, rel, g_csv_stepcount[axis]);
                     }
                 }
 #endif
@@ -706,20 +832,28 @@ void motion_on_tim6_tick(void)
                     ++ax->emitted_steps;
                     g_csv_stepcount[axis]++;
                     ax->target_steps = ax->emitted_steps;
-                    if (g_csv_armed[axis] && !g_csv_active[axis]) {
+                    /* Garanta ativação no primeiro STEP mesmo se o "arming" atrasar */
+                    if ((g_csv_armed[axis] || g_csv_stepcount[axis] == 1u) && !g_csv_active[axis]) {
                         g_csv_active[axis] = 1u;
                         g_csv_armed[axis]  = 0u;
                         uint32_t now_t6 = g_tim6_ticks;
                         g_csv_t0_t6[axis] = now_t6;
                         g_csv_next_t6[axis] = now_t6;
                     }
-#if MOTION_CSV_AT_STEP
+#if MOTION_CSV_AT_STEP && !MOTION_CSV_PRODUCE_IN_TIM6
                     if (g_csv_active[axis]) {
                         uint32_t dt_t6 = g_tim6_ticks - g_csv_t0_t6[axis];
-                        uint32_t t_ms = dt_t6 / T6_TICKS_PER_MS;
-                        long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+#if MOTION_CSV_TIME_IN_TICKS
+                        uint32_t t_val = dt_t6;
+#else
+                        uint32_t t_val = dt_t6 / T6_TICKS_PER_MS;
+#endif
+                        int32_t rel = (int32_t)(g_encoder_position[axis] - g_encoder_origin[axis]);
                         if (g_csv_stepcount[axis] == 1u || (g_csv_stepcount[axis] % MOTION_CSV_STEP_DECIM) == 0u) {
-                            motion_csv_print(axis, t_ms, rel, g_csv_stepcount[axis]);
+                            uint32_t pm = motion_lock();
+                            uint32_t id = ++g_csv_seq[axis];
+                            motion_unlock(pm);
+                            motion_csv_print(axis, id, t_val, rel, g_csv_stepcount[axis]);
                         }
                     }
 #endif
@@ -738,6 +872,31 @@ void motion_on_tim6_tick(void)
             }
         }
     }
+
+#if MOTION_CSV_PRODUCE_IN_TIM6
+    /* 4) Produção rígida de amostras a cada 1 ms (50 ticks), sem imprimir
+       - Apenas empilha amostras para drenagem posterior (TIM7).
+       - Começa após o primeiro STEP (g_csv_active[axis]==1). */
+    {
+        uint32_t now_t6 = g_tim6_ticks;
+        if ((int32_t)(now_t6 - g_csv_next_prod_t6) >= 0) {
+            /* gera 1..K amostras de 1ms (se houver atraso ocasional) */
+            do {
+                for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+                    if (!g_csv_active[axis]) continue; /* iniciar no primeiro STEP */
+                    uint32_t dt_t6 = now_t6 - g_csv_t0_t6[axis];
+                    long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+                    uint32_t pm = motion_lock();
+                    uint32_t id = ++g_csv_seq[axis];
+                    motion_unlock(pm);
+                    csv_ring_push(axis, id, dt_t6, (int32_t)rel, g_csv_stepcount[axis]);
+                }
+                g_csv_next_prod_t6 += T6_TICKS_PER_MS;
+            } while ((int32_t)(now_t6 - g_csv_next_prod_t6) >= 0);
+        }
+    }
+#endif
+
     uint32_t primask = motion_lock();
     if (g_has_active_segment) {
         uint8_t confirm = 1u;
@@ -759,11 +918,12 @@ void motion_on_tim6_tick(void)
                 g_status.state = MOTION_DONE;
                 motion_send_move_end_response(g_active_frame_id, 0u /* natural_done */);
                 // Fim do movimento: encerrar sessão CSV e zerar contadores
-                for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
-                    g_csv_active[a] = 0u;
-                    g_csv_armed[a]  = 0u;
-                    g_csv_stepcount[a] = 0u;
-                }
+        for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+            g_csv_active[a] = 0u;
+            g_csv_armed[a]  = 0u;
+            g_csv_stepcount[a] = 0u;
+            g_csv_seq[a] = 0u;
+        }
             }
             motion_refresh_status_locked();
         }
@@ -781,21 +941,44 @@ void motion_on_tim7_tick(void)
 {
     motion_update_encoders();
 
-#if (MOTION_CSV_SAMPLE_MS + 0u) > 0u
-    // Emite CSV (axis,tempo_ms,pos_rel,steps) periodicamente usando base de tempo do TIM6
-    // t_ms é relativo ao primeiro STEP (t0 capturado no próprio TIM6)
+#if (MOTION_CSV_SAMPLE_MS + 0u) > 0u && !MOTION_CSV_PRODUCE_IN_TIM6
+    // Emite CSV (axis,time,rel,steps) periodicamente usando base de tempo do TIM6
     uint32_t now_t6 = g_tim6_ticks;
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
         if (!g_csv_active[axis]) continue;
         if ((int32_t)(now_t6 - g_csv_next_t6[axis]) >= 0) {
-            long rel = (long)(g_encoder_position[axis] - g_encoder_origin[axis]);
+            int32_t rel = (int32_t)(g_encoder_position[axis] - g_encoder_origin[axis]);
             uint32_t dt_t6 = now_t6 - g_csv_t0_t6[axis];
-            uint32_t t_ms = dt_t6 / T6_TICKS_PER_MS;
-            motion_csv_print(axis, t_ms, rel, g_csv_stepcount[axis]);
-            // Agenda próximas amostras em passos de MOTION_CSV_SAMPLE_MS
+#if MOTION_CSV_TIME_IN_TICKS
+            uint32_t t_val = dt_t6;
+#else
+            uint32_t t_val = dt_t6 / T6_TICKS_PER_MS;
+#endif
+            uint32_t pm = motion_lock();
+            uint32_t id = ++g_csv_seq[axis];
+            motion_unlock(pm);
+            motion_csv_print(axis, id, t_val, rel, g_csv_stepcount[axis]);
             uint32_t inc_ticks = ((uint32_t)MOTION_CSV_SAMPLE_MS) * (uint32_t)T6_TICKS_PER_MS;
-            do { g_csv_next_t6[axis] += inc_ticks; }
-            while ((int32_t)(now_t6 - g_csv_next_t6[axis]) >= 0);
+            do { g_csv_next_t6[axis] += inc_ticks; } while ((int32_t)(now_t6 - g_csv_next_t6[axis]) >= 0);
+        }
+    }
+#endif
+
+#if MOTION_CSV_PRODUCE_IN_TIM6
+    /* Drena ring buffer (SPSC) produzido no TIM6, com limite por tick */
+    uint32_t drained = 0u;
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT && drained < MOTION_CSV_DRAIN_PER_TICK; ++axis) {
+        while (drained < MOTION_CSV_DRAIN_PER_TICK) {
+            motion_csv_sample_t s;
+            if (!csv_ring_pop(axis, &s)) break;
+            uint32_t t_val;
+#if MOTION_CSV_TIME_IN_TICKS
+            t_val = s.t6;
+#else
+            t_val = s.t6 / T6_TICKS_PER_MS;
+#endif
+            motion_csv_print(axis, s.id, t_val, s.rel, s.steps);
+            drained++;
         }
     }
 #endif
@@ -1005,11 +1188,11 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
 
 #if MOTION_DEBUG_FLOW
     {
-        uint8_t depth = (uint8_t)(g_queue_count + (g_has_active_segment ? 1u : 0u));
+        uint16_t depth = (uint16_t)(g_queue_count + (g_has_active_segment ? 1u : 0u));
         printf("[FLOW start_move request depth=%u active=%u ids=(",
-               (unsigned)depth, (unsigned)g_active_frame_id);
-        for (uint8_t i = 0; i < g_queue_count; ++i) {
-            uint8_t idxq = (uint8_t)((g_queue_head + i) % MOTION_QUEUE_CAPACITY);
+               (unsigned)((depth > 255u) ? 255u : depth), (unsigned)g_active_frame_id);
+        for (uint16_t i = 0; i < g_queue_count; ++i) {
+            uint8_t idxq = (uint8_t)(((uint16_t)g_queue_head + i) % MOTION_QUEUE_CAPACITY);
             unsigned id = (unsigned)g_queue[idxq].req.frameId;
             printf(i ? ",%u" : "%u", id);
         }
@@ -1046,8 +1229,14 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
             g_csv_next_ms[a] = 0u;           // será setado no primeiro STEP
             g_csv_t0_t6[a] = 0u;
             g_csv_next_t6[a] = 0u;
+            g_csv_seq[a] = 0u;               // reinicia id incremental por start_move
         }
         motion_unlock(pm);
+#if MOTION_CSV_PRODUCE_IN_TIM6
+        csv_ring_reset();
+        /* agenda primeira produção 1ms à frente do tempo atual */
+        g_csv_next_prod_t6 = g_tim6_ticks + (uint32_t)T6_TICKS_PER_MS;
+#endif
     }
 
     motion_send_start_response(req.frameId, started ? 0u : 1u, g_status.queue_depth);

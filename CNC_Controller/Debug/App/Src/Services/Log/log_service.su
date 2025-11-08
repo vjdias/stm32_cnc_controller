@@ -4,5 +4,5 @@
 ../App/Src/Services/Log/log_service.c:28:6:log_event_ids	16	static
 ../App/Src/Services/Log/log_service.c:32:6:log_event_names	24	static
 ../App/Src/Services/Log/log_service.c:40:19:log_swo_enabled	4	static
-../App/Src/Services/Log/log_service.c:49:5:_write	40	static,ignoring_inline_asm
-../App/Src/Services/Log/log_service.c:71:6:log_event_auto	168	static
+../App/Src/Services/Log/log_service.c:49:5:_write	32	static
+../App/Src/Services/Log/log_service.c:68:6:log_event_auto	168	static

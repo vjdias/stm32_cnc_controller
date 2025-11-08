@@ -2,8 +2,15 @@
 """
 Plot encoder telemetry from SWV/ITM console dump.
 
-Expects CSV lines strictly as:
-    axis,time_ms,enc_pos,step_count
+Accepts rows in either format:
+  - 4 columns (legacy): axis,time,enc_pos,step_count
+  - 5 columns (new):    axis,id,time,enc_pos,step_count
+
+Notes:
+  - time is milliseconds by default, unless firmware is configured to emit
+    TIM6 ticks; the script treats it as an x-axis without units.
+  - id is a per-axis incremental sequence (optional). When present,
+    the script reports gaps/duplicates as integrity checks.
 
 Adjustments applied per request:
   - Make encoder positions positive: use abs(enc_pos)
@@ -54,8 +61,8 @@ def is_debug_line(s: str) -> bool:
     return False
 
 
-def load_rows(path: str) -> List[Tuple[int,int,int,int]]:
-    rows: List[Tuple[int,int,int,int]] = []
+def load_rows(path: str) -> List[Tuple[int,int,int,int,int]]:
+    rows: List[Tuple[int,int,int,int,int]] = []
     
     with open(path, "r", encoding="utf-8", errors="ignore") as fh:
         for line in fh:
@@ -63,27 +70,35 @@ def load_rows(path: str) -> List[Tuple[int,int,int,int]]:
             if not s or is_debug_line(s):
                 continue
             parts = [p.strip() for p in s.split(',')]
-            # Strict: only accept 4-number rows
-            if len(parts) != 4:
+            if len(parts) == 4:
+                try:
+                    axis = int(parts[0], 10)
+                    seq  = -1  # legacy no-id
+                    t    = int(parts[1], 10)
+                    pos  = int(parts[2], 10)
+                    steps= int(parts[3], 10)
+                except ValueError:
+                    continue
+                rows.append((axis, seq, t, pos, steps))
+            elif len(parts) == 5:
+                try:
+                    axis = int(parts[0], 10)
+                    seq  = int(parts[1], 10)
+                    t    = int(parts[2], 10)
+                    pos  = int(parts[3], 10)
+                    steps= int(parts[4], 10)
+                except ValueError:
+                    continue
+                rows.append((axis, seq, t, pos, steps))
+            else:
                 continue
-            try:
-                axis = int(parts[0], 10)
-                t_ms = int(parts[1], 10)
-                pos = int(parts[2], 10)
-                steps = int(parts[3], 10)
-
-            except ValueError:
-                continue
-            rows.append((axis, t_ms, pos, steps))
     return rows
 
 
-def group_by_axis(rows: List[Tuple[int,int,int,int]]):
-    axes: Dict[int, List[Tuple[int,int,int]]] = {}
-    
-    for axis, t_ms, pos, steps in rows:
-        axes.setdefault(axis, []).append((t_ms, pos, steps))
-        
+def group_by_axis(rows: List[Tuple[int,int,int,int,int]]):
+    axes: Dict[int, List[Tuple[int,int,int,int]]] = {}
+    for axis, seq, t, pos, steps in rows:
+        axes.setdefault(axis, []).append((t, pos, steps, seq))
     # sort by time
     for a in axes:
         axes[a].sort(key=lambda x: x[0])
@@ -95,13 +110,14 @@ def ensure_outdir(path: str) -> None:
         os.makedirs(path, exist_ok=True)
 
 
-def summarize_axis(ax_id: int, series: List[Tuple[int,int,int]], offset: int) -> str:
+def summarize_axis(ax_id: int, series: List[Tuple[int,int,int,int]], offset: int) -> str:
     n = len(series)
     if n == 0:
         return f"axis {ax_id}: no data"
-    t = [t for (t,_,__) in series]
-    enc = [p for (_,p,__) in series]
-    steps = [s for (_,__,s) in series]
+    t = [t for (t,_,__,_) in series]
+    enc = [p for (_,p,__,_) in series]
+    steps = [s for (_,__,s,_) in series]
+    seqs = [q for (_,__,__,q) in series if q is not None and q >= 0]
     enc_adj = [max(abs(p) - offset, 0) for p in enc]
     t_min, t_max = min(t), max(t)
     s_min, s_max = min(steps), max(steps)
@@ -110,17 +126,28 @@ def summarize_axis(ax_id: int, series: List[Tuple[int,int,int]], offset: int) ->
     # Detect duplicates/out-of-order times
     nondec = all(t[i] >= t[i-1] for i in range(1, n))
     dup_ts = sum(1 for i in range(1, n) if t[i] == t[i-1])
-    return (f"axis {ax_id}: N={n} t=[{t_min},{t_max}] nondec={nondec} dups={dup_ts} | "
-            f"steps=[{s_min},{s_max}] enc_raw=[{er_min},{er_max}] enc_adj(|enc|-{offset})=[{ea_min},{ea_max}]")
+    seq_info = ""
+    if seqs:
+        gaps = 0
+        dups = 0
+        for i in range(1, len(seqs)):
+            diff = seqs[i] - seqs[i-1]
+            if diff <= 0:
+                dups += 1
+            elif diff > 1:
+                gaps += (diff - 1)
+        seq_info = f" seq=[{min(seqs)},{max(seqs)}] gaps={gaps} dups={dups} |"
+    return (f"axis {ax_id}: N={n} t=[{t_min},{t_max}] nondec={nondec} dups={dup_ts} |" 
+            f"{seq_info} steps=[{s_min},{s_max}] enc_raw=[{er_min},{er_max}] enc_adj(|enc|-{offset})=[{ea_min},{ea_max}]")
 
 
-def plot_axis(ax_id: int, series: List[Tuple[int,int,int]], offset: int, outdir: str, title_prefix: str|None, dpi: int) -> str:
+def plot_axis(ax_id: int, series: List[Tuple[int,int,int,int]], offset: int, outdir: str, title_prefix: str|None, dpi: int) -> str:
     import matplotlib.pyplot as plt
 
     if not series:
         raise ValueError(f"Axis {ax_id}: no data")
-    t = [t for (t,_,__) in series]
-    enc_raw = [p for (_,p,__) in series]
+    t = [t for (t,_,__,_) in series]
+    enc_raw = [p for (_,p,__,_) in series]
     # Apply requested adjustments
     enc_adj = [max(abs(p) - offset, 0) for p in enc_raw]
 
@@ -143,15 +170,15 @@ def plot_axis(ax_id: int, series: List[Tuple[int,int,int]], offset: int, outdir:
     return outpath
 
 
-def print_head(ax_id: int, series: List[Tuple[int,int,int]], offset: int, n: int) -> None:
+def print_head(ax_id: int, series: List[Tuple[int,int,int,int]], offset: int, n: int) -> None:
     k = min(max(n, 0), len(series))
     if k <= 0:
         return
     print(f"Axis {ax_id} - first {k} samples (t_ms, enc_raw, enc_adj, steps):")
     for i in range(k):
-        t, enc_raw, steps = series[i]
+        t, enc_raw, steps, seq = series[i]
         enc_adj = max(abs(enc_raw) - offset, 0)
-        print(f"  [{i:03d}] t={t} ms  enc_raw={enc_raw}  enc_adj={enc_adj}  steps={steps}")
+        print(f"  [{i:03d}] t={t} enc_raw={enc_raw} enc_adj={enc_adj} steps={steps} seq={seq}")
 
 
 def main() -> int:
