@@ -91,7 +91,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_CSV_INCLUDE_ID           1u   /* adiciona um id incremental por eixo */
 #endif
 #ifndef MOTION_CSV_TIME_IN_TICKS
-#define MOTION_CSV_TIME_IN_TICKS        1u   /* 0=imprime tempo em ms (compat), 1=ticks TIM6 (mais barato) */
+#define MOTION_CSV_TIME_IN_TICKS        0u   /* 0=imprime tempo em ms (compat), 1=ticks TIM6 (mais barato) */
 #endif
 #ifndef MOTION_CSV_BIN_ITM
 #define MOTION_CSV_BIN_ITM              0u   /* 1=encaminha frame binário via ITM (menos CPU/bytes) */

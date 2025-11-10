@@ -1,0 +1,107 @@
+SWV Step Response Analysis
+Generated: 2025-11-09 14:22:38
+Reference: motion_service.c (STEPS_PER_REV_BASE=400, default microstep=256, encoder counts X/Z=40000, Y=2500).
+
+=== motor0_v8_irun2_ihold0_mstep16_toff3_voltas2_enc40000_filtered.csv ===
+Axis X (id 0), microstep 16, samples 1132, duration 1.911 s.
+Δt stats: min 0.012000 s, median 0.015000 s, mean 0.015095 s, max 0.019000 s.
+Steady velocities: comando 6,852.10 pulsos/s, encoder 42,289.97 pulsos/s.
+G_v(s) params: K=6.1718, L=0.001000 s, τ=0.019000 s (t63=0.020000 s).
+PD gains (Z-N reaction curve): Kp=3.6942, Ki=0.0000, Kd=0.0018. Sugestão segura inicial Kp=1.8471 (50%).
+Step detection: step-like (t90 rise 0.027000 s; fraction 0.014).
+Viscoso/teórico: ganho medido vs teórico 6.1718 / 6.2500 → variação 1.251 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor0_v8_irun2_ihold0_mstep16_toff3_voltas2_enc40000_filtered_derived.csv
+
+=== motor0_v8_irun2_ihold0_mstep256_toff3_voltas2_enc40000_filtered.csv ===
+Axis X (id 0), microstep 256, samples 16618, duration 29.754 s.
+Δt stats: min 0.012000 s, median 0.016000 s, mean 0.016108 s, max 0.146000 s.
+Steady velocities: comando 6,895.48 pulsos/s, encoder 2,643.62 pulsos/s.
+G_v(s) params: K=0.3834, L=0.001000 s, τ=0.001000 s (t63=0.002000 s).
+PD gains (Z-N reaction curve): Kp=3.1300, Ki=0.0000, Kd=0.0016. Sugestão segura inicial Kp=1.5650 (50%).
+Step detection: step-like (t90 rise 0.028000 s; fraction 0.001).
+Viscoso/teórico: ganho medido vs teórico 0.3834 / 0.3906 → variação 1.853 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor0_v8_irun2_ihold0_mstep256_toff3_voltas2_enc40000_filtered_derived.csv
+Observações:
+  - L ajustado para resolução mínima (~0.001000 s).
+
+=== motor0_v8_irun2_ihold0_mstep4_toff3_voltas2_enc40000_filtered.csv ===
+Axis X (id 0), microstep 4, samples 293, duration 0.493 s.
+Δt stats: min 0.012000 s, median 0.015000 s, mean 0.014768 s, max 0.019000 s.
+Steady velocities: comando 6,692.09 pulsos/s, encoder 165,494.11 pulsos/s.
+G_v(s) params: K=24.7298, L=0.004000 s, τ=0.016000 s (t63=0.020000 s).
+PD gains (Z-N reaction curve): Kp=0.1941, Ki=0.0000, Kd=0.0004. Sugestão segura inicial Kp=0.0970 (50%).
+Step detection: step-like (t90 rise 0.030000 s; fraction 0.061).
+Viscoso/teórico: ganho medido vs teórico 24.7298 / 25.0000 → variação 1.081 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor0_v8_irun2_ihold0_mstep4_toff3_voltas2_enc40000_filtered_derived.csv
+
+=== motor1_v8_irun2_ihold0_mstep16_toff3_voltas2_enc5000_filtered.csv ===
+Axis Y (id 1), microstep 16, samples 1086, duration 1.913 s.
+Δt stats: min 0.013000 s, median 0.016000 s, mean 0.015750 s, max 0.020000 s.
+Steady velocities: comando 6,854.29 pulsos/s, encoder 5,355.59 pulsos/s.
+G_v(s) params: K=0.7813, L=0.001000 s, τ=0.019000 s (t63=0.020000 s).
+PD gains (Z-N reaction curve): Kp=29.1803, Ki=0.0000, Kd=0.0146. Sugestão segura inicial Kp=14.5902 (50%).
+Step detection: step-like (t90 rise 0.030000 s; fraction 0.016).
+Viscoso/teórico: ganho medido vs teórico 0.7813 / 0.3906 → variação -100.025 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor1_v8_irun2_ihold0_mstep16_toff3_voltas2_enc5000_filtered_derived.csv
+Observações:
+  - L ajustado para resolução mínima (~0.001000 s).
+
+=== motor1_v8_irun2_ihold0_mstep256_toff3_voltas2_enc5000_filtered.csv ===
+Axis Y (id 1), microstep 256, samples 16228, duration 29.739 s.
+Δt stats: min 0.013000 s, median 0.016000 s, mean 0.016486 s, max 0.124000 s.
+Steady velocities: comando 6,897.20 pulsos/s, encoder 337.36 pulsos/s.
+G_v(s) params: K=0.0489, L=0.001000 s, τ=0.001000 s (t63=0.001000 s).
+PD gains (Z-N reaction curve): Kp=24.5333, Ki=0.0000, Kd=0.0123. Sugestão segura inicial Kp=12.2666 (50%).
+Step detection: step-like (t90 rise 0.031000 s; fraction 0.001).
+Viscoso/teórico: ganho medido vs teórico 0.0489 / 0.0244 → variação -100.348 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor1_v8_irun2_ihold0_mstep256_toff3_voltas2_enc5000_filtered_derived.csv
+Observações:
+  - L ajustado para resolução mínima (~0.001000 s).
+  - τ ajustado para resolução mínima (~0.001000 s).
+
+=== motor1_v8_irun2_ihold0_mstep4_toff3_voltas2_enc5000_filtered.csv ===
+Axis Y (id 1), microstep 4, samples 287, duration 0.494 s.
+Δt stats: min 0.012000 s, median 0.015000 s, mean 0.015101 s, max 0.019000 s.
+Steady velocities: comando 6,659.10 pulsos/s, encoder 20,816.11 pulsos/s.
+G_v(s) params: K=3.1260, L=0.005000 s, τ=0.012000 s (t63=0.017000 s).
+PD gains (Z-N reaction curve): Kp=0.9213, Ki=0.0000, Kd=0.0023. Sugestão segura inicial Kp=0.4607 (50%).
+Step detection: step-like (t90 rise 0.021000 s; fraction 0.043).
+Viscoso/teórico: ganho medido vs teórico 3.1260 / 1.5625 → variação -100.062 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor1_v8_irun2_ihold0_mstep4_toff3_voltas2_enc5000_filtered_derived.csv
+
+=== motor2_v8_irun2_ihold0_mstep16_toff3_voltas2_enc40000_filtered.csv ===
+Axis Z (id 2), microstep 16, samples 1004, duration 1.900 s.
+Δt stats: min 0.014000 s, median 0.017000 s, mean 0.016916 s, max 0.021000 s.
+Steady velocities: comando 6,857.33 pulsos/s, encoder 41,268.06 pulsos/s.
+G_v(s) params: K=6.0181, L=0.001000 s, τ=0.019000 s (t63=0.020000 s).
+PD gains (Z-N reaction curve): Kp=3.7886, Ki=0.0000, Kd=0.0019. Sugestão segura inicial Kp=1.8943 (50%).
+Step detection: step-like (t90 rise 0.029000 s; fraction 0.015).
+Viscoso/teórico: ganho medido vs teórico 6.0181 / 6.2500 → variação 3.711 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor2_v8_irun2_ihold0_mstep16_toff3_voltas2_enc40000_filtered_derived.csv
+Observações:
+  - L ajustado para resolução mínima (~0.001000 s).
+
+=== motor2_v8_irun2_ihold0_mstep256_toff3_voltas2_enc40000_filtered.csv ===
+Axis Z (id 2), microstep 256, samples 14890, duration 29.756 s.
+Δt stats: min 0.014000 s, median 0.018000 s, mean 0.017978 s, max 0.092000 s.
+Steady velocities: comando 6,894.10 pulsos/s, encoder 2,656.51 pulsos/s.
+G_v(s) params: K=0.3853, L=0.001000 s, τ=0.001000 s (t63=0.001000 s).
+PD gains (Z-N reaction curve): Kp=3.1142, Ki=0.0000, Kd=0.0016. Sugestão segura inicial Kp=1.5571 (50%).
+Step detection: step-like (t90 rise 0.032000 s; fraction 0.001).
+Viscoso/teórico: ganho medido vs teórico 0.3853 / 0.3906 → variação 1.355 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor2_v8_irun2_ihold0_mstep256_toff3_voltas2_enc40000_filtered_derived.csv
+Observações:
+  - L ajustado para resolução mínima (~0.001000 s).
+  - τ ajustado para resolução mínima (~0.001000 s).
+
+=== motor2_v8_irun2_ihold0_mstep4_toff3_voltas2_enc40000_filtered.csv ===
+Axis Z (id 2), microstep 4, samples 260, duration 0.495 s.
+Δt stats: min 0.014000 s, median 0.016000 s, mean 0.016612 s, max 0.021000 s.
+Steady velocities: comando 6,775.07 pulsos/s, encoder 176,394.14 pulsos/s.
+G_v(s) params: K=26.0357, L=0.003000 s, τ=0.017000 s (t63=0.020000 s).
+PD gains (Z-N reaction curve): Kp=0.2612, Ki=0.0000, Kd=0.0004. Sugestão segura inicial Kp=0.1306 (50%).
+Step detection: step-like (t90 rise 0.031000 s; fraction 0.063).
+Viscoso/teórico: ganho medido vs teórico 26.0357 / 25.0000 → variação -4.143 %.
+Derived CSV: /mnt/c/Users/Valdir/Documents/Develop/cnc/stm32_cnc_controller/CNC_Controller/SWV_export/analysis_data/motor2_v8_irun2_ihold0_mstep4_toff3_voltas2_enc40000_filtered_derived.csv
+
+Use estes números como ponto de partida. Ajuste Kp gradualmente (50% → 100%) com o Kd sugerido e Ki=0, conforme recomendado.
