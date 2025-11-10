@@ -29,6 +29,8 @@ import json
 import math
 import numpy as np
 from collections import deque
+from datetime import datetime
+import csv
 
 import matplotlib
 try:
@@ -99,7 +101,8 @@ class PlantConfig:
     deadband_steps: int = 10      # (MOTION_PI_DEADBAND_STEPS)
 
     load_C_xyz: Tuple[float, float, float] = (0.0, 0.0, 0.0)
-    load_B_xyz: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    # Fricção viscosa default levemente diferente por eixo para provocar erro
+    load_B_xyz: Tuple[float, float, float] = (0.02, 0.025, 0.03)
 
     @property
     def max_sps(self) -> float:
@@ -118,6 +121,18 @@ class Scenario:
     
     sim_time_s: float = 3.0 # Tempo total da simulação
     use_dda: bool = True
+
+LOG_HEADER = [
+    "t_s",
+    "dda_pos_x", "dda_pos_y", "dda_pos_z",
+    "enc_rel_x", "enc_rel_y", "enc_rel_z",
+    "vel_sps_x", "vel_sps_y", "vel_sps_z",
+    "err_steps_x", "err_steps_y", "err_steps_z",
+    "active_load_x", "active_load_y", "active_load_z",
+    "load_timer_x", "load_timer_y", "load_timer_z",
+    "span_steps",
+    "global_stop",
+]
 
 
 def parse_axis_map(text: str) -> List[Tuple[str, int]]:
@@ -210,14 +225,27 @@ class DDAStepper:
 # =========================
 
 class InteractiveSim:
-    def __init__(self, cfg: PlantConfig, scn: Scenario):
+    def __init__(self, cfg: PlantConfig, scn: Scenario, *, log_dir: Path | None = None, enable_logging: bool = True):
         self.cfg = cfg
         self.scn = scn
+        self.log_enabled = enable_logging
+        self.log_dir = Path(log_dir) if log_dir else Path("sim_logs")
+        self.log_session_path: Path | None = None
+        self.last_log_path: Path | None = None
+        self._log_file = None
+        self._log_writer = None
+        self._log_samples = 0
+        self._log_flush_interval = 200
+        if self.log_enabled:
+            self.log_dir.mkdir(parents=True, exist_ok=True)
         
         self.microsteps_per_rev = dda_steps_per_rev(cfg)
         self.N_steps_total = int(round(scn.sim_time_s / cfg.Ts))
         # Mantém, no mínimo, todo o histórico de um ciclo completo de simulação
         self.plot_history_size = max(self.N_steps_total + 1, 500)
+        # Descola o t=0 do canto esquerdo para evitar sobreposição com a legenda
+        self.graph_time_pad_left = max(0.1, 0.05 * self.scn.sim_time_s)
+        self.graph_time_pad_right = max(self.cfg.Ts * 20, 0.02 * self.scn.sim_time_s)
         
         # Estado da Simulação
         self.is_paused = True
@@ -390,6 +418,78 @@ class InteractiveSim:
             self._in_freeze_draw = False
     # -----------------------------------------------------------------
 
+    # --- Helpers de Log ---
+    def _start_log_session(self):
+        if (not self.log_enabled) or (self._log_writer is not None):
+            return
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.log_session_path = self.log_dir / f"interactive_sim_{timestamp}.csv"
+        self._log_file = self.log_session_path.open("w", newline="")
+        self._log_writer = csv.writer(self._log_file)
+        self._log_writer.writerow(LOG_HEADER)
+        self._log_file.flush()
+        self._log_samples = 0
+        print(f"Iniciando log em {self.log_session_path}")
+
+    def _flush_log(self):
+        if self._log_file:
+            self._log_file.flush()
+
+    def _stop_log_session(self):
+        if (not self.log_enabled) or (self._log_file is None):
+            return
+        self._flush_log()
+        self._log_file.close()
+        samples = self._log_samples
+        print(f"Log finalizado: {self.log_session_path} ({samples} amostras)")
+        self.last_log_path = self.log_session_path
+        self._log_file = None
+        self._log_writer = None
+        self.log_session_path = None
+        self._log_samples = 0
+
+    def _encoder_rel_dda(self) -> np.ndarray:
+        pos_enc_rel = self.enc_pos_counts - self.enc_origin_counts
+        return np.array([
+            conv_enc_to_dda(self.cfg, pos_enc_rel[0], 0),
+            conv_enc_to_dda(self.cfg, pos_enc_rel[1], 1),
+            conv_enc_to_dda(self.cfg, pos_enc_rel[2], 2)
+        ], dtype=float)
+
+    def _log_state(
+        self,
+        *,
+        t: float,
+        pos_steps: np.ndarray,
+        pos_enc: np.ndarray,
+        vel_sps: np.ndarray,
+        casc_err: np.ndarray,
+        load_c: np.ndarray,
+        load_timer: np.ndarray,
+        span_steps: float,
+        global_stop: bool,
+    ):
+        if (not self.log_enabled) or (self._log_writer is None):
+            return
+
+        def _extend(row, vec):
+            row.extend(float(x) for x in vec)
+
+        row = [float(t)]
+        _extend(row, pos_steps)
+        _extend(row, pos_enc)
+        _extend(row, vel_sps)
+        _extend(row, casc_err)
+        _extend(row, load_c)
+        _extend(row, load_timer)
+        row.append(float(span_steps))
+        row.append(int(bool(global_stop)))
+
+        self._log_writer.writerow(row)
+        self._log_samples += 1
+        if (self._log_samples % self._log_flush_interval) == 0:
+            self._flush_log()
+
     # --- [FIX V13.4] Helpers para ligar/desligar callbacks ---
     def _attach_runtime_live(self):
         """Liga live-update (on_text_change) só para os inputs de runtime."""
@@ -494,6 +594,8 @@ class InteractiveSim:
         
         # [FIX V13.4] Garante que callbacks de runtime estão mortos
         self._detach_runtime_live()
+        # Finaliza log anterior (se houver)
+        self._stop_log_session()
         
         # [FIX GUI] Congela o desenho enquanto atualiza a UI
         with drawing_off():
@@ -612,6 +714,8 @@ class InteractiveSim:
         self.ax_graph_pos.clear()
         self.ax_graph_pos.set_ylabel("Posição (steps)")
         self.ax_graph_pos.grid(True)
+        self.ax_graph_pos.set_xlim(-self.graph_time_pad_left,
+                                   self.scn.sim_time_s + self.graph_time_pad_right)
         self.line_pos_x, = self.ax_graph_pos.plot([], [], 'r-', label='X pos', antialiased=False, lw=1.25)
         self.line_pos_y, = self.ax_graph_pos.plot([], [], 'g-', label='Y pos', antialiased=False, lw=1.25)
         self.line_pos_z, = self.ax_graph_pos.plot([], [], 'b-', label='Z pos', antialiased=False, lw=1.25)
@@ -621,6 +725,8 @@ class InteractiveSim:
         self.ax_graph_vel.clear()
         self.ax_graph_vel.set_ylabel("Velocidade (sps)")
         self.ax_graph_vel.grid(True)
+        self.ax_graph_vel.set_xlim(-self.graph_time_pad_left,
+                                   self.scn.sim_time_s + self.graph_time_pad_right)
         self.line_vel_x, = self.ax_graph_vel.plot([], [], 'r-', label='X vel', antialiased=False, lw=1.25)
         self.line_vel_y, = self.ax_graph_vel.plot([], [], 'g-', label='Y vel', antialiased=False, lw=1.25)
         self.line_vel_z, = self.ax_graph_vel.plot([], [], 'b-', label='Z vel', antialiased=False, lw=1.25)
@@ -632,9 +738,11 @@ class InteractiveSim:
         self.ax_graph_err.set_ylabel("Erro CASC (steps)")
         self.ax_graph_err.set_xlabel("Tempo (s)")
         self.ax_graph_err.grid(True)
-        self.line_err_x, = self.ax_graph_err.plot([], [], 'r-', label='Erro CASC X', antialiased=False, lw=1.25)
-        self.line_err_y, = self.ax_graph_err.plot([], [], 'g-', label='Erro CASC Y', antialiased=False, lw=1.25)
-        self.line_err_z, = self.ax_graph_err.plot([], [], 'b-', label='Erro CASC Z', antialiased=False, lw=1.25)
+        self.ax_graph_err.set_xlim(-self.graph_time_pad_left,
+                                   self.scn.sim_time_s + self.graph_time_pad_right)
+        self.line_err_x, = self.ax_graph_err.plot([], [], 'r-', label='Erro X', antialiased=False, lw=1.25)
+        self.line_err_y, = self.ax_graph_err.plot([], [], 'g-', label='Erro Y', antialiased=False, lw=1.25)
+        self.line_err_z, = self.ax_graph_err.plot([], [], 'b-', label='Erro Z', antialiased=False, lw=1.25)
         self.ax_graph_err.legend(loc='upper left')
         self.artists.extend([self.line_err_x, self.line_err_y, self.line_err_z])
         
@@ -764,27 +872,27 @@ class InteractiveSim:
         # Atrito X
         # [FIX 1] Aumentado wspace
         gs_fric_x = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[0, 0], wspace=0.4)
-        self.txt_c_x = TextBox(self.fig.add_subplot(gs_fric_x[0, :]), "Atrito X (C): ", initial="0.0")
-        self.txt_t_start_x = TextBox(self.fig.add_subplot(gs_fric_x[1, 0]), "Início(s):", initial="0.0")
-        self.txt_t_end_x = TextBox(self.fig.add_subplot(gs_fric_x[1, 1]), "Fim(s):", initial="inf")
+        self.txt_c_x = TextBox(self.fig.add_subplot(gs_fric_x[0, :]), "Atrito X (C): ", initial="700.0")
+        self.txt_t_start_x = TextBox(self.fig.add_subplot(gs_fric_x[1, 0]), "Início(s):", initial="0.35")
+        self.txt_t_end_x = TextBox(self.fig.add_subplot(gs_fric_x[1, 1]), "Fim(s):", initial="1.80")
         self.btn_stop_x = Button(self.fig.add_subplot(gs_fric_x[2, :]), 'Stop X', color=self.btn_color_off)
         self.btn_stop_x.on_clicked(self.on_stop_x)
         
         # Atrito Y
         # [FIX 1] Aumentado wspace
         gs_fric_y = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[1, 0], wspace=0.4)
-        self.txt_c_y = TextBox(self.fig.add_subplot(gs_fric_y[0, :]), "Atrito Y (C): ", initial="0.0")
-        self.txt_t_start_y = TextBox(self.fig.add_subplot(gs_fric_y[1, 0]), "Início(s):", initial="0.0")
-        self.txt_t_end_y = TextBox(self.fig.add_subplot(gs_fric_y[1, 1]), "Fim(s):", initial="inf")
+        self.txt_c_y = TextBox(self.fig.add_subplot(gs_fric_y[0, :]), "Atrito Y (C): ", initial="900.0")
+        self.txt_t_start_y = TextBox(self.fig.add_subplot(gs_fric_y[1, 0]), "Início(s):", initial="0.90")
+        self.txt_t_end_y = TextBox(self.fig.add_subplot(gs_fric_y[1, 1]), "Fim(s):", initial="2.60")
         self.btn_stop_y = Button(self.fig.add_subplot(gs_fric_y[2, :]), 'Stop Y', color=self.btn_color_off)
         self.btn_stop_y.on_clicked(self.on_stop_y)
         
         # Atrito Z
         # [FIX 1] Aumentado wspace
         gs_fric_z = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[2, 0], wspace=0.4)
-        self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="0.0")
-        self.txt_t_start_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 0]), "Início(s):", initial="0.0")
-        self.txt_t_end_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 1]), "Fim(s):", initial="inf")
+        self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="1100.0")
+        self.txt_t_start_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 0]), "Início(s):", initial="1.40")
+        self.txt_t_end_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 1]), "Fim(s):", initial="2.95")
         self.btn_stop_z = Button(self.fig.add_subplot(gs_fric_z[2, :]), 'Stop Z', color=self.btn_color_off)
         self.btn_stop_z.on_clicked(self.on_stop_z)
 
@@ -809,6 +917,19 @@ class InteractiveSim:
     # [FIX V13.5] Modificado para incluir o 'else'
     def on_play(self, event):
         if self.is_paused:
+            if self.log_enabled and self._log_writer is None:
+                self._start_log_session()
+                self._log_state(
+                    t=self.t,
+                    pos_steps=self.pos_real.copy(),
+                    pos_enc=self._encoder_rel_dda(),
+                    vel_sps=self.v_real.copy(),
+                    casc_err=self.g_casc_err_s32.copy(),
+                    load_c=self.active_C_load.copy(),
+                    load_timer=self.load_timer_xyz.copy(),
+                    span_steps=float(np.max(self.pos_real) - np.min(self.pos_real)),
+                    global_stop=bool(np.any(self.is_stopped)),
+                )
             self.is_paused = False
             
             # [FIX BLIT-FADE] Ativa o modo blit ANTES de iniciar o timer
@@ -827,6 +948,7 @@ class InteractiveSim:
         if not self.is_paused:
             self.is_paused = True
             self.timer.stop() # Para o loop de _on_timer_tick
+            self._flush_log()
             
             # [FIX V13.4] Desliga live-update do Atrito
             self._detach_runtime_live()
@@ -887,6 +1009,7 @@ class InteractiveSim:
                 self._detach_runtime_live()
                 # [FIX BLIT-FADE] Desativa o blit e redesenha o frame final
                 self._disable_blitting_and_redraw()
+            self._stop_log_session()
             return
 
         t = self.k * self.cfg.Ts
@@ -909,12 +1032,7 @@ class InteractiveSim:
         mestre_prog_num = 0
         mestre_prog_den = 1
         
-        pos_enc_rel = self.enc_pos_counts - self.enc_origin_counts
-        pos_rel_dda_from_enc = np.array([
-            conv_enc_to_dda(self.cfg, pos_enc_rel[0], 0),
-            conv_enc_to_dda(self.cfg, pos_enc_rel[1], 1),
-            conv_enc_to_dda(self.cfg, pos_enc_rel[2], 2)
-        ])
+        pos_rel_dda_from_enc = self._encoder_rel_dda()
         
         alvo_final_mag = self.target_mag
 
@@ -1074,6 +1192,17 @@ class InteractiveSim:
         
         # --- 8. Salvar no Histórico ---
         self._append_history(t, pos_rel_dda_from_enc, v_emit_real, self.g_casc_err_s32, span_real)
+        self._log_state(
+            t=t,
+            pos_steps=self.pos_real.copy(),
+            pos_enc=pos_rel_dda_from_enc.copy(),
+            vel_sps=v_emit_real.copy(),
+            casc_err=self.g_casc_err_s32.copy(),
+            load_c=self.active_C_load.copy(),
+            load_timer=self.load_timer_xyz.copy(),
+            span_steps=span_real,
+            global_stop=bool(global_stop_triggered),
+        )
         self.t = t
         self.k += 1
 
@@ -1143,12 +1272,16 @@ class InteractiveSim:
         self.line_err_y.set_data(t_data, self.history['y_err'])
         self.line_err_z.set_data(t_data, self.history['z_err'])
         
-        if (not self.is_paused) and len(t_data) > 1:
-            # [FIX OTIMIZAÇÃO] scaley=False pois os limites Y são fixos
+        if len(t_data) >= 1:
+            # Garante uma folga fixa no eixo X para que o t=0 fique afastado da legenda.
+            t_min = t_data[0]
+            t_max = t_data[-1]
+            span = max(self.cfg.Ts, t_max - t_min)
+            left = t_min - self.graph_time_pad_left
+            right = t_max + max(self.graph_time_pad_right, 0.02 * span)
             for ax in [self.ax_graph_pos, self.ax_graph_vel, self.ax_graph_err]:
                 ax.relim()
-                # O eixo X (tempo) ainda escala, o Y não.
-                ax.autoscale_view(scalex=True, scaley=False)
+                ax.set_xlim(left, right)
                 
         # Atualiza os textos do cronômetro
         for i, timer_text in enumerate([self.text_timer_x, self.text_timer_y, self.text_timer_z]):
@@ -1168,6 +1301,16 @@ if __name__ == "__main__":
         "--axes",
         default="X:256,Y:256,Z:256",
         help="Mapa de eixos no formato X:microstep,Y:microstep (default: X/Y/Z em 1/256).",
+    )
+    parser.add_argument(
+        "--log-dir",
+        default="sim_logs",
+        help="Diretório onde os logs CSV serão salvos (default: sim_logs/).",
+    )
+    parser.add_argument(
+        "--no-log",
+        action="store_true",
+        help="Desativa o log em arquivo da simulação.",
     )
     args = parser.parse_args()
 
@@ -1193,6 +1336,6 @@ if __name__ == "__main__":
         use_dda=True
     )
 
-    sim_app = InteractiveSim(cfg, scn)
+    sim_app = InteractiveSim(cfg, scn, log_dir=Path(args.log_dir), enable_logging=not args.no_log)
     plt.show()
     print("Simulação interativa encerrada.")
