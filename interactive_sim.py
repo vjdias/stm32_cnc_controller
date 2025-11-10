@@ -31,17 +31,24 @@ import numpy as np
 from collections import deque
 from datetime import datetime
 import csv
+import os
 
 import matplotlib
-try:
-    matplotlib.use("QtAgg") # ou "TkAgg"
-except ImportError:
-    print("Backend QtAgg não encontrado, usando TkAgg.")
+# Respeita execução headless via env (evita Qt e mensagens de QStandardPaths)
+_ENV_MPL = os.environ.get("MPLBACKEND", "").lower()
+_ENV_HEADLESS = os.environ.get("SIM_HEADLESS", "0") in ("1", "true", "yes")
+if _ENV_MPL == "agg" or _ENV_HEADLESS:
+    matplotlib.use("Agg")
+else:
     try:
-        matplotlib.use("TkAgg")
+        matplotlib.use("QtAgg") # ou "TkAgg"
     except ImportError:
-        print("Nenhum backend interativo encontrado. Widgets podem não funcionar.")
-        matplotlib.use("Agg") # Fallback para não-interativo
+        print("Backend QtAgg não encontrado, usando TkAgg.")
+        try:
+            matplotlib.use("TkAgg")
+        except ImportError:
+            print("Nenhum backend interativo encontrado. Widgets podem não funcionar.")
+            matplotlib.use("Agg") # Fallback para não-interativo
 
 print("Backend ativo:", matplotlib.get_backend())
 
@@ -91,7 +98,7 @@ class PlantConfig:
     
     accel_sps2: float = 200_000.0 # aceleração [steps/s^2] (DEMO_ACCEL_SPS2)
 
-    enc_cpr_xyz: Tuple[int, int, int] = (40_000, 2500, 40_000) # (ENC_COUNTS_PER_REV)
+    enc_cpr_xyz: Tuple[int, int, int] = (40_000, 5000, 40_000) # (ENC_COUNTS_PER_REV)
     microstep_factor: int = 256 # (MICROSTEP_FACTOR)
     motor_steps_per_rev_base: int = 400 # (STEPS_PER_REV_BASE)
     
@@ -112,14 +119,14 @@ class PlantConfig:
 @dataclass
 class Scenario:
     """Configurações do movimento (move_queue_add_req_t)."""
-    s_xyz: Tuple[int, int, int] = (20000, 16000, 12000) 
+    s_xyz: Tuple[int, int, int] = (40000, 32000, 24000) 
     v_xyz: Tuple[int, int, int] = (10000, 8000, 6000)
     dir_xyz: Tuple[int, int, int] = (1, 1, 1)
     kp_xyz: Tuple[int, int, int] = (800, 800, 800)
     ki_xyz: Tuple[int, int, int] = (40, 40, 40)
     kd_xyz: Tuple[int, int, int] = (120, 120, 120)
     
-    sim_time_s: float = 3.0 # Tempo total da simulação
+    sim_time_s: float = 5.0 # Tempo total da simulação
     use_dda: bool = True
 
 LOG_HEADER = [
@@ -225,10 +232,13 @@ class DDAStepper:
 # =========================
 
 class InteractiveSim:
-    def __init__(self, cfg: PlantConfig, scn: Scenario, *, log_dir: Path | None = None, enable_logging: bool = True):
+    def __init__(self, cfg: PlantConfig, scn: Scenario, *, log_dir: Path | None = None, enable_logging: bool = True, auto_analyze: bool = False, headless: bool = False):
         self.cfg = cfg
         self.scn = scn
         self.log_enabled = enable_logging
+        self.auto_analyze = auto_analyze
+        # Headless via parâmetro ou variável de ambiente
+        self.headless = headless or (_ENV_HEADLESS)
         self.log_dir = Path(log_dir) if log_dir else Path("sim_logs")
         self.log_session_path: Path | None = None
         self.last_log_path: Path | None = None
@@ -305,69 +315,146 @@ class InteractiveSim:
         # Buffers de histórico para plotagem
         self.history = {}
 
-        # --- Configuração da Interface Gráfica (GUI) ---
-        self.fig = plt.figure(figsize=(17, 10), dpi=96)
-        gs = gridspec.GridSpec(4, 4, figure=self.fig)
-        self.fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.05, hspace=0.7, wspace=0.4)
+        # Parâmetros auxiliares do CASC
+        self.current_master_axis: int = -1
+        # Throttle de feed mais permissivo: segura desaceleração só para erros bem grandes
+        self.sync_err_feed_threshold = 600.0  # erro (steps) onde feed começa a cair
+        self.sync_err_feed_min_fraction = 0.80  # fração mínima do feed nominal
+        self.master_switch_margin_steps = 400.0  # evita trocar de mestre sem folga
+        # Debounce de stall mais robusto
+        self.stall_debounce = 8
+        # Tolerância de conclusão (steps) — define quando consideramos "chegou"
+        self.finish_tol_steps = 20.0
+        # Janela de finalização (pior eixo) em que ajustamos regras para garantir fechamento
+        self.finish_window_steps = 600.0
+        self.finish_disable_stall = True
+        self.finish_feed_min_fraction = 0.20
+        self.finish_err_stop_steps = 50.0
+        # Orçamento de tempo extra para finalizar (2s)
+        self.finish_extra_budget_steps = int(2.0 / self.cfg.Ts)
+        # Trava de sincronismo: impede eixo escravo de se adiantar demais
+        self.sync_hold_enabled = True
+        self.sync_ahead_margin_steps = 20.0
+        # Estratégias e compatibilidade
+        self.master_select_strategy = 'remaining'  # 'remaining' | 'progress'
+        self.prefer_loaded_master = True
+        self.finish_all_axes = True
+        self.ramp_use_worst_remaining = True
+        self.global_stop_all_axes = False
 
-        # Eixos dos Círculos (Linha 0)
-        self.ax_motor_x = self.fig.add_subplot(gs[0, 0], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
-        self.ax_motor_y = self.fig.add_subplot(gs[0, 1], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
-        self.ax_motor_z = self.fig.add_subplot(gs[0, 2], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
-        
-        # Painéis de Input (Linha 1)
-        self.ax_input_x = self.fig.add_subplot(gs[1, 0])
-        self.ax_input_y = self.fig.add_subplot(gs[1, 1])
-        self.ax_input_z = self.fig.add_subplot(gs[1, 2])
-        
-        # Painel de Controle (Linhas 0-1, Coluna 3)
-        self.ax_control_panel = self.fig.add_subplot(gs[0:2, 3])
-        
-        # Gráficos (Linhas 2-3, Colunas 0,1,2)
-        gs_graphs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=gs[2:4, 0:3], hspace=0.3)
-        self.ax_graph_pos = self.fig.add_subplot(gs_graphs[0, 0])
-        self.ax_graph_vel = self.fig.add_subplot(gs_graphs[1, 0])
-        self.ax_graph_err = self.fig.add_subplot(gs_graphs[2, 0])
-        
-        # Painel de Atrito (Linhas 2-3, Coluna 3)
-        self.ax_friction_panel = self.fig.add_subplot(gs[2:4, 3])
-        
-        # Inicializa plots e widgets
-        self.artists = []
-        self._init_artists()
-        self._init_widgets()
-        
-        # [FIX V13.4] Agrupa TextBoxes e conecta callbacks estáticos
-        self._tbs_scenario = [
-            self.txt_s_x, self.txt_v_x, self.txt_dir_x, self.txt_kp_x, self.txt_ki_x, self.txt_kd_x,
-            self.txt_s_y, self.txt_v_y, self.txt_dir_y, self.txt_kp_y, self.txt_ki_y, self.txt_kd_y,
-            self.txt_s_z, self.txt_v_z, self.txt_dir_z, self.txt_kp_z, self.txt_ki_z, self.txt_kd_z,
-        ]
-        self._tbs_runtime = [
-            self.txt_c_x, self.txt_t_start_x, self.txt_t_end_x,
-            self.txt_c_y, self.txt_t_start_y, self.txt_t_end_y,
-            self.txt_c_z, self.txt_t_start_z, self.txt_t_end_z
-        ]
-        # Para cenário: só aplica ao dar ENTER (não redesenha a cada tecla/foco)
-        for tb in self._tbs_scenario:
-            tb.on_submit(lambda _=None: None)  # sem redraw; reset() que lê
-        
-        # Guardar cids (connection ids) para (des)ligar live-update dos runtime
-        self._live_cids = []
-        
-        # Carrega os valores iniciais do Scn nos TextBoxes e no estado
-        self.reset(None) 
-        
-        print("Interface Pronta. Pressione 'Play' para iniciar.")
-        
-        self.animation_interval_ms = 20 # 50Hz refresh rate
-        self.sim_steps_per_frame = int(self.animation_interval_ms / (self.cfg.Ts * 1000.0))
-        if self.sim_steps_per_frame == 0: self.sim_steps_per_frame = 1
-        
-        # Timer manual para animação (corrige lag)
-        self.timer = self.fig.canvas.new_timer(interval=self.animation_interval_ms)
-        self.timer.add_callback(self._on_timer_tick)
-        # O timer é iniciado pelo on_play()
+        if not self.headless:
+            # --- Configuração da Interface Gráfica (GUI) ---
+            self.fig = plt.figure(figsize=(17, 10), dpi=96)
+            gs = gridspec.GridSpec(4, 4, figure=self.fig)
+            self.fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.05, hspace=0.7, wspace=0.4)
+
+            # Eixos dos Círculos (Linha 0)
+            self.ax_motor_x = self.fig.add_subplot(gs[0, 0], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
+            self.ax_motor_y = self.fig.add_subplot(gs[0, 1], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
+            self.ax_motor_z = self.fig.add_subplot(gs[0, 2], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
+            
+            # Painéis de Input (Linha 1)
+            self.ax_input_x = self.fig.add_subplot(gs[1, 0])
+            self.ax_input_y = self.fig.add_subplot(gs[1, 1])
+            self.ax_input_z = self.fig.add_subplot(gs[1, 2])
+            
+            # Painel de Controle (Linhas 0-1, Coluna 3)
+            self.ax_control_panel = self.fig.add_subplot(gs[0:2, 3])
+            
+            # Gráficos (Linhas 2-3, Colunas 0,1,2)
+            gs_graphs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=gs[2:4, 0:3], hspace=0.3)
+            self.ax_graph_pos = self.fig.add_subplot(gs_graphs[0, 0])
+            self.ax_graph_vel = self.fig.add_subplot(gs_graphs[1, 0])
+            self.ax_graph_err = self.fig.add_subplot(gs_graphs[2, 0])
+            
+            # Painel de Atrito (Linhas 2-3, Coluna 3)
+            self.ax_friction_panel = self.fig.add_subplot(gs[2:4, 3])
+            
+            # Inicializa plots e widgets
+            self.artists = []
+            self._init_artists()
+            self._init_widgets()
+            
+            # [FIX V13.4] Agrupa TextBoxes e conecta callbacks estáticos
+            self._tbs_scenario = [
+                self.txt_s_x, self.txt_v_x, self.txt_dir_x, self.txt_kp_x, self.txt_ki_x, self.txt_kd_x,
+                self.txt_s_y, self.txt_v_y, self.txt_dir_y, self.txt_kp_y, self.txt_ki_y, self.txt_kd_y,
+                self.txt_s_z, self.txt_v_z, self.txt_dir_z, self.txt_kp_z, self.txt_ki_z, self.txt_kd_z,
+            ]
+            self._tbs_runtime = [
+                self.txt_c_x, self.txt_t_start_x, self.txt_t_end_x,
+                self.txt_c_y, self.txt_t_start_y, self.txt_t_end_y,
+                self.txt_c_z, self.txt_t_start_z, self.txt_t_end_z
+            ]
+            # Para cenário: só aplica ao dar ENTER (não redesenha a cada tecla/foco)
+            for tb in self._tbs_scenario:
+                tb.on_submit(lambda _=None: None)  # sem redraw; reset() que lê
+            
+            # Guardar cids (connection ids) para (des)ligar live-update dos runtime
+            self._live_cids = []
+            
+            # Carrega os valores iniciais do Scn nos TextBoxes e no estado
+            self.reset(None) 
+            
+            print("Interface Pronta. Pressione 'Play' para iniciar.")
+            
+            self.animation_interval_ms = 20 # 50Hz refresh rate
+            self.sim_steps_per_frame = int(self.animation_interval_ms / (self.cfg.Ts * 1000.0))
+            if self.sim_steps_per_frame == 0: self.sim_steps_per_frame = 1
+            
+            # Timer manual para animação (corrige lag)
+            self.timer = self.fig.canvas.new_timer(interval=self.animation_interval_ms)
+            self.timer.add_callback(self._on_timer_tick)
+            # O timer é iniciado pelo on_play()
+        else:
+            # Headless: inicializa estado a partir do cenário (sem GUI)
+            self.target_mag = np.array(self.scn.s_xyz, dtype=np.int64)
+            self.v_target_sps = np.array(self.scn.v_xyz, dtype=float)
+            self.dir_xyz = np.array(self.scn.dir_xyz, dtype=int)
+            self.kp_xyz = np.array(self.scn.kp_xyz, dtype=int)
+            self.ki_xyz = np.array(self.scn.ki_xyz, dtype=int)
+            self.kd_xyz = np.array(self.scn.kd_xyz, dtype=int)
+            self.dir_xyz[self.dir_xyz >= 0] = 1
+            self.dir_xyz[self.dir_xyz < 0] = -1
+            self.target_s32 = self.target_mag * self.dir_xyz
+
+            # Limites Y não aplicáveis em headless
+
+            # 2. Reseta estados de simulação
+            self.ddas_real = [DDAStepper(self.cfg.tim6_hz) for _ in range(3)]
+            self.pos_real = np.zeros(3, dtype=float)
+            self.enc_pos_counts = np.zeros(3, dtype=float)
+            self.enc_origin_counts = np.zeros(3, dtype=float)
+            self.v_real = np.zeros(3, dtype=float)
+            self.g_pi_i_accum = np.zeros(3, dtype=float)
+            self.g_pi_prev_err = np.zeros(3, dtype=float)
+            self.g_pi_d_filt = np.zeros(3, dtype=float)
+            self.g_v_accum = np.zeros(3, dtype=float)
+            self.g_casc_err_s32 = np.zeros(3, dtype=float)
+            self.k = 0
+            self.t = 0.0
+            self.active_C_load = np.zeros(3)
+            self.load_timer_xyz = np.zeros(3)
+            # Valores default do painel de atrito (iguais aos do modo GUI)
+            self.C_load_values = np.array([700.0, 900.0, 1100.0])
+            self.load_start_times = np.array([0.35, 0.90, 1.40])
+            self.load_end_times = np.array([1.80, 2.60, 2.95])
+            self.is_stopped = np.array([False, False, False], dtype=bool)
+            # História mínima
+            self.history = {
+                't_s': deque(maxlen=self.plot_history_size),
+                'x_pos': deque(maxlen=self.plot_history_size),
+                'y_pos': deque(maxlen=self.plot_history_size),
+                'z_pos': deque(maxlen=self.plot_history_size),
+                'x_v': deque(maxlen=self.plot_history_size),
+                'y_v': deque(maxlen=self.plot_history_size),
+                'z_v': deque(maxlen=self.plot_history_size),
+                'x_err': deque(maxlen=self.plot_history_size),
+                'y_err': deque(maxlen=self.plot_history_size),
+                'z_err': deque(maxlen=self.plot_history_size),
+                'sync_span': deque(maxlen=self.plot_history_size),
+            }
+            self._append_history(0.0, np.zeros(3), self.v_real, np.zeros(3), 0.0)
 
     # --- [FIX BLIT-FADE] Helpers para "congelar" o frame ao pausar ---
     
@@ -447,6 +534,50 @@ class InteractiveSim:
         self._log_writer = None
         self.log_session_path = None
         self._log_samples = 0
+
+    def _auto_analyze_last_log(self):
+        """Analisa o último CSV e imprime métricas + dicas rápidas."""
+        if not self.last_log_path or not self.last_log_path.exists():
+            return
+        try:
+            import csv, math
+            rows = []
+            with self.last_log_path.open() as f:
+                reader = csv.DictReader(f)
+                for r in reader:
+                    rows.append({k: float(r[k]) for k in reader.fieldnames})
+            if not rows:
+                print("Análise: log vazio.")
+                return
+            T = [r['t_s'] for r in rows]
+            dt = (T[-1] - T[0]) / max(1, (len(T)-1))
+            span = [r['span_steps'] for r in rows]
+            stops = [r['global_stop'] for r in rows]
+            stop_time = sum(stops) * dt
+            axes = ['x','y','z']
+            targets = {'x': self.target_mag[0], 'y': self.target_mag[1], 'z': self.target_mag[2]}
+            print("\n===== Análise Automática =====")
+            print(f"Arquivo: {self.last_log_path.name}")
+            print(f"Duração: {T[-1]:.3f}s | stop_fraction: {stop_time/T[-1]:.3%} | max_span: {max(span):.0f} | final_span: {span[-1]:.0f}")
+            for ax in axes:
+                err = [r[f'err_steps_{ax}'] for r in rows]
+                aerr = [abs(e) for e in err]
+                posf = rows[-1][f'dda_pos_{ax}']
+                print(f"{ax.upper()}: pos_final={posf:.0f} (meta {targets[ax]:.0f}) | max_err={max(aerr):.1f} | steady={err[-1]:.1f}")
+            # Dicas simples
+            tips = []
+            if span[-1] > self.finish_tol_steps:
+                tips.append("Aumentar finish_window_steps (ex.: +200) e reduzir finish_err_stop_steps (ex.: 40)")
+                tips.append("Subir piso do feed na fase final (finish_feed_min_fraction >= 0.3)")
+            if (stop_time/T[-1]) > 0.15:
+                tips.append("Aumentar stall_debounce (ex.: +4) e manter stall desabilitado na fase final")
+            if tips:
+                print("Sugestões:")
+                for t in tips:
+                    print("- ", t)
+            print("==============================\n")
+        except Exception as e:
+            print(f"Falha na análise automática: {e}")
 
     def _encoder_rel_dda(self) -> np.ndarray:
         pos_enc_rel = self.enc_pos_counts - self.enc_origin_counts
@@ -890,7 +1021,8 @@ class InteractiveSim:
         # Atrito Z
         # [FIX 1] Aumentado wspace
         gs_fric_z = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[2, 0], wspace=0.4)
-        self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="1100.0")
+        #self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="1100.0")
+        self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="900.0")
         self.txt_t_start_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 0]), "Início(s):", initial="1.40")
         self.txt_t_end_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 1]), "Fim(s):", initial="2.95")
         self.btn_stop_z = Button(self.fig.add_subplot(gs_fric_z[2, :]), 'Stop Z', color=self.btn_color_off)
@@ -1000,17 +1132,36 @@ class InteractiveSim:
     def _step(self):
         """Executa um único passo de 1ms da simulação (CASC/PID/RAMPA)."""
         if self.k >= self.N_steps_total:
-            if not self.is_paused:
-                self.is_paused = True
-                self.timer.stop()
-                print("Tempo de simulação concluído.")
-                
-                # [FIX V13.4] Desliga callbacks antes de redesenhar
-                self._detach_runtime_live()
-                # [FIX BLIT-FADE] Desativa o blit e redesenha o frame final
-                self._disable_blitting_and_redraw()
-            self._stop_log_session()
-            return
+            # Verifica se precisa estender tempo para concluir (com pequeno custo)
+            pos_rel_dda_from_enc = self._encoder_rel_dda()
+            alvo_final_mag = self.target_mag
+            remaining_steps = np.array([
+                max(float(alvo_final_mag[i]) - abs(pos_rel_dda_from_enc[i]), 0.0)
+                if alvo_final_mag[i] > 0 else 0.0 for i in range(3)
+            ])
+            active_axes_mask = alvo_final_mag > 0
+            all_done = True
+            for i in range(3):
+                if active_axes_mask[i] and remaining_steps[i] > self.finish_tol_steps:
+                    all_done = False; break
+
+            if (not all_done) and (self.finish_extra_budget_steps > 0):
+                chunk = int(0.5 / self.cfg.Ts)  # estende em 0.5s por vez
+                chunk = min(chunk, self.finish_extra_budget_steps)
+                self.N_steps_total += chunk
+                self.finish_extra_budget_steps -= chunk
+                # Não para; deixa o loop continuar
+            else:
+                if not self.is_paused:
+                    self.is_paused = True
+                    self.timer.stop()
+                    print("Tempo de simulação concluído.")
+                    self._detach_runtime_live()
+                    self._disable_blitting_and_redraw()
+                self._stop_log_session()
+                if getattr(self, 'auto_analyze', False):
+                    self._auto_analyze_last_log()
+                return
 
         t = self.k * self.cfg.Ts
         
@@ -1029,59 +1180,118 @@ class InteractiveSim:
         # --- 2. LÓGICA CASC (Achar Mestre "Percentual") ---
         
         master_axis = -1
-        mestre_prog_num = 0
-        mestre_prog_den = 1
+        mestre_prog_num = 0.0
+        mestre_prog_den = 1.0
         
         pos_rel_dda_from_enc = self._encoder_rel_dda()
         
         alvo_final_mag = self.target_mag
 
+        progress_nums = np.zeros(3, dtype=float)
+        remaining_steps = np.full(3, -1.0, dtype=float)
+
         for i in range(3):
             total_mag = alvo_final_mag[i]
-            if total_mag == 0: continue # Eixo não está em movimento
-            
-            prog_num = np.abs(pos_rel_dda_from_enc[i]) # Progresso (magnitude)
-            prog_den = total_mag
-            
-            if prog_num < 0: prog_num = 0
-            if prog_num > prog_den: prog_num = prog_den # Clamp (chegou)
+            if total_mag <= 0:
+                continue
+            actual_mag = abs(pos_rel_dda_from_enc[i])
+            clamped_progress = min(actual_mag, float(total_mag))
+            progress_nums[i] = clamped_progress
+            remaining_steps[i] = max(float(total_mag) - actual_mag, 0.0)
 
-            if master_axis == -1:
-                master_axis = i
-                mestre_prog_num = prog_num
-                mestre_prog_den = prog_den if prog_den > 0 else 1
-            else:
-                # É (prog_i / prog_den_i) < (mestre_prog_num / mestre_prog_den) ?
-                prog_i_64 = prog_num * mestre_prog_den
-                prog_mestre_64 = mestre_prog_num * prog_den
-
-                if prog_i_64 < prog_mestre_64:
+        if self.master_select_strategy == 'progress':
+            # Mestre = menor percentual de progresso
+            for i in range(3):
+                total_mag = alvo_final_mag[i]
+                if total_mag <= 0:
+                    continue
+                prog_num = progress_nums[i]
+                prog_den = float(total_mag)
+                if master_axis == -1:
                     master_axis = i
                     mestre_prog_num = prog_num
-                    mestre_prog_den = prog_den if prog_den > 0 else 1
+                    mestre_prog_den = prog_den if prog_den > 0 else 1.0
+                else:
+                    prog_i_64 = prog_num * mestre_prog_den
+                    prog_mestre_64 = mestre_prog_num * prog_den
+                    if prog_i_64 < prog_mestre_64:
+                        master_axis = i
+                        mestre_prog_num = prog_num
+                        mestre_prog_den = prog_den if prog_den > 0 else 1.0
+        else:
+            # Mestre = maior 'remaining' (com preferências)
+            active_load_mask = self.active_C_load > 0.0
+            remaining_positive = remaining_steps > 0.0
+
+            candidates = None
+            if self.prefer_loaded_master:
+                loaded_candidates = np.where(remaining_positive & active_load_mask)[0]
+                if loaded_candidates.size > 0:
+                    candidates = loaded_candidates
+            if candidates is None:
+                candidates = np.where(remaining_positive)[0]
+
+            if candidates.size > 0:
+                candidate_rem = remaining_steps[candidates]
+                best_idx = candidates[int(np.argmax(candidate_rem))]
+
+                prev_master = self.current_master_axis if 0 <= self.current_master_axis < 3 else -1
+                if prev_master != -1 and remaining_steps[prev_master] <= 0:
+                    prev_master = -1
+
+                if (
+                    prev_master != -1
+                    and best_idx != prev_master
+                    and (remaining_steps[best_idx] - remaining_steps[prev_master]) < self.master_switch_margin_steps
+                    and not (self.prefer_loaded_master and np.any(active_load_mask[candidates]))
+                ):
+                    master_axis = prev_master
+                else:
+                    master_axis = best_idx
+                
+                mestre_prog_num = progress_nums[master_axis]
+                mestre_prog_den = float(alvo_final_mag[master_axis])
+                if mestre_prog_den <= 0:
+                    mestre_prog_den = 1.0
+            else:
+                master_axis = -1
+                mestre_prog_num = 0.0
+                mestre_prog_den = 1.0
+
+        self.current_master_axis = master_axis
         
-        # Condição de Término Correta
-        if master_axis == -1 or (mestre_prog_den > 0 and mestre_prog_num >= mestre_prog_den):
+        # Condições de término
+        original_end = (master_axis == -1 or (mestre_prog_den > 0 and mestre_prog_num >= mestre_prog_den))
+        # Condição de término: TODOS os eixos ativos dentro da tolerância
+        active_axes_mask = alvo_final_mag > 0
+        all_done = True
+        for i in range(3):
+            if active_axes_mask[i]:
+                if remaining_steps[i] > self.finish_tol_steps:
+                    all_done = False
+                    break
+        if (not self.finish_all_axes and original_end) or all_done:
             if not self.is_paused:
-                print(f"Fim do movimento CASC (Mestre: {master_axis}, Prog: {mestre_prog_num}/{mestre_prog_den}).")
-                self.is_paused = True # Para o movimento
+                print(f"Fim do movimento CASC (todos os eixos dentro de {self.finish_tol_steps} steps).")
+                self.is_paused = True
                 self.timer.stop()
-                
-                # [FIX V13.4] Desliga callbacks antes de redesenhar
                 self._detach_runtime_live()
-                # [FIX BLIT-FADE] Desativa o blit e redesenha o frame final
                 self._disable_blitting_and_redraw()
-                
-            self.v_real = np.zeros(3) # Zera a velocidade
+            # Finaliza log + análise (se habilitado)
+            self._stop_log_session()
+            if getattr(self, 'auto_analyze', False):
+                self._auto_analyze_last_log()
+            self.v_real = np.zeros(3)
             for i in range(3): self.ddas_real[i].reset()
-            return # Fim
+            return
 
         # --- 3. LOOP DE CONTROLE (PID + CASC + Rampa) ---
         
         v_final_sps = np.zeros(3) # Velocidade final pós-PID/CASC
         v_ramped = np.zeros(3)    # Velocidade final pós-Rampa
         
-        rem_steps_mestre = mestre_prog_den - mestre_prog_num
+        # Usa o pior caso de "passos restantes" para comandar frenagem da rampa (ou o progresso do mestre)
+        rem_steps_mestre = float(np.max(remaining_steps)) if self.ramp_use_worst_remaining else float(max(mestre_prog_den - mestre_prog_num, 0.0))
         
         for axis in range(3):
             total_s32 = self.target_s32[axis]
@@ -1122,10 +1332,30 @@ class InteractiveSim:
             
             corr = pterm + iterm + dterm
             corr = np.clip(corr, -self.cfg.max_sps, self.cfg.max_sps)
-            
+
+            # Ajuste de feed por erro (fora da fase final)
+            if (self.sync_err_feed_threshold > 0) and (axis != self.current_master_axis):
+                penalty = min(abs(err) / self.sync_err_feed_threshold, 1.0)
+                scale = 1.0 - (1.0 - self.sync_err_feed_min_fraction) * penalty
+                scale = max(self.sync_err_feed_min_fraction, scale)
+                v_cmd_sps_ideal *= scale
+
             v_adj = v_cmd_sps_ideal + corr
             v_adj = np.clip(v_adj, 0, self.cfg.max_sps)
-            
+
+            # Na fase final, eixos adiantados param totalmente para permitir o alcance
+            if 'finish_phase' in locals() and finish_phase:
+                if err < -getattr(self, 'finish_err_stop_steps', 50.0):
+                    v_adj = 0.0
+                    # Força parada imediata do eixo adiantado
+                    self.v_real[axis] = 0.0
+
+            # Trava de sincronismo (durante toda a trajetória):
+            # se eixo não-mestre estiver à frente do alvo sincronizado por mais que a margem, segura
+            if self.sync_hold_enabled and (axis != self.current_master_axis):
+                if (actual_dda_steps - desired_dda_steps) > self.sync_ahead_margin_steps:
+                    v_adj = 0.0
+
             if not (v_adj == 0 or v_adj == self.cfg.max_sps):
                 self.g_pi_i_accum[axis] = iacc
                 
@@ -1158,18 +1388,37 @@ class InteractiveSim:
         v_eff_real = self.v_real - np.sign(self.v_real) * (self.active_C_load + self.B_load * np.abs(self.v_real))
         flip_mask = (np.sign(self.v_real) != np.sign(v_eff_real)) & (np.abs(self.v_real) > 1e-9)
         v_eff_real[flip_mask] = 0.0
-        
+
         # --- 6. PARADA DE SEGURANÇA (Botões / Stall) ---
-        is_stalled = flip_mask
+        # Debounce de stall por eixo e gating por eixo (evita parar o sistema inteiro)
+        if not hasattr(self, 'stall_counts'):
+            self.stall_counts = np.zeros(3, dtype=int)
+            self.stall_debounce = 3
+        # Atualiza contadores
+        self.stall_counts = np.where(flip_mask, self.stall_counts + 1, 0)
+
+        is_stalled_debounced = self.stall_counts >= getattr(self, 'stall_debounce', 8)
         is_manually_stopped = self.is_stopped
-        individual_stop_state = is_stalled | is_manually_stopped
-        global_stop_triggered = np.any(individual_stop_state)
-        
-        global_op_factor = 1.0 - float(global_stop_triggered) 
-        
-        v_final_DDA = v_eff_real * global_op_factor
-        
-        self.v_real = self.v_real * global_op_factor # Zera a rampa também
+        axis_stop = is_stalled_debounced | is_manually_stopped
+
+        # Checa janela de finalização usando 'remaining_steps' já computado acima
+        rem_global = float(np.max(remaining_steps)) if 'remaining_steps' in locals() else np.inf
+        finish_phase = rem_global <= getattr(self, 'finish_window_steps', 600.0)
+        if finish_phase and getattr(self, 'finish_disable_stall', True):
+            # Desabilita stall automático na fase final, mantendo apenas stop manual
+            axis_stop = is_manually_stopped
+
+        # Fator por eixo (1 = opera, 0 = parado)
+        op_factor = np.where(axis_stop, 0.0, 1.0)
+        global_stop_triggered = bool(np.any(axis_stop))
+
+        v_final_DDA = v_eff_real * op_factor
+        # Zera a rampa apenas nos eixos parados
+        self.v_real = self.v_real * op_factor
+        # Anti-windup: zera integrador dos eixos parados
+        for i in range(3):
+            if axis_stop[i]:
+                self.g_pi_i_accum[i] = 0.0
         
         # Reset do Acumulador DDA
         for i in range(3):
@@ -1312,6 +1561,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Desativa o log em arquivo da simulação.",
     )
+    parser.add_argument(
+        "--auto-analyze",
+        action="store_true",
+        help="Após finalizar, analisa automaticamente o CSV gerado e imprime métricas e dicas.",
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Roda a simulação sem abrir GUI (força backend Agg).",
+    )
     args = parser.parse_args()
 
     axis_map = parse_axis_map(args.axes)
@@ -1326,16 +1585,43 @@ if __name__ == "__main__":
     )
     
     scn = Scenario(
-        s_xyz=(20000, 16000, 12000),
+        s_xyz=(40000, 32000, 24000),
         v_xyz=(10000, 8000,  6000),
         dir_xyz=(1, 1, 1),
         kp_xyz=kp_xyz,
         ki_xyz=ki_xyz,
         kd_xyz=kd_xyz,
-        sim_time_s=3.0,
+        sim_time_s=5.0,
         use_dda=True
     )
 
-    sim_app = InteractiveSim(cfg, scn, log_dir=Path(args.log_dir), enable_logging=not args.no_log)
-    plt.show()
+    sim_app = InteractiveSim(
+        cfg, scn,
+        log_dir=Path(args.log_dir),
+        enable_logging=not args.no_log,
+        auto_analyze=args.auto_analyze,
+        headless=args.headless,
+    )
+    if args.headless:
+        # Headless: roda direto
+        sim_app._start_log_session()
+        sim_app._log_state(
+            t=sim_app.t,
+            pos_steps=sim_app.pos_real.copy(),
+            pos_enc=sim_app._encoder_rel_dda(),
+            vel_sps=sim_app.v_real.copy(),
+            casc_err=sim_app.g_casc_err_s32.copy(),
+            load_c=sim_app.active_C_load.copy(),
+            load_timer=sim_app.load_timer_xyz.copy(),
+            span_steps=float(np.max(sim_app.pos_real) - np.min(sim_app.pos_real)),
+            global_stop=False,
+        )
+        while sim_app.k < sim_app.N_steps_total:
+            sim_app._step()
+        sim_app._stop_log_session()
+        if args.auto_analyze:
+            sim_app._auto_analyze_last_log()
+        print("Headless concluído.")
+    else:
+        plt.show()
     print("Simulação interativa encerrada.")
