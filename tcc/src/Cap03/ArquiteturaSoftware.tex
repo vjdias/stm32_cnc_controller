@@ -185,11 +185,57 @@ O host pode ajustar \texttt{MICROSTEP\_FACTOR} em tempo de parada via comando \t
     \texttt{MOTION\_ENABLE\_SETTLE\_TICKS} & \emph{Settle} ap\'os ENABLE & 2 ticks = \SI{40}{\micro s} \\
     \texttt{MOTION\_MAX\_SPS} & Limite f\'isico de \emph{steps/s} & \SI{25}{kSPS} \\
     \texttt{DEMO\_ACCEL\_SPS2} & Acelera\c{c}\~ao padr\~ao & \num{200000} \,steps/s$^{2}$ \\
-    \texttt{MOTION\_PI\_DEADBAND\_STEPS} & Zona morta do PI (posi\c{c}\~ao) & 1 passo \\
+    \texttt{MOTION\_PI\_DEADBAND\_STEPS} & Zona morta do PI (posi\c{c}\~ao) & 10 passos \\
     \texttt{MOTION\_PI\_I\_CLAMP} & \emph{Anti-windup} da integral & $\pm\,200\,000$ \\
-    \bottomrule
+    \texttt{kd\_alpha\_bits} & Filtro exponencial na derivada ($\alpha$) & 8 \\
+    \texttt{MOTION\_ERR\_THROTTLE\_THRESHOLD} & Limiar do throttle por erro & 200 passos \\
+    \texttt{MOTION\_ERR\_THROTTLE\_MIN\_PERMILLE} & Piso do throttle por erro & 250 (25\% do alvo) \\
+  \bottomrule
   \end{tabularx}
 \end{table}
+
+\FloatBarrier
+\section{Coordena\c{c}\~ao Multi-eixos (Modo \emph{progress})}
+\label{sec:casc-progress}
+
+O firmware adota uma coordena\c{c}\~ao baseada em progresso relativo dos eixos.
+Define-se o eixo \emph{mestre} como aquele com menor fra\c{c}\~ao de avan\c{c}o
+no segmento ativo:
+\[
+  i^{\ast} \;=\; \argmin_i \; \frac{\texttt{emitted\_steps}_i}{\texttt{total\_steps}_i}.
+\]
+Com o mestre definido, duas pol\'iticas s\~ao aplicadas:
+\begin{enumerate}
+  \item \textbf{Rampa guiada pelo mestre}: a decis\~ao de frenagem usa o
+  restante global do mestre (segmento ativo + fila), denotado por
+  $\texttt{rem\_master}$. Assim, a condi\c{c}\~ao de freio (\S\ref{sec:rampa})
+  emprega $\texttt{rem\_steps} \leftarrow \texttt{rem\_master}$ para todos os eixos,
+  alinhando a desacelera\c{c}\~ao.
+  \item \textbf{T\'ermino por mestre}: o movimento \'e conclu\'ido quando
+  $\texttt{rem\_master}=0$, independentemente de sobras residuais em eixos
+  escravos, garantindo coer\^encia com o modo \emph{progress} da simula\c{c}\~ao.
+\end{enumerate}
+
+Essa estrat\'egia reproduz, no embarcado, o comportamento do
+\texttt{interactive\_old\_sim} ao priorizar o eixo mais atrasado e simplificar
+trocas de mestre.
+
+\FloatBarrier
+\section{Controle de Sincronismo: \emph{Throttle} por Erro}
+\label{sec:throttle-erro}
+
+Para evitar que eixos n\~ao-mestres "disparem" quando o erro de sincronismo
+aumenta, aplica-se um limitador suave ao alvo de velocidade antes do PI:
+\begin{align*}
+  \text{penalty} &= \min\!\left( \frac{|e|}{T},\,1 \right), \\
+  \text{scale} &= 1 - (1-f_{\min})\,\text{penalty}, \\
+  v_{\text{cmd}}' &= v_{\text{cmd}}\,\cdot\,\text{scale},
+\end{align*}
+com $T=\texttt{MOTION\_ERR\_THROTTLE\_THRESHOLD}=200$ passos e
+$f_{\min}=\texttt{MOTION\_ERR\_THROTTLE\_MIN\_PERMILLE}/1000=0{,}25$.
+O erro $e$ \'e o mesmo usado no PI (\S\ref{sec:pi}). O mestre n\~ao sofre
+\emph{throttle}. O efeito pr\'atico \'e amortecer o sincronismo entre eixos,
+reduzindo oscil\c{c}\~oes e o trabalho do PI, sem introduzir paradas bruscas.
 
 \FloatBarrier
 \section{Boas pr\'aticas e Diagn\'ostico}

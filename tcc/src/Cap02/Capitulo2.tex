@@ -102,6 +102,9 @@ variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_
 % Seção adicional: FOPDT e PD
 \input{Cap02/FOPDT_PID}
 
+% Seção adicional: FOPDT e PD
+\input{Cap02/FOPDT_PID}
+
 \section{Integração PID-DDA}
 
 A sincronização entre o DDA e o controlador PID ocorre ao transformar o
@@ -120,6 +123,58 @@ firmware do STM32, o laço de controle alimenta as metas de velocidade e
 microstepping de cada eixo, enquanto o DDA executa as transições
 discretas, possibilitando perfis suaves e respeitando os limites de
 aceleração definidos pelo firmware.
+
+\section{Sincronização Cruzada de Eixos (CASC)}
+
+Em movimentos multi-eixo, a coordenação cinemática exige que cada eixo
+siga uma fração coerente do avanço global, minimizando erro de
+sincronismo e de contorno. Chamamos aqui de \emph{CASC} (\emph{Cross-Axis
+Sync}) o conjunto de estratégias que, sobre a malha de posição/velocidade
+por eixo, impõem coerência temporal do grupo.
+
+Sejam $s_i(t)$ as posições desejadas e $x_i(t)$ as posições medidas. O
+\emph{progresso normalizado} por eixo pode ser escrito como
+\begin{equation}
+    p_i(t) = \frac{x_i(t) - x_i(0)}{\max\{1,\,|s_i(T) - s_i(0)|\}},
+\end{equation}
+onde $T$ é a duração nominal do movimento. Uma escolha comum de eixo
+\emph{mestre} é aquele com maior \emph{restante absoluto}
+$R_i(t) = |s_i(T) - x_i(t)|$ (ou, inversamente, menor progresso); o
+objetivo é que os demais eixos acompanhem o mestre, reduzindo o erro de
+sincronismo
+\begin{equation}
+    e^{\text{sync}}_i(t) = p_m(t) - p_i(t),\quad i\ne m.
+\end{equation}
+Uma lei simples de \emph{modulação de avanço} aplica um reescalonamento na
+velocidade de referência de cada eixo não-mestre, do tipo
+\begin{equation}
+    v^{\text{ref}}_i(t) = \sigma\bigl(e^{\text{sync}}_i(t)\bigr)\,v^{\text{nom}}_i(t),\quad
+    \sigma(e) = 1 - (1-\sigma_{\min})\,\min\left\{1,\,\frac{|e|}{e_{\text{th}}}\right\},
+\end{equation}
+com $\sigma_{\min}\in(0,1)$ a fração mínima admissível e $e_{\text{th}}>0$ um
+limiar que define quando a penalização satura. Intuitivamente, quanto
+maior o atraso relativo $e^{\text{sync}}_i$, maior a redução da velocidade
+"instantânea" para permitir a re-sincronização. Em situações críticas,
+uma \emph{retenção de sincronismo} (\emph{sync hold}) pode impor
+$v^{\text{ref}}_i\!=\!0$ para eixos defasados além de um limite de
+segurança.
+
+Durante a fase final do movimento, define-se uma \emph{janela de
+acabamento} de largura $W$ (em passos ou fração do deslocamento global),
+na qual se aplicam regras mais conservadoras: desabilita-se detecção de
+\emph{stall}, eleva-se $\sigma_{\min}$ e relaxam-se as trocas de mestre
+para evitar oscilações. Tais práticas são consistentes com técnicas de
+controle cruzado de eixos \emph{cross-coupled} que utilizam o erro de
+contorno/ sincronismo para melhorar a precisão em trajetórias 2D/3D
+\cite{adaptive_fuzzy_pid}.
+
+Note-se que o CASC não substitui as malhas PID por eixo: ele opera como
+supervisor de alto nível, gerando referências coerentes e respeitando
+limitações de aceleração e saturação. A estabilidade do conjunto
+depende da escolha de limiares $(e_{\text{th}},\,\sigma_{\min})$ e da
+política de seleção do mestre (maior restante, menor progresso, eixo
+carregado etc.), que devem ser ajustados de modo a preservar margens de
+fase e evitar comandos abruptos.
 
 \section{Comunicação SPI e USART}
 

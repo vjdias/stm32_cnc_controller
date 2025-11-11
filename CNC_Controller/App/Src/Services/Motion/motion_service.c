@@ -86,6 +86,34 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_CSV_DRAIN_PER_TICK       128u /* aumenta drenagem para aliviar backlog rapidamente */
 #endif
 
+/* =======================
+ *  Compatibilidade "progress" (interactive_old_sim)
+ *  - Seleciona mestre por menor progresso (emitted/total)
+ *  - Rampa guiada pelo restante do mestre (fila inclusa)
+ *  - Conclusão global quando restante do mestre chega a zero
+ * ======================= */
+#ifndef MOTION_PROGRESS_MODE
+#define MOTION_PROGRESS_MODE 1
+#endif
+
+/* =======================
+ *  Throttle por erro (modo progress)
+ *  - Reduz feed dos eixos não-mestres conforme |erro| cresce
+ *  - Fórmula (per-mille):
+ *      scale = 1 - (1 - min_frac) * min(|err|/threshold, 1)
+ *      v_cmd <- v_cmd * scale
+ *  - Parâmetros alinhados ao interactive_old_sim (threshold=200, min_frac=0.25)
+ * ======================= */
+#ifndef MOTION_ERR_THROTTLE_ENABLE
+#define MOTION_ERR_THROTTLE_ENABLE 1
+#endif
+#ifndef MOTION_ERR_THROTTLE_THRESHOLD
+#define MOTION_ERR_THROTTLE_THRESHOLD 200u /* steps */
+#endif
+#ifndef MOTION_ERR_THROTTLE_MIN_PERMILLE
+#define MOTION_ERR_THROTTLE_MIN_PERMILLE 250u /* 0.25 => 25% do v_cmd */
+#endif
+
 // Opções de formato/rápidez (padrões conservadores p/ compatibilidade)
 #ifndef MOTION_CSV_INCLUDE_ID
 #define MOTION_CSV_INCLUDE_ID           1u   /* adiciona um id incremental por eixo */
@@ -189,8 +217,8 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
 //#endif
 #define STEPS_PER_REV_BASE   400u
 #define DDA_STEPS_PER_REV    (STEPS_PER_REV_BASE * MICROSTEP_FACTOR)
-/* Encoders por rotação (fornecido): X/Z = 40000, Y = 2500 */
-static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 2500u, 40000u}; // X,Y,Z 
+/* Encoders por rotação (fornecido): X/Z = 40000, Y = 5000 */
+static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 5000u, 40000u}; // X,Y,Z 
 static volatile uint16_t g_microstep_factor = MICROSTEP_FACTOR;
 static inline uint32_t dda_steps_per_rev(void) { return STEPS_PER_REV_BASE * (uint32_t)g_microstep_factor; }
 
@@ -338,6 +366,35 @@ static inline void motion_unlock(uint32_t primask) {
     __set_PRIMASK(primask);
 }
 
+/* =======================
+ *  Seleção de Mestre (modo progress)
+ * ======================= */
+#if MOTION_PROGRESS_MODE
+static inline int8_t motion_select_master_axis_progress(void)
+{
+    int8_t master = -1;
+    uint32_t m_num = 0u, m_den = 1u;
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        const motion_axis_state_t *ax = &g_axis_state[axis];
+        if (ax->total_steps == 0u) continue;
+        uint32_t num = ax->emitted_steps; /* progresso acumulado */
+        uint32_t den = ax->total_steps;   /* tamanho do segmento */
+        if (master < 0) {
+            master = (int8_t)axis;
+            m_num = num; m_den = den;
+        } else {
+            /* Compara num/den < m_num/m_den sem perder precisão */
+            uint64_t lhs = (uint64_t)num * (uint64_t)m_den;
+            uint64_t rhs = (uint64_t)m_num * (uint64_t)den;
+            if (lhs < rhs) {
+                master = (int8_t)axis;
+                m_num = num; m_den = den;
+            }
+        }
+    }
+    return master;
+}
+#endif /* MOTION_PROGRESS_MODE */
 /* =======================
  *  Helpers de acesso por eixo
  * ======================= */
@@ -906,6 +963,18 @@ void motion_on_tim6_tick(void)
                 confirm = 0u; break;
             }
         }
+#if MOTION_PROGRESS_MODE
+        /* Compat: considera finalizado quando o restante do mestre (ativo+fila) zera */
+        if (!confirm) {
+            int8_t m = motion_select_master_axis_progress();
+            if (m >= 0) {
+                uint32_t rem_m = motion_remaining_steps_total_for_axis((uint8_t)m);
+                if (rem_m == 0u) {
+                    confirm = 1u;
+                }
+            }
+        }
+#endif
         if (confirm) {
             if (motion_try_start_next_locked()) {
                 g_status.state = MOTION_RUNNING;
@@ -1014,12 +1083,49 @@ void motion_on_tim7_tick(void)
     }
     /* Caminho da fila: rampa trapezoidal (acelera/cruza/desacelera) e define incremento DDA */
     if (g_status.state == MOTION_RUNNING && g_has_active_segment && !g_demo_continuous) {
+#if MOTION_PROGRESS_MODE
+        int8_t master_axis = motion_select_master_axis_progress();
+        uint32_t rem_master = 0u;
+        if (master_axis >= 0) {
+            rem_master = motion_remaining_steps_total_for_axis((uint8_t)master_axis);
+        }
+#endif
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
             motion_axis_state_t *ax = &g_axis_state[axis];
             /* Mesmo que o segmento ativo para este eixo tenha zerado, podemos ter
                passos remanescentes na fila — mantemos a rampa global da lista. */
 
             uint32_t v_cmd_sps = ((uint32_t)ax->velocity_per_tick) * 1000u; /* alvo/cruzeiro */
+
+#if MOTION_PROGRESS_MODE && MOTION_ERR_THROTTLE_ENABLE
+            /* Throttle por erro (apenas eixos não-mestres):
+               - Usa erro posicional baseado em encoder (mesmo usado no PI)
+               - Ajusta v_cmd antes de aplicar correção PI */
+            if (master_axis >= 0 && (int8_t)axis != master_axis) {
+                int32_t desired = (int32_t)ax->target_steps;
+                int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
+                int64_t num = enc_rel * (int64_t)dda_steps_per_rev();
+                int32_t actual = 0;
+                if (ENC_COUNTS_PER_REV[axis] > 0u) {
+                    int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
+                    if (q > INT32_MAX) q = INT32_MAX; else if (q < INT32_MIN) q = INT32_MIN;
+                    actual = (int32_t)q;
+                }
+                int32_t err = desired - actual;
+                uint32_t err_abs = (err < 0) ? (uint32_t)(-err) : (uint32_t)err;
+
+                uint32_t scale_pm;
+                if (err_abs >= (uint32_t)MOTION_ERR_THROTTLE_THRESHOLD) {
+                    scale_pm = (uint32_t)MOTION_ERR_THROTTLE_MIN_PERMILLE; /* piso */
+                } else {
+                    uint32_t range = 1000u - (uint32_t)MOTION_ERR_THROTTLE_MIN_PERMILLE; /* 0..750 */
+                    uint32_t dec = (uint32_t)(((uint64_t)range * (uint64_t)err_abs) / (uint32_t)MOTION_ERR_THROTTLE_THRESHOLD);
+                    scale_pm = 1000u - dec; /* 1000..min_permille */
+                }
+                v_cmd_sps = (uint32_t)(((uint64_t)v_cmd_sps * (uint64_t)scale_pm) / 1000u);
+                if (v_cmd_sps > MOTION_MAX_SPS) v_cmd_sps = MOTION_MAX_SPS;
+            }
+#endif /* MOTION_PROGRESS_MODE && MOTION_ERR_THROTTLE_ENABLE */
             /* PI de posição: ajusta v_cmd_sps com base no erro posicional */
 #if MOTION_PI_ENABLE
             if ((ax->kp | ax->ki | ax->kd) != 0u) {
@@ -1068,6 +1174,12 @@ void motion_on_tim7_tick(void)
 
             /* Distância restante total (ativo + fila) em passos */
             uint32_t rem_steps = motion_remaining_steps_total_for_axis(axis);
+#if MOTION_PROGRESS_MODE
+            /* Em compatibilidade "progress", guia a rampa pelo restante do mestre */
+            if (master_axis >= 0) {
+                rem_steps = rem_master;
+            }
+#endif
 
             /* Distância necessária para frear de v para 0: s = v^2 / (2a) */
             uint32_t v_now = ax->v_actual_sps;
