@@ -1,0 +1,36 @@
+\section{Modelo FOPDT e síntese de ganhos PD}\label{sec:fopdt_pd}
+
+O comportamento dinâmico da malha de velocidade foi aproximado por um
+modelo de primeira ordem com atraso puro (FOPDT, do inglês
+\emph{First-Order Plus Dead Time}), cuja função de transferência é dada por
+\begin{equation}
+    G_v(s) = \frac{K\,e^{-Ls}}{\tau s + 1},
+\end{equation}
+onde $K$ denota o ganho estático, $L$ o tempo morto e $\tau$ a constante
+de tempo. Para um degrau de amplitude $u_0$, a resposta temporal é
+\begin{equation}
+    y(t) = \begin{cases}
+        0, & t < L, \\
+        K\,u_0\left(1 - e^{-\frac{t-L}{\tau}}\right), & t \ge L.
+    \end{cases}
+\end{equation}
+Propriedades úteis incluem $t_{63}=L+\tau$ (63,2\% do valor de regime) e
+$t_{90}\approx L+2{,}303\,\tau$.
+
+Com base nesse modelo, adotou-se um regulador proporcional–derivativo (PD)
+na malha de velocidade, mantendo $K_i=0$ por já existir ação integrativa
+no nível de posição. As constantes são sintetizadas pelas regras de
+Ziegler–Nichols para curva de reação (processos do tipo FOPDT), a saber
+\cite{astrom1995}:
+\begin{equation}
+    K_p = 1{,}2\,\frac{\tau}{K\,L},\quad
+    T_d = 0{,}5\,L,\quad
+    K_d = K_p\,T_d,\quad
+    K_i = 0.
+\end{equation}
+Para implementação digital, os ganhos podem ser escalonados para
+representação inteira utilizando um fator de escala $S>0$ (\emph{fixed-point}),
+\emph{e.g.}, $k_{p,i}=\operatorname{round}(S\,K_p)$ e análogos para $k_{i,i}$ e
+$k_{d,i}$. Tal mapeamento preserva a coerência entre a análise contínua e o
+controlador discreto executado em tempo real.
+

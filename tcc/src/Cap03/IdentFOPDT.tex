@@ -1,0 +1,51 @@
+\section{Identificação experimental do modelo FOPDT}\label{sec:ident_fopdt}
+
+Esta seção descreve o procedimento de identificação adotado para
+estimativa de $K$, $L$ e $\tau$ a partir de respostas a degrau de
+velocidade obtidas em bancada. O método opera inteiramente no domínio do
+tempo e é robusto a ruídos moderados.
+
+\subsection*{Pré-processamento e séries derivadas}
+Considere amostras ordenadas por tempo contendo os campos $(t,\,p,\,e)$,
+em que $p$ representa a contagem acumulada de passos do atuador e $e$ a
+contagem acumulada do encoder. A partir de pares ou de uma janela
+deslizante de comprimento $N$, definem-se
+\begin{align}
+    \Delta t_k &= t_k - t_{k-N+1}, & \Delta p_k &= p_k - p_{k-N+1}, & \Delta e_k &= e_k - e_{k-N+1},\\
+    v_{\mathrm{cmd}}(k) &= \frac{\Delta p_k}{\Delta t_k}, & v_{\mathrm{enc}}(k) &= \frac{\Delta e_k}{\Delta t_k}.
+\end{align}
+Para reduzir o efeito de ruído, utiliza-se tipicamente $N\in[5,10]$.
+Pares com $\Delta t_k\le 0$ são descartados. O valor de regime (\emph{steady
+state}) de cada série é a média dos últimos $\rho\in(0,1)$ da janela
+temporal disponível (\emph{e.g.}, $\rho=0{,}2$), denotados por
+$\overline v_{\mathrm{cmd}}$ e $\overline v_{\mathrm{enc}}$.
+
+\subsection*{Extração de marcos temporais}
+Define-se o \emph{início efetivo} do degrau nos sinais de comando e de
+medição pelos primeiros cruzamentos de 5\% de seus respectivos regimes:
+\begin{equation}
+    t^{5\%}_{\mathrm{cmd}} = \inf\{ t: v_{\mathrm{cmd}}(t) \ge 0{,}05\,\overline v_{\mathrm{cmd}}\},\quad
+    t^{5\%}_{\mathrm{enc}} = \inf\{ t: v_{\mathrm{enc}}(t) \ge 0{,}05\,\overline v_{\mathrm{enc}}\}.
+\end{equation}
+Analogamente, obtém-se o instante $t_{63}$ como o primeiro cruzamento de
+63,2\% no sinal medido:
+\begin{equation}
+    t_{63} = \inf\{ t: v_{\mathrm{enc}}(t) \ge 0{,}632\,\overline v_{\mathrm{enc}}\}.
+\end{equation}
+
+\subsection*{Estimativas $K$, $L$ e $\tau$}
+O ganho estático é dado por $K=\overline v_{\mathrm{enc}}/\overline v_{\mathrm{cmd}}$.
+O tempo morto é $L = \max\{0,\,t^{5\%}_{\mathrm{enc}} - t^{5\%}_{\mathrm{cmd}}\}$. A constante de
+tempo decorre de $\tau = t_{63} - L$. Quando limitações de amostragem
+impõem baixa resolução temporal, adota-se o piso $\Delta t_{\min}$
+observado na série crua, substituindo $L$ e/ou $\tau$ por $\Delta t_{\min}$
+quando as estimativas resultarem nulas ou negativas.
+
+\subsection*{Síntese PD e validação}
+Com as estimativas $(K, L, \tau)$, computam-se os ganhos $K_p$ e $K_d$ por
+meio das regras de Ziegler–Nichols para curva de reação (com $K_i=0$ na
+malha de velocidade). A validação consiste em aplicar as constantes ao
+modelo FOPDT discretizado ($T_s=\SI{1}{\milli\second}$) e comparar a
+resposta simulada à resposta medida, verificando sobre-elevação,
+tempo de subida e ausência de saturações relevantes.
+
