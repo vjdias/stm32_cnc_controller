@@ -17,6 +17,42 @@ de tempo. Para um degrau de amplitude $u_0$, a resposta temporal é
 Propriedades úteis incluem $t_{63}=L+\tau$ (63,2\% do valor de regime) e
 $t_{90}\approx L+2{,}303\,\tau$.
 
+\subsection{Derivação da resposta ao degrau}\label{subsec:fopdt_degrau}
+Considere o modelo de primeira ordem com atraso puro excitado por um
+degrau de amplitude $U$ atrasado de $L$ segundos, isto é,
+\(u(t) = U\,H(t-L)\), onde $H(\cdot)$ é a função de Heaviside. No
+domínio do tempo, o FOPDT satisfaz a equação diferencial linear
+\begin{equation}
+    \tau\,\dot y(t) + y(t) = K\,u(t) = K\,U\,H(t-L), \quad y(0)=0.
+\end{equation}
+Para $t<L$ tem-se $u(t)=0$ e, portanto, $y(t)=0$. Para $t\ge L$ define-se
+\(\xi = t-L\) e resolve-se o problema deslocado
+\begin{equation}
+    \tau\,\frac{d}{d\xi} y(L+\xi) + y(L+\xi) = K\,U, \quad y(L^-)=0.
+\end{equation}
+A solução geral é soma das soluções homogênea e particular, resultando em
+\begin{equation}
+    y(t) = K\,U\,\bigl(1 - e^{-\frac{t-L}{\tau}}\bigr)\,H(t-L),
+\end{equation}
+que coincide com a expressão utilizada nas validações: para $t<L$, $y=0$;
+para $t\ge L$, a saída converge exponencialmente para $K\,U$ com
+constante de tempo $\tau$.
+
+Uma dedução equivalente via transformada de Laplace parte de
+\(G_v(s)=\tfrac{K\,e^{-Ls}}{\tau s + 1}\) e de um degrau de magnitude $U$,
+\(U/s\). Pela propriedade de translação temporal,
+\(Y(s)=G_v(s)\,\tfrac{U}{s} = \tfrac{K\,U}{s(\tau s+1)}\,e^{-Ls}\), cuja transformada
+inversa fornece a mesma expressão
+\(y(t)=K\,U\,(1 - e^{-(t-L)/\tau})\,H(t-L)\).
+
+No contexto deste trabalho, a amplitude do degrau $U$ é escolhida como a
+velocidade de comando em regime (denotada por $V_{\mathrm{cmd}}$),
+\(U := V_{\mathrm{cmd}} := \overline v_{\mathrm{cmd}}\), estimada a
+partir da média em janela final do traço de comando (vide
+Seção~\ref{sec:ident_fopdt}). Essa escolha assegura que o nível de regime
+previsto pelo modelo, $K\,U$, coincida com o patamar medido no encoder
+quando a aproximação FOPDT é adequada.
+
 Com base nesse modelo, adotou-se um regulador proporcional–derivativo (PD)
 na malha de velocidade, mantendo $K_i=0$ por já existir ação integrativa
 no nível de posição. As constantes são sintetizadas pelas regras de
@@ -33,4 +69,3 @@ representação inteira utilizando um fator de escala $S>0$ (\emph{fixed-point})
 \emph{e.g.}, $k_{p,i}=\operatorname{round}(S\,K_p)$ e análogos para $k_{i,i}$ e
 $k_{d,i}$. Tal mapeamento preserva a coerência entre a análise contínua e o
 controlador discreto executado em tempo real.
-

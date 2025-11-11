@@ -5,6 +5,11 @@
     \item[$f_{\text{TIM6}}$] \quad Frequência de interrupção do temporizador TIM6 usada pelo DDA.
     \item[$f_{\text{loop}}$] \quad Frequência do laço de controle executado no TIM7.
     \item[$N_{\text{steps}}$] \quad Número de pulsos STEP gerados para cada eixo.
+    \item[$p$] \quad Contagem acumulada de pulsos do atuador (STEP).
+    \item[$c$] \quad Contagem acumulada do encoder (em contagens).
+    \item[$k$] \quad Índice discreto de amostragem ($k\in\mathbb{N}$), com $t = k\,T_s$.
+    \item[$f(k)$] \quad Valor da grandeza discreta $f$ na $k$-ésima amostra (equivalente a $f[k]$).
+    \item[$v_{\mathrm{cmd}}(k)$ / $V_{\mathrm{cmd}}$] \quad Velocidade de comando: $v_{\mathrm{cmd}}(k)$ é o valor instantâneo (pulsos STEP/s) na amostra $k$; $V_{\mathrm{cmd}}$ denota a amplitude do degrau de comando utilizada nas análises (tipicamente $V_{\mathrm{cmd}} := \overline v_{\mathrm{cmd}}$).
     \item[$\theta$] \quad Posição angular estimada a partir do encoder.
     \item[$e(t)$] \quad Erro instantâneo entre referência e posição medida.
     \item[$u(t)$] \quad Sinal de controle produzido pelo regulador PID.
