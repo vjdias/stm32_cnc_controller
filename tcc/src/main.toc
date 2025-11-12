@@ -62,12 +62,15 @@
 \contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{27}{subsection.3.11.2}%
 \contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{28}{section.3.12}%
 \contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos (Modo \emph {progress})}{28}{section.3.13}%
-\contentsline {section}{\numberline {3.14}Controle de Sincronismo: \emph {Throttle} por Erro}{29}{section.3.14}%
-\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{29}{section.3.15}%
-\contentsline {section}{\numberline {3.16}Refer\^encias cruzadas}{30}{section.3.16}%
-\contentsline {chapter}{\numberline {4}Resultados e Discussão}{31}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{31}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{31}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{31}{section.4.3}%
-\contentsline {chapter}{\numberline {5}Conclusão}{33}{chapter.5}%
-\contentsline {chapter}{Bibliografia}{34}{chapter.5}%
+\contentsline {paragraph}{O que a simulação cobre e como.}{29}{section*.35}%
+\contentsline {paragraph}{Saídas e diagnósticos.}{29}{section*.36}%
+\contentsline {section}{\numberline {3.14}Controle de Sincronismo: \emph {Throttle} por Erro}{30}{section.3.14}%
+\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{30}{section.3.15}%
+\contentsline {section}{\numberline {3.16}Refer\^encias cruzadas}{31}{section.3.16}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{32}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{32}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{32}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{32}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Fluxo do comando \texttt {cnc\text {-}cli}}{33}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Conclusão}{36}{chapter.5}%
+\contentsline {chapter}{Bibliografia}{37}{chapter.5}%

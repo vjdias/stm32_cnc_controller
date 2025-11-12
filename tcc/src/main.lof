@@ -8,6 +8,7 @@
 \contentsline {figure}{\numberline {3.4}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{24}{figure.caption.30}%
 \contentsline {figure}{\numberline {3.5}{\ignorespaces Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}}{25}{figure.caption.32}%
 \contentsline {figure}{\numberline {3.6}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware.}}{26}{figure.caption.33}%
-\contentsline {figure}{\numberline {3.7}{\ignorespaces Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro.}}{29}{figure.caption.35}%
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro.}}{30}{figure.caption.37}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Fluxo do comando \texttt {cnc\text {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}}{34}{figure.caption.38}%
 \addvspace {10\p@ }

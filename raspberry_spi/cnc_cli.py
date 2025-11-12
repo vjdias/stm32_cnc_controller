@@ -38,6 +38,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+import math
 
 from .stm32.stm32_cli import STM32Client  # type: ignore
 from .stm32.stm32_requests import STM32RequestBuilder  # type: ignore
@@ -429,6 +430,44 @@ class _FrameSeq:
         return self._cur
 
 
+def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
+    spi = cfg.get("spi", {}) if isinstance(cfg.get("spi"), dict) else {}
+    tries_key = f"{kind}_tries"
+    settle_key = f"{kind}_settle"
+    # Defaults conservadores por operação
+    defaults = {
+        "queue_add": (40, 0.005),
+        "start_move": (40, 0.005),
+        "queue_status": (60, 0.010),
+    }
+    dtries, dsettle = defaults.get(kind, (40, 0.005))
+    tries = int(spi.get(tries_key, dtries))
+    settle = float(spi.get(settle_key, dsettle))
+    return max(1, tries), max(0.0, settle)
+
+
+def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
+    spi = cfg.get("spi", {}) if isinstance(cfg.get("spi"), dict) else {}
+    tries_key = f"{kind}_tries"
+    settle_key = f"{kind}_settle"
+    defaults = {
+        "queue_add": (40, 0.005),
+        "start_move": (40, 0.005),
+        "queue_status": (60, 0.010),
+    }
+    dtries, dsettle = defaults.get(kind, (40, 0.005))
+    tries = int(spi.get(tries_key, dtries))
+    settle = float(spi.get(settle_key, dsettle))
+    # Tempo mínimo total de espera (clamp >= 5s)
+    min_wait = float(spi.get("min_wait_s", 5.0))
+    if not math.isfinite(min_wait) or min_wait < 5.0:
+        min_wait = 5.0
+    settle = max(0.001, settle)
+    required_tries = int(math.ceil(min_wait / settle))
+    tries = max(tries, required_tries)
+    return max(1, tries), settle
+
+
 def _process_steps(
     client: STM32Client,
     cfg: Dict[str, Any],
@@ -444,7 +483,8 @@ def _process_steps(
                 cur_pid[ax].update({k: int(v) for k, v in seq["pid"][ax].items()})
 
     sent = 0
-    settle = 0.002
+    qadd_tries, qadd_settle = _spi_params(cfg, "queue_add")
+    start_tries, start_settle = _spi_params(cfg, "start_move")
     fid = _FrameSeq(1)
 
     for i, st in enumerate(steps):
@@ -474,24 +514,28 @@ def _process_steps(
                 *pid9,
             )
             try:
-                resp = client.exchange(0x01, req, tries=3, settle_delay_s=settle)
-                _ = STM32ResponseDecoder.queue_add_ack(resp)
-                sent += 1
+                resp = client.exchange(0x01, req, tries=qadd_tries, settle_delay_s=qadd_settle)
             except Exception as exc:
-                logger.error("Falha ao enfileirar movimento %d (step %d): %s", sent, i, exc)
-                raise
+                # Backoff: tenta novamente com parâmetros mais largos
+                logger.warning(
+                    "QueueAdd timeout com tries=%s/settle=%.3f; tentando backoff...",
+                    qadd_tries, qadd_settle,
+                )
+                resp = client.exchange(0x01, req, tries=max(qadd_tries, 80), settle_delay_s=max(qadd_settle, 0.010))
+            _ = STM32ResponseDecoder.queue_add_ack(resp)
+            sent += 1
     # Inicia execução se houve ao menos um movimento
     if sent > 0:
         try:
-            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=3, settle_delay_s=settle)
-            try:
-                data = STM32ResponseDecoder.start_move(ack)
-                logger.info("StartMove: status=%s depth=%s", data.get("status"), data.get("depth"))
-            except Exception:
-                logger.info("StartMove: ACK bruto=%s", ack)
-        except Exception as exc:
-            logger.error("Falha ao iniciar execução: %s", exc)
-            raise
+            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=start_tries, settle_delay_s=start_settle)
+        except Exception:
+            # backoff
+            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=max(start_tries, 80), settle_delay_s=max(start_settle, 0.010))
+        try:
+            data = STM32ResponseDecoder.start_move(ack)
+            logger.info("StartMove: status=%s depth=%s", data.get("status"), data.get("depth"))
+        except Exception:
+            logger.info("StartMove: ACK bruto=%s", ack)
     return sent
 
 
@@ -505,10 +549,11 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
     start_t = time.time()
     last_warn = 0.0
     frame_id = 0x41
+    qst_tries, qst_settle = _spi_params(cfg, "queue_status")
     while True:
         # 1) Consulta status da fila
         try:
-            resp = client.exchange(0x02, STM32RequestBuilder.queue_status(frame_id), tries=3, settle_delay_s=0.01)
+            resp = client.exchange(0x02, STM32RequestBuilder.queue_status(frame_id), tries=qst_tries, settle_delay_s=qst_settle)
             data = STM32ResponseDecoder.queue_status(resp)
             pct = data.get("pct", {})
             pmin = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0)))
@@ -561,6 +606,17 @@ def run_sequence(args: argparse.Namespace) -> int:
         logger.error("Execução abortada: limites violados em application.cfg")
         return 3
 
+    # Override opcional do tempo mínimo de espera (linha de comando)
+    try:
+        if getattr(args, "min_wait_s", None) is not None:
+            spi_cfg = cfg.get("spi") if isinstance(cfg.get("spi"), dict) else {}
+            if not isinstance(spi_cfg, dict):
+                spi_cfg = {}
+            spi_cfg["min_wait_s"] = float(args.min_wait_s)
+            cfg["spi"] = spi_cfg
+    except Exception:
+        pass
+
     # Conecta STM32
     try:
         st = cfg.get("stm32", {})
@@ -596,6 +652,18 @@ def run_sequence(args: argparse.Namespace) -> int:
             # LED: aceso (falha)
             _set_led(client, on=True)
             return 5
+    except Exception as exc:
+        # Qualquer erro de execução: LED aceso e segurança TMC, se possível
+        try:
+            _set_led(client, on=True)
+        except Exception:
+            pass
+        try:
+            _tmc_security_off_all(cfg, logger)
+        except Exception:
+            pass
+        logger.error("Falha durante execução: %s", exc)
+        return 6
     finally:
         try:
             client.close()
@@ -612,7 +680,8 @@ def status(args: argparse.Namespace) -> int:
         print("Falha ao abrir SPI para STM32:", exc)
         return 4
     try:
-        resp = client.exchange(0x02, STM32RequestBuilder.queue_status(int(args.frame_id)), tries=3, settle_delay_s=0.01)
+        qst_tries, qst_settle = _spi_params(cfg, "queue_status")
+        resp = client.exchange(0x02, STM32RequestBuilder.queue_status(int(args.frame_id)), tries=qst_tries, settle_delay_s=qst_settle)
         data = STM32ResponseDecoder.queue_status(resp)
         pct = data.get("pct", {})
         done = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0))) >= 100
@@ -653,6 +722,7 @@ def build_parser() -> argparse.ArgumentParser:
     prun.add_argument("sequence", help="Caminho do arquivo de sequência JSON")
     prun.add_argument("--config", default="application.cfg", help="application.cfg com limites e conexões")
     prun.add_argument("--timeout", type=float, default=120.0, help="Timeout aguardando conclusão (s)")
+    prun.add_argument("--min-wait-s", type=float, default=None, help="Tempo mínimo total de espera para ACKs SPI (>=5s; sobrescreve cfg.spi.min_wait_s)")
     prun.set_defaults(handler=run_sequence)
 
     pstat = sub.add_parser("status", help="Consulta MOVE_QUEUE_STATUS e imprime progresso/erro PID")

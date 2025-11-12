@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  11 NOV 2025 17:10
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  12 NOV 2025 03:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -602,7 +602,331 @@ Package: translations 2022/02/05 v1.12 internationalization of LaTeX2e packages
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/placeins\placeins.sty
 Package: placeins 2005/04/18  v 2.2
-) (main.aux (Identificacao.aux)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz
+.sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.s
+ty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-common.tex
+\pgfutil@everybye=\toks36
+\pgfutil@tempdima=\dimen271
+\pgfutil@tempdimb=\dimen272
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfuti
+l-latex.def
+\pgfutil@abb=\box70
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs
+.code.tex
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex
+)
+Package: pgfrcs 2025-08-29 v3.1.11a (3.1.11a)
+))
+Package: pgf 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore
+.sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys
+.sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys.code.tex
+Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex
+\pgfkeys@pathtoks=\toks37
+\pgfkeys@temptoks=\toks38
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+slibraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks39
+))
+\pgf@x=\dimen273
+\pgf@y=\dimen274
+\pgf@xa=\dimen275
+\pgf@ya=\dimen276
+\pgf@xb=\dimen277
+\pgf@yb=\dimen278
+\pgf@xc=\dimen279
+\pgf@yc=\dimen280
+\pgf@xd=\dimen281
+\pgf@yd=\dimen282
+\w@pgf@writea=\write3
+\r@pgf@reada=\read3
+\c@pgf@counta=\count356
+\c@pgf@countb=\count357
+\c@pgf@countc=\count358
+\c@pgf@countd=\count359
+\t@pgf@toka=\toks40
+\t@pgf@tokb=\toks41
+\t@pgf@tokc=\toks42
+\pgf@sys@id@count=\count360
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.
+cfg
+File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
+)
+Driver file for pgf: pgfsys-pdftex.def
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-pdftex.def
+File: pgfsys-pdftex.def 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ys-common-pdf.def
+File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+yssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfsyssoftpath@smallbuffer@items=\count361
+\pgfsyssoftpath@bigbuffer@items=\count362
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
+ysprotocol.code.tex
+File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+re.code.tex
+Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil
+.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathpars
+er.code.tex
+\pgfmath@dimen=\dimen283
+\pgfmath@count=\count363
+\pgfmath@box=\box71
+\pgfmath@toks=\toks43
+\pgfmath@stack@operand=\toks44
+\pgfmath@stack@operation=\toks45
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.basic.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.trigonometric.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.random.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.comparison.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.base.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.round.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.misc.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunc
+tions.integerarithmetics.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc
+.code.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloa
+t.code.tex
+\c@pgfmathroundto@lastzeros=\count364
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code
+.tex)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repoints.code.tex
+File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@picminx=\dimen284
+\pgf@picmaxx=\dimen285
+\pgf@picminy=\dimen286
+\pgf@picmaxy=\dimen287
+\pgf@pathminx=\dimen288
+\pgf@pathmaxx=\dimen289
+\pgf@pathminy=\dimen290
+\pgf@pathmaxy=\dimen291
+\pgf@xx=\dimen292
+\pgf@xy=\dimen293
+\pgf@yx=\dimen294
+\pgf@yy=\dimen295
+\pgf@zx=\dimen296
+\pgf@zy=\dimen297
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@path@lastx=\dimen298
+\pgf@path@lasty=\dimen299
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathusage.code.tex
+File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@shorten@end@additional=\dimen300
+\pgf@shorten@start@additional=\dimen301
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rescopes.code.tex
+File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfpic=\box72
+\pgf@hbox=\box73
+\pgf@layerbox@main=\box74
+\pgf@picture@serial@count=\count365
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+regraphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgflinewidth=\dimen302
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransformations.code.tex
+File: pgfcoretransformations.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@pt@x=\dimen303
+\pgf@pt@y=\dimen304
+\pgf@pt@temp=\dimen305
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+requick.code.tex
+File: pgfcorequick.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reobjects.code.tex
+File: pgfcoreobjects.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repathprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rearrows.code.tex
+File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowsep=\dimen306
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reshade.code.tex
+File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@max=\dimen307
+\pgf@sys@shading@range@num=\count366
+\pgf@shadingcount=\count367
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reimage.code.tex
+File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+reexternal.code.tex
+File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfexternal@startupbox=\box75
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+relayers.code.tex
+File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+retransparency.code.tex
+File: pgfcoretransparency.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+repatterns.code.tex
+File: pgfcorepatterns.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
+rerdf.code.tex
+File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eshapes.code.tex
+File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfnodeparttextbox=\box76
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+eplot.code.tex
+File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-0-65.sty
+Package: pgfcomp-version-0-65 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@nodesepstart=\dimen308
+\pgf@nodesepend=\dimen309
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfc
+omp-version-1-18.sty
+Package: pgfcomp-version-1-18 2025-08-29 v3.1.11a (3.1.11a)
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.s
+ty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.
+sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkey
+s.code.tex))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.cod
+e.tex))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor
+.code.tex
+Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
+\pgffor@iter=\dimen310
+\pgffor@skip=\dimen311
+\pgffor@stack=\toks46
+\pgffor@toks=\toks47
+))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz\tikz.code.tex
+Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryplothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgf@plot@mark@count=\count368
+\pgfplotmarksize=\dimen312
+)
+\tikz@lastx=\dimen313
+\tikz@lasty=\dimen314
+\tikz@lastxsaved=\dimen315
+\tikz@lastysaved=\dimen316
+\tikz@lastmovetox=\dimen317
+\tikz@lastmovetoy=\dimen318
+\tikzleveldistance=\dimen319
+\tikzsiblingdistance=\dimen320
+\tikz@figbox=\box77
+\tikz@figbox@bg=\box78
+\tikz@tempbox=\box79
+\tikz@tempbox@bg=\box80
+\tikztreelevel=\count369
+\tikznumberofchildren=\count370
+\tikznumberofcurrentchild=\count371
+\tikz@fig@count=\count372
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
+ematrix.code.tex
+File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfmatrixcurrentrow=\count373
+\pgfmatrixcurrentcolumn=\count374
+\pgf@matrix@numberofcolumns=\count375
+)
+\tikz@expandcount=\count376
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)))
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
+raryarrows.meta.code.tex
+File: pgflibraryarrows.meta.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfarrowinset=\dimen321
+\pgfarrowlength=\dimen322
+\pgfarrowwidth=\dimen323
+\pgfarrowlinewidth=\dimen324
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibrarypositioning.code.tex
+File: tikzlibrarypositioning.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
+kz/libraries\tikzlibraryshapes.geometric.code.tex
+File: tikzlibraryshapes.geometric.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries/shapes
+\pgflibraryshapes.geometric.code.tex
+File: pgflibraryshapes.geometric.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+)) (main.aux (Identificacao.aux)
 Package babel Info: 'portuguese' activates 'portuges' shorthands.
 (babel)             Reported on input line 9.
 
@@ -615,39 +939,39 @@ LaTeX Warning: Label `subsec:fopdt_degrau' multiply defined.
 )
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 25.
+LaTeX Font Info:    ... okay on input line 25.
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
 kii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count356
-\scratchdimen=\dimen271
-\scratchbox=\box70
-\nofMPsegments=\count357
-\nofMParguments=\count358
-\everyMPshowfont=\toks36
-\MPscratchCnt=\count359
-\MPscratchDim=\dimen272
-\MPnumerator=\count360
-\makeMPintoPDFobject=\count361
-\everyMPtoPDFconversion=\toks37
+\scratchcounter=\count377
+\scratchdimen=\dimen325
+\scratchbox=\box81
+\nofMPsegments=\count378
+\nofMParguments=\count379
+\everyMPshowfont=\toks48
+\MPscratchCnt=\count380
+\MPscratchDim=\dimen326
+\MPnumerator=\count381
+\makeMPintoPDFobject=\count382
+\everyMPtoPDFconversion=\toks49
 )
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
 base.sty
@@ -697,10 +1021,10 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring OFF on input line 23.
+Package hyperref Info: Link coloring OFF on input line 25.
 (main.out) (main.out)
-\@outlinefile=\write3
-\openout3 = `main.out'.
+\@outlinefile=\write4
+\openout4 = `main.out'.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/pdflscape\pdflscape.st
@@ -718,22 +1042,22 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 ))
 Package translations Info: no dictionary file `translations-basic-dictionary-po
-rtuges.trsl' found. on input line 23.
+rtuges.trsl' found. on input line 25.
 \openout2 = `Identificacao.aux'.
 
 (Identificacao.tex)
-<Cap00/IC.jpg, id=286, 1185.42876pt x 1185.42876pt>
+<Cap00/IC.jpg, id=293, 1185.42876pt x 1185.42876pt>
 File: Cap00/IC.jpg Graphic file (type jpg)
 <use Cap00/IC.jpg>
-Package pdftex.def Info: Cap00/IC.jpg  used on input line 26.
+Package pdftex.def Info: Cap00/IC.jpg  used on input line 28.
 (pdftex.def)             Requested size: 99.57533pt x 99.58464pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 26.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 28.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 26.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 28.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
@@ -779,7 +1103,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.31 \dedicatoria
+l.33 \dedicatoria
                  {} [1
 
 
@@ -790,7 +1114,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.ii}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.32 \agradecimentos
+l.34 \agradecimentos
                     {} [2
 
 
@@ -814,8 +1138,8 @@ l.32 \agradecimentos
 
 
 ] (main.lof)
-\tf@lof=\write4
-\openout4 = `main.lof'.
+\tf@lof=\write5
+\openout5 = `main.lof'.
 
 
 
@@ -836,8 +1160,8 @@ Underfull \hbox (badness 10000) in paragraph at lines 14--14
  []
 
 )
-\tf@lot=\write5
-\openout5 = `main.lot'.
+\tf@lot=\write6
+\openout6 = `main.lot'.
 
 
 
@@ -866,8 +1190,8 @@ Underfull \hbox (badness 10000) in paragraph at lines 14--14
 ]
 
 [11])
-\tf@toc=\write6
-\openout6 = `main.toc'.
+\tf@toc=\write7
+\openout7 = `main.toc'.
 
 
 
@@ -881,7 +1205,7 @@ Cap\'{\i }tulo 1.
 ])
 
 Package babel Info: 'portuguese' activates 'portuges' shorthands.
-(babel)             Reported on input line 56.
+(babel)             Reported on input line 58.
 [2] (Cap02/Capitulo2.tex
 Cap\'{\i }tulo 2.
 
@@ -1046,55 +1370,55 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 
 [20]
-<Cap03/img/overlay_X_mstep4.png, id=684, 433.62pt x 231.264pt>
+<Cap03/img/overlay_X_mstep4.png, id=699, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_X_mstep4.png Graphic file (type png)
 <use Cap03/img/overlay_X_mstep4.png>
 Package pdftex.def Info: Cap03/img/overlay_X_mstep4.png  used on input line 76.
 
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_X_mstep16.png, id=686, 433.62pt x 231.264pt>
+<Cap03/img/overlay_X_mstep16.png, id=701, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_X_mstep16.png Graphic file (type png)
 <use Cap03/img/overlay_X_mstep16.png>
 Package pdftex.def Info: Cap03/img/overlay_X_mstep16.png  used on input line 81
 .
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_X_mstep256.png, id=687, 433.62pt x 231.264pt>
+<Cap03/img/overlay_X_mstep256.png, id=702, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_X_mstep256.png Graphic file (type png)
 <use Cap03/img/overlay_X_mstep256.png>
 Package pdftex.def Info: Cap03/img/overlay_X_mstep256.png  used on input line 8
 6.
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Y_mstep4.png, id=688, 433.62pt x 231.264pt>
+<Cap03/img/overlay_Y_mstep4.png, id=703, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Y_mstep4.png Graphic file (type png)
 <use Cap03/img/overlay_Y_mstep4.png>
 Package pdftex.def Info: Cap03/img/overlay_Y_mstep4.png  used on input line 97.
 
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Y_mstep16.png, id=689, 433.62pt x 231.264pt>
+<Cap03/img/overlay_Y_mstep16.png, id=704, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Y_mstep16.png Graphic file (type png)
 <use Cap03/img/overlay_Y_mstep16.png>
 Package pdftex.def Info: Cap03/img/overlay_Y_mstep16.png  used on input line 10
 2.
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Y_mstep256.png, id=690, 433.62pt x 231.264pt>
+<Cap03/img/overlay_Y_mstep256.png, id=705, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Y_mstep256.png Graphic file (type png)
 <use Cap03/img/overlay_Y_mstep256.png>
 Package pdftex.def Info: Cap03/img/overlay_Y_mstep256.png  used on input line 1
 07.
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Z_mstep4.png, id=691, 433.62pt x 231.264pt>
+<Cap03/img/overlay_Z_mstep4.png, id=706, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Z_mstep4.png Graphic file (type png)
 <use Cap03/img/overlay_Z_mstep4.png>
 Package pdftex.def Info: Cap03/img/overlay_Z_mstep4.png  used on input line 118
 .
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Z_mstep16.png, id=692, 433.62pt x 231.264pt>
+<Cap03/img/overlay_Z_mstep16.png, id=707, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Z_mstep16.png Graphic file (type png)
 <use Cap03/img/overlay_Z_mstep16.png>
 Package pdftex.def Info: Cap03/img/overlay_Z_mstep16.png  used on input line 12
 3.
 (pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Z_mstep256.png, id=693, 433.62pt x 231.264pt>
+<Cap03/img/overlay_Z_mstep256.png, id=708, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Z_mstep256.png Graphic file (type png)
 <use Cap03/img/overlay_Z_mstep256.png>
 Package pdftex.def Info: Cap03/img/overlay_Z_mstep256.png  used on input line 1
@@ -1149,7 +1473,7 @@ Underfull \hbox (badness 2865) in paragraph at lines 14--17
 0 []$ (DIR ap^^Sos STEP)
  []
 
-<Cap03/step_pulse_comparison.png, id=714, 867.24pt x 361.35pt>
+<Cap03/step_pulse_comparison.png, id=729, 867.24pt x 361.35pt>
 File: Cap03/step_pulse_comparison.png Graphic file (type png)
 <use Cap03/step_pulse_comparison.png>
 Package pdftex.def Info: Cap03/step_pulse_comparison.png  used on input line 26
@@ -1194,7 +1518,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 
 [24 <./Cap03/step_pulse_comparison.png>]
-<Cap03/firmware_dda_simulation.png, id=729, 867.24pt x 578.16pt>
+<Cap03/firmware_dda_simulation.png, id=744, 867.24pt x 578.16pt>
 File: Cap03/firmware_dda_simulation.png Graphic file (type png)
 <use Cap03/firmware_dda_simulation.png>
 Package pdftex.def Info: Cap03/firmware_dda_simulation.png  used on input line 
@@ -1212,7 +1536,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                \kern 1.66702pt
 (hyperref)                removed on input line 97.
 
-<Cap03/rampa_trapezoidal.png, id=735, 1084.05pt x 722.7pt>
+<Cap03/rampa_trapezoidal.png, id=750, 1084.05pt x 722.7pt>
 File: Cap03/rampa_trapezoidal.png Graphic file (type png)
 <use Cap03/rampa_trapezoidal.png>
 Package pdftex.def Info: Cap03/rampa_trapezoidal.png  used on input line 116.
@@ -1241,40 +1565,42 @@ Underfull \hbox (badness 5260) in paragraph at lines 166--167
 
 
 [27]
-<Cap03/SimulacaoTCC.png, id=759, 1926.44719pt x 812.28468pt>
+
+[28]
+<Cap03/SimulacaoTCC.png, id=781, 1926.44719pt x 812.28468pt>
 File: Cap03/SimulacaoTCC.png Graphic file (type png)
 <use Cap03/SimulacaoTCC.png>
-Package pdftex.def Info: Cap03/SimulacaoTCC.png  used on input line 241.
+Package pdftex.def Info: Cap03/SimulacaoTCC.png  used on input line 265.
 (pdftex.def)             Requested size: 455.24411pt x 191.95285pt.
 
 
-[28]
-Underfull \hbox (badness 10000) in paragraph at lines 256--262
+[29]
+Underfull \hbox (badness 10000) in paragraph at lines 280--286
 \OT1/cmr/m/n/10 com $\OML/cmm/m/it/10 T \OT1/cmr/m/n/10 = [] = 200$ pas-sos e $
 \OML/cmm/m/it/10 f[] \OT1/cmr/m/n/10 =
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 271--272
+Underfull \hbox (badness 10000) in paragraph at lines 295--296
 []\OT1/cmr/bx/n/10 Compatibilidade com o TMC5160\OT1/cmr/m/n/10 : man-ter $\OML
 /cmm/m/it/10 t[]$\OT1/cmr/m/n/10 , $\OML/cmm/m/it/10 t[]$\OT1/cmr/m/n/10 , $\OM
 L/cmm/m/it/10 t[]$ \OT1/cmr/m/n/10 e $\OML/cmm/m/it/10 t[]$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 271--272
+Underfull \hbox (badness 10000) in paragraph at lines 295--296
 \OT1/cmr/m/n/10 com folga; se usar \OT1/cmtt/m/n/10 dedge\OT1/cmr/m/n/10 =1, ga
 -ran-tir duty de 50% e bor-das lim-pas
  []
 
 )
-Underfull \hbox (badness 3646) in paragraph at lines 278--67
+Underfull \hbox (badness 3646) in paragraph at lines 302--69
 []\OT1/cmr/m/n/10 Para tem-po-ri-za-do-res e mo-dos de en-co-der do STM32L4, ve
 r [[]].
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 278--67
+Underfull \hbox (badness 10000) in paragraph at lines 302--69
 \OT1/cmr/m/n/10 Para o modo \OT1/cmr/m/it/10 STEP/DIR\OT1/cmr/m/n/10 , \OT1/cmr
 /m/it/10 Mi-cro-Plyer \OT1/cmr/m/n/10 e \OT1/cmr/m/it/10 ti-ming \OT1/cmr/m/n/1
 0 do TMC5160, ver
@@ -1282,27 +1608,83 @@ Underfull \hbox (badness 10000) in paragraph at lines 278--67
 
 
 
-[29 <./Cap03/SimulacaoTCC.png>]
+[30 <./Cap03/SimulacaoTCC.png>]
 
-[30] (Cap04/Capitulo4.tex
+[31] (Cap04/Capitulo4.tex
 Cap\'{\i }tulo 4.
 
 
-[31
+[32
 
 
-])
+]
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <17.28> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 60.
 
-[32] (Cap05/Capitulo5.tex
+
+LaTeX Warning: Reference `fig:cnc-seq-flow' on page 33 undefined on input line 
+63.
+
+LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 1
+07.
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\omscmr.fd
+File: omscmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 107.
+
+Overfull \hbox (44.81512pt too wide) in paragraph at lines 148--149
+ [][] 
+ []
+
+
+
+[33]
+Overfull \vbox (68.30977pt too high) has occurred while \output is active []
+
+
+
+[34]
+Underfull \hbox (badness 1789) in paragraph at lines 156--157
+[]\OT1/cmr/bx/n/10 Valida^^Xc~ao \OT1/cmr/m/n/10 (no Rasp-berry): cada item da 
+sequ^encia ^^Se ve-ri-fi-cado con-tra os li-mi-tes do
+ []
+
+LaTeX Font Info:    Trying to load font information for OMS+cmtt on input line 
+157.
+LaTeX Font Info:    No file OMScmtt.fd. on input line 157.
+
+LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
+(Font)              using `OMS/cmsy/m/n' instead
+(Font)              for symbol `textbraceleft' on input line 157.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 161--162
+[]\OT1/cmtt/m/n/10 tmc\OMS/cmtt/m/n/10 f\OT1/cmtt/m/n/10 ...\OMS/cmtt/m/n/10 g\
+OT1/cmr/m/n/10 : aplica patches no CHOP-CONF/PWMCONF/registradores cor-re-la-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 161--162
+\OT1/cmr/m/n/10 tos (\OT1/cmtt/m/n/10 toff\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 hs
+trt\OT1/cmr/m/n/10 /\OT1/cmtt/m/n/10 hend\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 tbl
+\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 dedge\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 micr
+osteps\OT1/cmr/m/n/10 /\OT1/cmtt/m/n/10 interpolate\OT1/cmr/m/n/10 , \OT1/cmtt/
+m/n/10 globalscaler\OT1/cmr/m/n/10 ,
+ []
+
+)
+
+[35] (Cap05/Capitulo5.tex
 Cap\'{\i }tulo 5.
 )
 
-[33
+[36
 
 
 ] (main.bbl
 
-[34
+[37
 
 
 ]
@@ -1312,7 +1694,7 @@ Underfull \hbox (badness 3009) in paragraph at lines 94--98
 
 )
 
-[35] (main.aux (Identificacao.aux))
+[38] (main.aux (Identificacao.aux))
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
@@ -1322,19 +1704,22 @@ L3 programming layer <2025-09-02>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 
+LaTeX Warning: There were undefined references.
+
+
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: A49A82C095E44278FA80B18D28742407;14811.
+(rerunfilecheck)             Checksum: BDD835628A2946328C6F0C0E69E58848;14995.
  ) 
 Here is how much of TeX's memory you used:
- 20652 strings out of 468081
- 393713 string characters out of 5425304
- 893657 words of memory out of 5000000
- 48732 multiletter control sequences out of 15000+600000
- 647814 words of font info for 112 fonts, out of 8000000 for 9000
+ 31773 strings out of 468081
+ 642340 string characters out of 5425304
+ 1112234 words of memory out of 5000000
+ 59607 multiletter control sequences out of 15000+600000
+ 648409 words of font info for 115 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,85p,858b,1188s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,15n,87p,858b,1188s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tct
 i1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 600\tcbx1200.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
@@ -1362,21 +1747,23 @@ ic/amsfonts/cm/cmr12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/t
 ype1/public/amsfonts/cm/cmr7.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/Program
 s/MiKTeX/fonts/type1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Loc
-al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/A
-ppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users
-/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
-<C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
-msy8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
-onts/cm/cmti10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/p
-ublic/amsfonts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fon
-ts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Valdir/AppData/Local/Programs/
-MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb><C:/Users/Valdir/AppData/Local
-/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb><C:/Users/Valdi
-r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-
-Output written on main.pdf (51 pages, 1695240 bytes).
+al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsltt10.pfb><C:/Users/Valdir
+/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Us
+ers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.p
+fb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
+m/cmsy7.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
+msfonts/cm/cmsy8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1
+/public/amsfonts/cm/cmti10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/f
+onts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/Valdir/AppData/Loc
+al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb><C:/Users/Valdir/A
+ppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt8.pfb><C:/Users
+/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam1
+0.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/symbols/msbm10.pfb>
+Output written on main.pdf (54 pages, 1733897 bytes).
 PDF statistics:
- 994 PDF objects out of 1000 (max. 8388607)
- 203 named destinations out of 1000 (max. 500000)
- 639 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1059 PDF objects out of 1200 (max. 8388607)
+ 228 named destinations out of 1000 (max. 500000)
+ 659 words of extra memory for PDF output out of 10000 (max. 10000000)
 

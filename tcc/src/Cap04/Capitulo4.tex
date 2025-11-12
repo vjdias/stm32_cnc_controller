@@ -67,50 +67,102 @@ monitoramento de falhas do TMC5160.
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[
-    node distance=7mm and 12mm,
+    node distance=8mm and 10mm,
     every node/.style={font=\small},
-    box/.style={draw, rounded corners, align=center, inner sep=3pt, minimum width=3.8cm},
-    io/.style={draw, trapezium, trapezium left angle=70, trapezium right angle=110, align=center, minimum height=8mm},
-    decision/.style={draw, diamond, aspect=2, inner sep=1pt, align=center},
-    >={Stealth[]}
+    box/.style={
+      draw=blue!80, 
+      fill=blue!10, 
+      rounded corners, 
+      align=center, 
+      inner sep=4pt, 
+      minimum width=3.8cm
+    },
+    io/.style={
+      draw=blue!80, 
+      fill=blue!10, 
+      trapezium, 
+      trapezium left angle=70, 
+      trapezium right angle=110, 
+      align=center, 
+      minimum height=8mm
+    },
+    decision/.style={
+      draw=blue!80, 
+      fill=blue!10, 
+      diamond, 
+      aspect=1.8, 
+      inner sep=1pt, align=center
+    },
+    terminator/.style={draw=blue!80, fill=blue!10, ellipse, align=center, inner sep=3pt, minimum width=2.8cm},
+    arrow/.style={->, >=Stealth, line width=0.9pt, blue!60, rounded corners=2pt, shorten <=2pt, shorten >=2pt}
   ]
     \node[io] (start) {Ler application.cfg\\e arquivo de sequência};
     \node[box, below=of start] (validate) {Validar limites (PID, vel, TMC)\\conforme cfg.limits};
     \node[decision, below=of validate] (ok) {Válido?};
-    \node[box, right=18mm of ok] (abort) {Abortar execução\\Log de motivos};
+    \node[box, right=22mm of ok] (abort) {Abortar execução\\Log de motivos};
     \node[box, below=of ok] (connect) {Abrir SPI\\STM32 (dev 0)};
     \node[box, below=of connect] (ledblink) {LED pisca (execução)};
     \node[box, below=of ledblink] (steps) {Iterar passos da sequência:};
-    \node[box, below=of steps, xshift=-30mm] (tmc) {tmc\{:\} aplica patch\\(TOFF/HSTRT/HEND/TBL/\\MRES/INTPOL/DEDGE/\\DISS2G/DISS2VS/\ldots)};
-    \node[box, below=of steps, xshift=30mm] (pid) {pid\{:\} atualizar ganhos\\default (x,y,z)};
-    \node[box, below=28mm of steps] (move) {move\{:\} enfileirar REQ\_MOVE\_QUEUE\_ADD\\(pos/vel/dir, PID atual)\\frameId interno incremental};
+
+    \node[box, below left=of steps, xshift=-5mm] (tmc) {tmc\{:\} aplica patch\\(TOFF/HSTRT/HEND/TBL/\\MRES/INTPOL/DEDGE/\ldots)};
+    \node[box, below right=of steps, xshift=5mm] (pid) {pid\{:\} atualizar ganhos\\default (x,y,z)};
+    
+    \node[box, below=32mm of steps] (move) {move\{:\} enfileirar REQ\_MOVE\_QUEUE\_ADD\\(pos/vel/dir, PID atual)\\frameId interno incremental};
     \node[box, below=of move] (startmv) {REQ\_START\_MOVE};
     \node[box, below=of startmv] (monitor) {Loop de monitoramento:\\QueueStatus + TMC DRV\_STATUS/GSTAT};
-    \node[decision, below=of monitor, xshift=-25mm] (tmcerr) {TMC erro?\\(OT/OTPW/DRV\_ERR)};
-    \node[box, right=20mm of tmcerr] (done) {STM32 concluiu?};
+    
+    \node[decision, below left=of monitor, xshift=12mm] (tmcerr) {TMC erro?\\(OT/OTPW/DRV\_ERR)};
+    \node[decision, below right=of monitor, xshift=-12mm] (done) {STM32 concluiu?};
+    
     \node[box, below=of tmcerr] (tmcstop) {Segurança: TOFF=0, IHOLD/IRUN=0\\LED aceso (falha)};
     \node[box, below=of done] (finish) {LED apagado\\TOFF=0 (pós-execução)};
+    \node[terminator, below=of tmcstop] (endfail) {Encerrar (falha)};
+    \node[terminator, below=of finish] (endok) {Encerrar (sucesso)};
 
-    \draw[->] (start) -- (validate);
-    \draw[->] (validate) -- (ok);
-    \draw[->] (ok) -- node[above]{não} (abort);
-    \draw[->] (ok) -- node[right]{sim} (connect);
-    \draw[->] (connect) -- (ledblink);
-    \draw[->] (ledblink) -- (steps);
-    \draw[->] (steps) -- (tmc);
-    \draw[->] (steps) -- (pid);
-    \draw[->] (tmc) -- (move);
-    \draw[->] (pid) -- (move);
-    \draw[->] (move) -- (startmv);
-    \draw[->] (startmv) -- (monitor);
-    \draw[->] (monitor) -- (tmcerr);
-    \draw[->] (monitor) -- (done);
-    \draw[->] (tmcerr) -- node[right]{sim} (tmcstop);
-    \draw[->] (done) -- node[right]{sim} (finish);
-    % loops
-    \draw[->] (tmcstop.west) .. controls +(-2,0) and +(-2,0) .. (monitor.west);
-    \draw[->] (done.south) .. controls +(0,-1) and +(0,-1) .. (monitor.south) node[midway,right]{não};
+    \draw[arrow] (start) -- (validate);
+    \draw[arrow] (validate) -- (ok);
+    \draw[arrow] (ok.east) to[out=0, in=180] node[midway, above]{não} (abort.west);
+    \draw[arrow] (ok.south) to[out=-90, in=90] node[midway, right]{sim} (connect.north);
+    \draw[arrow] (connect) -- (ledblink);
+    \draw[arrow] (ledblink) -- (steps);
+    
+    \draw[arrow] (steps.south) to[out=-90, in=90] (tmc.north);
+    \draw[arrow] (steps.south) to[out=-90, in=90] (pid.north);
+    \draw[arrow] (tmc.south) to[out=-90, in=135] (move.north);
+    \draw[arrow] (pid.south) to[out=-90, in=45] (move.north);
+
+    \draw[arrow] (move) -- (startmv);
+    \draw[arrow] (startmv) -- (monitor);
+    
+    \draw[arrow] (monitor.south) to[out=-90, in=90] (tmcerr.north);
+    \draw[arrow] (monitor.south) to[out=-90, in=90] (done.north);
+    
+    \draw[arrow] (tmcerr.south) -- node[midway, left]{sim} (tmcstop.north);
+    \draw[arrow] (done.south) -- node[midway, right]{sim} (finish.north);
+
+    % Saídas finais e loop "não concluiu"
+    \draw[arrow] (tmcstop) -- (endfail);
+    \draw[arrow] (finish) -- (endok);
+    \draw[arrow] (done.west) to[out=180, in=180, looseness=1.25] node[midway, below]{não} (monitor.west);
+
   \end{tikzpicture}
   \caption{Fluxo do comando \texttt{cnc\text{-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}
   \label{fig:cnc-cli-flow}
 \end{figure}
+
+\subsection*{Descrição do fluxo}
+\begin{enumerate}
+  \item \textbf{Leitura de arquivos}: o cliente carrega o \texttt{application.cfg} (conexões, limites e presets) e o JSON de sequência (lista de passos \texttt{steps}).
+  \item \textbf{Validação} (no Raspberry): cada item da sequência é verificado contra os limites do \texttt{cfg.limits}––faixas de PID, teto de velocidade e parâmetros do TMC5160. Qualquer violação aborta a execução, com mensagens registradas em log (\texttt{raspberry\_spi/run\_logs/}).
+  \item \textbf{Conexão SPI com STM32}: abre \texttt{/dev/spidev\{bus\}.\{dev\}} do microcontrolador para enviar comandos do protocolo CNC (MOVE\_QUEUE\_ADD/STATUS/START/END).
+  \item \textbf{Sinalização por LED (STM32)}: o LED passa a piscar durante a execução; em falha fica aceso; no sucesso, é apagado ao final.
+  \item \textbf{Iteração de passos}:
+    \begin{itemize}
+      \item \texttt{tmc\{...\}}: aplica patches no CHOPCONF/PWMCONF/registradores correlatos (\texttt{toff}, \texttt{hstrt}/\texttt{hend}, \texttt{tbl}, \texttt{dedge}, \texttt{microsteps}/\texttt{interpolate}, \texttt{globalscaler}, \texttt{ihold}/\texttt{irun}/\texttt{ihold\_delay}, \texttt{tpowerdown}).
+      \item \texttt{pid\{...\}}: atualiza os ganhos padrão por eixo para os próximos movimentos.
+      \item \texttt{move\{pos, vel, dir\}}: enfileira segmentos no STM32 via \texttt{REQ\_MOVE\_QUEUE\_ADD} com \textit{frameId} gerado internamente e, após o último, envia \texttt{REQ\_START\_MOVE}.
+    \end{itemize}
+  \item \textbf{Monitoramento}: o cliente consulta periodicamente o \texttt{MOVE\_QUEUE\_STATUS} para acompanhar o progresso (percentuais por eixo). Em paralelo, lê \texttt{GSTAT/DRV\_STATUS} do TMC5160 para detectar falhas críticas.
+  \item \textbf{Tratamento de falhas (TMC)}: se houver \emph{overtemp}/\emph{OTPW} ou \emph{driver\_error}, aplica "segurança" em todos os drivers (\texttt{TOFF=0}, \texttt{IHOLD/IRUN=0}), mantém o LED do STM32 aceso e encerra a execução.
+  \item \textbf{Término normal}: ao concluir todos os movimentos, o cliente aplica \texttt{TOFF=0} (pós-execução), apaga o LED do STM32 e finaliza o run.
+\end{enumerate}
