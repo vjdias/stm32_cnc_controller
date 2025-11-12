@@ -258,7 +258,18 @@ def _set_led(client: STM32Client, *, on: Optional[bool] = None, blink_hz: Option
     req = STM32RequestBuilder.led_control(0, mask, mode, freq_centi)
     try:
         print(f"STM32 ← LED_CONTROL on={bool(on)} blink_hz={blink_hz if blink_hz is not None else 0}")
-        client.exchange(0x07, req, tries=1, settle_delay_s=5)
+        raw = client.exchange(0x07, req, tries=1, settle_delay_s=5)
+        try:
+            data = STM32ResponseDecoder.led(raw)
+            out = {
+                "cmd": "led_control_ack",
+                "frameId": int(data.get("frameId", 0)),
+                "ledMask": int(data.get("ledMask", 0)),
+                "status": int(data.get("status", 0)),
+            }
+            print(json.dumps(out, ensure_ascii=False))
+        except Exception:
+            pass
     except Exception:
         pass
 
@@ -538,7 +549,19 @@ def _process_steps(
                     )
                 else:
                     raise
-            _ = STM32ResponseDecoder.queue_add_ack(resp)
+            try:
+                data_ack = STM32ResponseDecoder.queue_add_ack(resp)
+                status_code = int(data_ack.get("status", 0))
+                status_label = {0: "ok", 1: "invalid", 2: "queue_full"}.get(status_code, "unknown")
+                out = {
+                    "cmd": "queue_add_ack",
+                    "frameId": int(data_ack.get("frameId", 0)),
+                    "status": status_code,
+                    "status_label": status_label,
+                }
+                print(json.dumps(out, ensure_ascii=False))
+            except Exception:
+                pass
             sent += 1
             last_frame_id = frame_id
     # Inicia execução se houve ao menos um movimento
@@ -563,7 +586,16 @@ def _process_steps(
             ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=max(start_tries, 80), settle_delay_s=max(start_settle, cooldown))
         try:
             data = STM32ResponseDecoder.start_move(ack)
-            logger.info("StartMove: status=%s depth=%s", data.get("status"), data.get("depth"))
+            status_code = int(data.get("status", 0))
+            status_label = {0: "started", 1: "ignored"}.get(status_code, "unknown")
+            out = {
+                "cmd": "start_move_ack",
+                "frameId": int(data.get("frameId", 0)),
+                "status": status_code,
+                "status_label": status_label,
+                "depth": data.get("depth"),
+            }
+            print(json.dumps(out, ensure_ascii=False))
         except Exception:
             logger.info("StartMove: ACK bruto=%s", ack)
     return sent
@@ -597,6 +629,18 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
                 pct = data.get("pct", {})
                 pmin = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0)))
                 logger.info("Progresso: X=%d%% Y=%d%% Z=%d%%", pct.get("x", 0), pct.get("y", 0), pct.get("z", 0))
+                # Emite JSON do status traduzido
+                try:
+                    out = {
+                        "cmd": "queue_status",
+                        "frameId": int(data.get("frameId", 0)),
+                        "status": int(data.get("status", 0)),
+                        "pidErr": data.get("pidErr", {}),
+                        "pct": pct,
+                    }
+                    print(json.dumps(out, ensure_ascii=False))
+                except Exception:
+                    pass
                 if pmin >= 100:
                     return True, "concluído"
             except Exception as exc:
