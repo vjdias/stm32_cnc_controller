@@ -79,6 +79,9 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #ifndef MOTION_CSV_PRODUCE_IN_TIM6
 #define MOTION_CSV_PRODUCE_IN_TIM6      0u   /* amostra e imprime no TIM7, sempre após atualizar encoders */
 #endif
+#ifndef MOTION_CSV_TEXT_ENABLE
+#define MOTION_CSV_TEXT_ENABLE           0u   /* 0=desliga printf textual; 1=liga printf textual */
+#endif
 #ifndef MOTION_CSV_RING_CAP
 #define MOTION_CSV_RING_CAP             512u /* 16 bytes × 512 × 3 eixos ≈ 24 KB */
 #endif
@@ -334,6 +337,7 @@ static inline void motion_csv_print(uint8_t axis, uint32_t id, uint32_t t_val, i
     }
 #endif
 
+#if MOTION_CSV_TEXT_ENABLE
 #if MOTION_CSV_INCLUDE_ID
     // Texto: axis,id,time,rel,steps (rel como int32 para evitar wrap sem sinal)
     printf("%u,%lu,%lu,%d,%lu\r\n",
@@ -350,6 +354,7 @@ static inline void motion_csv_print(uint8_t axis, uint32_t id, uint32_t t_val, i
            (int)rel,
            (unsigned long)steps);
 #endif
+#endif /* MOTION_CSV_TEXT_ENABLE */
 }
 
 static uint32_t g_step_print_count[MOTION_AXIS_COUNT] = {0,0,0};

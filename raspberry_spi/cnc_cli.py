@@ -496,6 +496,9 @@ def _process_steps(
 
     sent = 0
     qadd_tries, qadd_settle = _spi_params(cfg, "queue_add")
+    # Ajuste solicitado: settle-delay dos QUEUE_ADD = 2s (mantém semântica simples)
+    qadd_settle = 2.0
+    qadd_tries = 1
     start_tries, start_settle = _spi_params(cfg, "start_move")
     fid = _FrameSeq(1)
     last_frame_id: Optional[int] = None
@@ -572,6 +575,9 @@ def _process_steps(
             if gap > 0:
                 time.sleep(gap)
             frame_id = last_frame_id if last_frame_id is not None else fid._cur
+            # Ajuste solicitado: settle do START_MOVE = 2 * número de itens movidos
+            start_settle = max(0.001, 2.0 * float(sent))
+            start_tries = 1
             logger.info(
                 "STM32 ← START_MOVE [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
                 frame_id,
