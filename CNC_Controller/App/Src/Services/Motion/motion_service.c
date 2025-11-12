@@ -53,7 +53,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_DEBUG_ENCODERS          1
 #endif
 #ifndef MOTION_DEBUG_FLOW
-#define MOTION_DEBUG_FLOW              1
+#define MOTION_DEBUG_FLOW              0
 #endif
 #ifndef MOTION_DEBUG_TIM6_PRINTS
 #define MOTION_DEBUG_TIM6_PRINTS       0
@@ -116,7 +116,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
 // Opções de formato/rápidez (padrões conservadores p/ compatibilidade)
 #ifndef MOTION_CSV_INCLUDE_ID
-#define MOTION_CSV_INCLUDE_ID           1u   /* adiciona um id incremental por eixo */
+#define MOTION_CSV_INCLUDE_ID           0u   /* adiciona um id incremental por eixo */
 #endif
 #ifndef MOTION_CSV_TIME_IN_TICKS
 #define MOTION_CSV_TIME_IN_TICKS        0u   /* 0=imprime tempo em ms (compat), 1=ticks TIM6 (mais barato) */
@@ -184,6 +184,10 @@ static uint8_t  g_queue_head  = 0u;
 static uint8_t  g_queue_tail  = 0u;
 static uint16_t g_queue_count = 0u;  /* suporta até 256 entradas */
 static uint8_t g_active_frame_id = 0u; 
+
+/* Soma dos passos restantes na FILA (exclui segmento ativo) por eixo.
+ * Mantida em O(1) nos push/pop para permitir consultas rápidas no TIM6. */
+static uint32_t g_queue_rem_steps[MOTION_AXIS_COUNT];
 
 static int64_t  g_encoder_position[MOTION_AXIS_COUNT];
 static uint32_t g_encoder_last_raw[MOTION_AXIS_COUNT];
@@ -366,6 +370,9 @@ static inline void motion_unlock(uint32_t primask) {
     __set_PRIMASK(primask);
 }
 
+/* Forward decl. para função usada pela seleção de mestre (progress) */
+static uint32_t motion_remaining_steps_total_for_axis(uint8_t axis);
+
 /* =======================
  *  Seleção de Mestre (modo progress)
  * ======================= */
@@ -374,24 +381,34 @@ static inline int8_t motion_select_master_axis_progress(void)
 {
     int8_t master = -1;
     uint32_t m_num = 0u, m_den = 1u;
+
+    /* 1) Preferir o menor progresso ENTRE eixos que ainda têm trabalho (ativo+fila)
+          e que participam do segmento atual (total_steps>0). */
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        uint32_t rem_total = motion_remaining_steps_total_for_axis(axis);
+        if (rem_total == 0u) continue; /* não escolher quem já acabou de vez */
+
         const motion_axis_state_t *ax = &g_axis_state[axis];
-        if (ax->total_steps == 0u) continue;
+        if (ax->total_steps == 0u) continue; /* não participa do segmento atual */
+
         uint32_t num = ax->emitted_steps; /* progresso acumulado */
         uint32_t den = ax->total_steps;   /* tamanho do segmento */
-        if (master < 0) {
-            master = (int8_t)axis;
-            m_num = num; m_den = den;
-        } else {
-            /* Compara num/den < m_num/m_den sem perder precisão */
-            uint64_t lhs = (uint64_t)num * (uint64_t)m_den;
-            uint64_t rhs = (uint64_t)m_num * (uint64_t)den;
-            if (lhs < rhs) {
-                master = (int8_t)axis;
-                m_num = num; m_den = den;
-            }
+        if (master < 0) { master = (int8_t)axis; m_num = num; m_den = den; }
+        else if ((uint64_t)num * (uint64_t)m_den < (uint64_t)m_num * (uint64_t)den) {
+            master = (int8_t)axis; m_num = num; m_den = den;
         }
     }
+
+    /* 2) Fallback: se ninguém do segmento atual tem rem_total>0, escolha
+          o eixo com MAIOR rem_total geral (apontando para o próximo da fila). */
+    if (master < 0) {
+        uint32_t best_rem = 0u;
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            uint32_t rem_total = motion_remaining_steps_total_for_axis(axis);
+            if (rem_total > best_rem) { best_rem = rem_total; master = (int8_t)axis; }
+        }
+    }
+
     return master;
 }
 #endif /* MOTION_PROGRESS_MODE */
@@ -550,6 +567,7 @@ static void motion_queue_clear_locked(void) {
     g_queue_head = 0u;
     g_queue_tail = 0u;
     g_queue_count = 0u;
+    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_queue_rem_steps[a] = 0u;
 }
 
 static proto_result_t motion_queue_push_locked(const move_queue_add_req_t *req) {
@@ -558,15 +576,26 @@ static proto_result_t motion_queue_push_locked(const move_queue_add_req_t *req) 
     g_queue[g_queue_tail].req = *req;
     g_queue_tail = (uint8_t)((g_queue_tail + 1u) % MOTION_QUEUE_CAPACITY);
     ++g_queue_count;
+    /* Atualiza soma de passos restantes na FILA (por eixo) */
+    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+        g_queue_rem_steps[a] += motion_total_for_axis(req, a);
+    }
     motion_refresh_status_locked();
     return PROTO_OK;
 }
 
 static int motion_queue_pop_locked(move_queue_add_req_t *out) {
     if (g_queue_count == 0u) return 0;
-    if (out) *out = g_queue[g_queue_head].req;
+    move_queue_add_req_t tmp = g_queue[g_queue_head].req;
+    if (out) *out = tmp;
     g_queue_head = (uint8_t)((g_queue_head + 1u) % MOTION_QUEUE_CAPACITY);
     --g_queue_count;
+    /* Remove da soma de fila aquilo que saiu da fila */
+    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+        uint32_t s = motion_total_for_axis(&tmp, a);
+        if (g_queue_rem_steps[a] >= s) g_queue_rem_steps[a] -= s;
+        else g_queue_rem_steps[a] = 0u;
+    }
     return 1;
 }
 
@@ -739,6 +768,7 @@ void motion_service_init(void) {
     memset(g_origin_base32, 0, sizeof g_origin_base32);
     memset(g_pi_d_filt, 0, sizeof g_pi_d_filt);
     memset(g_v_accum, 0, sizeof g_v_accum);
+    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_queue_rem_steps[a] = 0u;
     memset((void*)g_csv_active, 0, sizeof g_csv_active);
     memset((void*)g_csv_t0_ms, 0, sizeof g_csv_t0_ms);
     memset((void*)g_csv_stepcount, 0, sizeof g_csv_stepcount);
@@ -964,14 +994,18 @@ void motion_on_tim6_tick(void)
             }
         }
 #if MOTION_PROGRESS_MODE
-        /* Compat: considera finalizado quando o restante do mestre (ativo+fila) zera */
+        /* Confirmar término apenas quando não houver trabalho (ativo+fila)
+           em NENHUM eixo. Usa soma O(1) por eixo (ativo + fila acumulada). */
         if (!confirm) {
-            int8_t m = motion_select_master_axis_progress();
-            if (m >= 0) {
-                uint32_t rem_m = motion_remaining_steps_total_for_axis((uint8_t)m);
-                if (rem_m == 0u) {
-                    confirm = 1u;
-                }
+            uint32_t rem_all = 0u;
+            for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
+                const motion_axis_state_t *ax = &g_axis_state[a];
+                uint32_t active = (ax->total_steps > ax->emitted_steps)
+                                  ? (ax->total_steps - ax->emitted_steps) : 0u;
+                rem_all += active + g_queue_rem_steps[a];
+            }
+            if (rem_all == 0u) {
+                confirm = 1u;
             }
         }
 #endif
@@ -1172,13 +1206,17 @@ void motion_on_tim7_tick(void)
 #endif
             uint32_t a_sps2    = (ax->accel_sps2 > 0u) ? ax->accel_sps2 : DEMO_ACCEL_SPS2;
 
-            /* Distância restante total (ativo + fila) em passos */
-            uint32_t rem_steps = motion_remaining_steps_total_for_axis(axis);
+            /* Distância restante total (ativo + fila) em passos (O(1)) */
+            uint32_t active_rem = (ax->total_steps > ax->emitted_steps)
+                                  ? (ax->total_steps - ax->emitted_steps) : 0u;
+            uint32_t rem_steps = active_rem + g_queue_rem_steps[axis];
 #if MOTION_PROGRESS_MODE
-            /* Em compatibilidade "progress", guia a rampa pelo restante do mestre */
-            if (master_axis >= 0) {
+            /* Só impõe o restante do mestre se ele tiver trabalho pendente */
+            if (master_axis >= 0 && rem_master > 0u) {
                 rem_steps = rem_master;
             }
+            /* caso contrário, mantém o rem_steps do próprio eixo
+               para não “matar” a rampa dos demais */
 #endif
 
             /* Distância necessária para frear de v para 0: s = v^2 / (2a) */
