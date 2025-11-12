@@ -216,9 +216,56 @@ Com o mestre definido, duas pol\'iticas s\~ao aplicadas:
   escravos, garantindo coer\^encia com o modo \emph{progress} da simula\c{c}\~ao.
 \end{enumerate}
 
-Essa estrat\'egia reproduz, no embarcado, o comportamento do
-\texttt{interactive\_old\_sim} ao priorizar o eixo mais atrasado e simplificar
-trocas de mestre.
+\medskip
+\noindent\textbf{Simulador interativo.}
+Para validar rapidamente políticas de sincronismo, curvas de rampa e o impacto
+do limitador por erro entre eixos, utilizou-se um simulador interativo em Python
+que espelha as constantes do firmware: amostragem de controle a \SI{1}{kHz},
+geração de passos pelo DDA a \SI{50}{kHz} e ganhos inteiros escalados por
+$K_\text{SCALE}=256$. Os ganhos por eixo $(K_p, K_i, K_d)$ são carregados a partir
+dos perfis obtidos no processo de identificação experimental descrito na
+Seção~\ref{sec:ident_fopdt} (modelo FOPDT, consolidados em uma tabela de
+\emph{tuning}).
+
+\emph{Controles e parâmetros}. A interface permite configurar, por eixo: (i)
+o deslocamento alvo em passos $s$; (ii) a velocidade nominal $v$ (\emph{steps/s});
+(iii) o sentido $\texttt{dir}\in\{+1,-1\}$; e (iv) os ganhos $K_p$, $K_i$, $K_d$.
+Um painel adicional aplica uma carga de atrito programável, com amplitude $C$ e
+janela temporal \emph{início/fim}. Há ainda comandos de execução (\emph{Play},
+\emph{Pause}, \emph{Reset}) e botões de parada por eixo. Os gráficos exibem
+posição, velocidade e erro de sincronismo, além de indicadores textuais do erro
+acumulado por eixo (\emph{IAE}, em steps·s).
+
+\paragraph{O que a simulação cobre e como.}
+O laço principal roda a \SI{1}{kHz} e, a cada passo $T_s=\SI{1}{ms}$, executa:
+\begin{enumerate}
+  \item \textbf{Carga/atrito programável}: ativa $C$ (Coulomb) em janelas \emph{início/fim} por eixo e combina um termo viscoso $B\,|v|$. A velocidade efetiva é
+        $v_\text{eff}=\max\{0,\;v-\operatorname{sgn}(v)\,(C+B\,|v|)\}$.
+  \item \textbf{Seleção de mestre (CASC)}: elege o eixo com maior \emph{restante} de passos (preferindo eixos sob carga quando habilitado). Os demais seguem um alvo sincronizado proporcional ao progresso do mestre.
+  \item \textbf{Alvo sincronizado}: para cada eixo $i$ com alvo total $S_i$, calcula-se $s_i^* = \operatorname{round}\!\big(S_i\,p_m\big)$, com $p_m$ o progresso do mestre em $[0,1]$.
+  \item \textbf{PI(D) digital inteiro}: o erro $e_i=s_i^*-\hat{s}_i$ (posição de encoder em passos DDA) alimenta um PI(D) com:
+        \begin{itemize}
+          \item \emph{deadband} $|e|<D$ (anula ruído pequeno);
+          \item integrador saturado em $\pm I_\text{clamp}$ (\emph{anti-windup});
+          \item derivada filtrada por média exponencial com $\alpha=2^{-\texttt{kd\_alpha\_bits}}$;
+          \item ganhos inteiros $(K_p,K_i,K_d)$ escalados por $K_\text{SCALE}=256$ para produzir correção em \emph{steps/s}.
+        \end{itemize}
+  \item \textbf{Limitadores de sincronismo}: (i) \emph{throttle} por erro (\S\ref{sec:throttle-erro}) nos eixos não-mestres; (ii) \emph{sync hold}, que zera temporariamente a velocidade de eixos adiantados acima de uma margem configurável.
+  \item \textbf{Rampa trapezoidal}: aplica aceleração discreta $a$ limitada por $\texttt{accel\_sps2}$ e freia quando o restante do mestre cai abaixo do espaço de frenagem $s_\text{brake}=v^2/(2a)$.
+  \item \textbf{DDA a \SI{50}{kHz}}: integra a velocidade final e emite pulsos STEP ao cruzar \emph{quântuns} Q16; a posição de atuador acumula passos por eixo.
+  \item \textbf{Realimentação por encoder}: converte contagens para passos DDA e fecha o CASC/PI. Detecta estol por inversão de sinal de $v$ vs. $v_\text{eff}$ com \emph{debounce}.
+  \item \textbf{Término e segurança}: encerra quando todos os eixos ativos entram numa janela de tolerância; ao pausar, congela a tela e descarrega o modo \emph{blit}. O log CSV agrega tempo, posições, velocidades, erro, carga ativa e IAE.
+\end{enumerate}
+
+\paragraph{Saídas e diagnósticos.}
+Os gráficos de posição, velocidade e erro utilizam os valores do encoder (não o alvo), refletindo a resposta efetiva do sistema. O painel numérico exibe o erro acumulado (IAE) em \emph{steps·s} por eixo, útil para comparar ajustes e cargas. Um modo \emph{headless} permite executar a simulação e gravar CSV/estatísticas sem abrir a GUI.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Cap03/SimulacaoTCC.png}
+  \caption{Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro.}
+  \label{fig:simulacao-tcc}
+\end{figure}
 
 \FloatBarrier
 \section{Controle de Sincronismo: \emph{Throttle} por Erro}

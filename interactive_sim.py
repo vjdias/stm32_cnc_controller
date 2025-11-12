@@ -70,6 +70,8 @@ mpl.rcParams['path.simplify'] = True
 mpl.rcParams['path.simplify_threshold'] = 0.5
 # [FIX V13.4] Reduz custo de paths longos
 mpl.rcParams['agg.path.chunksize'] = 20000
+# Remove toolbar de navegação para janelas interativas
+mpl.rcParams['toolbar'] = 'None'
 
 @contextmanager
 def drawing_off():
@@ -307,6 +309,9 @@ class InteractiveSim:
         self.active_C_load: np.ndarray = np.zeros(3)
         self.load_timer_xyz: np.ndarray = np.zeros(3)
         self.B_load: np.ndarray = np.array(cfg.load_B_xyz, dtype=float)
+
+        # Erro acumulado (IAE) por eixo [steps*s]
+        self.err_accum_xyz: np.ndarray = np.zeros(3)
         
         # Estado de Parada por Eixo (lido em tempo real)
         self.is_stopped: np.ndarray = np.array([False, False, False], dtype=bool)
@@ -345,6 +350,14 @@ class InteractiveSim:
         if not self.headless:
             # --- Configuração da Interface Gráfica (GUI) ---
             self.fig = plt.figure(figsize=(17, 10), dpi=96)
+            # Renomeia a janela principal
+            try:
+                self.fig.canvas.manager.set_window_title("Simulação")
+            except Exception:
+                try:
+                    self.fig.canvas.set_window_title("Simulação")
+                except Exception:
+                    pass
             gs = gridspec.GridSpec(4, 4, figure=self.fig)
             self.fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.05, hspace=0.7, wspace=0.4)
 
@@ -779,6 +792,8 @@ class InteractiveSim:
             # [FIX 2] O estado de carga já foi lido. Zera apenas os timers.
             self.active_C_load = np.zeros(3)
             self.load_timer_xyz = np.zeros(3)
+            # Zera erro acumulado (IAE)
+            self.err_accum_xyz = np.zeros(3)
             
             self.is_stopped = np.array([False, False, False], dtype=bool)
 
@@ -1028,12 +1043,12 @@ class InteractiveSim:
         self.btn_stop_z = Button(self.fig.add_subplot(gs_fric_z[2, :]), 'Stop Z', color=self.btn_color_off)
         self.btn_stop_z.on_clicked(self.on_stop_z)
 
-        # [FIX 1] Painel de Timers de Carga (na linha 4)
+        # Painel de Erro Acumulado (na linha 4)
         ax_timers = self.fig.add_subplot(gs_friction[3, 0])
         ax_timers.axis('off')
-        self.text_timer_x = ax_timers.text(0.5, 0.66, 'Carga X: 0.00s', ha='center', va='center', fontsize=9)
-        self.text_timer_y = ax_timers.text(0.5, 0.33, 'Carga Y: 0.00s', ha='center', va='center', fontsize=9)
-        self.text_timer_z = ax_timers.text(0.5, 0.0, 'Carga Z: 0.00s', ha='center', va='center', fontsize=9)
+        self.text_timer_x = ax_timers.text(0.5, 0.66, 'Erro acum X: 0.00 steps·s', ha='center', va='center', fontsize=9)
+        self.text_timer_y = ax_timers.text(0.5, 0.33, 'Erro acum Y: 0.00 steps·s', ha='center', va='center', fontsize=9)
+        self.text_timer_z = ax_timers.text(0.5, 0.0, 'Erro acum Z: 0.00 steps·s', ha='center', va='center', fontsize=9)
         
         # [FIX OTIMIZAÇÃO] Adiciona os textos de timer aos artistas para o blitting
         self.artists.extend([self.text_timer_x, self.text_timer_y, self.text_timer_z])
@@ -1310,6 +1325,8 @@ class InteractiveSim:
             
             err = desired_dda_steps - actual_dda_steps
             self.g_casc_err_s32[axis] = err
+            # Acumula IAE (Integral do Erro Absoluto) em steps*s
+            self.err_accum_xyz[axis] += abs(self.g_casc_err_s32[axis]) * self.cfg.Ts
             
             if abs(err) < self.cfg.deadband_steps:
                 err = 0.0
@@ -1532,13 +1549,10 @@ class InteractiveSim:
                 ax.relim()
                 ax.set_xlim(left, right)
                 
-        # Atualiza os textos do cronômetro
+        # Atualiza os textos de erro acumulado (IAE)
         for i, timer_text in enumerate([self.text_timer_x, self.text_timer_y, self.text_timer_z]):
-            timer_text.set_text(f'Carga {["X","Y","Z"][i]}: {self.load_timer_xyz[i]:.2f}s')
-            if self.load_timer_xyz[i] > 0:
-                timer_text.set_color('red')
-            else:
-                timer_text.set_color('black')
+            timer_text.set_text(f'Erro acum {["X","Y","Z"][i]}: {self.err_accum_xyz[i]:.2f} steps·s')
+            timer_text.set_color('black')
 
 # =========================
 # Ponto de Entrada Principal

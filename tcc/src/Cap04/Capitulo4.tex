@@ -56,3 +56,61 @@ Os resultados confirmam que a divisão de responsabilidades entre STM32 e
 Raspberry Pi atende às metas de determinismo, sem sacrificar a
 flexibilidade de integração com interfaces gráficas ou scripts de
 automação.
+
+\section{Fluxo do comando \texttt{cnc\text{-}seq}}
+
+O comando \texttt{cnc\text{-}seq} executa uma sequência declarativa de ações
+em um arquivo JSON (patches do TMC5160, ajustes de PID e movimentos). A Figura~\ref{fig:cnc-seq-flow}
+resume o fluxo principal, incluindo validações, enfileiramento no STM32 e
+monitoramento de falhas do TMC5160.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    node distance=7mm and 12mm,
+    every node/.style={font=\small},
+    box/.style={draw, rounded corners, align=center, inner sep=3pt, minimum width=3.8cm},
+    io/.style={draw, trapezium, trapezium left angle=70, trapezium right angle=110, align=center, minimum height=8mm},
+    decision/.style={draw, diamond, aspect=2, inner sep=1pt, align=center},
+    >={Stealth[]}
+  ]
+    \node[io] (start) {Ler application.cfg\\e arquivo de sequência};
+    \node[box, below=of start] (validate) {Validar limites (PID, vel, TMC)\\conforme cfg.limits};
+    \node[decision, below=of validate] (ok) {Válido?};
+    \node[box, right=18mm of ok] (abort) {Abortar execução\\Log de motivos};
+    \node[box, below=of ok] (connect) {Abrir SPI\\STM32 (dev 0)};
+    \node[box, below=of connect] (ledblink) {LED pisca (execução)};
+    \node[box, below=of ledblink] (steps) {Iterar passos da sequência:};
+    \node[box, below=of steps, xshift=-30mm] (tmc) {tmc\{:\} aplica patch\\(TOFF/HSTRT/HEND/TBL/\\MRES/INTPOL/DEDGE/\\DISS2G/DISS2VS/\ldots)};
+    \node[box, below=of steps, xshift=30mm] (pid) {pid\{:\} atualizar ganhos\\default (x,y,z)};
+    \node[box, below=28mm of steps] (move) {move\{:\} enfileirar REQ\_MOVE\_QUEUE\_ADD\\(pos/vel/dir, PID atual)\\frameId interno incremental};
+    \node[box, below=of move] (startmv) {REQ\_START\_MOVE};
+    \node[box, below=of startmv] (monitor) {Loop de monitoramento:\\QueueStatus + TMC DRV\_STATUS/GSTAT};
+    \node[decision, below=of monitor, xshift=-25mm] (tmcerr) {TMC erro?\\(OT/OTPW/DRV\_ERR)};
+    \node[box, right=20mm of tmcerr] (done) {STM32 concluiu?};
+    \node[box, below=of tmcerr] (tmcstop) {Segurança: TOFF=0, IHOLD/IRUN=0\\LED aceso (falha)};
+    \node[box, below=of done] (finish) {LED apagado\\TOFF=0 (pós-execução)};
+
+    \draw[->] (start) -- (validate);
+    \draw[->] (validate) -- (ok);
+    \draw[->] (ok) -- node[above]{não} (abort);
+    \draw[->] (ok) -- node[right]{sim} (connect);
+    \draw[->] (connect) -- (ledblink);
+    \draw[->] (ledblink) -- (steps);
+    \draw[->] (steps) -- (tmc);
+    \draw[->] (steps) -- (pid);
+    \draw[->] (tmc) -- (move);
+    \draw[->] (pid) -- (move);
+    \draw[->] (move) -- (startmv);
+    \draw[->] (startmv) -- (monitor);
+    \draw[->] (monitor) -- (tmcerr);
+    \draw[->] (monitor) -- (done);
+    \draw[->] (tmcerr) -- node[right]{sim} (tmcstop);
+    \draw[->] (done) -- node[right]{sim} (finish);
+    % loops
+    \draw[->] (tmcstop.west) .. controls +(-2,0) and +(-2,0) .. (monitor.west);
+    \draw[->] (done.south) .. controls +(0,-1) and +(0,-1) .. (monitor.south) node[midway,right]{não};
+  \end{tikzpicture}
+  \caption{Fluxo do comando \texttt{cnc\text{-}seq}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}
+  \label{fig:cnc-seq-flow}
+\end{figure}

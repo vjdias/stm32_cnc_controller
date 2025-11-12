@@ -127,6 +127,27 @@ class STM32ResponseDecoder:
         status = raw[3] if len(raw) >= 5 else 0
         return {"type": raw[1], "frameId": raw[2], "status": status}
 
+    @staticmethod
+    def queue_status(raw: List[int]) -> Dict[str, Any]:
+        """Decodifica RESP_MOVE_QUEUE_STATUS (12 bytes).
+
+        Layout conforme firmware:
+        [HDR, TYPE, frameId, status, pidErrX, pidErrY, pidErrZ, pctX, pctY, pctZ, parity, TAIL]
+        """
+        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 12)
+        if raw[1] != RESP_MOVE_QUEUE_STATUS or not parity_check_bit_1N(raw, 9, 10):
+            raise ValueError("QueueStatus inválida/paridade")
+        def s8(b: int) -> int:
+            b &= 0xFF
+            return b - 256 if b > 127 else b
+        return {
+            "type": raw[1],
+            "frameId": raw[2],
+            "status": raw[3],
+            "pidErr": {"x": s8(raw[4]), "y": s8(raw[5]), "z": s8(raw[6])},
+            "pct": {"x": raw[7] & 0xFF, "y": raw[8] & 0xFF, "z": raw[9] & 0xFF},
+        }
+
     SPECS: Dict[int, ResponseSpec] = {
         REQ_LED_CTRL: ResponseSpec(RESP_LED_CTRL, 7, led.__func__),
         REQ_MOVE_QUEUE_ADD: ResponseSpec(RESP_MOVE_QUEUE_ADD_ACK, 6, queue_add_ack.__func__),
@@ -138,6 +159,8 @@ class STM32ResponseDecoder:
         REQ_SET_ORIGIN: ResponseSpec(RESP_SET_ORIGIN, 16, None),
         # encoder_status: [HDR,TYPE,frameId, pidX, pidY, pidZ, delta, absX(4), absY(4), absZ(4), TAIL] => 20 bytes
         REQ_ENCODER_STATUS: ResponseSpec(RESP_ENCODER_STATUS, 20, None),
+        # move_queue_status: 12 bytes (ver decoder queue_status)
+        REQ_MOVE_QUEUE_STATUS: ResponseSpec(RESP_MOVE_QUEUE_STATUS, 12, queue_status.__func__),
         # Outros tipos podem ser acrescentados aqui quando necessários.
     }
 

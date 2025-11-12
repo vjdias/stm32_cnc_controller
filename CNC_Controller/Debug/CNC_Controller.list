@@ -5914,7 +5914,7 @@ uint8_t motion_hw_encoder_bits(uint8_t axis)
 08002a10 <dda_steps_per_rev>:
 #define STEPS_PER_REV_BASE   400u
 #define DDA_STEPS_PER_REV    (STEPS_PER_REV_BASE * MICROSTEP_FACTOR)
-/* Encoders por rotação (fornecido): X/Z = 40000, Y = 2500 */
+/* Encoders por rotação (fornecido): X/Z = 40000, Y = 5000 */
 static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 5000u, 40000u}; // X,Y,Z 
 static volatile uint16_t g_microstep_factor = MICROSTEP_FACTOR;
 static inline uint32_t dda_steps_per_rev(void) { return STEPS_PER_REV_BASE * (uint32_t)g_microstep_factor; }
