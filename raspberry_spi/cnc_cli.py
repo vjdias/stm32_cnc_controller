@@ -468,6 +468,15 @@ def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
     return max(1, tries), settle
 
 
+def _spi_busy_cooldown(cfg: dict) -> float:
+    spi = cfg.get("spi", {}) if isinstance(cfg.get("spi"), dict) else {}
+    try:
+        val = float(spi.get("busy_cooldown_s", 5.0))
+        return max(0.1, val)
+    except Exception:
+        return 5.0
+
+
 def _process_steps(
     client: STM32Client,
     cfg: Dict[str, Any],
@@ -516,21 +525,31 @@ def _process_steps(
             try:
                 resp = client.exchange(0x01, req, tries=qadd_tries, settle_delay_s=qadd_settle)
             except Exception as exc:
-                # Backoff: tenta novamente com parâmetros mais largos
-                logger.warning(
-                    "QueueAdd timeout com tries=%s/settle=%.3f; tentando backoff...",
-                    qadd_tries, qadd_settle,
-                )
-                resp = client.exchange(0x01, req, tries=max(qadd_tries, 80), settle_delay_s=max(qadd_settle, 0.010))
+                cooldown = _spi_busy_cooldown(cfg)
+                msg = str(exc).lower()
+                if "busy" in msg or "polling" in msg or "resposta" in msg:
+                    logger.warning(
+                        "QueueAdd timeout/BUSY com tries=%s/settle=%.3f; cooldown %.3fs e backoff...",
+                        qadd_tries, qadd_settle, cooldown,
+                    )
+                    time.sleep(cooldown)
+                    resp = client.exchange(
+                        0x01, req, tries=max(qadd_tries, int(max(80, cooldown / max(0.001, qadd_settle)))) ,
+                        settle_delay_s=max(qadd_settle, cooldown)
+                    )
+                else:
+                    raise
             _ = STM32ResponseDecoder.queue_add_ack(resp)
             sent += 1
     # Inicia execução se houve ao menos um movimento
     if sent > 0:
         try:
             ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=start_tries, settle_delay_s=start_settle)
-        except Exception:
-            # backoff
-            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=max(start_tries, 80), settle_delay_s=max(start_settle, 0.010))
+        except Exception as exc:
+            cooldown = _spi_busy_cooldown(cfg)
+            logger.warning("StartMove timeout/BUSY; cooldown %.3fs e backoff...", cooldown)
+            time.sleep(cooldown)
+            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=max(start_tries, 80), settle_delay_s=max(start_settle, cooldown))
         try:
             data = STM32ResponseDecoder.start_move(ack)
             logger.info("StartMove: status=%s depth=%s", data.get("status"), data.get("depth"))
@@ -544,7 +563,7 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
     bus = int(tmc.get("bus", 0))
     devs = list(tmc.get("devs", [1, 2, 3]))
     speed = int(tmc.get("speed", 4_000_000))
-    check_iv = float(cfg.get("monitor", {}).get("check_interval", 0.5))
+    check_iv = float(cfg.get("monitor", {}).get("check_interval", 10))
 
     start_t = time.time()
     last_warn = 0.0
@@ -608,11 +627,18 @@ def run_sequence(args: argparse.Namespace) -> int:
 
     # Override opcional do tempo mínimo de espera (linha de comando)
     try:
+        spi_cfg = cfg.get("spi") if isinstance(cfg.get("spi"), dict) else {}
+        if not isinstance(spi_cfg, dict):
+            spi_cfg = {}
         if getattr(args, "min_wait_s", None) is not None:
-            spi_cfg = cfg.get("spi") if isinstance(cfg.get("spi"), dict) else {}
-            if not isinstance(spi_cfg, dict):
-                spi_cfg = {}
             spi_cfg["min_wait_s"] = float(args.min_wait_s)
+        if getattr(args, "queue_add_settle", None) is not None:
+            spi_cfg["queue_add_settle"] = float(args.queue_add_settle)
+        if getattr(args, "start_move_settle", None) is not None:
+            spi_cfg["start_move_settle"] = float(args.start_move_settle)
+        if getattr(args, "queue_status_settle", None) is not None:
+            spi_cfg["queue_status_settle"] = float(args.queue_status_settle)
+        if spi_cfg:
             cfg["spi"] = spi_cfg
     except Exception:
         pass
@@ -723,6 +749,9 @@ def build_parser() -> argparse.ArgumentParser:
     prun.add_argument("--config", default="application.cfg", help="application.cfg com limites e conexões")
     prun.add_argument("--timeout", type=float, default=120.0, help="Timeout aguardando conclusão (s)")
     prun.add_argument("--min-wait-s", type=float, default=None, help="Tempo mínimo total de espera para ACKs SPI (>=5s; sobrescreve cfg.spi.min_wait_s)")
+    prun.add_argument("--queue-add-settle", type=float, default=None, help="Sobrescreve cfg.spi.queue_add_settle (s)")
+    prun.add_argument("--start-move-settle", type=float, default=None, help="Sobrescreve cfg.spi.start_move_settle (s)")
+    prun.add_argument("--queue-status-settle", type=float, default=None, help="Sobrescreve cfg.spi.queue_status_settle (s)")
     prun.set_defaults(handler=run_sequence)
 
     pstat = sub.add_parser("status", help="Consulta MOVE_QUEUE_STATUS e imprime progresso/erro PID")
