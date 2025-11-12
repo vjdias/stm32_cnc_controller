@@ -435,22 +435,6 @@ class _FrameSeq:
 
 
 def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
-    spi = cfg.get("spi", {}) if isinstance(cfg.get("spi"), dict) else {}
-    tries_key = f"{kind}_tries"
-    settle_key = f"{kind}_settle"
-    # Defaults conservadores por operação
-    defaults = {
-        "queue_add": (40, 0.005),
-        "start_move": (40, 0.005),
-        "queue_status": (60, 0.010),
-    }
-    dtries, dsettle = defaults.get(kind, (40, 0.005))
-    tries = int(spi.get(tries_key, dtries))
-    settle = float(spi.get(settle_key, dsettle))
-    return max(1, tries), max(0.0, settle)
-
-
-def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
     """Resolve (tries, settle) para uma operação SPI.
 
     Regras:
@@ -503,6 +487,7 @@ def _process_steps(
     qadd_tries, qadd_settle = _spi_params(cfg, "queue_add")
     start_tries, start_settle = _spi_params(cfg, "start_move")
     fid = _FrameSeq(1)
+    last_frame_id: Optional[int] = None
 
     for i, st in enumerate(steps):
         if "tmc" in st and isinstance(st["tmc"], dict):
@@ -522,8 +507,9 @@ def _process_steps(
                 vx, vy, vz = int(mv.get("vx", 0)), int(mv.get("vy", 0)), int(mv.get("vz", 0))
                 sx, sy, sz = int(mv.get("sx", 0)), int(mv.get("sy", 0)), int(mv.get("sz", 0))
             pid9 = _pid_for_move(cfg, cur_pid, mv)
+            frame_id = fid.next()
             req = STM32RequestBuilder.move_queue_add(
-                fid.next(),
+                frame_id,
                 dir_mask,
                 vx, sx,
                 vy, sy,
@@ -533,7 +519,7 @@ def _process_steps(
             try:
                 logger.info(
                     "STM32 ← QUEUE_ADD [frame=%d] dir=0x%02X v=(%d,%d,%d) s=(%d,%d,%d) | aguardará %.3fs (tries=%d) pela resposta",
-                    fid._cur + 1 if hasattr(fid, "_cur") else -1,
+                    frame_id,
                     dir_mask, vx, vy, vz, sx, sy, sz, qadd_tries * qadd_settle if qadd_tries > 1 else qadd_settle, qadd_tries,
                 )
                 resp = client.exchange(0x01, req, tries=qadd_tries, settle_delay_s=qadd_settle)
@@ -554,16 +540,22 @@ def _process_steps(
                     raise
             _ = STM32ResponseDecoder.queue_add_ack(resp)
             sent += 1
+            last_frame_id = frame_id
     # Inicia execução se houve ao menos um movimento
     if sent > 0:
         try:
+            # Pequena folga entre o último queue_add e o start_move (configurável)
+            gap = float(cfg.get("spi", {}).get("start_move_gap_s", 0.5)) if isinstance(cfg.get("spi"), dict) else 0.5
+            if gap > 0:
+                time.sleep(gap)
+            frame_id = last_frame_id if last_frame_id is not None else fid._cur
             logger.info(
                 "STM32 ← START_MOVE [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
-                fid._cur + 1 if hasattr(fid, "_cur") else -1,
+                frame_id,
                 start_tries * start_settle if start_tries > 1 else start_settle,
                 start_tries,
             )
-            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=start_tries, settle_delay_s=start_settle)
+            ack = client.exchange(0x03, STM32RequestBuilder.start_move(frame_id), tries=start_tries, settle_delay_s=start_settle)
         except Exception as exc:
             cooldown = _spi_busy_cooldown(cfg)
             logger.warning("StartMove: sem ACK/BUSY; aguardando %.3fs e repetindo...", cooldown)
