@@ -1,5 +1,4 @@
-[
-build-system]
+[build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
@@ -26,8 +25,6 @@ stm32-cli = "raspberry_spi.stm32.stm32_cli:main"
 stm32_cli = "raspberry_spi.stm32.stm32_cli:main"
 cnc-cli = "raspberry_spi.cnc_cli:main"
 cnc_cli = "raspberry_spi.cnc_cli:main"
-cnc-seq = "raspberry_spi.sequence_cli:main"
-cnc_seq = "raspberry_spi.sequence_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

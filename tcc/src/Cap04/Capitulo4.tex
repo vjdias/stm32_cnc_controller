@@ -57,9 +57,9 @@ Raspberry Pi atende às metas de determinismo, sem sacrificar a
 flexibilidade de integração com interfaces gráficas ou scripts de
 automação.
 
-\section{Fluxo do comando \texttt{cnc\text{-}seq}}
+\section{Fluxo do comando \texttt{cnc\text{-}cli}}
 
-O comando \texttt{cnc\text{-}seq} executa uma sequência declarativa de ações
+O comando \texttt{cnc\text{-}cli} executa uma sequência declarativa de ações
 em um arquivo JSON (patches do TMC5160, ajustes de PID e movimentos). A Figura~\ref{fig:cnc-seq-flow}
 resume o fluxo principal, incluindo validações, enfileiramento no STM32 e
 monitoramento de falhas do TMC5160.
@@ -111,6 +111,6 @@ monitoramento de falhas do TMC5160.
     \draw[->] (tmcstop.west) .. controls +(-2,0) and +(-2,0) .. (monitor.west);
     \draw[->] (done.south) .. controls +(0,-1) and +(0,-1) .. (monitor.south) node[midway,right]{não};
   \end{tikzpicture}
-  \caption{Fluxo do comando \texttt{cnc\text{-}seq}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}
-  \label{fig:cnc-seq-flow}
+  \caption{Fluxo do comando \texttt{cnc\text{-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}
+  \label{fig:cnc-cli-flow}
 \end{figure}
