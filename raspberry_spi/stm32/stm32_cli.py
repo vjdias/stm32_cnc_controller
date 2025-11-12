@@ -173,7 +173,7 @@ class STM32Client:
         request_type: int,
         request: List[int],
         tries: int = 0,
-        settle_delay_s: float = 2,
+        settle_delay_s: float = 5,
         poll_byte: int | None = SPI_DMA_CLIENT_POLL_BYTE,
     ) -> List[int]:
         if tries < 0:
@@ -208,7 +208,7 @@ class STM32Client:
         *,
         expected_len: int,
         tries: int = 100,
-        settle_delay_s: float = 2,
+        settle_delay_s: float = 5,
         poll_byte: int = SPI_DMA_CLIENT_POLL_BYTE,
     ) -> List[int]:  # pragma: no cover - depende de hardware
         """Faz polling do buffer DMA do STM32 até encontrar o tipo de resposta esperado.
@@ -254,7 +254,7 @@ def _common_args(
     include_tries: bool = False,
     default_tries: int = 5,
     include_settle_delay: bool = False,
-    default_settle_delay: float = 0.001,
+    default_settle_delay: float = 5.0,
 ) -> None:
     p.add_argument("--bus", type=int, default=0)
     p.add_argument("--dev", type=int, default=0)

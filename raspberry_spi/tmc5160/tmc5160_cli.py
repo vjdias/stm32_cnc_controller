@@ -182,6 +182,7 @@ def _add_common_spi_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--bus", type=int, default=0, help="Barramento SPI (default: 0)")
     p.add_argument("--dev", type=int, default=1, help="Dispositivo SPI (default: 1)")
     p.add_argument("--speed", type=int, default=4_000_000, help="Velocidade SPI em Hz")
+    p.add_argument("--settle-delay", type=float, default=5.0, help="Aguardar esta quantidade (s) antes de ler/escrever (default: 5.0)")
 
 
 def _build_set_parser() -> argparse.ArgumentParser:
@@ -408,6 +409,8 @@ def run_set(argv: Sequence[str]) -> int:
     if chop_wanted:
         with TMC5160Configurator(bus=args.bus, device=args.dev, speed_hz=args.speed,
                                  register_preset=TMC5160RegisterPreset(writes=tuple())) as d:
+            import time as _t
+            _t.sleep(max(0.0, float(getattr(args, "settle_delay", 5.0))))
             old = d.read_register(REG_CHOPCONF).value
         new = _assemble_chopconf(
             old,
@@ -539,6 +542,8 @@ def run_set(argv: Sequence[str]) -> int:
     )
 
     with configurator as driver:  # type: ignore
+        import time as _t
+        _t.sleep(max(0.0, float(getattr(args, "settle_delay", 5.0))))
         _record_writes(args.bus, args.dev, writes)
         if not getattr(args, "json", False):
             print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para aplicar parÃ¢metros")
@@ -614,6 +619,8 @@ def run_status(argv: Sequence[str]) -> int:
         register_preset=TMC5160RegisterPreset.default(),
     )
     with configurator as driver:  # type: ignore
+        import time as _t
+        _t.sleep(max(0.0, float(getattr(args, "settle_delay", 5.0))))
         print(f"Abrindo SPI bus={args.bus} dev={args.dev} a {args.speed} Hz para consultar o TMC5160")
         if args.clear_gstat:
             driver.write_register(REG_GSTAT, 0x00000007)
