@@ -150,6 +150,16 @@ KiCad 9 para inspeção detalhada e edição.
 - Mostra os 5 bytes de cada quadro (req/resp) e as flags do byte de status. Se `driver_error=1`, lê
   `GSTAT/DRV_STATUS` e imprime um resumo do significado (OT/OL*/S2G*/S2VS*/UV_CP etc.).
 
+## CLI instalável globalmente
+
+O pacote já define entry points (`cnc-cli`, `cnc_cli`, `tmc5160-cli`, `stm32-cli` etc.) em `pyproject.toml`, então basta instalá-lo com `pip` para gerar scripts binários que ficam no `PATH` e não exigem chamar `python` explícito.
+
+1. Execute `pip install --user .` no diretório raiz (ou `pip install .` com privilégios de administrador) para instalar os binários em `~/.local/bin` (ou em `/usr/local/bin`).
+2. Certifique-se de que o diretório de scripts esteja no `PATH` (`export PATH="$HOME/.local/bin:$PATH"`); assim a CLI já pode ser acionada como `cnc-cli run ...`.
+3. Ao modificar o código e quiser testar a nova versão, reinstale com `pip install --user --upgrade .` para atualizar os entry points.
+
+Para compartilhar esse atalho com outros usuários do sistema, instale o pacote globalmente (`pip install .`) ou crie um link simbólico em um diretório do `PATH` apontando para `raspberry_spi/cnc_cli.py`.
+
 - **Time Base**: \( f = \frac{TIMCLK}{(PSC+1)(ARR+1)} \) → com **TIMCLK=80 MHz**:  
   - **TIM6**: 80e6/(80·20) = **50 kHz** (tick = 20 µs).  
   - **TIM7**: 80e6/(8000·10) = **1 kHz** (tick = 1 ms).
