@@ -257,7 +257,7 @@ def _set_led(client: STM32Client, *, on: Optional[bool] = None, blink_hz: Option
         freq_centi = 0
     req = STM32RequestBuilder.led_control(0, mask, mode, freq_centi)
     try:
-        client.exchange(0x07, req, tries=1, settle_delay_s=0.002)
+        client.exchange(0x07, req, tries=1, settle_delay_s=5)
     except Exception:
         pass
 

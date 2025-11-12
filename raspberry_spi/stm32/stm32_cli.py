@@ -173,7 +173,7 @@ class STM32Client:
         request_type: int,
         request: List[int],
         tries: int = 0,
-        settle_delay_s: float = 0.001,
+        settle_delay_s: float = 2,
         poll_byte: int | None = SPI_DMA_CLIENT_POLL_BYTE,
     ) -> List[int]:
         if tries < 0:
@@ -208,7 +208,7 @@ class STM32Client:
         *,
         expected_len: int,
         tries: int = 100,
-        settle_delay_s: float = 0.01,
+        settle_delay_s: float = 2,
         poll_byte: int = SPI_DMA_CLIENT_POLL_BYTE,
     ) -> List[int]:  # pragma: no cover - depende de hardware
         """Faz polling do buffer DMA do STM32 até encontrar o tipo de resposta esperado.
@@ -698,7 +698,7 @@ def origin_set(args: argparse.Namespace) -> None:
     mask = int(getattr(args, "mask", 0x07) or 0x07)
     mode = 0 if str(getattr(args, "mode", "start")).lower() == "start" else 1
     req = STM32RequestBuilder.set_origin(frame_id, mask, mode)
-    resp = _client_instance.exchange(REQ_SET_ORIGIN, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    resp = _client_instance.exchange(REQ_SET_ORIGIN, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 2) or 2))
     try:
         data = STM32ResponseDecoder.set_origin(resp)
     except Exception:
@@ -710,7 +710,7 @@ def origin_set(args: argparse.Namespace) -> None:
 def encoder_status(args: argparse.Namespace) -> None:
     frame_id = int(getattr(args, "frame_id", 0) or 0)
     req = STM32RequestBuilder.encoder_status(frame_id)
-    resp = _client_instance.exchange(REQ_ENCODER_STATUS, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+    resp = _client_instance.exchange(REQ_ENCODER_STATUS, req, tries=int(getattr(args, "tries", 3) or 3), settle_delay_s=float(getattr(args, "settle_delay", 2) or 2))
     try:
         data = STM32ResponseDecoder.encoder_status(resp)
     except Exception:
