@@ -390,6 +390,9 @@ def _tmc_apply(cfg: Dict[str, Any], patch: Dict[str, Any], logger: logging.Logge
                 if need_chop:
                     writes.append((REG_CHOPCONF, nv))
                 if writes:
+                    logger.info("TMC bus=%s dev=%s: enviando %d writes:", bus, dev, len(writes))
+                    for addr, val in writes:
+                        logger.info("  -> reg 0x%02X = 0x%08X", int(addr) & 0xFF, int(val) & 0xFFFFFFFF)
                     d.apply_registers(writes)
                     logger.info("TMC dev %s: %d writes aplicados", dev, len(writes))
         except Exception as exc:
@@ -523,6 +526,10 @@ def _process_steps(
                 *pid9,
             )
             try:
+                logger.info(
+                    "STM32: QUEUE_ADD f=%d dir=0x%02X v=(%d,%d,%d) s=(%d,%d,%d) tries=%d settle=%.3fs",
+                    fid._cur + 1 if hasattr(fid, "_cur") else -1, dir_mask, vx, vy, vz, sx, sy, sz, qadd_tries, qadd_settle,
+                )
                 resp = client.exchange(0x01, req, tries=qadd_tries, settle_delay_s=qadd_settle)
             except Exception as exc:
                 cooldown = _spi_busy_cooldown(cfg)
@@ -544,6 +551,10 @@ def _process_steps(
     # Inicia execução se houve ao menos um movimento
     if sent > 0:
         try:
+            logger.info(
+                "STM32: START_MOVE f=%d tries=%d settle=%.3fs",
+                fid._cur + 1 if hasattr(fid, "_cur") else -1, start_tries, start_settle,
+            )
             ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=start_tries, settle_delay_s=start_settle)
         except Exception as exc:
             cooldown = _spi_busy_cooldown(cfg)
@@ -572,6 +583,7 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
     while True:
         # 1) Consulta status da fila
         try:
+            logger.info("STM32: QUEUE_STATUS f=%d tries=%d settle=%.3fs", frame_id, qst_tries, qst_settle)
             resp = client.exchange(0x02, STM32RequestBuilder.queue_status(frame_id), tries=qst_tries, settle_delay_s=qst_settle)
             data = STM32ResponseDecoder.queue_status(resp)
             pct = data.get("pct", {})
