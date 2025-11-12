@@ -385,10 +385,12 @@ static inline int8_t motion_select_master_axis_progress(void)
     /* 1) Preferir o menor progresso ENTRE eixos que ainda têm trabalho (ativo+fila)
           e que participam do segmento atual (total_steps>0). */
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
-        uint32_t rem_total = motion_remaining_steps_total_for_axis(axis);
-        if (rem_total == 0u) continue; /* não escolher quem já acabou de vez */
-
+        /* total restante (ativo + fila) em O(1) */
         const motion_axis_state_t *ax = &g_axis_state[axis];
+        uint32_t active = (ax->total_steps > ax->emitted_steps)
+                          ? (ax->total_steps - ax->emitted_steps) : 0u;
+        uint32_t rem_total = active + g_queue_rem_steps[axis];
+        if (rem_total == 0u) continue; /* não escolher quem já acabou de vez */
         if (ax->total_steps == 0u) continue; /* não participa do segmento atual */
 
         uint32_t num = ax->emitted_steps; /* progresso acumulado */
@@ -404,7 +406,10 @@ static inline int8_t motion_select_master_axis_progress(void)
     if (master < 0) {
         uint32_t best_rem = 0u;
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
-            uint32_t rem_total = motion_remaining_steps_total_for_axis(axis);
+            const motion_axis_state_t *ax = &g_axis_state[axis];
+            uint32_t active = (ax->total_steps > ax->emitted_steps)
+                              ? (ax->total_steps - ax->emitted_steps) : 0u;
+            uint32_t rem_total = active + g_queue_rem_steps[axis];
             if (rem_total > best_rem) { best_rem = rem_total; master = (int8_t)axis; }
         }
     }
@@ -1121,7 +1126,10 @@ void motion_on_tim7_tick(void)
         int8_t master_axis = motion_select_master_axis_progress();
         uint32_t rem_master = 0u;
         if (master_axis >= 0) {
-            rem_master = motion_remaining_steps_total_for_axis((uint8_t)master_axis);
+            const motion_axis_state_t *am = &g_axis_state[(uint8_t)master_axis];
+            uint32_t active_m = (am->total_steps > am->emitted_steps)
+                                ? (am->total_steps - am->emitted_steps) : 0u;
+            rem_master = active_m + g_queue_rem_steps[(uint8_t)master_axis];
         }
 #endif
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
