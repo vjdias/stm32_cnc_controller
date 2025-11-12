@@ -575,33 +575,39 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
     devs = list(tmc.get("devs", [1, 2, 3]))
     speed = int(tmc.get("speed", 4_000_000))
     check_iv = float(cfg.get("monitor", {}).get("check_interval", 10))
+    disable_status = bool(cfg.get("spi", {}).get("disable_status_poll", True)) if isinstance(cfg.get("spi"), dict) else True
 
     start_t = time.time()
     last_warn = 0.0
     frame_id = 0x41
-    qst_tries, qst_settle = _spi_params(cfg, "queue_status")
+    if not disable_status:
+        qst_tries, qst_settle = _spi_params(cfg, "queue_status")
     while True:
-        # 1) Consulta status da fila
-        try:
-            logger.info(
-                "STM32 ← QUEUE_STATUS [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
-                frame_id,
-                qst_tries * qst_settle if qst_tries > 1 else qst_settle,
-                qst_tries,
-            )
-            resp = client.exchange(0x02, STM32RequestBuilder.queue_status(frame_id), tries=qst_tries, settle_delay_s=qst_settle)
-            data = STM32ResponseDecoder.queue_status(resp)
-            pct = data.get("pct", {})
-            pmin = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0)))
-            logger.info("Progresso: X=%d%% Y=%d%% Z=%d%%", pct.get("x", 0), pct.get("y", 0), pct.get("z", 0))
-            if pmin >= 100:
-                return True, "concluído"
-        except Exception as exc:
-            # Impressão descontínua para evitar flood
-            now = time.time()
-            if now - last_warn > 2.0:
-                logger.info("QueueStatus indisponível: %s", exc)
-                last_warn = now
+        # 1) (Opcional) Consulta status da fila
+        if not disable_status:
+            try:
+                logger.info(
+                    "STM32 ← QUEUE_STATUS [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
+                    frame_id,
+                    qst_tries * qst_settle if qst_tries > 1 else qst_settle,
+                    qst_tries,
+                )
+                resp = client.exchange(0x02, STM32RequestBuilder.queue_status(frame_id), tries=qst_tries, settle_delay_s=qst_settle)
+                data = STM32ResponseDecoder.queue_status(resp)
+                pct = data.get("pct", {})
+                pmin = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0)))
+                logger.info("Progresso: X=%d%% Y=%d%% Z=%d%%", pct.get("x", 0), pct.get("y", 0), pct.get("z", 0))
+                if pmin >= 100:
+                    return True, "concluído"
+            except Exception as exc:
+                # Impressão descontínua para evitar flood
+                now = time.time()
+                if now - last_warn > 2.0:
+                    logger.info("QueueStatus indisponível: %s", exc)
+                    last_warn = now
+        else:
+            # Sem polling de status: operação cega até 'timeout_s'
+            logger.debug("Status STM32 desativado (spi.disable_status_poll=true). Aguardando execução...")
 
         # 2) Verifica TMC por falhas graves
         try:
@@ -620,6 +626,9 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
             logger.info("Falha ao consultar TMC5160: %s", exc)
 
         if (time.time() - start_t) > timeout_s:
+            # Se não estamos consultando status, considerar como concluído (sem erro)
+            if disable_status:
+                return True, "tempo de execução decorrido (sem status)"
             return False, "timeout aguardando conclusão"
         time.sleep(max(0.05, check_iv))
 
