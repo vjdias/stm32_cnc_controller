@@ -257,6 +257,7 @@ def _set_led(client: STM32Client, *, on: Optional[bool] = None, blink_hz: Option
         freq_centi = 0
     req = STM32RequestBuilder.led_control(0, mask, mode, freq_centi)
     try:
+        print(f"STM32 ← LED_CONTROL on={bool(on)} blink_hz={blink_hz if blink_hz is not None else 0}")
         client.exchange(0x07, req, tries=1, settle_delay_s=5)
     except Exception:
         pass
@@ -450,24 +451,28 @@ def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
 
 
 def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
+    """Resolve (tries, settle) para uma operação SPI.
+
+    Regras:
+    - Se '{kind}_tries' for informado no cfg, respeita-o (>=1) e NÃO amplifica pelo min_wait_s.
+    - Caso contrário, calcula tries para cobrir pelo menos min_wait_s (>=5s) com o settle informado.
+    - Settle padrão = 5.0 s.
+    """
     spi = cfg.get("spi", {}) if isinstance(cfg.get("spi"), dict) else {}
     tries_key = f"{kind}_tries"
     settle_key = f"{kind}_settle"
-    defaults = {
-        "queue_add": (40, 0.005),
-        "start_move": (40, 0.005),
-        "queue_status": (60, 0.010),
-    }
-    dtries, dsettle = defaults.get(kind, (40, 0.005))
-    tries = int(spi.get(tries_key, dtries))
+    dsettle = 5.0
     settle = float(spi.get(settle_key, dsettle))
-    # Tempo mínimo total de espera (clamp >= 5s)
+    settle = max(0.001, settle)
+    specified_tries = spi.get(tries_key, None)
+    if specified_tries is not None:
+        tries = max(1, int(specified_tries))
+        return tries, settle
+    # Deriva tries a partir de min_wait_s
     min_wait = float(spi.get("min_wait_s", 5.0))
     if not math.isfinite(min_wait) or min_wait < 5.0:
         min_wait = 5.0
-    settle = max(0.001, settle)
-    required_tries = int(math.ceil(min_wait / settle))
-    tries = max(tries, required_tries)
+    tries = int(math.ceil(min_wait / settle))
     return max(1, tries), settle
 
 
@@ -527,8 +532,9 @@ def _process_steps(
             )
             try:
                 logger.info(
-                    "STM32: QUEUE_ADD f=%d dir=0x%02X v=(%d,%d,%d) s=(%d,%d,%d) tries=%d settle=%.3fs",
-                    fid._cur + 1 if hasattr(fid, "_cur") else -1, dir_mask, vx, vy, vz, sx, sy, sz, qadd_tries, qadd_settle,
+                    "STM32 ← QUEUE_ADD [frame=%d] dir=0x%02X v=(%d,%d,%d) s=(%d,%d,%d) | aguardará %.3fs (tries=%d) pela resposta",
+                    fid._cur + 1 if hasattr(fid, "_cur") else -1,
+                    dir_mask, vx, vy, vz, sx, sy, sz, qadd_tries * qadd_settle if qadd_tries > 1 else qadd_settle, qadd_tries,
                 )
                 resp = client.exchange(0x01, req, tries=qadd_tries, settle_delay_s=qadd_settle)
             except Exception as exc:
@@ -536,8 +542,8 @@ def _process_steps(
                 msg = str(exc).lower()
                 if "busy" in msg or "polling" in msg or "resposta" in msg:
                     logger.warning(
-                        "QueueAdd timeout/BUSY com tries=%s/settle=%.3f; cooldown %.3fs e backoff...",
-                        qadd_tries, qadd_settle, cooldown,
+                        "QueueAdd: sem ACK/BUSY após %.3fs (tries=%d). Aguardando %.3fs e repetindo com settle=%.3fs...",
+                        qadd_tries * qadd_settle if qadd_tries > 1 else qadd_settle, qadd_tries, cooldown, max(qadd_settle, cooldown),
                     )
                     time.sleep(cooldown)
                     resp = client.exchange(
@@ -552,13 +558,15 @@ def _process_steps(
     if sent > 0:
         try:
             logger.info(
-                "STM32: START_MOVE f=%d tries=%d settle=%.3fs",
-                fid._cur + 1 if hasattr(fid, "_cur") else -1, start_tries, start_settle,
+                "STM32 ← START_MOVE [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
+                fid._cur + 1 if hasattr(fid, "_cur") else -1,
+                start_tries * start_settle if start_tries > 1 else start_settle,
+                start_tries,
             )
             ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=start_tries, settle_delay_s=start_settle)
         except Exception as exc:
             cooldown = _spi_busy_cooldown(cfg)
-            logger.warning("StartMove timeout/BUSY; cooldown %.3fs e backoff...", cooldown)
+            logger.warning("StartMove: sem ACK/BUSY; aguardando %.3fs e repetindo...", cooldown)
             time.sleep(cooldown)
             ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=max(start_tries, 80), settle_delay_s=max(start_settle, cooldown))
         try:
@@ -583,7 +591,12 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
     while True:
         # 1) Consulta status da fila
         try:
-            logger.info("STM32: QUEUE_STATUS f=%d tries=%d settle=%.3fs", frame_id, qst_tries, qst_settle)
+            logger.info(
+                "STM32 ← QUEUE_STATUS [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
+                frame_id,
+                qst_tries * qst_settle if qst_tries > 1 else qst_settle,
+                qst_tries,
+            )
             resp = client.exchange(0x02, STM32RequestBuilder.queue_status(frame_id), tries=qst_tries, settle_delay_s=qst_settle)
             data = STM32ResponseDecoder.queue_status(resp)
             pct = data.get("pct", {})
