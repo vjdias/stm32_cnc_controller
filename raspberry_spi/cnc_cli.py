@@ -496,7 +496,7 @@ def _process_steps(
 
     sent = 0
     qadd_tries, qadd_settle = _spi_params(cfg, "queue_add")
-    # Ajuste solicitado: settle-delay dos QUEUE_ADD = 2s (mantém semântica simples)
+    # Ajuste: QUEUE_ADD usa settle fixo de 2s e tries=1
     qadd_settle = 2.0
     qadd_tries = 1
     start_tries, start_settle = _spi_params(cfg, "start_move")
@@ -569,27 +569,40 @@ def _process_steps(
             last_frame_id = frame_id
     # Inicia execução se houve ao menos um movimento
     if sent > 0:
-        try:
-            # Pequena folga entre o último queue_add e o start_move (configurável)
-            gap = float(cfg.get("spi", {}).get("start_move_gap_s", 0.5)) if isinstance(cfg.get("spi"), dict) else 0.5
-            if gap > 0:
-                time.sleep(gap)
-            frame_id = last_frame_id if last_frame_id is not None else fid._cur
-            # Ajuste solicitado: settle do START_MOVE = 2 * número de itens movidos
-            start_settle = max(0.001, 2.0 * float(sent))
-            start_tries = 1
-            logger.info(
-                "STM32 ← START_MOVE [frame=%d] | aguardará %.3fs (tries=%d) pela resposta",
-                frame_id,
-                start_tries * start_settle if start_tries > 1 else start_settle,
-                start_tries,
-            )
-            ack = client.exchange(0x03, STM32RequestBuilder.start_move(frame_id), tries=start_tries, settle_delay_s=start_settle)
-        except Exception as exc:
-            cooldown = _spi_busy_cooldown(cfg)
-            logger.warning("StartMove: sem ACK/BUSY; aguardando %.3fs e repetindo...", cooldown)
-            time.sleep(cooldown)
-            ack = client.exchange(0x03, STM32RequestBuilder.start_move(fid.next()), tries=max(start_tries, 80), settle_delay_s=max(start_settle, cooldown))
+        # Pequena folga entre o último queue_add e o start_move (configurável)
+        gap = float(cfg.get("spi", {}).get("start_move_gap_s", 0.5)) if isinstance(cfg.get("spi"), dict) else 0.5
+        if gap > 0:
+            time.sleep(gap)
+
+        frame_id = last_frame_id if last_frame_id is not None else fid._cur
+        # START_MOVE: settle = 3 × quantidade de itens; tries=1
+        start_settle = max(0.001, 3.0 * float(sent))
+        start_tries = 1
+
+        # Tenta até 3 vezes (sleep 3s entre tentativas) se não houver ACK/BUSY
+        ack = None
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            try:
+                logger.info(
+                    "STM32 ← START_MOVE [frame=%d] | aguardará %.3fs (tries=%d) pela resposta (tentativa %d/%d)",
+                    frame_id,
+                    start_tries * start_settle if start_tries > 1 else start_settle,
+                    start_tries,
+                    attempt,
+                    max_attempts,
+                )
+                ack = client.exchange(0x03, STM32RequestBuilder.start_move(frame_id), tries=start_tries, settle_delay_s=start_settle)
+                break  # sucesso
+            except Exception as exc:
+                if attempt < max_attempts:
+                    logger.warning("StartMove: sem ACK/BUSY; aguardando 3.000s e repetindo (%d/%d)...", attempt, max_attempts)
+                    time.sleep(3.0)
+                else:
+                    logger.error("StartMove: falha após %d tentativas (sem ACK/BUSY)", max_attempts)
+                    return sent
+
+        # Se chegou aqui, 'ack' existe; valida e imprime sucesso/resultado
         try:
             data = STM32ResponseDecoder.start_move(ack)
             status_code = int(data.get("status", 0))
@@ -602,6 +615,10 @@ def _process_steps(
                 "depth": data.get("depth"),
             }
             print(json.dumps(out, ensure_ascii=False))
+            if status_code == 0:
+                logger.info("StartMove: iniciado com sucesso (depth=%s)", data.get("depth"))
+            else:
+                logger.warning("StartMove: ignorado pelo firmware (status=%s)", status_label)
         except Exception:
             logger.info("StartMove: ACK bruto=%s", ack)
     return sent
@@ -668,6 +685,7 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
                 otpw = bool(drv & (1 << 25))
                 drv_err = bool(g & (1 << 1))
                 if overtemp or otpw or drv_err:
+                    logger.error("TMC5160: fault detected (OT=%s, OTPW=%s, DRV_ERR=%s)", overtemp, otpw, drv_err)
                     _tmc_security_off_all(cfg, logger)
                     # LED aceso para indicar erro
                     _set_led(client, on=True)
