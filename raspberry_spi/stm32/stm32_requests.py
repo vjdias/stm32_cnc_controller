@@ -105,6 +105,12 @@ class STM32RequestBuilder:
                        kp_x: int, ki_x: int, kd_x: int,
                        kp_y: int, ki_y: int, kd_y: int,
                        kp_z: int, ki_z: int, kd_z: int) -> List[int]:
+        # OBSERVAÇÃO:
+        # - O firmware atual espera kp/ki/kd como inteiros de 16 bits JÁ
+        #   escalados (Q8). Não há multiplicação por 256 no destino.
+        # - FUTURO: um request alternativo poderia carregar ganhos em 32 bits
+        #   com escala 10^4 (analogia ao LED em centi-Hz) ou IEEE‑754, mantendo
+        #   este request para compatibilidade.
         raw = [0] * 42
         raw[0] = REQ_HEADER
         raw[1] = REQ_MOVE_QUEUE_ADD

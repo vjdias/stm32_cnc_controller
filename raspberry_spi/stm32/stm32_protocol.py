@@ -9,6 +9,11 @@ RESP_HEADER = 0xAB
 RESP_TAIL = 0x54
 
 # Request types
+#
+# FUTURO: para aceitar PID em ponto flutuante (ex.: 4 casas decimais) sem
+# quebrar compatibilidade, pode-se definir um novo request MOVE_QUEUE_ADD_F
+# com campos de 32 bits (inteiros com escala 10^4 ou IEEE-754). Tomar como
+# referência a decisão do LED (centi-Hz) para documentar a escala escolhida.
 REQ_MOVE_QUEUE_ADD = 0x01
 REQ_MOVE_QUEUE_STATUS = 0x02
 REQ_START_MOVE = 0x03

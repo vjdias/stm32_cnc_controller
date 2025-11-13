@@ -106,19 +106,27 @@ def _validate_sequence(cfg: Dict[str, Any], seq: Dict[str, Any]) -> Tuple[bool, 
     vmax = int(lim_vel.get("max_sps", 65535))
 
     def _chk_pid(axis: str, pid: Dict[str, Any], path: str) -> None:
+        """Validação sem multiplicar por 256 (aceita int ou float).
+
+        Observação: a conversão para o formato do firmware (×256) é feita apenas
+        no envio (_pid_for_move). Aqui a checagem compara o valor informado
+        diretamente contra os limites declarados em application.cfg.
+        """
         for k in ("kp", "ki", "kd"):
             raw = pid.get(k, 0)
+            # Parse numérico sem escalar
             try:
-                if isinstance(raw, (int,)):
-                    v = int(raw)
-                else:
-                    v = int(round(float(raw) * 256.0))
+                val_f = float(raw) if not isinstance(raw, (int,)) else float(int(raw))
             except Exception:
                 errs.append(f"{path}.{k} inválido (int ou float esperado)")
                 continue
-            rng = tuple(lim_pid.get(k, (0, 65535)))  # type: ignore
-            if not _within(v, rng):
-                errs.append(f"{path}.{k}={raw} (esc.256={v}) fora de limites {rng}")
+            lo, hi = lim_pid.get(k, (0, 65535))  # type: ignore
+            try:
+                lo_f, hi_f = float(lo), float(hi)
+            except Exception:
+                lo_f, hi_f = 0.0, 65535.0
+            if not (lo_f <= val_f <= hi_f):
+                errs.append(f"{path}.{k}={raw} fora de limites ({lo},{hi})")
 
     def _validate_tmc_patch(tmc: Dict[str, Any], *, path: str) -> None:
         # Campos e limites básicos
@@ -454,23 +462,28 @@ def _seq_dir_mask(mv: Dict[str, Any]) -> int:
 
 
 def _pid_for_move(cfg: Dict[str, Any], seq_default_pid: Dict[str, Any], mv: Dict[str, Any]) -> Tuple[int, int, int, int, int, int, int, int, int]:
+    # NOTA:
+    #  - Envia kp/ki/kd exatamente como informados (inteiros). Floats são
+    #    apenas arredondados, sem multiplicação por 256.
+    #  - FUTURO: caso o firmware passe a aceitar um request com escala 10^4
+    #    (análogo ao LED em centi-Hz), este ponto pode converter floats para a
+    #    nova escala quando esse request alternativo for selecionado.
     def _get(ax: str, k: str) -> int:
         # prioridade: mv.pid.ax.k > seq.pid.ax.k > cfg.pid.ax.k > 0
-        def _parse_scaled(v: Any) -> int:
-            # Aceita inteiro já escalado ou float com até 4 casas (escala ×256)
+        # Sem multiplicar por 256: assume que o valor informado já está no formato que o firmware espera
+        def _parse_direct(v: Any) -> int:
             try:
                 if isinstance(v, (int,)):
                     return int(v)
-                x = float(v)
-                return int(round(x * 256.0))
+                return int(round(float(v)))
             except Exception:
                 return 0
         if isinstance(mv.get("pid"), dict) and isinstance(mv["pid"].get(ax), dict) and (k in mv["pid"][ax]):
-            return _parse_scaled(mv["pid"][ax][k])
+            return _parse_direct(mv["pid"][ax][k])
         if isinstance(seq_default_pid, dict) and isinstance(seq_default_pid.get(ax), dict) and (k in seq_default_pid[ax]):
-            return _parse_scaled(seq_default_pid[ax][k])
+            return _parse_direct(seq_default_pid[ax][k])
         if isinstance(cfg.get("pid"), dict) and isinstance(cfg["pid"].get(ax), dict) and (k in cfg["pid"][ax]):
-            return _parse_scaled(cfg["pid"][ax][k])
+            return _parse_direct(cfg["pid"][ax][k])
         return 0
     kp_x, ki_x, kd_x = _get("x", "kp"), _get("x", "ki"), _get("x", "kd")
     kp_y, ki_y, kd_y = _get("y", "kp"), _get("y", "ki"), _get("y", "kd")

@@ -1,4 +1,16 @@
 // MOVE_QUEUE_ADD (42 bytes) — 0x01
+//
+// Notas sobre PID (formato atual e futura extensão):
+// - O firmware consome kp/ki/kd como inteiros de 16 bits já escalados
+//   (formato fixo Q8 — ver MOTION_PI_SHIFT=8 no motion_service.c). Não há
+//   multiplicação interna por 256; o emissor deve enviar o valor inteiro
+//   esperado pelo firmware.
+// - FUTURO: caso seja necessário aceitar "floats puros" (ex.: 3.1300) no
+//   protocolo, considerar um novo request alternativo com campos de 32 bits
+//   para os ganhos (ou uma escala fixa de 10^4). A referência para a escolha
+//   de escala é o serviço de LED, que usa centi-Hz para representar frequência
+//   com 2 casas decimais. Para PID, uma escala de 10^4 permitiria 4 casas.
+//   Essa mudança exigiria um novo REQ_* para manter compatibilidade.
 #pragma once
 #include <stdint.h>
 #include "../frame_defs.h"

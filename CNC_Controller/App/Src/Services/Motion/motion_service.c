@@ -204,6 +204,11 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
  *  - Ganhos kp/ki/kd recebidos via protocolo são inteiros de 16 bits.
  *  - A saída da correção é escalada por 2^-8 (>> 8) para manter estabilidade.
  */
+// Ganhos inteiros (kp/ki/kd) operam em formato Q8 (>> 8). O emissor deve
+// fornecer os valores já escalados. Não há multiplicação interna por 256.
+// FUTURO: avaliar request alternativo com ganhos em 32 bits (ex.: escala 10^4
+// como no LED em centi-Hz) ou IEEE-754, preservando o MOVE_QUEUE_ADD atual
+// para compatibilidade retroativa.
 #define MOTION_PI_SHIFT              8
 #define MOTION_PI_I_CLAMP            (200000)
 #define MOTION_PI_CORR_MAX_SPS       (MOTION_MAX_SPS)
