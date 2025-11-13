@@ -854,6 +854,29 @@ def run_sequence(args: argparse.Namespace) -> int:
         _set_led(client, blink_hz=1.0)
         total = _process_steps(client, cfg, seq, steps, logger)
         logger.info("Movimentos enfileirados: %d", total)
+
+        # Checagem final silenciosa: até 32 tentativas (1 s cada) para
+        # confirmar conclusão via QUEUE_STATUS. Não imprime cada tentativa;
+        # apenas sucesso ou falha após as 32.
+        try:
+            concluded = False
+            for _i in range(32):
+                try:
+                    resp = client.exchange(0x02, STM32RequestBuilder.queue_status(0x41), tries=1, settle_delay_s=0.2)
+                    data = STM32ResponseDecoder.queue_status(resp)
+                    pct = data.get("pct", {})
+                    pmin = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0)))
+                    if pmin >= 100:
+                        logger.info("Conferência final: concluído (X=%d%% Y=%d%% Z=%d%%)", pct.get("x", 0), pct.get("y", 0), pct.get("z", 0))
+                        concluded = True
+                        break
+                except Exception:
+                    pass
+                time.sleep(1.0)
+            if not concluded:
+                logger.warning("Conferência final: conclusão não confirmada após 32 tentativas")
+        except Exception:
+            pass
         ok, reason = _monitor_until_end(client, cfg, timeout_s=float(args.timeout), logger=logger)
         if ok:
             logger.info("Execução concluída com sucesso.")
