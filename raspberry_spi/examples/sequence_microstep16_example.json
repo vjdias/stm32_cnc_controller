@@ -3,7 +3,7 @@
     {
       "tmc": {
         "toff": 3, "hstrt": 5, "hend": 2, "tbl": 2, "dedge": 0,
-        "ihold": 0, "irun": 2, "ihold_delay": 6, "globalscaler": 128,
+        "ihold": 0, "irun": 4, "ihold_delay": 6, "globalscaler": 128,
         "microsteps": 16, "interpolate": true
       }
     },
