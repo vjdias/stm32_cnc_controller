@@ -397,6 +397,15 @@ def build_parser() -> argparse.ArgumentParser:
         q_add.add_argument(f"--kd-{axis}", type=int, default=0)
     q_add.set_defaults(handler="queue_add", needs_client=True)
 
+    # set-microsteps-axes: define microsteps por eixo no firmware
+    set_ms_ax = sub.add_parser("set-microsteps-axes", help="Define microsteps por eixo (X,Y,Z) no firmware (afeta PI/telemetria)")
+    _common_args(set_ms_ax, include_tries=True, include_settle_delay=True)
+    set_ms_ax.add_argument("--frame-id", type=int, default=0x40)
+    set_ms_ax.add_argument("--x", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
+    set_ms_ax.add_argument("--y", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
+    set_ms_ax.add_argument("--z", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
+    set_ms_ax.set_defaults(handler="set_microsteps_axes", needs_client=True)
+
     # queue-status removido na versão sucinta
 
     start_move = sub.add_parser("start-move", help="Iniciar execução")
@@ -405,6 +414,15 @@ def build_parser() -> argparse.ArgumentParser:
     start_move.add_argument("--wait-end", action="store_true", help="Aguarda e imprime RESP_MOVE_END após o ack do start")
     start_move.add_argument("--end-timeout", type=float, default=60.0, help="Tempo máximo (s) aguardando MOVE_END quando --wait-end")
     start_move.set_defaults(handler="start_move", needs_client=True)
+
+    # set-microsteps-axes
+    set_ms_ax = sub.add_parser("set-microsteps-axes", help="Define microsteps por eixo (X,Y,Z) no firmware (afeta PI/telemetria)")
+    _common_args(set_ms_ax, include_tries=True, include_settle_delay=True)
+    set_ms_ax.add_argument("--frame-id", type=int, default=0x40)
+    set_ms_ax.add_argument("--x", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
+    set_ms_ax.add_argument("--y", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
+    set_ms_ax.add_argument("--z", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
+    set_ms_ax.set_defaults(handler="set_microsteps_axes", needs_client=True)
 
     end_move = sub.add_parser("end-move", help="Finalizar execução")
     _common_args(end_move, include_tries=True, include_settle_delay=True)

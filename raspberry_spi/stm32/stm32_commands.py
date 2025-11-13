@@ -273,4 +273,15 @@ class STM32CommandExecutor:
             except Exception as exc:
                 print(f"Aviso: falha ao aplicar SAFE-OFF no TMC /dev/spidev{bus}.{dev}: {exc}")
 
+    def set_microsteps_axes(self, args: argparse.Namespace) -> None:
+        # Envia REQ_SET_MICROSTEPS_AX com ms por eixo
+        try:
+            from .stm32_protocol import REQ_SET_MICROSTEPS_AX  # type: ignore
+        except Exception:
+            from stm32_protocol import REQ_SET_MICROSTEPS_AX  # type: ignore
+        request = STM32RequestBuilder.set_microsteps_axes(int(args.frame_id) & 0xFF, int(args.x), int(args.y), int(args.z))
+        # Expect no decoder; just print bits
+        frame = self.client.exchange(REQ_SET_MICROSTEPS_AX, request, tries=int(getattr(args, "tries", 2) or 2), settle_delay_s=float(getattr(args, "settle_delay", 0.002) or 0.002))
+        print("Frame RX bits:", bits_str(frame))
+
 __all__ = ["STM32CommandExecutor", "print_boot_frame_info"]

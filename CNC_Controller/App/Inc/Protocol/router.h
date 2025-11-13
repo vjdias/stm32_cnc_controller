@@ -29,10 +29,11 @@ typedef struct {
         req_handler_fn on_move_end;
         req_handler_fn on_led_ctrl;
         req_handler_fn on_fpga_status;
-        req_handler_fn on_set_origin;
-        req_handler_fn on_encoder_status;
-        req_handler_fn on_set_microsteps;
-        req_handler_fn on_test_hello;
+    req_handler_fn on_set_origin;
+    req_handler_fn on_encoder_status;
+    req_handler_fn on_set_microsteps;
+    req_handler_fn on_set_microsteps_axes;
+    req_handler_fn on_test_hello;
 } router_handlers_t;
 
 void router_init(router_t *r, response_fifo_t *resp_fifo,

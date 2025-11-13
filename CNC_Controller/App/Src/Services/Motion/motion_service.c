@@ -26,6 +26,7 @@
 #include "Protocol/Requests/encoder_status_request.h"
 #include "Protocol/Responses/encoder_status_response.h"
 #include "Protocol/Requests/set_microsteps_request.h"
+#include "Protocol/Requests/set_microsteps_axes_request.h"
 
 LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
@@ -226,8 +227,11 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
 #define DDA_STEPS_PER_REV    (STEPS_PER_REV_BASE * MICROSTEP_FACTOR)
 /* Encoders por rotação (fornecido): X/Z = 40000, Y = 5000 */
 static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 5000u, 40000u}; // X,Y,Z 
-static volatile uint16_t g_microstep_factor = MICROSTEP_FACTOR;
-static inline uint32_t dda_steps_per_rev(void) { return STEPS_PER_REV_BASE * (uint32_t)g_microstep_factor; }
+static volatile uint16_t g_microstep_factor[MOTION_AXIS_COUNT] = { MICROSTEP_FACTOR, MICROSTEP_FACTOR, MICROSTEP_FACTOR };
+static inline uint32_t dda_steps_per_rev_axis(uint8_t axis) {
+    if (axis >= MOTION_AXIS_COUNT) axis = 0;
+    return STEPS_PER_REV_BASE * (uint32_t)g_microstep_factor[axis];
+}
 
 /* Deadband em passos para o PI de posição (evita tremor próximo de zero) */
 #ifndef MOTION_PI_DEADBAND_STEPS
@@ -526,7 +530,7 @@ static void motion_refresh_status_locked(void) {
         int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
         if (enc_rel > (int64_t)INT32_MAX) enc_rel = INT32_MAX;
         else if (enc_rel < (int64_t)INT32_MIN) enc_rel = INT32_MIN;
-        int64_t num = enc_rel * (int64_t)dda_steps_per_rev();
+        int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
         int32_t actual_steps = (ENC_COUNTS_PER_REV[axis]
                                 ? (int32_t)(num / (int64_t)ENC_COUNTS_PER_REV[axis])
                                 : 0);
@@ -1151,7 +1155,7 @@ void motion_on_tim7_tick(void)
             if (master_axis >= 0 && (int8_t)axis != master_axis) {
                 int32_t desired = (int32_t)ax->target_steps;
                 int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
-                int64_t num = enc_rel * (int64_t)dda_steps_per_rev();
+                int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
                 int32_t actual = 0;
                 if (ENC_COUNTS_PER_REV[axis] > 0u) {
                     int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
@@ -1179,8 +1183,8 @@ void motion_on_tim7_tick(void)
                 /* desired (em passos DDA) vs actual convertido de contagens do encoder para passos DDA */
                 int32_t desired = (int32_t)ax->target_steps;
                 int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
-                /* actual_steps ≈ enc_rel * (DDA_STEPS_PER_REV / ENC_COUNTS_PER_REV) */
-                int64_t num = enc_rel * (int64_t)dda_steps_per_rev();
+                /* actual_steps ≈ enc_rel * (DDA_STEPS_PER_REV(axis) / ENC_COUNTS_PER_REV) */
+                int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
                 int32_t actual = 0;
                 if (ENC_COUNTS_PER_REV[axis] > 0u) {
                     int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
@@ -1508,8 +1512,27 @@ void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
     }
     uint16_t ms = (req.microsteps == 0u) ? 1u : req.microsteps;
     if (ms > 256u) ms = 256u;
-    g_microstep_factor = ms;
-    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "ms=%u", (unsigned)ms);
+    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_microstep_factor[a] = ms;
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "all_axes_ms=%u", (unsigned)ms);
+}
+
+void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
+    set_microsteps_axes_req_t req;
+    if (set_microsteps_axes_req_decoder(frame, len, &req) != PROTO_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_FRAME, "set_microsteps_ax", "decode_fail");
+        return;
+    }
+    if (g_status.state == MOTION_RUNNING) {
+        LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps_ax", "busy_running");
+        return;
+    }
+    uint16_t msx = (req.ms_x == 0u) ? 1u : req.ms_x; if (msx > 256u) msx = 256u;
+    uint16_t msy = (req.ms_y == 0u) ? 1u : req.ms_y; if (msy > 256u) msy = 256u;
+    uint16_t msz = (req.ms_z == 0u) ? 1u : req.ms_z; if (msz > 256u) msz = 256u;
+    g_microstep_factor[AXIS_X] = msx;
+    g_microstep_factor[AXIS_Y] = msy;
+    g_microstep_factor[AXIS_Z] = msz;
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps_ax", "ms=(%u,%u,%u)", (unsigned)msx, (unsigned)msy, (unsigned)msz);
 }
 
 /* =====================================================================

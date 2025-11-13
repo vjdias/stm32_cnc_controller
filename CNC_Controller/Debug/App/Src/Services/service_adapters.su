@@ -9,5 +9,6 @@
 ../App/Src/Services/service_adapters.c:44:13:h_set_origin	24	static
 ../App/Src/Services/service_adapters.c:47:13:h_encoder_status	24	static
 ../App/Src/Services/service_adapters.c:50:13:h_set_microsteps	24	static
-../App/Src/Services/service_adapters.c:54:13:h_test_hello	24	static
-../App/Src/Services/service_adapters.c:59:6:services_register_handlers	16	static
+../App/Src/Services/service_adapters.c:53:13:h_set_microsteps_axes	24	static
+../App/Src/Services/service_adapters.c:57:13:h_test_hello	24	static
+../App/Src/Services/service_adapters.c:62:6:services_register_handlers	16	static

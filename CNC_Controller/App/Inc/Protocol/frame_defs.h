@@ -20,6 +20,7 @@ typedef enum {
         REQ_SET_ORIGIN = 0x24,
         REQ_ENCODER_STATUS = 0x25,
         REQ_SET_MICROSTEPS = 0x26,
+        REQ_SET_MICROSTEPS_AX = 0x27,
         REQ_TEST_HELLO = 0x68,
 } req_msg_type_t;
 

@@ -107,10 +107,18 @@ def _validate_sequence(cfg: Dict[str, Any], seq: Dict[str, Any]) -> Tuple[bool, 
 
     def _chk_pid(axis: str, pid: Dict[str, Any], path: str) -> None:
         for k in ("kp", "ki", "kd"):
-            v = int(pid.get(k, 0))
+            raw = pid.get(k, 0)
+            try:
+                if isinstance(raw, (int,)):
+                    v = int(raw)
+                else:
+                    v = int(round(float(raw) * 256.0))
+            except Exception:
+                errs.append(f"{path}.{k} inválido (int ou float esperado)")
+                continue
             rng = tuple(lim_pid.get(k, (0, 65535)))  # type: ignore
             if not _within(v, rng):
-                errs.append(f"{path}.{k}={v} fora de limites {rng}")
+                errs.append(f"{path}.{k}={raw} (esc.256={v}) fora de limites {rng}")
 
     def _validate_tmc_patch(tmc: Dict[str, Any], *, path: str) -> None:
         # Campos e limites básicos
@@ -139,13 +147,24 @@ def _validate_sequence(cfg: Dict[str, Any], seq: Dict[str, Any]) -> Tuple[bool, 
                     errs.append(f"{path}.{key}={val} fora de limites {rng}")
         if "microsteps" in tmc:
             allowed = lim_tmc.get("microsteps", [1, 2, 4, 8, 16, 32, 64, 128, 256])
-            try:
-                ms = int(tmc["microsteps"]) 
-            except Exception:
-                errs.append(f"{path}.microsteps inválido (inteiro esperado)")
-                ms = None
-            if ms is not None and ms not in allowed:
-                errs.append(f"{path}.microsteps={tmc['microsteps']} não permitido (opções: {allowed})")
+            ms_val = tmc["microsteps"]
+            if isinstance(ms_val, dict):
+                for axk, v in ms_val.items():
+                    try:
+                        ms = int(v)
+                    except Exception:
+                        errs.append(f"{path}.microsteps.{axk} inválido (inteiro esperado)")
+                        continue
+                    if ms not in allowed:
+                        errs.append(f"{path}.microsteps.{axk}={v} não permitido (opções: {allowed})")
+            else:
+                try:
+                    ms = int(ms_val)
+                except Exception:
+                    errs.append(f"{path}.microsteps inválido (inteiro esperado)")
+                    ms = None
+                if ms is not None and ms not in allowed:
+                    errs.append(f"{path}.microsteps={ms_val} não permitido (opções: {allowed})")
 
     # TMC (global da sequência)
     if isinstance(seq.get("tmc"), dict):
@@ -279,7 +298,8 @@ def _tmc_security_off_all(cfg: Dict[str, Any], logger: logging.Logger) -> None:
     bus = int(tmc.get("bus", 0))
     devs = list(tmc.get("devs", [1, 2, 3]))
     speed = int(tmc.get("speed", 4_000_000))
-    for dev in devs:
+    axes = ['x','y','z']
+    for idx, dev in enumerate(devs):
         try:
             with TMC5160Configurator(bus=bus, device=int(dev), speed_hz=speed, register_preset=TMC5160RegisterPreset(writes=tuple())) as d:  # type: ignore
                 # IHOLD/IRUN=0; CHOPCONF.TOFF=0; PWMCONF.FREEWHEEL=1
@@ -329,8 +349,22 @@ def _tmc_apply(cfg: Dict[str, Any], patch: Dict[str, Any], logger: logging.Logge
                     need_chop = True
                 if patch.get("microsteps") is not None:
                     table = {256: 0, 128: 1, 64: 2, 32: 3, 16: 4, 8: 5, 4: 6, 2: 7, 1: 8}
-                    ms = int(patch["microsteps"])
-                    if ms in table:
+                    ms_field = patch.get("microsteps")
+                    # Suporta inteiro (global) ou dict por eixo {x:16, y:256, z:16}
+                    ms = None
+                    if isinstance(ms_field, dict):
+                        axk = axes[idx] if idx < len(axes) else None
+                        if axk is not None and axk in ms_field:
+                            try:
+                                ms = int(ms_field[axk])
+                            except Exception:
+                                ms = None
+                    else:
+                        try:
+                            ms = int(ms_field)
+                        except Exception:
+                            ms = None
+                    if ms is not None and ms in table:
                         if old is None:
                             old = d.read_register(REG_CHOPCONF).value
                             nv = old
@@ -422,12 +456,21 @@ def _seq_dir_mask(mv: Dict[str, Any]) -> int:
 def _pid_for_move(cfg: Dict[str, Any], seq_default_pid: Dict[str, Any], mv: Dict[str, Any]) -> Tuple[int, int, int, int, int, int, int, int, int]:
     def _get(ax: str, k: str) -> int:
         # prioridade: mv.pid.ax.k > seq.pid.ax.k > cfg.pid.ax.k > 0
+        def _parse_scaled(v: Any) -> int:
+            # Aceita inteiro já escalado ou float com até 4 casas (escala ×256)
+            try:
+                if isinstance(v, (int,)):
+                    return int(v)
+                x = float(v)
+                return int(round(x * 256.0))
+            except Exception:
+                return 0
         if isinstance(mv.get("pid"), dict) and isinstance(mv["pid"].get(ax), dict) and (k in mv["pid"][ax]):
-            return int(mv["pid"][ax][k])
+            return _parse_scaled(mv["pid"][ax][k])
         if isinstance(seq_default_pid, dict) and isinstance(seq_default_pid.get(ax), dict) and (k in seq_default_pid[ax]):
-            return int(seq_default_pid[ax][k])
+            return _parse_scaled(seq_default_pid[ax][k])
         if isinstance(cfg.get("pid"), dict) and isinstance(cfg["pid"].get(ax), dict) and (k in cfg["pid"][ax]):
-            return int(cfg["pid"][ax][k])
+            return _parse_scaled(cfg["pid"][ax][k])
         return 0
     kp_x, ki_x, kd_x = _get("x", "kp"), _get("x", "ki"), _get("x", "kd")
     kp_y, ki_y, kd_y = _get("y", "kp"), _get("y", "ki"), _get("y", "kd")
@@ -506,6 +549,45 @@ def _process_steps(
     for i, st in enumerate(steps):
         if "tmc" in st and isinstance(st["tmc"], dict):
             _tmc_apply(cfg, st["tmc"], logger)
+            # Se houver microsteps no patch, tenta alinhar o firmware (global)
+            ms_field = st["tmc"].get("microsteps")
+            if ms_field is not None:
+                ms_to_send: Optional[int] = None
+                if isinstance(ms_field, dict):
+                    # Se todos os eixos forem iguais, envia SET_MICROSTEPS global;
+                    # caso contrário, envia SET_MICROSTEPS_AX (por eixo)
+                    vals = []
+                    for ax in ("x","y","z"):
+                        if ax in ms_field:
+                            try:
+                                vals.append(int(ms_field[ax]))
+                            except Exception:
+                                pass
+                    uniq = sorted(set(vals))
+                    if len(uniq) == 1:
+                        ms_to_send = uniq[0]
+                    else:
+                        try:
+                            mx = int(ms_field.get("x", 0) or 0)
+                            my = int(ms_field.get("y", 0) or 0)
+                            mz = int(ms_field.get("z", 0) or 0)
+                            req_ms_ax = STM32RequestBuilder.set_microsteps_axes(0x40, mx, my, mz)
+                            _ = client.exchange(0x27, req_ms_ax, tries=2, settle_delay_s=0.002)
+                            logger.info("STM32 ← SET_MICROSTEPS_AX (x=%d,y=%d,z=%d) (alinha PI/telemetria)", mx, my, mz)
+                        except Exception as exc:
+                            logger.warning("Falha ao enviar SET_MICROSTEPS_AX ao STM32: %s", exc)
+                else:
+                    try:
+                        ms_to_send = int(ms_field)
+                    except Exception:
+                        ms_to_send = None
+                if ms_to_send is not None:
+                    try:
+                        req_ms = STM32RequestBuilder.set_microsteps(0x40, ms_to_send)
+                        _ = client.exchange(0x26, req_ms, tries=2, settle_delay_s=0.002)
+                        logger.info("STM32 ← SET_MICROSTEPS %d (alinha PI/telemetria)", ms_to_send)
+                    except Exception as exc:
+                        logger.warning("Falha ao enviar SET_MICROSTEPS(%s) ao STM32: %s", ms_to_send, exc)
         if "pid" in st and isinstance(st["pid"], dict):
             for ax in ("x", "y", "z"):
                 if isinstance(st["pid"].get(ax), dict):
@@ -853,6 +935,33 @@ def build_parser() -> argparse.ArgumentParser:
     pstat.add_argument("--frame-id", type=int, default=0x41)
     pstat.add_argument("--total", type=int, default=None, help="(Opcional) total de movimentos para estimar executados/pending")
     pstat.set_defaults(handler=status)
+
+    pms = sub.add_parser("set-microsteps", help="Envia SET_MICROSTEPS global ao firmware (alinha PI/telemetria)")
+    pms.add_argument("--config", default="application.cfg")
+    pms.add_argument("--frame-id", type=int, default=0x40)
+    pms.add_argument("--value", type=int, choices=[1,2,4,8,16,32,64,128,256], required=True)
+    def _h_set_ms(args: argparse.Namespace) -> int:
+        cfg = _load_cfg(args.config)
+        try:
+            st = cfg.get("stm32", {})
+            client = STM32Client(bus=int(st.get("bus", 0)), dev=int(st.get("dev", 0)), speed_hz=int(st.get("speed", 1_000_000)))
+        except Exception as exc:
+            print("Falha ao abrir SPI para STM32:", exc)
+            return 4
+        try:
+            req = STM32RequestBuilder.set_microsteps(int(args.frame_id) & 0xFF, int(args.value))
+            _ = client.exchange(0x26, req, tries=2, settle_delay_s=0.002)
+            print(f"Enviado SET_MICROSTEPS={int(args.value)} (frame={int(args.frame_id) & 0xFF})")
+            return 0
+        except Exception as exc:
+            print("Falha ao enviar SET_MICROSTEPS:", exc)
+            return 5
+        finally:
+            try:
+                client.close()
+            except Exception:
+                pass
+    pms.set_defaults(handler=_h_set_ms)
 
     return p
 

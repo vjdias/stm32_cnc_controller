@@ -6,6 +6,7 @@
 "./App/Src/Protocol/Requests/move_probe_level_request.o"
 "./App/Src/Protocol/Requests/move_queue_add_request.o"
 "./App/Src/Protocol/Requests/move_queue_status_request.o"
+"./App/Src/Protocol/Requests/set_microsteps_axes_request.o"
 "./App/Src/Protocol/Requests/set_microsteps_request.o"
 "./App/Src/Protocol/Requests/set_origin_request.o"
 "./App/Src/Protocol/Requests/start_move_request.o"

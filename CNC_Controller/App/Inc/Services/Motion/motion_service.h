@@ -35,6 +35,7 @@ void motion_on_move_end(const uint8_t *frame, uint32_t len);
 void motion_on_set_origin(const uint8_t *frame, uint32_t len);
 void motion_on_encoder_status(const uint8_t *frame, uint32_t len);
 void motion_on_set_microsteps(const uint8_t *frame, uint32_t len);
+void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len);
 
 // Demo opcional: habilita um movimento de teste interno (sem host)
 void motion_demo_set_enabled(uint8_t enable);

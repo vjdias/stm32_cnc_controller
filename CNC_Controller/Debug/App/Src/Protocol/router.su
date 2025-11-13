@@ -5,4 +5,4 @@
 ../App/Src/Protocol/router.c:63:5:resp_fifo_count	16	static
 ../App/Src/Protocol/router.c:68:6:router_init	32	static
 ../App/Src/Protocol/router.c:76:13:dispatch	32	static
-../App/Src/Protocol/router.c:102:6:router_feed_bytes	24	static
+../App/Src/Protocol/router.c:103:6:router_feed_bytes	24	static

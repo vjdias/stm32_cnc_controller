@@ -50,6 +50,9 @@ static void h_encoder_status(router_t *r, const uint8_t *f, uint32_t l) {
 static void h_set_microsteps(router_t *r, const uint8_t *f, uint32_t l) {
     (void) r; motion_on_set_microsteps(f, l);
 }
+static void h_set_microsteps_axes(router_t *r, const uint8_t *f, uint32_t l) {
+    (void) r; motion_on_set_microsteps_axes(f, l);
+}
 
 static void h_test_hello(router_t *r, const uint8_t *f, uint32_t l) {
 	(void) r;
@@ -70,5 +73,6 @@ void services_register_handlers(router_handlers_t *h) {
     h->on_set_origin = h_set_origin;
     h->on_encoder_status = h_encoder_status;
     h->on_set_microsteps = h_set_microsteps;
+    h->on_set_microsteps_axes = h_set_microsteps_axes;
     h->on_test_hello = h_test_hello;
 }

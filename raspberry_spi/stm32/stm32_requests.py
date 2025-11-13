@@ -179,5 +179,17 @@ class STM32RequestBuilder:
         raw[4] = REQ_TAIL
         return pad_request(raw)
 
+    @staticmethod
+    def set_microsteps_axes(frame_id: int, ms_x: int, ms_y: int, ms_z: int) -> List[int]:
+        raw = [0] * 7
+        raw[0] = REQ_HEADER
+        raw[1] = REQ_SET_MICROSTEPS_AX
+        raw[2] = frame_id & 0xFF
+        raw[3] = ms_x & 0xFF
+        raw[4] = ms_y & 0xFF
+        raw[5] = ms_z & 0xFF
+        raw[6] = REQ_TAIL
+        return pad_request(raw)
+
 
 __all__ = ["STM32RequestBuilder"]
