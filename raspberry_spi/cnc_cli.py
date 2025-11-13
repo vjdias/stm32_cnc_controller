@@ -606,7 +606,7 @@ def _process_steps(
         try:
             data = STM32ResponseDecoder.start_move(ack)
             status_code = int(data.get("status", 0))
-            status_label = {0: "started", 1: "ignored"}.get(status_code, "unknown")
+            status_label = {0: "started", 1: "concluido"}.get(status_code, "unknown")
             out = {
                 "cmd": "start_move_ack",
                 "frameId": int(data.get("frameId", 0)),
@@ -618,7 +618,7 @@ def _process_steps(
             if status_code == 0:
                 logger.info("StartMove: iniciado com sucesso (depth=%s)", data.get("depth"))
             else:
-                logger.warning("StartMove: ignorado pelo firmware (status=%s)", status_label)
+                logger.info("StartMove: concluído (status=%s)", status_label)
         except Exception:
             logger.info("StartMove: ACK bruto=%s", ack)
     return sent
