@@ -40,6 +40,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 import math
 
+# Flag global para indicar START_MOVE concluído imediatamente pelo firmware
+START_MOVE_CONCLUDED: bool = False
+
 from .stm32.stm32_cli import STM32Client  # type: ignore
 from .stm32.stm32_requests import STM32RequestBuilder  # type: ignore
 from .stm32.stm32_responses import STM32ResponseDecoder  # type: ignore
@@ -679,23 +682,15 @@ def _process_steps(
         max_attempts = 3
         for attempt in range(1, max_attempts + 1):
             try:
-                logger.info(
-                    "STM32 ← START_MOVE [frame=%d] | aguardará %.3fs (tries=%d) pela resposta (tentativa %d/%d)",
-                    frame_id,
-                    start_tries * start_settle if start_tries > 1 else start_settle,
-                    start_tries,
-                    attempt,
-                    max_attempts,
-                )
                 ack = client.exchange(0x03, STM32RequestBuilder.start_move(frame_id), tries=start_tries, settle_delay_s=start_settle)
                 break  # sucesso
-            except Exception as exc:
+            except Exception:
                 if attempt < max_attempts:
-                    logger.warning("StartMove: sem ACK/BUSY; aguardando 3.000s e repetindo (%d/%d)...", attempt, max_attempts)
                     time.sleep(3.0)
-                else:
-                    logger.error("StartMove: falha após %d tentativas (sem ACK/BUSY)", max_attempts)
-                    return sent
+                    continue
+                # Sem sucesso após todas as tentativas
+                logger.error("StartMove: falha (sem ACK/BUSY)")
+                return sent
 
         # Se chegou aqui, 'ack' existe; valida e imprime sucesso/resultado
         try:
@@ -714,6 +709,17 @@ def _process_steps(
                 logger.info("StartMove: iniciado com sucesso (depth=%s)", data.get("depth"))
             else:
                 logger.info("StartMove: concluído (status=%s)", status_label)
+                # Se concluído imediatamente: aplicar segurança no TMC e sinalizar conclusão
+                try:
+                    _tmc_security_off_all(cfg, logger)
+                except Exception:
+                    pass
+                try:
+                    _set_led(client, on=False)
+                except Exception:
+                    pass
+                global START_MOVE_CONCLUDED
+                START_MOVE_CONCLUDED = True
         except Exception:
             logger.info("StartMove: ACK bruto=%s", ack)
     return sent
@@ -854,29 +860,10 @@ def run_sequence(args: argparse.Namespace) -> int:
         _set_led(client, blink_hz=1.0)
         total = _process_steps(client, cfg, seq, steps, logger)
         logger.info("Movimentos enfileirados: %d", total)
-
-        # Checagem final silenciosa: até 32 tentativas (1 s cada) para
-        # confirmar conclusão via QUEUE_STATUS. Não imprime cada tentativa;
-        # apenas sucesso ou falha após as 32.
-        try:
-            concluded = False
-            for _i in range(32):
-                try:
-                    resp = client.exchange(0x02, STM32RequestBuilder.queue_status(0x41), tries=1, settle_delay_s=0.2)
-                    data = STM32ResponseDecoder.queue_status(resp)
-                    pct = data.get("pct", {})
-                    pmin = min(int(pct.get("x", 0)), int(pct.get("y", 0)), int(pct.get("z", 0)))
-                    if pmin >= 100:
-                        logger.info("Conferência final: concluído (X=%d%% Y=%d%% Z=%d%%)", pct.get("x", 0), pct.get("y", 0), pct.get("z", 0))
-                        concluded = True
-                        break
-                except Exception:
-                    pass
-                time.sleep(1.0)
-            if not concluded:
-                logger.warning("Conferência final: conclusão não confirmada após 32 tentativas")
-        except Exception:
-            pass
+        # Se firmware reportou conclusão imediata, apenas finalize (segurança já aplicada).
+        if START_MOVE_CONCLUDED:
+            logger.info("Finalizando sem monitoramento: firmware respondeu concluído no START_MOVE.")
+            return 0
         ok, reason = _monitor_until_end(client, cfg, timeout_s=float(args.timeout), logger=logger)
         if ok:
             logger.info("Execução concluída com sucesso.")
