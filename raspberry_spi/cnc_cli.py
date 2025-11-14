@@ -103,7 +103,7 @@ class _ThrottledClient:
 
     def __init__(self, client: STM32Client, min_interval_s: float = 2.0) -> None:
         self._c = client
-        self._min_iv = max(0.0, float(min_interval_s))
+        self._min_iv = max(1.0, float(min_interval_s))
         self._lock = threading.Lock()
         # Inicializa como "já passou" o intervalo para não atrasar a 1ª chamada
         self._last = time.monotonic() - self._min_iv
@@ -557,7 +557,7 @@ def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
     settle_key = f"{kind}_settle"
     dsettle = 5.0
     settle = float(spi.get(settle_key, dsettle))
-    settle = max(1, settle)
+    settle = max(2, settle)
     specified_tries = spi.get(tries_key, None)
     if specified_tries is not None:
         tries = max(1, int(specified_tries))
@@ -816,7 +816,7 @@ def _monitor_until_end(client: STM32Client, cfg: Dict[str, Any], *, timeout_s: f
             if disable_status:
                 return True, "tempo de execução decorrido (sem status)"
             return False, "timeout aguardando conclusão"
-        time.sleep(max(0.05, check_iv))
+        time.sleep(max(2, check_iv))
 
 
 def run_sequence(args: argparse.Namespace) -> int:
