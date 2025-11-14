@@ -234,7 +234,7 @@ class DDAStepper:
 # =========================
 
 class InteractiveSim:
-    def __init__(self, cfg: PlantConfig, scn: Scenario, *, log_dir: Path | None = None, enable_logging: bool = True, auto_analyze: bool = False, headless: bool = False):
+    def __init__(self, cfg: PlantConfig, scn: Scenario, *, log_dir: Path | None = None, enable_logging: bool = True, auto_analyze: bool = False, headless: bool = False, friction_stage: str = 'post'):
         self.cfg = cfg
         self.scn = scn
         self.log_enabled = enable_logging
@@ -242,6 +242,10 @@ class InteractiveSim:
         # Headless via parâmetro ou variável de ambiente
         self.headless = headless or (_ENV_HEADLESS)
         self.log_dir = Path(log_dir) if log_dir else Path("sim_logs")
+        # Onde aplicar atrito: 'post' (padrão, após rampa, na planta) ou 'pre' (antes da planta)
+        if friction_stage not in ('post', 'pre'):
+            friction_stage = 'post'
+        self.friction_stage = friction_stage
         self.log_session_path: Path | None = None
         self.last_log_path: Path | None = None
         self._log_file = None
@@ -1360,6 +1364,17 @@ class InteractiveSim:
             v_adj = v_cmd_sps_ideal + corr
             v_adj = np.clip(v_adj, 0, self.cfg.max_sps)
 
+            # Atrito "antes da planta" (pré-rampa): reduz o comando do controlador
+            if getattr(self, 'friction_stage', 'post') == 'pre':
+                c_val = float(self.active_C_load[axis]) if axis < len(self.active_C_load) else 0.0
+                b_val = float(self.B_load[axis]) if axis < len(self.B_load) else 0.0
+                if v_adj <= c_val:
+                    v_adj = 0.0
+                else:
+                    v_after_c = v_adj - c_val
+                    visc = b_val * (v_adj)
+                    v_adj = max(v_after_c - visc, 0.0)
+
             # Na fase final, eixos adiantados param totalmente para permitir o alcance
             if 'finish_phase' in locals() and finish_phase:
                 if err < -getattr(self, 'finish_err_stop_steps', 50.0):
@@ -1402,9 +1417,15 @@ class InteractiveSim:
         self.v_real = np.clip(v_ramped, 0, self.cfg.max_sps) # Salva v_actual_sps
         
         # --- 5. FÍSICA (Atrito) ---
-        v_eff_real = self.v_real - np.sign(self.v_real) * (self.active_C_load + self.B_load * np.abs(self.v_real))
-        flip_mask = (np.sign(self.v_real) != np.sign(v_eff_real)) & (np.abs(self.v_real) > 1e-9)
-        v_eff_real[flip_mask] = 0.0
+        if getattr(self, 'friction_stage', 'post') == 'post':
+            # Atrito pós-planta (após rampa): atua na velocidade efetiva
+            v_eff_real = self.v_real - np.sign(self.v_real) * (self.active_C_load + self.B_load * np.abs(self.v_real))
+            flip_mask = (np.sign(self.v_real) != np.sign(v_eff_real)) & (np.abs(self.v_real) > 1e-9)
+            v_eff_real[flip_mask] = 0.0
+        else:
+            # Já aplicado no comando; planta não altera além do gating de stop
+            v_eff_real = self.v_real.copy()
+            flip_mask = np.zeros_like(v_eff_real, dtype=bool)
 
         # --- 6. PARADA DE SEGURANÇA (Botões / Stall) ---
         # Debounce de stall por eixo e gating por eixo (evita parar o sistema inteiro)
@@ -1585,6 +1606,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Roda a simulação sem abrir GUI (força backend Agg).",
     )
+    parser.add_argument(
+        "--friction-stage",
+        choices=("post", "pre"),
+        default="post",
+        help="Onde aplicar o atrito: 'post'=após rampa (planta), 'pre'=antes da planta (no comando).",
+    )
     args = parser.parse_args()
 
     axis_map = parse_axis_map(args.axes)
@@ -1615,6 +1642,7 @@ if __name__ == "__main__":
         enable_logging=not args.no_log,
         auto_analyze=args.auto_analyze,
         headless=args.headless,
+        friction_stage=args.friction_stage,
     )
     if args.headless:
         # Headless: roda direto

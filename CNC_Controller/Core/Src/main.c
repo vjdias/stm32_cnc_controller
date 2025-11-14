@@ -199,45 +199,50 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 }
 
-/* Botões de segurança (EXTI):
- * - B1 (PC13): E-STOP imediato (pressionado = nível baixo)
- * - B2 (PC0): Release/recover + funções extras do demo (pressionado = baixo)
+/* Botões (EXTI):
+ * - E-STOP (PC1): E-STOP imediato (pressionado = nível baixo)
+ * - B2 (PC13): Toggle de escala de velocidade do eixo X (pressionado = baixo)
+ * Observação: PC0 segue desabilitado como EXTI no board_config para não interferir no encoder Y.
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin) {
-    case GPIO_PIN_13: /* B1 - E-STOP */
+    case GPIO_PIN_13: /* B2 (PC13) – Toggle escala de velocidade do eixo X */
         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET) {
+            /* Pressionado: inicia janela para clique longo (se configurada) */
+            motion_test_b2_on_press();
+            /* Garante que os timers base estejam ativos */
+            HAL_TIM_Base_Start_IT(&htim6);
+            HAL_TIM_Base_Start_IT(&htim7);
+        } else {
+            /* Soltou: se duração >= hold, alterna 100% <-> reduzido em X */
+            motion_test_b2_on_release();
+        }
+        break;
+    case GPIO_PIN_0:  /* B2 legado (PC0) – se EXTI estiver ativo */
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == GPIO_PIN_RESET) {
+            /* Pressionado: inicia janela para clique longo (se configurada) */
+            motion_test_b2_on_press();
+            /* Garante timers ativos */
+            HAL_TIM_Base_Start_IT(&htim6);
+            HAL_TIM_Base_Start_IT(&htim7);
+        } else {
+            /* Soltou: se duração >= hold, alterna 100% <-> reduzido no eixo X */
+            motion_test_b2_on_release();
+        }
+        break;
+    case GPIO_PIN_1:  /* E-STOP (PC1) */
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1) == GPIO_PIN_RESET) {
             /* Pressionado: aciona E-STOP e para tudo agora */
             safety_estop_assert();
             motion_emergency_stop();
-            /* Opcionalmente interrompe os timers para cessar qualquer atividade em ISR */
+            /* Interrompe timers para cessar qualquer atividade em ISR */
             HAL_TIM_Base_Stop_IT(&htim6);
             HAL_TIM_Base_Stop_IT(&htim7);
             /* Se houver PWM em TIM15 (LED/auxiliar), pare também */
             HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1);
         }
         break;
-    case GPIO_PIN_0:  /* B2 - Release/Resume + demo speed step */
-        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == GPIO_PIN_RESET) {
-            /* Libera segurança */
-            safety_estop_release();
-            /* Garante que os timers base voltem a rodar */
-            HAL_TIM_Base_Start_IT(&htim6);
-            HAL_TIM_Base_Start_IT(&htim7);
-            /* Reativa movimentos conforme contexto */
-            if (motion_demo_is_active()) {
-                /* Cicla velocidade no modo demo contínuo */
-                motion_demo_cycle_speed();
-            } else {
-                /* Se o demo estava desligado (ex.: após E-STOP), religa */
-                motion_demo_set_continuous(1);
-                /* Se usa PWM em TIM15 para indicação, retome */
-                HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
-            }
-        }
-        break;
-    case GPIO_PIN_1:
     case GPIO_PIN_2:
     default:
         /* Reservado para sensores PROX/limites; sem ação específica aqui */

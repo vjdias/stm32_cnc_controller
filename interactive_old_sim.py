@@ -46,6 +46,15 @@ def main():
         action="store_true",
         help="Roda sem GUI (usa backend Agg)",
     )
+    parser.add_argument(
+        "--friction-stage",
+        choices=("post", "pre"),
+        default="post",
+        help=(
+            "Onde aplicar o atrito: 'post'=após rampa (planta, COMPORTAMENTO ORIGINAL), "
+            "'pre'=antes da planta (no comando)."
+        ),
+    )
     args = parser.parse_args()
 
     axis_map = parse_axis_map(args.axes)
@@ -77,6 +86,7 @@ def main():
         enable_logging=not args.no_log,
         auto_analyze=args.auto_analyze,
         headless=args.headless,
+        friction_stage=args.friction_stage,  # default preserva o comportamento original
     )
 
     # Configuração de compatibilidade "antiga"

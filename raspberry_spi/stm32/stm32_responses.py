@@ -154,6 +154,10 @@ class STM32ResponseDecoder:
         # Comprimento esperado usado como pista; extração é tolerante (4, 5 ou 6)
         REQ_START_MOVE: ResponseSpec(RESP_START_MOVE, 6, start_move.__func__),
         REQ_MOVE_END: ResponseSpec(RESP_MOVE_END, 5, move_end.__func__),
+        # set_microsteps / set_microsteps_axes: ACK mínimo de 4 bytes (HDR,TYPE,frameId,TAIL)
+        # Ambos mapeiam para RESP_SET_MICROSTEPS por simplicidade.
+        REQ_SET_MICROSTEPS: ResponseSpec(RESP_SET_MICROSTEPS, 4, None),
+        REQ_SET_MICROSTEPS_AX: ResponseSpec(RESP_SET_MICROSTEPS, 4, None),
         # Placeholder comprimentos alinhados com os decoders abaixo.
         # set_origin: [HDR,TYPE,frameId, x0(4), y0(4), z0(4), TAIL] => 16 bytes
         REQ_SET_ORIGIN: ResponseSpec(RESP_SET_ORIGIN, 16, None),

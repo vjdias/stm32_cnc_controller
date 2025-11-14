@@ -2,6 +2,6 @@
 ../Core/Src/main.c:138:6:SystemClock_Config	96	static
 ../Core/Src/main.c:185:6:HAL_SPI_TxRxCpltCallback	16	static
 ../Core/Src/main.c:190:6:HAL_SPI_ErrorCallback	16	static
-../Core/Src/main.c:206:6:HAL_GPIO_EXTI_Callback	16	static
-../Core/Src/main.c:254:6:Error_Handler	8	static,ignoring_inline_asm
-../Core/Src/main.c:275:6:assert_failed	16	static
+../Core/Src/main.c:207:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/main.c:259:6:Error_Handler	8	static,ignoring_inline_asm
+../Core/Src/main.c:280:6:assert_failed	16	static

@@ -59,3 +59,8 @@ void motion_demo_cycle_speed(void);
 // SWV Graph/Data Trace (tamanhos suportados: 4 bytes).
 extern volatile int32_t g_enc_abs32[3];
 extern volatile int32_t g_enc_rel32[3];
+
+// Teste: handlers de botão B2 para alternar escala de velocidade do eixo X
+// - Chame no EXTI de B2: on_press quando nível baixo; on_release quando alto
+void motion_test_b2_on_press(void);
+void motion_test_b2_on_release(void);

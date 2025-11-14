@@ -118,6 +118,36 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_ERR_THROTTLE_MIN_PERMILLE 250u /* 0.25 => 25% do v_cmd */
 #endif
 
+/* =======================
+ *  Modelo de atrito (C + B·v)
+ *  - MOTION_FRICTION_ENABLE: liga/desliga o modelo
+ *  - C: offset "estático" (steps/s)
+ *  - B: atrito viscoso em permille (0..1000) sobre v_cmd
+ * ======================= */
+#ifndef MOTION_FRICTION_ENABLE
+#define MOTION_FRICTION_ENABLE 1u
+#endif
+
+/* Valores para o eixo X (ajuste depois conforme os testes) */
+#ifndef MOTION_FRICTION_C_X_SPS
+#define MOTION_FRICTION_C_X_SPS  2000u    /* forte offset estático (steps/s) */
+#endif
+#ifndef MOTION_FRICTION_B_X_PM
+#define MOTION_FRICTION_B_X_PM   600u     /* 60% de atrito viscoso */
+#endif
+
+/* =======================
+ *  Teste: botão B2 alterna escala
+ *  - Alterna 100% <-> reduzido (permille) para o eixo X
+ *  - Debounce simples + janela opcional de hold
+ * ======================= */
+#ifndef MOTION_TEST_B2_DEBOUNCE_MS
+#define MOTION_TEST_B2_DEBOUNCE_MS 200u
+#endif
+#ifndef MOTION_TEST_B2_HOLD_MS
+#define MOTION_TEST_B2_HOLD_MS 0u /* 0 => sem exigência de hold */
+#endif
+
 // Opções de formato/rápidez (padrões conservadores p/ compatibilidade)
 #ifndef MOTION_CSV_INCLUDE_ID
 #define MOTION_CSV_INCLUDE_ID           0u   /* adiciona um id incremental por eixo */
@@ -198,6 +228,51 @@ static uint32_t g_encoder_last_raw[MOTION_AXIS_COUNT];
 static int64_t  g_encoder_origin[MOTION_AXIS_COUNT];
 static int32_t  g_encoder_delta_tick[MOTION_AXIS_COUNT]; /* delta de contagens por tick TIM7 */
 static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-set) */
+
+#if MOTION_FRICTION_ENABLE
+/* Habilita/desabilita atrito por eixo em tempo de execução */
+static volatile uint8_t  g_axis_friction_enabled[MOTION_AXIS_COUNT] = { 0u, 0u, 0u };
+/* Parâmetros C (steps/s) e B (permille) por eixo */
+static uint32_t g_axis_friction_C_sps[MOTION_AXIS_COUNT] = { 0u, 0u, 0u };
+static uint16_t g_axis_friction_B_pm[MOTION_AXIS_COUNT]  = { 0u, 0u, 0u };
+#endif
+
+/* Estado do botão B2 para alternância com debounce/hold */
+static volatile uint8_t  g_b2_pressed = 0u;
+static volatile uint32_t g_b2_t0_ms  = 0u;
+
+void motion_test_b2_on_press(void) {
+    if (g_b2_pressed) return;
+    g_b2_pressed = 1u;
+    g_b2_t0_ms = HAL_GetTick();
+}
+
+void motion_test_b2_on_release(void) {
+    if (!g_b2_pressed) return;
+    uint32_t now = HAL_GetTick();
+    uint32_t dt  = now - g_b2_t0_ms;
+    g_b2_pressed = 0u;
+    if ((uint32_t)MOTION_TEST_B2_HOLD_MS == 0u || dt >= (uint32_t)MOTION_TEST_B2_HOLD_MS) {
+        static uint32_t last_toggle = 0u;
+        if ((uint32_t)(now - last_toggle) >= (uint32_t)MOTION_TEST_B2_DEBOUNCE_MS) {
+            last_toggle = now;
+#if MOTION_FRICTION_ENABLE
+            uint8_t cur = g_axis_friction_enabled[AXIS_X];
+            g_axis_friction_enabled[AXIS_X] = (cur ? 0u : 1u);
+
+            LOGA_THIS(LOG_STATE_APPLIED,
+                      (int32_t)g_axis_friction_enabled[AXIS_X],
+                      "b2_toggle",
+                      "friction_x=%u C=%lu B_pm=%u",
+                      (unsigned)g_axis_friction_enabled[AXIS_X],
+                      (unsigned long)g_axis_friction_C_sps[AXIS_X],
+                      (unsigned)g_axis_friction_B_pm[AXIS_X]);
+#else
+            (void)now; (void)dt; /* evita warning se atrito estiver desligado em build */
+#endif
+        }
+    }
+}
 
 /* PI de velocidade baseado no encoder
  * Notas:
@@ -484,6 +559,39 @@ static inline int8_t motion_clamp_error(int32_t value) {
     if (value < -128) return -128;
     return (int8_t)value;
 }
+
+#if MOTION_FRICTION_ENABLE
+static inline uint32_t motion_apply_friction(uint8_t axis, uint32_t v_cmd_sps)
+{
+    uint32_t v = v_cmd_sps;
+    if (v == 0u) return 0u;
+    if (axis >= MOTION_AXIS_COUNT) return v;
+    if (!g_axis_friction_enabled[axis]) return v;
+
+    uint32_t C    = g_axis_friction_C_sps[axis];
+    uint16_t B_pm = g_axis_friction_B_pm[axis];
+
+    /* Região de atrito estático: se v <= C, motor não "anda" */
+    if (v <= C) {
+        return 0u;
+    }
+
+    /* Tira o offset C (Coulomb) */
+    uint32_t v_after_c = v - C;
+
+    /* Atrito viscoso proporcional à velocidade: B% de v_cmd */
+    uint32_t visc = (uint32_t)(((uint64_t)v * (uint64_t)B_pm) / 1000u);
+
+    if (visc >= v_after_c) {
+        return 0u;
+    }
+
+    v = v_after_c - visc;
+
+    if (v > MOTION_MAX_SPS) v = MOTION_MAX_SPS;
+    return v;
+}
+#endif
 
 /* Soma restante (em passos) no eixo, incluindo segmento ativo + fila
  * Usado para decidir desaceleração suave no final da lista de movimentos. */
@@ -804,6 +912,18 @@ void motion_service_init(void) {
     g_status.state = MOTION_IDLE;
     g_queue_head = g_queue_tail = g_queue_count = 0u;
     g_has_active_segment = 0u;
+
+#if MOTION_FRICTION_ENABLE
+    /* Inicializa parâmetros de atrito (por enquanto só X configurado por macro) */
+    g_axis_friction_C_sps[AXIS_X] = MOTION_FRICTION_C_X_SPS;
+    g_axis_friction_B_pm[AXIS_X]  = MOTION_FRICTION_B_X_PM;
+    /* Inicia com atrito ligado no eixo X para ficar perceptível de cara */
+    g_axis_friction_enabled[AXIS_X] = 1u;
+    /* Se quiser atrito em Y/Z:
+     * g_axis_friction_C_sps[AXIS_Y] = ...;
+     * g_axis_friction_B_pm[AXIS_Y]  = ...;
+     */
+#endif
 
     motion_stop_all_axes_locked();
     motion_refresh_status_locked();
@@ -1131,6 +1251,10 @@ void motion_on_tim7_tick(void)
                 }
             }
             if (ax->v_actual_sps > MOTION_MAX_SPS) ax->v_actual_sps = MOTION_MAX_SPS;
+#if MOTION_FRICTION_ENABLE
+            /* DEMO: aplica atrito pós-rampa (C + B·v) na velocidade efetiva */
+            ax->v_actual_sps = motion_apply_friction(axis, ax->v_actual_sps);
+#endif
             ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
         }
     }
@@ -1226,6 +1350,7 @@ void motion_on_tim7_tick(void)
                 }
             }
 #endif
+            /* Atrito será aplicado pós-rampa (na v_actual_sps) para modelar planta */
             uint32_t a_sps2    = (ax->accel_sps2 > 0u) ? ax->accel_sps2 : DEMO_ACCEL_SPS2;
 
             /* Distância restante total (ativo + fila) em passos (O(1)) */
@@ -1275,6 +1400,10 @@ void motion_on_tim7_tick(void)
             if (v_cmd_sps > MOTION_MAX_SPS) v_cmd_sps = MOTION_MAX_SPS;
             if (ax->v_actual_sps > MOTION_MAX_SPS) ax->v_actual_sps = MOTION_MAX_SPS;
 
+            /* Aplica modelo de atrito pós-rampa (C + B·v): atua sobre v_actual_sps */
+#if MOTION_FRICTION_ENABLE
+            ax->v_actual_sps = motion_apply_friction(axis, ax->v_actual_sps);
+#endif
             /* Incremento do DDA a 50 kHz */
             ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
         }
@@ -1519,6 +1648,14 @@ void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
     if (ms > 256u) ms = 256u;
     for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_microstep_factor[a] = ms;
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "all_axes_ms=%u", (unsigned)ms);
+    /* Resposta mínima (ACK): [HDR,TYPE,frameId,TAIL] */
+    {
+        uint8_t raw[4];
+        resp_init(raw, RESP_SET_MICROSTEPS);
+        raw[2] = req.frameId;
+        resp_set_tail(raw, 3);
+        (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
 }
 
 void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
@@ -1538,6 +1675,14 @@ void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
     g_microstep_factor[AXIS_Y] = msy;
     g_microstep_factor[AXIS_Z] = msz;
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps_ax", "ms=(%u,%u,%u)", (unsigned)msx, (unsigned)msy, (unsigned)msz);
+    /* Resposta mínima (ACK) reutiliza RESP_SET_MICROSTEPS */
+    {
+        uint8_t raw[4];
+        resp_init(raw, RESP_SET_MICROSTEPS);
+        raw[2] = req.frameId;
+        resp_set_tail(raw, 3);
+        (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
 }
 
 /* =====================================================================
