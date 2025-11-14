@@ -1,3 +1,5 @@
+../App/Inc/Protocol/frame_defs.h:151:20:resp_init	16	static
+../App/Inc/Protocol/frame_defs.h:158:20:resp_set_tail	16	static
 ../App/Src/Services/Motion/motion_service.c:244:6:motion_test_b2_on_press	8	static
 ../App/Src/Services/Motion/motion_service.c:250:6:motion_test_b2_on_release	56	static
 ../App/Src/Services/Motion/motion_service.c:311:24:dda_steps_per_rev_axis	16	static
@@ -35,11 +37,11 @@
 ../App/Src/Services/Motion/motion_service.c:1550:6:motion_on_move_end	40	static
 ../App/Src/Services/Motion/motion_service.c:1577:6:motion_on_set_origin	88	static
 ../App/Src/Services/Motion/motion_service.c:1605:6:motion_on_encoder_status	152	static
-../App/Src/Services/Motion/motion_service.c:1637:6:motion_on_set_microsteps	40	static
-../App/Src/Services/Motion/motion_service.c:1653:6:motion_on_set_microsteps_axes	56	static
-../App/Src/Services/Motion/motion_service.c:1677:6:motion_demo_set_enabled	120	static
-../App/Src/Services/Motion/motion_service.c:1711:6:motion_demo_set_continuous	32	static
-../App/Src/Services/Motion/motion_service.c:1762:6:HAL_TIM_PeriodElapsedCallback	16	static
-../App/Src/Services/Motion/motion_service.c:1773:6:motion_emergency_stop	16	static
-../App/Src/Services/Motion/motion_service.c:1796:9:motion_demo_is_active	4	static
-../App/Src/Services/Motion/motion_service.c:1801:6:motion_demo_cycle_speed	16	static
+../App/Src/Services/Motion/motion_service.c:1637:6:motion_on_set_microsteps	48	static
+../App/Src/Services/Motion/motion_service.c:1661:6:motion_on_set_microsteps_axes	56	static
+../App/Src/Services/Motion/motion_service.c:1693:6:motion_demo_set_enabled	120	static
+../App/Src/Services/Motion/motion_service.c:1727:6:motion_demo_set_continuous	32	static
+../App/Src/Services/Motion/motion_service.c:1778:6:HAL_TIM_PeriodElapsedCallback	16	static
+../App/Src/Services/Motion/motion_service.c:1789:6:motion_emergency_stop	16	static
+../App/Src/Services/Motion/motion_service.c:1812:9:motion_demo_is_active	4	static
+../App/Src/Services/Motion/motion_service.c:1817:6:motion_demo_cycle_speed	16	static

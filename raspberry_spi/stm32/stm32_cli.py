@@ -146,8 +146,31 @@ class STM32Client:
         self.spi = spidev.SpiDev()
         self.spi.open(bus, dev)
         self.spi.max_speed_hz = int(speed_hz)
+        # Enforce MODE 3 (CPOL=1, CPHA=1)
         self.spi.mode = mode  # MODE 3: 0b11
         self.spi.bits_per_word = 8
+        # Garantir CS ativo-baixo por padrão (cshigh=False) quando disponível
+        try:
+            if hasattr(self.spi, "cshigh"):
+                setattr(self.spi, "cshigh", False)
+        except Exception:
+            pass
+
+        # Verificação defensiva: confirma que o modo efetivo é 3
+        try:
+            effective_mode = int(getattr(self.spi, "mode", mode)) & 0x3
+            if effective_mode != (mode & 0x3):
+                # Tenta aplicar novamente e, se falhar, aborta com mensagem clara
+                self.spi.mode = mode
+                effective_mode = int(getattr(self.spi, "mode", mode)) & 0x3
+                if effective_mode != (mode & 0x3):
+                    raise RuntimeError(
+                        f"Falha ao aplicar SPI mode=3 (CPOL=1, CPHA=1). Modo atual={effective_mode}. "
+                        "Verifique /boot/config.txt (dtoverlay=spiX), permissões e driver spidev."
+                    )
+        except Exception as _:
+            # Mantém execução; _print_spidev_info no comando 'spi-diag' ajuda a depurar
+            pass
         self._log_format = str(log_format or "hex").lower().strip()
 
     @staticmethod
@@ -468,6 +491,34 @@ def build_parser() -> argparse.ArgumentParser:
     _common_args(encst, include_tries=True, include_settle_delay=True)
     encst.add_argument("--frame-id", type=int, default=0x43)
     encst.set_defaults(handler="encoder_status", needs_client=True)
+
+    # Diagnóstico do driver spidev e linhas de CS
+    diag = sub.add_parser(
+        "spi-diag",
+        help="Diagnóstico de /dev/spidevX.Y (modo, bpw, cshigh, no_cs, transfer)",
+    )
+    # Não requer cliente/STM32
+    diag.set_defaults(handler=cs_check, needs_client=False)
+    diag.add_argument("--expected-mode", type=int, default=3, help="Modo SPI esperado (padrão: 3)")
+    diag.add_argument("--expected-bpw", type=int, default=8, help="Bits por palavra esperados (padrão: 8)")
+    diag.add_argument(
+        "--expected-active-low",
+        action="store_true",
+        default=True,
+        help="Valida CS como ativo-baixo (cshigh=False). Padrão: ativo-baixo",
+    )
+    diag.add_argument(
+        "--manual-cs",
+        action="append",
+        default=None,
+        metavar="NAME=GPIO",
+        help="Opcional: mapeia linhas de CS manuais para leitura/toggle (ex.: TMCX=8)",
+    )
+    diag.add_argument(
+        "--toggle-test",
+        action="store_true",
+        help="Se informado, tenta alternar (alto→baixo→alto) os GPIOs de --manual-cs",
+    )
 
     return parser
 

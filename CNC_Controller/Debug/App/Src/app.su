@@ -3,9 +3,9 @@
 ../App/Src/app.c:76:12:find_frame	32	static
 ../App/Src/app.c:107:13:prepare_next_tx	64	static
 ../App/Src/app.c:146:13:restart_spi_dma	8	static
-../App/Src/app.c:171:6:app_init	8	static
-../App/Src/app.c:201:6:app_poll	16	static
-../App/Src/app.c:231:17:app_spi_get_state	4	static
-../App/Src/app.c:239:9:app_spi_get_error	4	static
-../App/Src/app.c:252:6:app_spi_isr_txrx_done	16	static
-../App/Src/app.c:269:5:app_resp_push	16	static
+../App/Src/app.c:172:6:app_init	8	static
+../App/Src/app.c:202:6:app_poll	16	static
+../App/Src/app.c:232:17:app_spi_get_state	4	static
+../App/Src/app.c:240:9:app_spi_get_error	4	static
+../App/Src/app.c:253:6:app_spi_isr_txrx_done	16	static
+../App/Src/app.c:270:5:app_resp_push	16	static

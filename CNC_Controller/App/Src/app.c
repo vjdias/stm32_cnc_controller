@@ -145,8 +145,9 @@ static void prepare_next_tx(void)
  */
 static void restart_spi_dma(void)
 {
+    /* Somente reinicia quando a periferia está realmente pronta. Evita falso erro
+       quando se utiliza DMA em modo NORMAL e o HAL ainda está finalizando a rodada. */
     if (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY) {
-        g_spi_error_flag = 1u;
         return;
     }
 
