@@ -90,6 +90,29 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_CSV_DRAIN_PER_TICK       128u /* aumenta drenagem para aliviar backlog rapidamente */
 #endif
 
+/* Debug opcional: loga resumo do alinhamento do eixo Y no final do movimento */
+#ifndef MOTION_DEBUG_Y_CMD_LOG
+#define MOTION_DEBUG_Y_CMD_LOG 1
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+static inline void cascade_dbg_arm(void);
+static inline void cascade_dbg_report(const char *reason);
+#endif
+
+/* =======================
+ *  Amostrador de velocidade (resumo ao final)
+ * ======================= */
+#ifndef MOTION_VEL_SAMPLER_ENABLE
+#define MOTION_VEL_SAMPLER_ENABLE 1u
+#endif
+#ifndef MOTION_VEL_SAMPLER_SAMPLES
+#define MOTION_VEL_SAMPLER_SAMPLES 250u
+#endif
+/* Janela de média móvel para suavizar a velocidade do encoder (em amostras de 1 ms) */
+#ifndef MOTION_VEL_SMOOTH_WIN
+#define MOTION_VEL_SMOOTH_WIN 10u
+#endif
+
 /* =======================
  *  Compatibilidade "progress" (interactive_old_sim)
  *  - Seleciona mestre por menor progresso (emitted/total)
@@ -112,10 +135,18 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_ERR_THROTTLE_ENABLE 1
 #endif
 #ifndef MOTION_ERR_THROTTLE_THRESHOLD
-#define MOTION_ERR_THROTTLE_THRESHOLD 200u /* steps */
+#define MOTION_ERR_THROTTLE_THRESHOLD 50u  /* steps (mais sensível) */
 #endif
 #ifndef MOTION_ERR_THROTTLE_MIN_PERMILLE
-#define MOTION_ERR_THROTTLE_MIN_PERMILLE 250u /* 0.25 => 25% do v_cmd */
+#define MOTION_ERR_THROTTLE_MIN_PERMILLE 500u /* piso 50% do v_cmd (redução mais forte) */
+#endif
+
+/* Quando habilitado, o throttle do progresso usa erro RELATIVO AO MESTRE
+ * (progresso do mestre -> passos esperados no eixo não-mestre) em vez de
+ * comparar o eixo apenas contra seu próprio target. Isso replica a
+ * semântica do interactive_old_sim (alinhamento cascata). */
+#ifndef MOTION_CASCADE_MASTER_RELATIVE_ENABLE
+#define MOTION_CASCADE_MASTER_RELATIVE_ENABLE 1
 #endif
 
 /* =======================
@@ -130,10 +161,10 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
 /* Valores para o eixo X (ajuste depois conforme os testes) */
 #ifndef MOTION_FRICTION_C_X_SPS
-#define MOTION_FRICTION_C_X_SPS  2000u    /* forte offset estático (steps/s) */
+#define MOTION_FRICTION_C_X_SPS    20u    /* offset estático bem baixo (steps/s) */
 #endif
 #ifndef MOTION_FRICTION_B_X_PM
-#define MOTION_FRICTION_B_X_PM   600u     /* 60% de atrito viscoso */
+#define MOTION_FRICTION_B_X_PM     20u    /* ~2% de atrito viscoso */
 #endif
 
 /* =======================
@@ -259,6 +290,14 @@ void motion_test_b2_on_release(void) {
 #if MOTION_FRICTION_ENABLE
             uint8_t cur = g_axis_friction_enabled[AXIS_X];
             g_axis_friction_enabled[AXIS_X] = (cur ? 0u : 1u);
+
+#if MOTION_DEBUG_Y_CMD_LOG
+            if (g_axis_friction_enabled[AXIS_X]) {
+                cascade_dbg_arm();
+            } else {
+                cascade_dbg_report("b2_off");
+            }
+#endif
 
             LOGA_THIS(LOG_STATE_APPLIED,
                       (int32_t)g_axis_friction_enabled[AXIS_X],
@@ -571,16 +610,21 @@ static inline uint32_t motion_apply_friction(uint8_t axis, uint32_t v_cmd_sps)
     uint32_t C    = g_axis_friction_C_sps[axis];
     uint16_t B_pm = g_axis_friction_B_pm[axis];
 
-    /* Região de atrito estático: se v <= C, motor não "anda" */
-    if (v <= C) {
+    /* Limita o offset estático a no máximo v_cmd/4 para não travar baixa velocidade */
+    uint32_t quarter = (v >> 2); /* v/4 */
+    uint32_t C_eff = C;
+    if (C_eff > quarter) C_eff = quarter;
+
+    /* Região de atrito estático: se v <= C_eff, motor não "anda" */
+    if (v <= C_eff) {
         return 0u;
     }
 
-    /* Tira o offset C (Coulomb) */
-    uint32_t v_after_c = v - C;
+    /* Tira o offset estático efetivo */
+    uint32_t v_after_c = v - C_eff;
 
-    /* Atrito viscoso proporcional à velocidade: B% de v_cmd */
-    uint32_t visc = (uint32_t)(((uint64_t)v * (uint64_t)B_pm) / 1000u);
+    /* Atrito viscoso proporcional à velocidade restante: B% */
+    uint32_t visc = (uint32_t)(((uint64_t)v_after_c * (uint64_t)B_pm) / 1000u);
 
     if (visc >= v_after_c) {
         return 0u;
@@ -592,6 +636,186 @@ static inline uint32_t motion_apply_friction(uint8_t axis, uint32_t v_cmd_sps)
     return v;
 }
 #endif
+
+/* ---- Amostrador de velocidade (após defs. de eixos/encoders) ---- */
+#if MOTION_VEL_SAMPLER_ENABLE
+static volatile uint8_t  g_vel_armed = 0u;
+static volatile uint16_t g_vel_count = 0u;
+static uint32_t          g_vel_t0_ms = 0u;   /* legado (não usado para o tempo) */
+static uint32_t          g_vel_t0_t6 = 0u;   /* tick base do TIM6 (50 kHz) */
+static uint32_t          g_vel_time_ms[MOTION_VEL_SAMPLER_SAMPLES];
+/* Velocidades medidas VIA ENCODER em passos/seg (signed) */
+static int32_t           g_vel_vx[MOTION_VEL_SAMPLER_SAMPLES];
+static int32_t           g_vel_vy[MOTION_VEL_SAMPLER_SAMPLES];
+static int32_t           g_vel_vz[MOTION_VEL_SAMPLER_SAMPLES];
+/* Velocidades comandadas (pós-throttle/PI; ou v_target no modo demo) */
+static uint32_t          g_vel_cmd_vx[MOTION_VEL_SAMPLER_SAMPLES];
+static uint32_t          g_vel_cmd_vy[MOTION_VEL_SAMPLER_SAMPLES];
+static uint32_t          g_vel_cmd_vz[MOTION_VEL_SAMPLER_SAMPLES];
+/* Snapshot atual do comando (atualizado no TIM7 durante o cálculo) */
+static volatile uint32_t g_vel_cmd_sps[3] = {0u,0u,0u};
+/* Históricos/somas para média móvel */
+static int32_t           g_vel_hist_x[MOTION_VEL_SMOOTH_WIN];
+static int32_t           g_vel_hist_y[MOTION_VEL_SMOOTH_WIN];
+static int32_t           g_vel_hist_z[MOTION_VEL_SMOOTH_WIN];
+static int64_t           g_vel_sum_x = 0, g_vel_sum_y = 0, g_vel_sum_z = 0;
+static uint8_t           g_vel_hist_idx = 0u;      /* cursor 0..WIN-1 */
+static uint8_t           g_vel_hist_count = 0u;    /* quantas amostras válidas na janela */
+
+typedef struct {
+    uint8_t  armed;
+    uint8_t  clamp_y;
+    uint8_t  clamp_z;
+    uint32_t baseline_y;
+    uint32_t baseline_z;
+    uint32_t min_y;
+    uint32_t min_z;
+} cascade_dbg_t;
+
+static cascade_dbg_t g_cascade_dbg = {0};
+
+static inline void vel_sampler_reset(void)
+{
+    g_vel_armed = 0u;
+    g_vel_count = 0u;
+    g_vel_sum_x = g_vel_sum_y = g_vel_sum_z = 0;
+    g_vel_hist_idx = 0u;
+    g_vel_hist_count = 0u;
+    for (uint8_t i = 0; i < (uint8_t)MOTION_VEL_SMOOTH_WIN; ++i) {
+        g_vel_hist_x[i] = 0;
+        g_vel_hist_y[i] = 0;
+        g_vel_hist_z[i] = 0;
+    }
+}
+
+static inline void cascade_dbg_arm(void)
+{
+    g_cascade_dbg.armed     = 1u;
+    g_cascade_dbg.clamp_y   = 0u;
+    g_cascade_dbg.clamp_z   = 0u;
+    g_cascade_dbg.baseline_y = g_vel_cmd_sps[AXIS_Y];
+    g_cascade_dbg.baseline_z = g_vel_cmd_sps[AXIS_Z];
+    g_cascade_dbg.min_y      = UINT32_MAX;
+    g_cascade_dbg.min_z      = UINT32_MAX;
+}
+
+static inline void cascade_dbg_report(const char *reason)
+{
+    if (!g_cascade_dbg.armed) return;
+    uint32_t min_y = (g_cascade_dbg.min_y == UINT32_MAX) ? g_vel_cmd_sps[AXIS_Y] : g_cascade_dbg.min_y;
+    uint32_t min_z = (g_cascade_dbg.min_z == UINT32_MAX) ? g_vel_cmd_sps[AXIS_Z] : g_cascade_dbg.min_z;
+    int32_t delta_y = (int32_t)g_cascade_dbg.baseline_y - (int32_t)min_y;
+    int32_t delta_z = (int32_t)g_cascade_dbg.baseline_z - (int32_t)min_z;
+    LOGA_THIS(LOG_STATE_APPLIED, 0,
+              "cascade_summary",
+              "reason=%s baseY=%lu minY=%lu deltaY=%ld clampY=%u | baseZ=%lu minZ=%lu deltaZ=%ld clampZ=%u",
+              reason ? reason : "n/a",
+              (unsigned long)g_cascade_dbg.baseline_y,
+              (unsigned long)min_y,
+              (long)delta_y,
+              (unsigned)g_cascade_dbg.clamp_y,
+              (unsigned long)g_cascade_dbg.baseline_z,
+              (unsigned long)min_z,
+              (long)delta_z,
+              (unsigned)g_cascade_dbg.clamp_z);
+    g_cascade_dbg.armed = 0u;
+}
+
+static inline void vel_sampler_arm(void)
+{
+    g_vel_t0_ms = HAL_GetTick(); /* mantido apenas para compat */
+    g_vel_t0_t6 = g_tim6_ticks;
+    g_vel_count = 0u;
+    g_vel_armed = 1u;
+}
+
+static inline void vel_sampler_try_sample(void)
+{
+    if (!g_vel_armed) return;
+    if (g_vel_count >= (uint16_t)MOTION_VEL_SAMPLER_SAMPLES) return;
+    uint16_t idx = g_vel_count;
+    /* Tempo relativo baseado no TIM6 (50 kHz) convertido para ms */
+    uint32_t dt_t6 = g_tim6_ticks - g_vel_t0_t6;
+    g_vel_time_ms[idx] = dt_t6 / (uint32_t)T6_TICKS_PER_MS;
+    /* Converter delta de encoder (contagens por 1ms) em passos/seg (DDA) */
+    /* sps = (delta_counts * DDA_STEPS_PER_REV(axis) * 1000) / ENC_COUNTS_PER_REV[axis] */
+    int32_t sps_x = 0, sps_y = 0, sps_z = 0;
+    {
+        int32_t d = g_encoder_delta_tick[AXIS_X];
+        int64_t num = (int64_t)d * (int64_t)dda_steps_per_rev_axis(AXIS_X) * 1000LL;
+        if (ENC_COUNTS_PER_REV[AXIS_X] > 0u) sps_x = (int32_t)(num / (int64_t)ENC_COUNTS_PER_REV[AXIS_X]);
+    }
+    {
+        int32_t d = g_encoder_delta_tick[AXIS_Y];
+        int64_t num = (int64_t)d * (int64_t)dda_steps_per_rev_axis(AXIS_Y) * 1000LL;
+        if (ENC_COUNTS_PER_REV[AXIS_Y] > 0u) sps_y = (int32_t)(num / (int64_t)ENC_COUNTS_PER_REV[AXIS_Y]);
+    }
+    {
+        int32_t d = g_encoder_delta_tick[AXIS_Z];
+        int64_t num = (int64_t)d * (int64_t)dda_steps_per_rev_axis(AXIS_Z) * 1000LL;
+        if (ENC_COUNTS_PER_REV[AXIS_Z] > 0u) sps_z = (int32_t)(num / (int64_t)ENC_COUNTS_PER_REV[AXIS_Z]);
+    }
+
+    /* Atualiza janela deslizante (média móvel) */
+    if (g_vel_hist_count < (uint8_t)MOTION_VEL_SMOOTH_WIN) {
+        g_vel_hist_count++;
+    } else {
+        /* Remove amostras antigas da soma */
+        g_vel_sum_x -= (int64_t)g_vel_hist_x[g_vel_hist_idx];
+        g_vel_sum_y -= (int64_t)g_vel_hist_y[g_vel_hist_idx];
+        g_vel_sum_z -= (int64_t)g_vel_hist_z[g_vel_hist_idx];
+    }
+    /* Adiciona amostras novas */
+    g_vel_hist_x[g_vel_hist_idx] = sps_x;
+    g_vel_hist_y[g_vel_hist_idx] = sps_y;
+    g_vel_hist_z[g_vel_hist_idx] = sps_z;
+    g_vel_sum_x += (int64_t)sps_x;
+    g_vel_sum_y += (int64_t)sps_y;
+    g_vel_sum_z += (int64_t)sps_z;
+    g_vel_hist_idx = (uint8_t)((g_vel_hist_idx + 1u) % (uint8_t)MOTION_VEL_SMOOTH_WIN);
+
+    int32_t avg_x = (int32_t)(g_vel_sum_x / (int64_t)g_vel_hist_count);
+    int32_t avg_y = (int32_t)(g_vel_sum_y / (int64_t)g_vel_hist_count);
+    int32_t avg_z = (int32_t)(g_vel_sum_z / (int64_t)g_vel_hist_count);
+
+    g_vel_vx[idx] = avg_x;
+    g_vel_vy[idx] = avg_y;
+    g_vel_vz[idx] = avg_z;
+    /* Captura também os comandos atuais */
+    g_vel_cmd_vx[idx] = g_vel_cmd_sps[AXIS_X];
+    g_vel_cmd_vy[idx] = g_vel_cmd_sps[AXIS_Y];
+    g_vel_cmd_vz[idx] = g_vel_cmd_sps[AXIS_Z];
+    g_vel_count = (uint16_t)(idx + 1u);
+}
+
+static inline void vel_sampler_dump_and_reset(void)
+{
+    if (!g_vel_count) { vel_sampler_reset(); return; }
+    /* Cabeçalho simples */
+    uint32_t duration_ms = (g_tim6_ticks - g_vel_t0_t6) / (uint32_t)T6_TICKS_PER_MS;
+    printf("VEL_SAMPLES count=%u\r\n", (unsigned)g_vel_count);
+    printf("id,time_ms,vx_enc_sps,vy_enc_sps,vz_enc_sps,vx_cmd_sps,vy_cmd_sps,vz_cmd_sps\r\n");
+    for (uint16_t i = 0; i < g_vel_count; ++i) {
+        printf("%u,%lu,%ld,%ld,%ld,%lu,%lu,%lu\r\n",
+               (unsigned)i,
+               (unsigned long)g_vel_time_ms[i],
+               (long)g_vel_vx[i],
+               (long)g_vel_vy[i],
+               (long)g_vel_vz[i],
+               (unsigned long)g_vel_cmd_vx[i],
+               (unsigned long)g_vel_cmd_vy[i],
+               (unsigned long)g_vel_cmd_vz[i]);
+    }
+    /* Resumo: duração total da sessão em milissegundos */
+    printf("VEL_END,%lu\r\n", (unsigned long)duration_ms);
+    vel_sampler_reset();
+}
+#else
+static inline void vel_sampler_reset(void) {}
+static inline void vel_sampler_arm(void) {}
+static inline void vel_sampler_try_sample(void) {}
+static inline void vel_sampler_dump_and_reset(void) {}
+#endif /* MOTION_VEL_SAMPLER_ENABLE */
 
 /* Soma restante (em passos) no eixo, incluindo segmento ativo + fila
  * Usado para decidir desaceleração suave no final da lista de movimentos. */
@@ -917,8 +1141,8 @@ void motion_service_init(void) {
     /* Inicializa parâmetros de atrito (por enquanto só X configurado por macro) */
     g_axis_friction_C_sps[AXIS_X] = MOTION_FRICTION_C_X_SPS;
     g_axis_friction_B_pm[AXIS_X]  = MOTION_FRICTION_B_X_PM;
-    /* Inicia com atrito ligado no eixo X para ficar perceptível de cara */
-    g_axis_friction_enabled[AXIS_X] = 1u;
+    /* Inicia com atrito DESLIGADO; o botão B2 alterna quando desejado */
+    g_axis_friction_enabled[AXIS_X] = 0u;
     /* Se quiser atrito em Y/Z:
      * g_axis_friction_C_sps[AXIS_Y] = ...;
      * g_axis_friction_B_pm[AXIS_Y]  = ...;
@@ -928,6 +1152,17 @@ void motion_service_init(void) {
     motion_stop_all_axes_locked();
     motion_refresh_status_locked();
     motion_unlock(primask);
+
+#if MOTION_VEL_SAMPLER_ENABLE
+    vel_sampler_reset();
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+    g_cascade_dbg.armed = 0u;
+    g_cascade_dbg.clamp_y = 0u;
+    g_cascade_dbg.clamp_z = 0u;
+    g_cascade_dbg.baseline_y = g_cascade_dbg.baseline_z = 0u;
+    g_cascade_dbg.min_y = g_cascade_dbg.min_z = 0u;
+#endif
 
     motion_hw_init();
 
@@ -1159,6 +1394,13 @@ void motion_on_tim6_tick(void)
                 motion_stop_all_axes_locked();
                 g_status.state = MOTION_DONE;
                 motion_send_move_end_response(g_active_frame_id, 0u /* natural_done */);
+#if MOTION_VEL_SAMPLER_ENABLE
+                /* Emite o resumo de velocidades coletadas e limpa o buffer */
+                vel_sampler_dump_and_reset();
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+                cascade_dbg_report("motion_done");
+#endif
                 // Fim do movimento: encerrar sessão CSV e zerar contadores
         for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) {
             g_csv_active[a] = 0u;
@@ -1182,6 +1424,13 @@ void motion_on_tim6_tick(void)
 void motion_on_tim7_tick(void)
 {
     motion_update_encoders();
+
+#if MOTION_VEL_SAMPLER_ENABLE
+    /* Amostra as velocidades efetivas a cada tick de 1 ms enquanto em execução */
+    if (g_status.state == MOTION_RUNNING && g_has_active_segment) {
+        vel_sampler_try_sample();
+    }
+#endif
 
 #if (MOTION_CSV_SAMPLE_MS + 0u) > 0u && !MOTION_CSV_PRODUCE_IN_TIM6
     // Emite CSV (axis,time,rel,steps) periodicamente usando base de tempo do TIM6
@@ -1251,6 +1500,20 @@ void motion_on_tim7_tick(void)
                 }
             }
             if (ax->v_actual_sps > MOTION_MAX_SPS) ax->v_actual_sps = MOTION_MAX_SPS;
+            /* Comando (demo): alvo de velocidade */
+            g_vel_cmd_sps[axis] = ax->v_target_sps;
+#if MOTION_DEBUG_Y_CMD_LOG
+            if (g_cascade_dbg.armed) {
+                uint32_t cmd = g_vel_cmd_sps[axis];
+                if (axis == AXIS_Y) {
+                    if (cmd >= MOTION_MAX_SPS) g_cascade_dbg.clamp_y = 1u;
+                    if (cmd < g_cascade_dbg.min_y) g_cascade_dbg.min_y = cmd;
+                } else if (axis == AXIS_Z) {
+                    if (cmd >= MOTION_MAX_SPS) g_cascade_dbg.clamp_z = 1u;
+                    if (cmd < g_cascade_dbg.min_z) g_cascade_dbg.min_z = cmd;
+                }
+            }
+#endif
 #if MOTION_FRICTION_ENABLE
             /* DEMO: aplica atrito pós-rampa (C + B·v) na velocidade efetiva */
             ax->v_actual_sps = motion_apply_friction(axis, ax->v_actual_sps);
@@ -1276,13 +1539,29 @@ void motion_on_tim7_tick(void)
                passos remanescentes na fila — mantemos a rampa global da lista. */
 
             uint32_t v_cmd_sps = ((uint32_t)ax->velocity_per_tick) * 1000u; /* alvo/cruzeiro */
+#if MOTION_DEBUG_Y_CMD_LOG
+            uint32_t v_cmd_before_thr = v_cmd_sps;
+#endif
 
 #if MOTION_PROGRESS_MODE && MOTION_ERR_THROTTLE_ENABLE
             /* Throttle por erro (apenas eixos não-mestres):
-               - Usa erro posicional baseado em encoder (mesmo usado no PI)
-               - Ajusta v_cmd antes de aplicar correção PI */
+               - Opcionalmente usa erro relativo ao mestre (cascata) para alinhar
+                 progresso entre eixos, espelhando a simulação antiga. */
             if (master_axis >= 0 && (int8_t)axis != master_axis) {
-                int32_t desired = (int32_t)ax->target_steps;
+                int32_t desired;
+#if MOTION_CASCADE_MASTER_RELATIVE_ENABLE
+                /* desired_nm = frac_mestre * total_nm (somente segmento ativo) */
+                const motion_axis_state_t *am = &g_axis_state[(uint8_t)master_axis];
+                uint32_t tm = am->total_steps ? am->total_steps : 1u;
+                uint32_t em = am->emitted_steps;
+                /* clamp */ if (em > tm) em = tm;
+                uint64_t prod = (uint64_t)em * (uint64_t)ax->total_steps;
+                uint64_t exp_steps = prod / (uint64_t)tm; /* esperado no eixo */
+                if (exp_steps > (uint64_t)INT32_MAX) exp_steps = INT32_MAX;
+                desired = (int32_t)exp_steps;
+#else
+                desired = (int32_t)ax->target_steps;
+#endif
                 int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
                 int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
                 int32_t actual = 0;
@@ -1298,7 +1577,7 @@ void motion_on_tim7_tick(void)
                 if (err_abs >= (uint32_t)MOTION_ERR_THROTTLE_THRESHOLD) {
                     scale_pm = (uint32_t)MOTION_ERR_THROTTLE_MIN_PERMILLE; /* piso */
                 } else {
-                    uint32_t range = 1000u - (uint32_t)MOTION_ERR_THROTTLE_MIN_PERMILLE; /* 0..750 */
+                    uint32_t range = 1000u - (uint32_t)MOTION_ERR_THROTTLE_MIN_PERMILLE; /* 0..(100%-piso) */
                     uint32_t dec = (uint32_t)(((uint64_t)range * (uint64_t)err_abs) / (uint32_t)MOTION_ERR_THROTTLE_THRESHOLD);
                     scale_pm = 1000u - dec; /* 1000..min_permille */
                 }
@@ -1347,6 +1626,22 @@ void motion_on_tim7_tick(void)
                 /* Anti-windup por saturação: só aceita a integral quando não saturou */
                 if (!(v_adj == 0 || v_adj == (int32_t)MOTION_MAX_SPS)) {
                     g_pi_i_accum[axis] = iacc;
+                }
+            }
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+            uint32_t v_cmd_after_pi = v_cmd_sps;
+#endif
+            /* Snapshot do comando (após throttle/PI) */
+            g_vel_cmd_sps[axis] = v_cmd_sps;
+#if MOTION_DEBUG_Y_CMD_LOG
+            if (g_cascade_dbg.armed) {
+                if (axis == AXIS_Y) {
+                    if (v_cmd_sps >= MOTION_MAX_SPS) g_cascade_dbg.clamp_y = 1u;
+                    if (v_cmd_sps < g_cascade_dbg.min_y) g_cascade_dbg.min_y = v_cmd_sps;
+                } else if (axis == AXIS_Z) {
+                    if (v_cmd_sps >= MOTION_MAX_SPS) g_cascade_dbg.clamp_z = 1u;
+                    if (v_cmd_sps < g_cascade_dbg.min_z) g_cascade_dbg.min_z = v_cmd_sps;
                 }
             }
 #endif
@@ -1403,6 +1698,18 @@ void motion_on_tim7_tick(void)
             /* Aplica modelo de atrito pós-rampa (C + B·v): atua sobre v_actual_sps */
 #if MOTION_FRICTION_ENABLE
             ax->v_actual_sps = motion_apply_friction(axis, ax->v_actual_sps);
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+            if (axis == AXIS_Y) {
+                static uint32_t dbg_cnt = 0;
+                if ((dbg_cnt++ % 50u) == 0u) {
+                    printf("dbgY:base=%lu thr_pi=%lu cmd=%lu act=%lu\r\n",
+                           (unsigned long)v_cmd_before_thr,
+                           (unsigned long)v_cmd_after_pi,
+                           (unsigned long)g_vel_cmd_sps[AXIS_Y],
+                           (unsigned long)ax->v_actual_sps);
+                }
+            }
 #endif
             /* Incremento do DDA a 50 kHz */
             ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
@@ -1519,6 +1826,11 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
     (void)HAL_TIM_Base_Start_IT(&htim6);
     (void)HAL_TIM_Base_Start_IT(&htim7);
 
+#if MOTION_VEL_SAMPLER_ENABLE
+    /* Arma o amostrador de velocidades relativo ao início do movimento */
+    vel_sampler_arm();
+#endif
+
     // Arma sessões CSV para iniciarem no primeiro STEP; zera contadores
     if (started) {
         uint32_t pm = motion_lock();
@@ -1565,6 +1877,12 @@ void motion_on_move_end(const uint8_t *frame, uint32_t len) {
 
     primask = motion_lock();
     g_status.state = MOTION_IDLE;
+#if MOTION_VEL_SAMPLER_ENABLE
+    vel_sampler_dump_and_reset();
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+    cascade_dbg_report("move_end");
+#endif
     motion_refresh_status_locked();
     motion_unlock(primask);
 
@@ -1809,6 +2127,12 @@ void motion_emergency_stop(void)
     if (g_active_frame_id) {
         motion_send_move_end_response(g_active_frame_id, 2u /* emergency */);
     }
+#if MOTION_VEL_SAMPLER_ENABLE
+    vel_sampler_dump_and_reset();
+#endif
+#if MOTION_DEBUG_Y_CMD_LOG
+    cascade_dbg_report("estop");
+#endif
 }
 
 uint8_t motion_demo_is_active(void)
