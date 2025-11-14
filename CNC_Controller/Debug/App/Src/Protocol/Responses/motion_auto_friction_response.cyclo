@@ -1,0 +1,4 @@
+../App/Inc/Protocol/Responses/../frame_defs.h:115:20:be16_write	1
+../App/Inc/Protocol/Responses/../frame_defs.h:153:20:resp_init	1
+../App/Inc/Protocol/Responses/../frame_defs.h:160:20:resp_set_tail	1
+../App/Src/Protocol/Responses/motion_auto_friction_response.c:3:5:motion_auto_friction_resp_encoder	4

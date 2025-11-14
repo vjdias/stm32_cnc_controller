@@ -263,6 +263,7 @@ static int32_t  g_encoder_delta_tick[MOTION_AXIS_COUNT]; /* delta de contagens p
 static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-set) */
 
 #if MOTION_FRICTION_ENABLE
+static proto_result_t motion_queue_push_locked(const move_queue_add_req_t *req);
 /* Habilita/desabilita atrito por eixo em tempo de execução */
 static volatile uint8_t  g_axis_friction_enabled[MOTION_AXIS_COUNT] = { 0u, 0u, 0u };
 /* Parâmetros C (steps/s) e B (permille) por eixo */
@@ -286,6 +287,22 @@ static uint32_t g_dbg_friction_drop[MOTION_AXIS_COUNT]   = { 0u, 0u, 0u };
 #ifndef MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM
 #define MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM 20u /* 2% */
 #endif
+#ifndef MOTION_AUTO_FRICTION_STARTMOVE_ENABLE
+#define MOTION_AUTO_FRICTION_STARTMOVE_ENABLE 0u
+#endif
+#ifndef MOTION_AUTO_FRICTION_STARTMOVE_SAMPLE_LIMIT
+#define MOTION_AUTO_FRICTION_STARTMOVE_SAMPLE_LIMIT MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT
+#endif
+#ifndef MOTION_AUTO_FRICTION_STARTMOVE_MIN_SEGMENTS
+#define MOTION_AUTO_FRICTION_STARTMOVE_MIN_SEGMENTS 2u
+#endif
+
+typedef struct {
+    uint32_t sample_count[2];
+    uint64_t sum_base[2];
+    uint64_t sum_cmd[2];
+    uint64_t sum_act[2];
+} motion_auto_friction_axis_stats_t;
 
 typedef struct {
     uint8_t  armed;
@@ -298,10 +315,7 @@ typedef struct {
     uint16_t toggle_segment_index;
     uint16_t sample_limit;
     uint16_t current_segment;
-    uint32_t sample_count[2];
-    uint64_t sum_base[2];
-    uint64_t sum_cmd[2];
-    uint64_t sum_act[2];
+    motion_auto_friction_axis_stats_t axes[MOTION_AXIS_COUNT];
 } motion_auto_friction_test_t;
 
 static motion_auto_friction_test_t g_auto_friction_test = {
@@ -321,6 +335,9 @@ static void motion_auto_friction_record_sample(uint8_t axis,
                                                uint32_t v_cmd_sps,
                                                uint32_t v_act_sps);
 static void motion_auto_friction_maybe_report(void);
+#if MOTION_AUTO_FRICTION_STARTMOVE_ENABLE
+static void motion_auto_friction_try_arm_on_startmove(void);
+#endif
 #else
 #define motion_auto_friction_is_armed() (0u)
 #endif /* MOTION_FRICTION_ENABLE */
@@ -553,11 +570,14 @@ static inline void motion_unlock(uint32_t primask) {
 
 #if MOTION_FRICTION_ENABLE
 static void motion_auto_friction_clear_samples(motion_auto_friction_test_t *test) {
-    for (uint8_t i = 0u; i < 2u; ++i) {
-        test->sample_count[i] = 0u;
-        test->sum_base[i] = 0u;
-        test->sum_cmd[i] = 0u;
-        test->sum_act[i] = 0u;
+    for (uint8_t axis = 0u; axis < MOTION_AXIS_COUNT; ++axis) {
+        motion_auto_friction_axis_stats_t *stats = &test->axes[axis];
+        for (uint8_t phase = 0u; phase < 2u; ++phase) {
+            stats->sample_count[phase] = 0u;
+            stats->sum_base[phase] = 0u;
+            stats->sum_cmd[phase]  = 0u;
+            stats->sum_act[phase]  = 0u;
+        }
     }
 }
 
@@ -626,13 +646,14 @@ static void motion_auto_friction_record_sample(uint8_t axis,
                                                uint32_t v_act_sps) {
     motion_auto_friction_test_t *test = &g_auto_friction_test;
     if (!test->armed || !test->collecting) return;
-    if (axis != test->axis_monitor) return;
+    if (axis >= MOTION_AXIS_COUNT) return;
     uint8_t phase = test->friction_applied ? 1u : 0u;
-    if (test->sample_count[phase] >= test->sample_limit) return;
-    test->sum_base[phase] += v_base_sps;
-    test->sum_cmd[phase]  += v_cmd_sps;
-    test->sum_act[phase]  += v_act_sps;
-    test->sample_count[phase]++;
+    motion_auto_friction_axis_stats_t *stats = &test->axes[axis];
+    if (stats->sample_count[phase] >= test->sample_limit) return;
+    stats->sum_base[phase] += v_base_sps;
+    stats->sum_cmd[phase]  += v_cmd_sps;
+    stats->sum_act[phase]  += v_act_sps;
+    stats->sample_count[phase]++;
 }
 
 static uint32_t motion_auto_friction_avg(uint64_t sum, uint32_t count) {
@@ -642,6 +663,26 @@ static uint32_t motion_auto_friction_avg(uint64_t sum, uint32_t count) {
 
 static uint32_t motion_auto_abs_i32(int32_t v) {
     return (uint32_t)((v < 0) ? -v : v);
+}
+
+static void motion_auto_friction_format_percent(int32_t permille,
+                                                char *buf,
+                                                size_t len) {
+    if (!buf || len == 0u) return;
+    uint32_t abs_pm = motion_auto_abs_i32(permille);
+    uint32_t int_part = abs_pm / 10u;
+    uint32_t frac_part = abs_pm % 10u;
+    const char *sign = (permille < 0) ? "-" : "";
+    if (frac_part == 0u) {
+        (void)snprintf(buf, len, "%s%lu%%",
+                       sign,
+                       (unsigned long)int_part);
+    } else {
+        (void)snprintf(buf, len, "%s%lu.%01lu%%",
+                       sign,
+                       (unsigned long)int_part,
+                       (unsigned long)frac_part);
+    }
 }
 
 static void motion_auto_friction_finalize(void) {
@@ -663,44 +704,60 @@ static void motion_auto_friction_maybe_report(void) {
     if (g_queue_count != 0u) return;
 
     test->result_reported = 1u;
-    uint32_t before_samples = test->sample_count[0];
-    uint32_t after_samples  = test->sample_count[1];
-    uint32_t avg_base_before = motion_auto_friction_avg(test->sum_base[0], before_samples);
-    uint32_t avg_base_after  = motion_auto_friction_avg(test->sum_base[1], after_samples);
-    uint32_t avg_cmd_before  = motion_auto_friction_avg(test->sum_cmd[0], before_samples);
-    uint32_t avg_cmd_after   = motion_auto_friction_avg(test->sum_cmd[1], after_samples);
-    uint32_t avg_act_before  = motion_auto_friction_avg(test->sum_act[0], before_samples);
-    uint32_t avg_act_after   = motion_auto_friction_avg(test->sum_act[1], after_samples);
-
-    int32_t delta_cmd = (int32_t)avg_cmd_after - (int32_t)avg_cmd_before;
-    int32_t delta_act = (int32_t)avg_act_after - (int32_t)avg_act_before;
-    const char *effect = "INCONCLUSIVE";
-    int32_t delta_cmd_pm = 0;
-    int32_t delta_act_pm = 0;
-    if (before_samples > 0u && after_samples > 0u) {
-        uint32_t ref_cmd = (avg_cmd_before == 0u) ? 1u : avg_cmd_before;
-        uint32_t ref_act = (avg_act_before == 0u) ? 1u : avg_act_before;
-        delta_cmd_pm = (int32_t)(((int64_t)delta_cmd * 1000LL) / (int64_t)ref_cmd);
-        delta_act_pm = (int32_t)(((int64_t)delta_act * 1000LL) / (int64_t)ref_act);
-        uint32_t cmd_abs = motion_auto_abs_i32(delta_cmd_pm);
-        uint32_t act_abs = motion_auto_abs_i32(delta_act_pm);
-        uint8_t detected = (cmd_abs >= MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM) ||
-                           (act_abs >= MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM);
-        effect = detected ? "EFFECT" : "NO_EFFECT";
+    uint8_t effect_detected = 0u;
+    char axis_pct[MOTION_AXIS_COUNT][16];
+    for (uint8_t axis = 0u; axis < MOTION_AXIS_COUNT; ++axis) {
+        (void)snprintf(axis_pct[axis], sizeof axis_pct[axis], "n/a");
     }
 
-    printf("[AUTO-FRIC] toggle_seg=%u samples(before=%lu,after=%lu) "
-           "base_avg(before=%lu,after=%lu) cmd_avg(before=%lu,after=%lu) "
-           "act_avg(before=%lu,after=%lu) delta_cmd=%ld delta_act=%ld "
-           "delta_cmd_pm=%ld delta_act_pm=%ld result=%s\r\n",
+    for (uint8_t axis = 0u; axis < MOTION_AXIS_COUNT; ++axis) {
+        const motion_auto_friction_axis_stats_t *stats = &test->axes[axis];
+        uint32_t before_samples = stats->sample_count[0];
+        uint32_t after_samples  = stats->sample_count[1];
+        if (before_samples == 0u || after_samples == 0u) {
+            continue;
+        }
+
+        uint32_t avg_cmd_before = motion_auto_friction_avg(stats->sum_cmd[0], before_samples);
+        uint32_t avg_cmd_after  = motion_auto_friction_avg(stats->sum_cmd[1], after_samples);
+        uint32_t avg_act_before = motion_auto_friction_avg(stats->sum_act[0], before_samples);
+        uint32_t avg_act_after  = motion_auto_friction_avg(stats->sum_act[1], after_samples);
+
+        int32_t delta_cmd = (int32_t)avg_cmd_after - (int32_t)avg_cmd_before;
+        int32_t delta_act = (int32_t)avg_act_after - (int32_t)avg_act_before;
+
+        uint32_t ref_cmd = (avg_cmd_before == 0u) ? 1u : avg_cmd_before;
+        uint32_t ref_act = (avg_act_before == 0u) ? 1u : avg_act_before;
+        int32_t delta_cmd_pm = (int32_t)(((int64_t)delta_cmd * 1000LL) / (int64_t)ref_cmd);
+        int32_t delta_act_pm = (int32_t)(((int64_t)delta_act * 1000LL) / (int64_t)ref_act);
+
+        motion_auto_friction_format_percent(delta_act_pm,
+                                            axis_pct[axis],
+                                            sizeof axis_pct[axis]);
+
+        uint32_t act_abs = motion_auto_abs_i32(delta_act_pm);
+        uint32_t cmd_abs = motion_auto_abs_i32(delta_cmd_pm);
+        if (act_abs >= MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM ||
+            cmd_abs >= MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM) {
+            effect_detected = 1u;
+        }
+    }
+
+    const char *effect = effect_detected ? "EFFECT" : "NO_EFFECT";
+    printf("[AUTO-FRIC] toggle_seg=%u samples_before=(%lu,%lu,%lu) samples_after=(%lu,%lu,%lu) result=%s\r\n",
            (unsigned)test->toggle_segment_index,
-           (unsigned long)before_samples, (unsigned long)after_samples,
-           (unsigned long)avg_base_before, (unsigned long)avg_base_after,
-           (unsigned long)avg_cmd_before,  (unsigned long)avg_cmd_after,
-           (unsigned long)avg_act_before,  (unsigned long)avg_act_after,
-           (long)delta_cmd, (long)delta_act,
-           (long)delta_cmd_pm, (long)delta_act_pm,
+           (unsigned long)test->axes[AXIS_X].sample_count[0],
+           (unsigned long)test->axes[AXIS_Y].sample_count[0],
+           (unsigned long)test->axes[AXIS_Z].sample_count[0],
+           (unsigned long)test->axes[AXIS_X].sample_count[1],
+           (unsigned long)test->axes[AXIS_Y].sample_count[1],
+           (unsigned long)test->axes[AXIS_Z].sample_count[1],
            effect);
+
+    printf("[AUTO-FRIC] act_delta axisX=%s axisY=%s axisZ=%s\r\n",
+           axis_pct[AXIS_X],
+           axis_pct[AXIS_Y],
+           axis_pct[AXIS_Z]);
 
     motion_auto_friction_finalize();
 }
@@ -729,6 +786,37 @@ static proto_result_t motion_auto_friction_enqueue_segments_locked(uint8_t revol
     }
     return PROTO_OK;
 }
+
+#if MOTION_AUTO_FRICTION_STARTMOVE_ENABLE
+static void motion_auto_friction_try_arm_on_startmove(void) {
+    if (motion_auto_friction_is_armed()) return;
+
+    uint16_t total_segments = 0u;
+    uint8_t has_active = 0u;
+    uint32_t primask = motion_lock();
+    has_active = g_has_active_segment;
+    if (has_active) {
+        total_segments = (uint16_t)(g_queue_count + 1u);
+    } else {
+        total_segments = g_queue_count;
+    }
+    motion_unlock(primask);
+
+    if (!has_active) return;
+    if (total_segments < MOTION_AUTO_FRICTION_STARTMOVE_MIN_SEGMENTS) return;
+
+    uint16_t toggle = (uint16_t)((total_segments / 2u) + 1u);
+    if (toggle < MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION)
+        toggle = MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION;
+    if (toggle > total_segments)
+        toggle = total_segments;
+
+    motion_auto_friction_test_arm(toggle, MOTION_AUTO_FRICTION_STARTMOVE_SAMPLE_LIMIT);
+    printf("[AUTO-FRIC] start_move auto test armed segments=%u toggle=%u\r\n",
+           (unsigned)total_segments,
+           (unsigned)toggle);
+}
+#endif
 #else
 void motion_auto_friction_test_arm(uint16_t toggle_segment_index, uint16_t sample_limit) {
     (void)toggle_segment_index;
@@ -1864,6 +1952,9 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
         csv_ring_reset();
         /* agenda primeira produção 1ms à frente do tempo atual */
         g_csv_next_prod_t6 = g_tim6_ticks + (uint32_t)T6_TICKS_PER_MS;
+#endif
+#if MOTION_FRICTION_ENABLE && MOTION_AUTO_FRICTION_STARTMOVE_ENABLE
+        motion_auto_friction_try_arm_on_startmove();
 #endif
     }
 

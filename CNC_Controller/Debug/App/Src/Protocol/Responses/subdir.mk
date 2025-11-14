@@ -8,12 +8,12 @@ C_SRCS += \
 ../App/Src/Protocol/Responses/encoder_status_response.c \
 ../App/Src/Protocol/Responses/home_status_response.c \
 ../App/Src/Protocol/Responses/led_control_response.c \
+../App/Src/Protocol/Responses/motion_auto_friction_response.c \
 ../App/Src/Protocol/Responses/move_end_response.c \
 ../App/Src/Protocol/Responses/move_home_response.c \
 ../App/Src/Protocol/Responses/move_probe_level_response.c \
 ../App/Src/Protocol/Responses/move_queue_add_ack_response.c \
 ../App/Src/Protocol/Responses/move_queue_status_response.c \
-../App/Src/Protocol/Responses/motion_auto_friction_response.c \
 ../App/Src/Protocol/Responses/set_origin_response.c \
 ../App/Src/Protocol/Responses/start_move_response.c 
 
@@ -21,12 +21,12 @@ OBJS += \
 ./App/Src/Protocol/Responses/encoder_status_response.o \
 ./App/Src/Protocol/Responses/home_status_response.o \
 ./App/Src/Protocol/Responses/led_control_response.o \
+./App/Src/Protocol/Responses/motion_auto_friction_response.o \
 ./App/Src/Protocol/Responses/move_end_response.o \
 ./App/Src/Protocol/Responses/move_home_response.o \
 ./App/Src/Protocol/Responses/move_probe_level_response.o \
 ./App/Src/Protocol/Responses/move_queue_add_ack_response.o \
 ./App/Src/Protocol/Responses/move_queue_status_response.o \
-./App/Src/Protocol/Responses/motion_auto_friction_response.o \
 ./App/Src/Protocol/Responses/set_origin_response.o \
 ./App/Src/Protocol/Responses/start_move_response.o 
 
@@ -34,12 +34,12 @@ C_DEPS += \
 ./App/Src/Protocol/Responses/encoder_status_response.d \
 ./App/Src/Protocol/Responses/home_status_response.d \
 ./App/Src/Protocol/Responses/led_control_response.d \
+./App/Src/Protocol/Responses/motion_auto_friction_response.d \
 ./App/Src/Protocol/Responses/move_end_response.d \
 ./App/Src/Protocol/Responses/move_home_response.d \
 ./App/Src/Protocol/Responses/move_probe_level_response.d \
 ./App/Src/Protocol/Responses/move_queue_add_ack_response.d \
 ./App/Src/Protocol/Responses/move_queue_status_response.d \
-./App/Src/Protocol/Responses/motion_auto_friction_response.d \
 ./App/Src/Protocol/Responses/set_origin_response.d \
 ./App/Src/Protocol/Responses/start_move_response.d 
 
@@ -51,7 +51,7 @@ App/Src/Protocol/Responses/%.o App/Src/Protocol/Responses/%.su App/Src/Protocol/
 clean: clean-App-2f-Src-2f-Protocol-2f-Responses
 
 clean-App-2f-Src-2f-Protocol-2f-Responses:
-	-$(RM) ./App/Src/Protocol/Responses/encoder_status_response.cyclo ./App/Src/Protocol/Responses/encoder_status_response.d ./App/Src/Protocol/Responses/encoder_status_response.o ./App/Src/Protocol/Responses/encoder_status_response.su ./App/Src/Protocol/Responses/home_status_response.cyclo ./App/Src/Protocol/Responses/home_status_response.d ./App/Src/Protocol/Responses/home_status_response.o ./App/Src/Protocol/Responses/home_status_response.su ./App/Src/Protocol/Responses/led_control_response.cyclo ./App/Src/Protocol/Responses/led_control_response.d ./App/Src/Protocol/Responses/led_control_response.o ./App/Src/Protocol/Responses/led_control_response.su ./App/Src/Protocol/Responses/move_end_response.cyclo ./App/Src/Protocol/Responses/move_end_response.d ./App/Src/Protocol/Responses/move_end_response.o ./App/Src/Protocol/Responses/move_end_response.su ./App/Src/Protocol/Responses/move_home_response.cyclo ./App/Src/Protocol/Responses/move_home_response.d ./App/Src/Protocol/Responses/move_home_response.o ./App/Src/Protocol/Responses/move_home_response.su ./App/Src/Protocol/Responses/move_probe_level_response.cyclo ./App/Src/Protocol/Responses/move_probe_level_response.d ./App/Src/Protocol/Responses/move_probe_level_response.o ./App/Src/Protocol/Responses/move_probe_level_response.su ./App/Src/Protocol/Responses/move_queue_add_ack_response.cyclo ./App/Src/Protocol/Responses/move_queue_add_ack_response.d ./App/Src/Protocol/Responses/move_queue_add_ack_response.o ./App/Src/Protocol/Responses/move_queue_add_ack_response.su ./App/Src/Protocol/Responses/move_queue_status_response.cyclo ./App/Src/Protocol/Responses/move_queue_status_response.d ./App/Src/Protocol/Responses/move_queue_status_response.o ./App/Src/Protocol/Responses/move_queue_status_response.su ./App/Src/Protocol/Responses/set_origin_response.cyclo ./App/Src/Protocol/Responses/set_origin_response.d ./App/Src/Protocol/Responses/set_origin_response.o ./App/Src/Protocol/Responses/set_origin_response.su ./App/Src/Protocol/Responses/start_move_response.cyclo ./App/Src/Protocol/Responses/start_move_response.d ./App/Src/Protocol/Responses/start_move_response.o ./App/Src/Protocol/Responses/start_move_response.su
+	-$(RM) ./App/Src/Protocol/Responses/encoder_status_response.cyclo ./App/Src/Protocol/Responses/encoder_status_response.d ./App/Src/Protocol/Responses/encoder_status_response.o ./App/Src/Protocol/Responses/encoder_status_response.su ./App/Src/Protocol/Responses/home_status_response.cyclo ./App/Src/Protocol/Responses/home_status_response.d ./App/Src/Protocol/Responses/home_status_response.o ./App/Src/Protocol/Responses/home_status_response.su ./App/Src/Protocol/Responses/led_control_response.cyclo ./App/Src/Protocol/Responses/led_control_response.d ./App/Src/Protocol/Responses/led_control_response.o ./App/Src/Protocol/Responses/led_control_response.su ./App/Src/Protocol/Responses/motion_auto_friction_response.cyclo ./App/Src/Protocol/Responses/motion_auto_friction_response.d ./App/Src/Protocol/Responses/motion_auto_friction_response.o ./App/Src/Protocol/Responses/motion_auto_friction_response.su ./App/Src/Protocol/Responses/move_end_response.cyclo ./App/Src/Protocol/Responses/move_end_response.d ./App/Src/Protocol/Responses/move_end_response.o ./App/Src/Protocol/Responses/move_end_response.su ./App/Src/Protocol/Responses/move_home_response.cyclo ./App/Src/Protocol/Responses/move_home_response.d ./App/Src/Protocol/Responses/move_home_response.o ./App/Src/Protocol/Responses/move_home_response.su ./App/Src/Protocol/Responses/move_probe_level_response.cyclo ./App/Src/Protocol/Responses/move_probe_level_response.d ./App/Src/Protocol/Responses/move_probe_level_response.o ./App/Src/Protocol/Responses/move_probe_level_response.su ./App/Src/Protocol/Responses/move_queue_add_ack_response.cyclo ./App/Src/Protocol/Responses/move_queue_add_ack_response.d ./App/Src/Protocol/Responses/move_queue_add_ack_response.o ./App/Src/Protocol/Responses/move_queue_add_ack_response.su ./App/Src/Protocol/Responses/move_queue_status_response.cyclo ./App/Src/Protocol/Responses/move_queue_status_response.d ./App/Src/Protocol/Responses/move_queue_status_response.o ./App/Src/Protocol/Responses/move_queue_status_response.su ./App/Src/Protocol/Responses/set_origin_response.cyclo ./App/Src/Protocol/Responses/set_origin_response.d ./App/Src/Protocol/Responses/set_origin_response.o ./App/Src/Protocol/Responses/set_origin_response.su ./App/Src/Protocol/Responses/start_move_response.cyclo ./App/Src/Protocol/Responses/start_move_response.d ./App/Src/Protocol/Responses/start_move_response.o ./App/Src/Protocol/Responses/start_move_response.su
 
 .PHONY: clean-App-2f-Src-2f-Protocol-2f-Responses
 

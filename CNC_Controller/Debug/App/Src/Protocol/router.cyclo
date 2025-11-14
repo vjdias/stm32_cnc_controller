@@ -4,5 +4,5 @@
 ../App/Src/Protocol/router.c:49:5:resp_fifo_pop	6
 ../App/Src/Protocol/router.c:63:5:resp_fifo_count	2
 ../App/Src/Protocol/router.c:68:6:router_init	3
-../App/Src/Protocol/router.c:76:13:dispatch	30
-../App/Src/Protocol/router.c:103:6:router_feed_bytes	6
+../App/Src/Protocol/router.c:76:13:dispatch	32
+../App/Src/Protocol/router.c:104:6:router_feed_bytes	6

@@ -1,0 +1,11 @@
+../App/Inc/Protocol/Requests/../frame_defs.h:102:19:has_header_tail	5
+../App/Inc/Protocol/Requests/../frame_defs.h:108:24:be16_read	1
+../App/Inc/Protocol/Requests/../frame_defs.h:115:20:be16_write	1
+../App/Inc/Protocol/Requests/../frame_defs.h:149:20:req_init	1
+../App/Inc/Protocol/Requests/../frame_defs.h:157:20:req_set_tail	1
+../App/Inc/Protocol/Requests/../frame_defs.h:168:19:frame_expect_req	5
+../App/Src/Protocol/Requests/motion_auto_friction_request.c:3:5:motion_auto_friction_req_decoder	4
+../App/Src/Protocol/Requests/motion_auto_friction_request.c:15:5:motion_auto_friction_req_encoder	4
+../App/Src/Protocol/Requests/motion_auto_friction_request.c:27:5:motion_auto_friction_req_check_parity	1
+../App/Src/Protocol/Requests/motion_auto_friction_request.c:32:5:motion_auto_friction_req_set_parity	1
+../App/Src/Protocol/Requests/motion_auto_friction_request.c:37:28:motion_auto_friction_req_make_default	1
