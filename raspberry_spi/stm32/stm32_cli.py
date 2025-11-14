@@ -177,6 +177,12 @@ class STM32Client:
     def _format_bytes(bs: List[int]) -> str:
         return " ".join(f"{b & 0xFF:08b}" for b in bs)
 
+    @staticmethod
+    def _format_bytes_hex(bs: List[int]) -> str:
+        if not bs:
+            return "(vazio)"
+        return " ".join(f"0x{b & 0xFF:02X}" for b in bs)
+
     def _xfer(self, tx: List[int]) -> List[int]:  # pragma: no cover - depende de hardware
         try:
             if self._log_format == "bin":
@@ -203,7 +209,9 @@ class STM32Client:
             raise ValueError("tries cannot be negative")
         spec = STM32ResponseDecoder.SPECS[request_type]
         dma_frame = _build_spi_dma_frame(request)
+        last_rx: List[int] = []
         rx_frame = self._xfer(dma_frame)
+        last_rx = list(rx_frame)
         _validate_handshake_frame(dma_frame, rx_frame, len(request))
         handshake_response = _extract_response_frame(rx_frame, spec.length, spec.response_type)
         if handshake_response is not None:
@@ -212,19 +220,27 @@ class STM32Client:
             time.sleep(settle_delay_s)
 
         if poll_byte is None:
-            raise TimeoutError("Polling desabilitado e resposta não estava presente no handshake.")
+            err = TimeoutError("Polling desabilitado e resposta não estava presente no handshake.")
+            setattr(err, "last_rx", last_rx)
+            raise err
 
         # Poll com quadro completo (42×poll_byte) para o firmware reconhecer como "apenas leitura"
         poll_payload_len = 42
         for _ in range(max(1, tries)):
             poll = [poll_byte & 0xFF] * poll_payload_len
             rx = self._xfer(_build_spi_dma_frame(poll, filler=(poll_byte & 0xFF), frame_len=42))
+            last_rx = list(rx)
             r = _extract_response_frame(rx, spec.length, spec.response_type)
             if r is not None:
                 return r
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
-        raise TimeoutError("Resposta não encontrada após polling SPI.")
+        err = TimeoutError(
+            "Resposta não encontrada após polling SPI. "
+            f"Último RX ({len(last_rx)} bytes): {self._format_bytes_hex(last_rx)}"
+        )
+        setattr(err, "last_rx", last_rx)
+        raise err
 
     def poll_for(
         self,

@@ -94,6 +94,12 @@ def _mk_logger() -> logging.Logger:
     return logger
 
 
+def _format_rx_hex(data: Optional[Sequence[int]]) -> str:
+    if not data:
+        return "(sem amostra)"
+    return " ".join(f"0x{int(b) & 0xFF:02X}" for b in data)
+
+
 class _ThrottledClient:
     """Wrapper do STM32Client que impõe um intervalo mínimo entre chamadas SPI.
 
@@ -656,14 +662,21 @@ def _process_steps(
                 cooldown = _spi_busy_cooldown(cfg)
                 msg = str(exc).lower()
                 if "busy" in msg or "polling" in msg or "resposta" in msg:
+                    last_rx = getattr(exc, "last_rx", None)
+                    rx_desc = _format_rx_hex(last_rx) if last_rx is not None else str(exc)
+                    next_settle = max(qadd_settle, cooldown)
                     logger.warning(
-                        "QueueAdd: sem ACK/BUSY após %.3fs (tries=%d). Aguardando %.3fs e repetindo com settle=%.3fs...",
-                        qadd_tries * qadd_settle if qadd_tries > 1 else qadd_settle, qadd_tries, cooldown, max(qadd_settle, cooldown),
+                        "QueueAdd sem ACK/BUSY (tries=%d settle=%.3fs) resp=%s. Aguardando %.3fs e repetindo com settle=%.3fs...",
+                        qadd_tries,
+                        qadd_settle,
+                        rx_desc,
+                        cooldown,
+                        next_settle,
                     )
                     time.sleep(cooldown)
                     resp = client.exchange(
                         0x01, req, tries=max(qadd_tries, int(max(80, cooldown / max(3.0, qadd_settle)))) ,
-                        settle_delay_s=max(qadd_settle, cooldown)
+                        settle_delay_s=next_settle
                     )
                 else:
                     raise
