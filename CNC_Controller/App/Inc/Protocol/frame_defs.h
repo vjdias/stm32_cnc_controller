@@ -22,6 +22,7 @@ typedef enum {
         REQ_SET_MICROSTEPS = 0x26,
         REQ_SET_MICROSTEPS_AX = 0x27,
         REQ_TEST_HELLO = 0x68,
+        REQ_MOTION_AUTO_FRICTION = 0x69,
 } req_msg_type_t;
 
 // Tipos de mensagens de resposta (STM32 envia)
@@ -39,6 +40,7 @@ typedef enum {
         RESP_ENCODER_STATUS = 0x25,
         RESP_SET_MICROSTEPS = 0x26,
         RESP_TEST_HELLO = 0x68,
+        RESP_MOTION_AUTO_FRICTION = 0x69,
 } resp_msg_type_t;
 
 // =====================

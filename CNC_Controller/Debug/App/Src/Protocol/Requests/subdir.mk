@@ -13,6 +13,7 @@ C_SRCS += \
 ../App/Src/Protocol/Requests/move_probe_level_request.c \
 ../App/Src/Protocol/Requests/move_queue_add_request.c \
 ../App/Src/Protocol/Requests/move_queue_status_request.c \
+../App/Src/Protocol/Requests/motion_auto_friction_request.c \
 ../App/Src/Protocol/Requests/set_microsteps_axes_request.c \
 ../App/Src/Protocol/Requests/set_microsteps_request.c \
 ../App/Src/Protocol/Requests/set_origin_request.c \
@@ -27,6 +28,7 @@ OBJS += \
 ./App/Src/Protocol/Requests/move_probe_level_request.o \
 ./App/Src/Protocol/Requests/move_queue_add_request.o \
 ./App/Src/Protocol/Requests/move_queue_status_request.o \
+./App/Src/Protocol/Requests/motion_auto_friction_request.o \
 ./App/Src/Protocol/Requests/set_microsteps_axes_request.o \
 ./App/Src/Protocol/Requests/set_microsteps_request.o \
 ./App/Src/Protocol/Requests/set_origin_request.o \
@@ -41,6 +43,7 @@ C_DEPS += \
 ./App/Src/Protocol/Requests/move_probe_level_request.d \
 ./App/Src/Protocol/Requests/move_queue_add_request.d \
 ./App/Src/Protocol/Requests/move_queue_status_request.d \
+./App/Src/Protocol/Requests/motion_auto_friction_request.d \
 ./App/Src/Protocol/Requests/set_microsteps_axes_request.d \
 ./App/Src/Protocol/Requests/set_microsteps_request.d \
 ./App/Src/Protocol/Requests/set_origin_request.d \

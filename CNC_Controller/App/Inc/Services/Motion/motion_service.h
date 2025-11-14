@@ -36,6 +36,7 @@ void motion_on_set_origin(const uint8_t *frame, uint32_t len);
 void motion_on_encoder_status(const uint8_t *frame, uint32_t len);
 void motion_on_set_microsteps(const uint8_t *frame, uint32_t len);
 void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len);
+void motion_on_auto_friction_request(const uint8_t *frame, uint32_t len);
 
 // Demo opcional: habilita um movimento de teste interno (sem host)
 void motion_demo_set_enabled(uint8_t enable);
@@ -64,3 +65,7 @@ extern volatile int32_t g_enc_rel32[3];
 // - Chame no EXTI de B2: on_press quando nível baixo; on_release quando alto
 void motion_test_b2_on_press(void);
 void motion_test_b2_on_release(void);
+
+// Autoanalisador de atrito: arma coleta e relatório após os movimentos terminarem
+void motion_auto_friction_test_arm(uint16_t toggle_segment_index, uint16_t sample_limit);
+void motion_auto_friction_test_disarm(void);

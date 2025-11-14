@@ -34,6 +34,7 @@ typedef struct {
     req_handler_fn on_set_microsteps;
     req_handler_fn on_set_microsteps_axes;
     req_handler_fn on_test_hello;
+    req_handler_fn on_motion_auto_friction;
 } router_handlers_t;
 
 void router_init(router_t *r, response_fifo_t *resp_fifo,

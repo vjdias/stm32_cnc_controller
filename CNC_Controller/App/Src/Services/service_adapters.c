@@ -58,6 +58,10 @@ static void h_test_hello(router_t *r, const uint8_t *f, uint32_t l) {
 	(void) r;
 	//test_spi_on_hello(f, l);
 }
+static void h_motion_auto_friction(router_t *r, const uint8_t *f, uint32_t l) {
+    (void)r;
+    motion_on_auto_friction_request(f, l);
+}
 
 void services_register_handlers(router_handlers_t *h) {
 	if (!h)
@@ -75,4 +79,5 @@ void services_register_handlers(router_handlers_t *h) {
     h->on_set_microsteps = h_set_microsteps;
     h->on_set_microsteps_axes = h_set_microsteps_axes;
     h->on_test_hello = h_test_hello;
+    h->on_motion_auto_friction = h_motion_auto_friction;
 }

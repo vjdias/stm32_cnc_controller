@@ -27,6 +27,8 @@
 #include "Protocol/Responses/encoder_status_response.h"
 #include "Protocol/Requests/set_microsteps_request.h"
 #include "Protocol/Requests/set_microsteps_axes_request.h"
+#include "Protocol/Requests/motion_auto_friction_request.h"
+#include "Protocol/Responses/motion_auto_friction_response.h"
 
 LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
@@ -136,6 +138,37 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_FRICTION_B_X_PM   600u     /* 60% de atrito viscoso */
 #endif
 
+#ifndef MOTION_AUTO_FRICTION_DEFAULT_REVOLUTIONS
+#define MOTION_AUTO_FRICTION_DEFAULT_REVOLUTIONS 6u
+#endif
+#ifndef MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION
+#define MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION 2u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_DIRMASK
+#define MOTION_AUTO_FRICTION_SEG_DIRMASK 0x07u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_VX
+#define MOTION_AUTO_FRICTION_SEG_VX 10u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_VY
+#define MOTION_AUTO_FRICTION_SEG_VY 8u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_VZ
+#define MOTION_AUTO_FRICTION_SEG_VZ 6u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_SX
+#define MOTION_AUTO_FRICTION_SEG_SX 2400u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_SY
+#define MOTION_AUTO_FRICTION_SEG_SY 2400u
+#endif
+#ifndef MOTION_AUTO_FRICTION_SEG_SZ
+#define MOTION_AUTO_FRICTION_SEG_SZ 2400u
+#endif
+#ifndef MOTION_AUTO_FRICTION_FRAME_BASE
+#define MOTION_AUTO_FRICTION_FRAME_BASE 0xC0u
+#endif
+
 /* =======================
  *  Teste: botão B2 alterna escala
  *  - Alterna 100% <-> reduzido (permille) para o eixo X
@@ -235,7 +268,62 @@ static volatile uint8_t  g_axis_friction_enabled[MOTION_AXIS_COUNT] = { 0u, 0u, 
 /* Parâmetros C (steps/s) e B (permille) por eixo */
 static uint32_t g_axis_friction_C_sps[MOTION_AXIS_COUNT] = { 0u, 0u, 0u };
 static uint16_t g_axis_friction_B_pm[MOTION_AXIS_COUNT]  = { 0u, 0u, 0u };
+static uint8_t  g_dbg_friction_active[MOTION_AXIS_COUNT] = { 0u, 0u, 0u };
+static uint32_t g_dbg_friction_drop[MOTION_AXIS_COUNT]   = { 0u, 0u, 0u };
+
+#ifndef MOTION_AUTO_FRICTION_MONITOR_AXIS
+#define MOTION_AUTO_FRICTION_MONITOR_AXIS AXIS_Y
 #endif
+#ifndef MOTION_AUTO_FRICTION_TARGET_AXIS
+#define MOTION_AUTO_FRICTION_TARGET_AXIS  AXIS_X
+#endif
+#ifndef MOTION_AUTO_FRICTION_DEFAULT_TOGGLE_SEGMENT
+#define MOTION_AUTO_FRICTION_DEFAULT_TOGGLE_SEGMENT 3u
+#endif
+#ifndef MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT
+#define MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT 400u
+#endif
+#ifndef MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM
+#define MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM 20u /* 2% */
+#endif
+
+typedef struct {
+    uint8_t  armed;
+    uint8_t  collecting;
+    uint8_t  friction_applied;
+    uint8_t  prev_friction_state;
+    uint8_t  axis_monitor;
+    uint8_t  axis_friction;
+    uint8_t  result_reported;
+    uint16_t toggle_segment_index;
+    uint16_t sample_limit;
+    uint16_t current_segment;
+    uint32_t sample_count[2];
+    uint64_t sum_base[2];
+    uint64_t sum_cmd[2];
+    uint64_t sum_act[2];
+} motion_auto_friction_test_t;
+
+static motion_auto_friction_test_t g_auto_friction_test = {
+    .axis_monitor         = MOTION_AUTO_FRICTION_MONITOR_AXIS,
+    .axis_friction        = MOTION_AUTO_FRICTION_TARGET_AXIS,
+    .toggle_segment_index = MOTION_AUTO_FRICTION_DEFAULT_TOGGLE_SEGMENT,
+    .sample_limit         = MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT,
+};
+
+static inline uint8_t motion_auto_friction_is_armed(void) {
+    return g_auto_friction_test.armed;
+}
+
+static void motion_auto_friction_on_segment_begin_locked(const move_queue_add_req_t *seg);
+static void motion_auto_friction_record_sample(uint8_t axis,
+                                               uint32_t v_base_sps,
+                                               uint32_t v_cmd_sps,
+                                               uint32_t v_act_sps);
+static void motion_auto_friction_maybe_report(void);
+#else
+#define motion_auto_friction_is_armed() (0u)
+#endif /* MOTION_FRICTION_ENABLE */
 
 /* Estado do botão B2 para alternância com debounce/hold */
 static volatile uint8_t  g_b2_pressed = 0u;
@@ -257,6 +345,10 @@ void motion_test_b2_on_release(void) {
         if ((uint32_t)(now - last_toggle) >= (uint32_t)MOTION_TEST_B2_DEBOUNCE_MS) {
             last_toggle = now;
 #if MOTION_FRICTION_ENABLE
+            if (motion_auto_friction_is_armed()) {
+                LOGA_THIS(LOG_STATE_APPLIED, 0, "b2_toggle", "ignored_auto_fric_active");
+                return;
+            }
             uint8_t cur = g_axis_friction_enabled[AXIS_X];
             g_axis_friction_enabled[AXIS_X] = (cur ? 0u : 1u);
 
@@ -458,6 +550,200 @@ static inline uint32_t motion_lock(void) {
 static inline void motion_unlock(uint32_t primask) {
     __set_PRIMASK(primask);
 }
+
+#if MOTION_FRICTION_ENABLE
+static void motion_auto_friction_clear_samples(motion_auto_friction_test_t *test) {
+    for (uint8_t i = 0u; i < 2u; ++i) {
+        test->sample_count[i] = 0u;
+        test->sum_base[i] = 0u;
+        test->sum_cmd[i] = 0u;
+        test->sum_act[i] = 0u;
+    }
+}
+
+void motion_auto_friction_test_arm(uint16_t toggle_segment_index, uint16_t sample_limit) {
+    motion_auto_friction_test_t *test = &g_auto_friction_test;
+    uint32_t primask = motion_lock();
+    test->armed = 1u;
+    test->collecting = 0u;
+    test->friction_applied = 0u;
+    test->result_reported = 0u;
+    test->current_segment = 0u;
+    test->toggle_segment_index = (toggle_segment_index == 0u)
+                                 ? MOTION_AUTO_FRICTION_DEFAULT_TOGGLE_SEGMENT
+                                 : toggle_segment_index;
+    test->sample_limit = (sample_limit == 0u)
+                         ? MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT
+                         : sample_limit;
+    motion_auto_friction_clear_samples(test);
+    test->prev_friction_state = g_axis_friction_enabled[test->axis_friction];
+    g_axis_friction_enabled[test->axis_friction] = 0u;
+    motion_unlock(primask);
+
+    printf("[AUTO-FRIC] armed toggle_seg=%u sample_limit=%u monitor_axis=%u friction_axis=%u prev=%u\r\n",
+           (unsigned)test->toggle_segment_index,
+           (unsigned)test->sample_limit,
+           (unsigned)test->axis_monitor,
+           (unsigned)test->axis_friction,
+           (unsigned)test->prev_friction_state);
+}
+
+void motion_auto_friction_test_disarm(void) {
+    motion_auto_friction_test_t *test = &g_auto_friction_test;
+    uint32_t primask = motion_lock();
+    g_axis_friction_enabled[test->axis_friction] = test->prev_friction_state;
+    test->armed = 0u;
+    test->collecting = 0u;
+    test->friction_applied = 0u;
+    test->result_reported = 0u;
+    test->current_segment = 0u;
+    motion_auto_friction_clear_samples(test);
+    motion_unlock(primask);
+}
+
+static void motion_auto_friction_on_segment_begin_locked(const move_queue_add_req_t *seg) {
+    (void)seg;
+    motion_auto_friction_test_t *test = &g_auto_friction_test;
+    if (!test->armed) return;
+    if (test->collecting == 0u) {
+        test->collecting = 1u;
+    }
+    if (test->current_segment < UINT16_MAX) {
+        test->current_segment++;
+    }
+    if (!test->friction_applied && test->current_segment == test->toggle_segment_index) {
+        g_axis_friction_enabled[test->axis_friction] = 1u;
+        test->friction_applied = 1u;
+        printf("[AUTO-FRIC] friction axis %u enabled at segment %u\r\n",
+               (unsigned)test->axis_friction,
+               (unsigned)test->current_segment);
+    }
+}
+
+static void motion_auto_friction_record_sample(uint8_t axis,
+                                               uint32_t v_base_sps,
+                                               uint32_t v_cmd_sps,
+                                               uint32_t v_act_sps) {
+    motion_auto_friction_test_t *test = &g_auto_friction_test;
+    if (!test->armed || !test->collecting) return;
+    if (axis != test->axis_monitor) return;
+    uint8_t phase = test->friction_applied ? 1u : 0u;
+    if (test->sample_count[phase] >= test->sample_limit) return;
+    test->sum_base[phase] += v_base_sps;
+    test->sum_cmd[phase]  += v_cmd_sps;
+    test->sum_act[phase]  += v_act_sps;
+    test->sample_count[phase]++;
+}
+
+static uint32_t motion_auto_friction_avg(uint64_t sum, uint32_t count) {
+    if (count == 0u) return 0u;
+    return (uint32_t)(sum / (uint64_t)count);
+}
+
+static uint32_t motion_auto_abs_i32(int32_t v) {
+    return (uint32_t)((v < 0) ? -v : v);
+}
+
+static void motion_auto_friction_finalize(void) {
+    motion_auto_friction_test_t *test = &g_auto_friction_test;
+    g_axis_friction_enabled[test->axis_friction] = test->prev_friction_state;
+    test->armed = 0u;
+    test->collecting = 0u;
+    test->friction_applied = 0u;
+    test->result_reported = 0u;
+    motion_auto_friction_clear_samples(test);
+}
+
+static void motion_auto_friction_maybe_report(void) {
+    motion_auto_friction_test_t *test = &g_auto_friction_test;
+    if (!test->armed) return;
+    if (test->result_reported) return;
+    if (!test->collecting) return;
+    if (g_status.state == MOTION_RUNNING || g_has_active_segment) return;
+    if (g_queue_count != 0u) return;
+
+    test->result_reported = 1u;
+    uint32_t before_samples = test->sample_count[0];
+    uint32_t after_samples  = test->sample_count[1];
+    uint32_t avg_base_before = motion_auto_friction_avg(test->sum_base[0], before_samples);
+    uint32_t avg_base_after  = motion_auto_friction_avg(test->sum_base[1], after_samples);
+    uint32_t avg_cmd_before  = motion_auto_friction_avg(test->sum_cmd[0], before_samples);
+    uint32_t avg_cmd_after   = motion_auto_friction_avg(test->sum_cmd[1], after_samples);
+    uint32_t avg_act_before  = motion_auto_friction_avg(test->sum_act[0], before_samples);
+    uint32_t avg_act_after   = motion_auto_friction_avg(test->sum_act[1], after_samples);
+
+    int32_t delta_cmd = (int32_t)avg_cmd_after - (int32_t)avg_cmd_before;
+    int32_t delta_act = (int32_t)avg_act_after - (int32_t)avg_act_before;
+    const char *effect = "INCONCLUSIVE";
+    int32_t delta_cmd_pm = 0;
+    int32_t delta_act_pm = 0;
+    if (before_samples > 0u && after_samples > 0u) {
+        uint32_t ref_cmd = (avg_cmd_before == 0u) ? 1u : avg_cmd_before;
+        uint32_t ref_act = (avg_act_before == 0u) ? 1u : avg_act_before;
+        delta_cmd_pm = (int32_t)(((int64_t)delta_cmd * 1000LL) / (int64_t)ref_cmd);
+        delta_act_pm = (int32_t)(((int64_t)delta_act * 1000LL) / (int64_t)ref_act);
+        uint32_t cmd_abs = motion_auto_abs_i32(delta_cmd_pm);
+        uint32_t act_abs = motion_auto_abs_i32(delta_act_pm);
+        uint8_t detected = (cmd_abs >= MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM) ||
+                           (act_abs >= MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM);
+        effect = detected ? "EFFECT" : "NO_EFFECT";
+    }
+
+    printf("[AUTO-FRIC] toggle_seg=%u samples(before=%lu,after=%lu) "
+           "base_avg(before=%lu,after=%lu) cmd_avg(before=%lu,after=%lu) "
+           "act_avg(before=%lu,after=%lu) delta_cmd=%ld delta_act=%ld "
+           "delta_cmd_pm=%ld delta_act_pm=%ld result=%s\r\n",
+           (unsigned)test->toggle_segment_index,
+           (unsigned long)before_samples, (unsigned long)after_samples,
+           (unsigned long)avg_base_before, (unsigned long)avg_base_after,
+           (unsigned long)avg_cmd_before,  (unsigned long)avg_cmd_after,
+           (unsigned long)avg_act_before,  (unsigned long)avg_act_after,
+           (long)delta_cmd, (long)delta_act,
+           (long)delta_cmd_pm, (long)delta_act_pm,
+           effect);
+
+    motion_auto_friction_finalize();
+}
+
+static move_queue_add_req_t motion_auto_friction_make_segment_template(void) {
+    move_queue_add_req_t seg = move_queue_add_req_make_default();
+    seg.dirMask = MOTION_AUTO_FRICTION_SEG_DIRMASK;
+    seg.vx = MOTION_AUTO_FRICTION_SEG_VX;
+    seg.vy = MOTION_AUTO_FRICTION_SEG_VY;
+    seg.vz = MOTION_AUTO_FRICTION_SEG_VZ;
+    seg.sx = MOTION_AUTO_FRICTION_SEG_SX;
+    seg.sy = MOTION_AUTO_FRICTION_SEG_SY;
+    seg.sz = MOTION_AUTO_FRICTION_SEG_SZ;
+    return seg;
+}
+
+static proto_result_t motion_auto_friction_enqueue_segments_locked(uint8_t revolutions) {
+    if (revolutions == 0u) return PROTO_ERR_ARG;
+    move_queue_add_req_t seg = motion_auto_friction_make_segment_template();
+    for (uint8_t i = 0; i < revolutions; ++i) {
+        seg.frameId = (uint8_t)(MOTION_AUTO_FRICTION_FRAME_BASE + i);
+        proto_result_t st = motion_queue_push_locked(&seg);
+        if (st != PROTO_OK) {
+            return st;
+        }
+    }
+    return PROTO_OK;
+}
+#else
+void motion_auto_friction_test_arm(uint16_t toggle_segment_index, uint16_t sample_limit) {
+    (void)toggle_segment_index;
+    (void)sample_limit;
+}
+void motion_auto_friction_test_disarm(void) { }
+static void motion_auto_friction_maybe_report(void) { }
+static move_queue_add_req_t motion_auto_friction_make_segment_template(void) {
+    return move_queue_add_req_make_default();
+}
+static proto_result_t motion_auto_friction_enqueue_segments_locked(uint8_t revolutions) {
+    (void)revolutions;
+    return PROTO_ERR_RANGE;
+}
+#endif
 
 /* Forward decl. para função usada pela seleção de mestre (progress) */
 static uint32_t motion_remaining_steps_total_for_axis(uint8_t axis);
@@ -771,6 +1057,9 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
         g_pi_i_accum[axis] = 0;
         g_pi_prev_err[axis] = 0;
     }
+#if MOTION_FRICTION_ENABLE
+    motion_auto_friction_on_segment_begin_locked(seg);
+#endif
 #if MOTION_DEBUG_FLOW
     printf("[FLOW begin_segment id=%u dirMask=0x%02X V(x,y,z)=(%u,%u,%u) S(x,y,z)=(%lu,%lu,%lu) ]\r\n",
            (unsigned)seg->frameId,
@@ -944,6 +1233,9 @@ void motion_service_init(void) {
     if (HAL_TIM_Base_Start_IT(&htim7) != HAL_OK) Error_Handler();
 
     LOGT_THIS(LOG_STATE_START, PROTO_OK, "init", "timers_ready");
+    printf("MOTION cfg: TIM6=%lu Hz, MAX_SPS=%lu\r\n",
+           (unsigned long)MOTION_TIM6_HZ,
+           (unsigned long)MOTION_MAX_SPS);
 }
 
 const motion_status_t* motion_status_get(void) {
@@ -1276,6 +1568,7 @@ void motion_on_tim7_tick(void)
                passos remanescentes na fila — mantemos a rampa global da lista. */
 
             uint32_t v_cmd_sps = ((uint32_t)ax->velocity_per_tick) * 1000u; /* alvo/cruzeiro */
+            uint32_t v_base_sps = v_cmd_sps;   /* debug: valor antes de throttle/PI */
 
 #if MOTION_PROGRESS_MODE && MOTION_ERR_THROTTLE_ENABLE
             /* Throttle por erro (apenas eixos não-mestres):
@@ -1401,14 +1694,48 @@ void motion_on_tim7_tick(void)
             if (ax->v_actual_sps > MOTION_MAX_SPS) ax->v_actual_sps = MOTION_MAX_SPS;
 
             /* Aplica modelo de atrito pós-rampa (C + B·v): atua sobre v_actual_sps */
+            uint8_t friction_active = 0u;
+            uint32_t friction_drop_sps = 0u;
 #if MOTION_FRICTION_ENABLE
+            uint32_t v_pre_friction = ax->v_actual_sps;
             ax->v_actual_sps = motion_apply_friction(axis, ax->v_actual_sps);
+            friction_active = g_axis_friction_enabled[axis];
+            if (v_pre_friction > ax->v_actual_sps) {
+                friction_drop_sps = v_pre_friction - ax->v_actual_sps;
+            }
+            g_dbg_friction_active[axis] = friction_active;
+            g_dbg_friction_drop[axis] = friction_drop_sps;
+#endif
+            if (axis == AXIS_Y) {
+                static uint32_t dbg_cnt = 0;
+                if ((dbg_cnt++ % 50u) == 0u) {
+                    uint8_t fric_x = 0u;
+                    uint32_t drop_x = 0u;
+#if MOTION_FRICTION_ENABLE
+                    fric_x = g_dbg_friction_active[AXIS_X];
+                    drop_x = g_dbg_friction_drop[AXIS_X];
+#endif
+                    printf("DBG_Y: base=%lu cmd=%lu act=%lu max=%lu fricY=%u dropY=%lu fricX=%u dropX=%lu\r\n",
+                           (unsigned long)v_base_sps,
+                           (unsigned long)v_cmd_sps,
+                           (unsigned long)ax->v_actual_sps,
+                           (unsigned long)MOTION_MAX_SPS,
+                           (unsigned)friction_active,
+                           (unsigned long)friction_drop_sps,
+                           (unsigned)fric_x,
+                           (unsigned long)drop_x);
+                }
+            }
+#if MOTION_FRICTION_ENABLE
+            motion_auto_friction_record_sample(axis, v_base_sps, v_cmd_sps, ax->v_actual_sps);
 #endif
             /* Incremento do DDA a 50 kHz */
             ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
         }
     }
-
+#if MOTION_FRICTION_ENABLE
+    motion_auto_friction_maybe_report();
+#endif
 }
 
 /* =======================
@@ -1631,6 +1958,87 @@ void motion_on_encoder_status(const uint8_t *frame, uint32_t len) {
     uint8_t raw[20];
     if (encoder_status_resp_encoder(&resp, raw, sizeof raw) == PROTO_OK) {
         (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
+}
+
+void motion_on_auto_friction_request(const uint8_t *frame, uint32_t len) {
+    motion_auto_friction_req_t req = motion_auto_friction_req_make_default();
+    motion_auto_friction_resp_t resp = {0};
+    uint8_t status = MOTION_AUTO_FRICTION_STATUS_ERROR;
+    uint8_t loops = 0u;
+    uint8_t friction_segment = 0u;
+    uint16_t sample_limit = 0u;
+
+    int dec = motion_auto_friction_req_decoder(frame, len, &req);
+    resp.frameId = req.frameId;
+    if (dec != PROTO_OK) {
+        status = MOTION_AUTO_FRICTION_STATUS_INVALID;
+        goto send_resp;
+    }
+
+    loops = (req.revolutions == 0u) ? MOTION_AUTO_FRICTION_DEFAULT_REVOLUTIONS : req.revolutions;
+    if (loops < 2u) loops = 2u;
+    if (loops > (uint8_t)MOTION_QUEUE_CAPACITY) loops = (uint8_t)MOTION_QUEUE_CAPACITY;
+
+    friction_segment = (req.friction_segment == 0u)
+                       ? MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION
+                       : req.friction_segment;
+    if (friction_segment < MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION)
+        friction_segment = MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION;
+    if (friction_segment > loops)
+        friction_segment = MOTION_AUTO_FRICTION_MIN_SEGMENT_WITH_FRICTION;
+
+    sample_limit = (req.sample_limit == 0u) ? MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT
+                                            : req.sample_limit;
+
+#if MOTION_FRICTION_ENABLE
+    do {
+        uint32_t primask = motion_lock();
+        if (g_status.state == MOTION_RUNNING || g_has_active_segment || g_queue_count != 0u ||
+            motion_auto_friction_is_armed()) {
+            status = MOTION_AUTO_FRICTION_STATUS_BUSY;
+            motion_unlock(primask);
+            break;
+        }
+
+        motion_queue_clear_locked();
+        motion_auto_friction_test_arm((uint16_t)friction_segment, sample_limit);
+        proto_result_t sched = motion_auto_friction_enqueue_segments_locked(loops);
+        if (sched != PROTO_OK) {
+            status = MOTION_AUTO_FRICTION_STATUS_QUEUE_FULL;
+            motion_auto_friction_test_disarm();
+            motion_queue_clear_locked();
+            motion_unlock(primask);
+            break;
+        }
+
+        if (!g_has_active_segment) {
+            if (motion_try_start_next_locked()) {
+                g_status.state = MOTION_RUNNING;
+                motion_refresh_status_locked();
+            }
+        }
+        motion_unlock(primask);
+        status = MOTION_AUTO_FRICTION_STATUS_OK;
+        LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "auto_fric_cmd",
+                  "loops=%u fric_seg=%u samples=%u",
+                  (unsigned)loops, (unsigned)friction_segment, (unsigned)sample_limit);
+    } while (0);
+#else
+    status = MOTION_AUTO_FRICTION_STATUS_UNAVAILABLE;
+#endif
+
+send_resp:
+    resp.status = status;
+    resp.revolutions = loops;
+    resp.friction_segment = friction_segment;
+    resp.sample_limit = sample_limit;
+    uint8_t raw[8];
+    if (motion_auto_friction_resp_encoder(&resp, raw, sizeof raw) == PROTO_OK) {
+        (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
+    if (status != MOTION_AUTO_FRICTION_STATUS_OK) {
+        LOGA_THIS(LOG_STATE_ERROR, status, "auto_fric_cmd", "status=%u", (unsigned)status);
     }
 }
 

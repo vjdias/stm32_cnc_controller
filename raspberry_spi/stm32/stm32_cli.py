@@ -421,6 +421,17 @@ def build_parser() -> argparse.ArgumentParser:
         q_add.add_argument(f"--kd-{axis}", type=int, default=0)
     q_add.set_defaults(handler="queue_add", needs_client=True)
 
+    auto_fric = sub.add_parser(
+        "auto-friction",
+        help="Executa sequência automática de 6 voltas para validar atrito (com logger embutido)",
+    )
+    _common_args(auto_fric, include_tries=True, include_settle_delay=True)
+    auto_fric.add_argument("--frame-id", type=int, default=0x60)
+    auto_fric.add_argument("--loops", type=int, default=6, help="Quantidade de segmentos (voltas) sequenciais")
+    auto_fric.add_argument("--friction-seg", type=int, default=2, help="Segmento (1-based) em que o atrito do X volta a ligar")
+    auto_fric.add_argument("--samples", type=int, default=400, help="Amostras coletadas antes/depois para a análise")
+    auto_fric.set_defaults(handler="motion_auto_friction", needs_client=True)
+
     # set-microsteps-axes: define microsteps por eixo no firmware
     set_ms_ax = sub.add_parser("set-microsteps-axes", help="Define microsteps por eixo (X,Y,Z) no firmware (afeta PI/telemetria)")
     _common_args(set_ms_ax, include_tries=True, include_settle_delay=True)

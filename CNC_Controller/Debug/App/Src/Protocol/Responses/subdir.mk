@@ -13,6 +13,7 @@ C_SRCS += \
 ../App/Src/Protocol/Responses/move_probe_level_response.c \
 ../App/Src/Protocol/Responses/move_queue_add_ack_response.c \
 ../App/Src/Protocol/Responses/move_queue_status_response.c \
+../App/Src/Protocol/Responses/motion_auto_friction_response.c \
 ../App/Src/Protocol/Responses/set_origin_response.c \
 ../App/Src/Protocol/Responses/start_move_response.c 
 
@@ -25,6 +26,7 @@ OBJS += \
 ./App/Src/Protocol/Responses/move_probe_level_response.o \
 ./App/Src/Protocol/Responses/move_queue_add_ack_response.o \
 ./App/Src/Protocol/Responses/move_queue_status_response.o \
+./App/Src/Protocol/Responses/motion_auto_friction_response.o \
 ./App/Src/Protocol/Responses/set_origin_response.o \
 ./App/Src/Protocol/Responses/start_move_response.o 
 
@@ -37,6 +39,7 @@ C_DEPS += \
 ./App/Src/Protocol/Responses/move_probe_level_response.d \
 ./App/Src/Protocol/Responses/move_queue_add_ack_response.d \
 ./App/Src/Protocol/Responses/move_queue_status_response.d \
+./App/Src/Protocol/Responses/motion_auto_friction_response.d \
 ./App/Src/Protocol/Responses/set_origin_response.d \
 ./App/Src/Protocol/Responses/start_move_response.d 
 
