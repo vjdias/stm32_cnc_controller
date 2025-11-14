@@ -214,10 +214,11 @@ class STM32Client:
         if poll_byte is None:
             raise TimeoutError("Polling desabilitado e resposta não estava presente no handshake.")
 
-        poll_payload_len = max(1, len(request))
+        # Poll com quadro completo (42×poll_byte) para o firmware reconhecer como "apenas leitura"
+        poll_payload_len = 42
         for _ in range(max(1, tries)):
             poll = [poll_byte & 0xFF] * poll_payload_len
-            rx = self._xfer(_build_spi_dma_frame(poll))
+            rx = self._xfer(_build_spi_dma_frame(poll, filler=(poll_byte & 0xFF), frame_len=42))
             r = _extract_response_frame(rx, spec.length, spec.response_type)
             if r is not None:
                 return r
@@ -238,9 +239,9 @@ class STM32Client:
 
         Não envia nenhum comando, apenas quadros de polling (byte repetido).
         """
-        payload_len = 1
+        payload_len = 42
         for _ in range(max(1, tries)):
-            rx = self._xfer(_build_spi_dma_frame([poll_byte] * payload_len))
+            rx = self._xfer(_build_spi_dma_frame([poll_byte] * payload_len, filler=poll_byte, frame_len=42))
             r = _extract_response_frame(rx, expected_len, expected_response_type)
             if r is not None:
                 return r
@@ -438,14 +439,7 @@ def build_parser() -> argparse.ArgumentParser:
     start_move.add_argument("--end-timeout", type=float, default=60.0, help="Tempo máximo (s) aguardando MOVE_END quando --wait-end")
     start_move.set_defaults(handler="start_move", needs_client=True)
 
-    # set-microsteps-axes
-    set_ms_ax = sub.add_parser("set-microsteps-axes", help="Define microsteps por eixo (X,Y,Z) no firmware (afeta PI/telemetria)")
-    _common_args(set_ms_ax, include_tries=True, include_settle_delay=True)
-    set_ms_ax.add_argument("--frame-id", type=int, default=0x40)
-    set_ms_ax.add_argument("--x", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
-    set_ms_ax.add_argument("--y", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
-    set_ms_ax.add_argument("--z", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
-    set_ms_ax.set_defaults(handler="set_microsteps_axes", needs_client=True)
+    # (duplicata removida) set-microsteps-axes já definido acima
 
     end_move = sub.add_parser("end-move", help="Finalizar execução")
     _common_args(end_move, include_tries=True, include_settle_delay=True)

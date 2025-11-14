@@ -1641,13 +1641,14 @@ void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
         return;
     }
     if (g_status.state == MOTION_RUNNING) {
+        /* Em execução: não aplica, mas responde ACK para o host não travar */
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps", "busy_running");
-        return;
+    } else {
+        uint16_t ms = (req.microsteps == 0u) ? 1u : req.microsteps;
+        if (ms > 256u) ms = 256u;
+        for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_microstep_factor[a] = ms;
+        LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "all_axes_ms=%u", (unsigned)ms);
     }
-    uint16_t ms = (req.microsteps == 0u) ? 1u : req.microsteps;
-    if (ms > 256u) ms = 256u;
-    for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_microstep_factor[a] = ms;
-    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "all_axes_ms=%u", (unsigned)ms);
     /* Resposta mínima (ACK): [HDR,TYPE,frameId,TAIL] */
     {
         uint8_t raw[4];
@@ -1665,16 +1666,17 @@ void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
         return;
     }
     if (g_status.state == MOTION_RUNNING) {
+        /* Em execução: não aplica, mas responde ACK para o host não travar */
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps_ax", "busy_running");
-        return;
+    } else {
+        uint16_t msx = (req.ms_x == 0u) ? 1u : req.ms_x; if (msx > 256u) msx = 256u;
+        uint16_t msy = (req.ms_y == 0u) ? 1u : req.ms_y; if (msy > 256u) msy = 256u;
+        uint16_t msz = (req.ms_z == 0u) ? 1u : req.ms_z; if (msz > 256u) msz = 256u;
+        g_microstep_factor[AXIS_X] = msx;
+        g_microstep_factor[AXIS_Y] = msy;
+        g_microstep_factor[AXIS_Z] = msz;
+        LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps_ax", "ms=(%u,%u,%u)", (unsigned)msx, (unsigned)msy, (unsigned)msz);
     }
-    uint16_t msx = (req.ms_x == 0u) ? 1u : req.ms_x; if (msx > 256u) msx = 256u;
-    uint16_t msy = (req.ms_y == 0u) ? 1u : req.ms_y; if (msy > 256u) msy = 256u;
-    uint16_t msz = (req.ms_z == 0u) ? 1u : req.ms_z; if (msz > 256u) msz = 256u;
-    g_microstep_factor[AXIS_X] = msx;
-    g_microstep_factor[AXIS_Y] = msy;
-    g_microstep_factor[AXIS_Z] = msz;
-    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps_ax", "ms=(%u,%u,%u)", (unsigned)msx, (unsigned)msy, (unsigned)msz);
     /* Resposta mínima (ACK) reutiliza RESP_SET_MICROSTEPS */
     {
         uint8_t raw[4];
