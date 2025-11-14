@@ -103,7 +103,7 @@ class _ThrottledClient:
 
     def __init__(self, client: STM32Client, min_interval_s: float = 2.0) -> None:
         self._c = client
-        self._min_iv = max(1.0, float(min_interval_s))
+        self._min_iv = max(2.0, float(min_interval_s))
         self._lock = threading.Lock()
         # Inicializa como "já passou" o intervalo para não atrasar a 1ª chamada
         self._last = time.monotonic() - self._min_iv
@@ -557,7 +557,7 @@ def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
     settle_key = f"{kind}_settle"
     dsettle = 5.0
     settle = float(spi.get(settle_key, dsettle))
-    settle = max(2, settle)
+    settle = max(3.0, settle)
     specified_tries = spi.get(tries_key, None)
     if specified_tries is not None:
         tries = max(1, int(specified_tries))
@@ -617,7 +617,7 @@ def _process_steps(
                         v = int(ms_field)
                         mx = my = mz = v
                     req_ms_ax = STM32RequestBuilder.set_microsteps_axes(0x40, mx, my, mz)
-                    _ = client.exchange(0x27, req_ms_ax, tries=2, settle_delay_s=2)
+                    _ = client.exchange(0x27, req_ms_ax, tries=2, settle_delay_s=3)
                     logger.info("STM32 ← SET_MICROSTEPS_AX (x=%d,y=%d,z=%d) (alinha PI/telemetria)", mx, my, mz)
                 except Exception as exc:
                     logger.warning("Falha ao enviar SET_MICROSTEPS_AX ao STM32: %s", exc)
@@ -662,7 +662,7 @@ def _process_steps(
                     )
                     time.sleep(cooldown)
                     resp = client.exchange(
-                        0x01, req, tries=max(qadd_tries, int(max(80, cooldown / max(2, qadd_settle)))) ,
+                        0x01, req, tries=max(qadd_tries, int(max(80, cooldown / max(3.0, qadd_settle)))) ,
                         settle_delay_s=max(qadd_settle, cooldown)
                     )
                 else:
@@ -685,13 +685,13 @@ def _process_steps(
     # Inicia execução se houve ao menos um movimento
     if sent > 0:
         # Pequena folga entre o último queue_add e o start_move (configurável)
-        gap = float(cfg.get("spi", {}).get("start_move_gap_s", 2)) if isinstance(cfg.get("spi"), dict) else 3
+        gap = float(cfg.get("spi", {}).get("start_move_gap_s", 2)) if isinstance(cfg.get("spi"), dict) else 2
         if gap > 0:
             time.sleep(gap)
 
         frame_id = last_frame_id if last_frame_id is not None else fid._cur
         # START_MOVE: settle = 3 × quantidade de itens; tries=1
-        start_settle = max(2, 3.0 * float(sent))
+        start_settle = max(3.0, 3.0 * float(sent))
         start_tries = 1
 
         # Tenta até 3 vezes (sleep 3s entre tentativas) se não houver ACK/BUSY
@@ -859,7 +859,7 @@ def run_sequence(args: argparse.Namespace) -> int:
     try:
         st = cfg.get("stm32", {})
         base_client = STM32Client(bus=int(st.get("bus", 0)), dev=int(st.get("dev", 0)), speed_hz=int(st.get("speed", 1_000_000)))
-        min_iv = float(getattr(args, "stm32_min_interval", 3.0) or 3.0)
+        min_iv = float(getattr(args, "stm32_min_interval", 2.0) or 2.0)
         client = _ThrottledClient(base_client, min_iv)
     except Exception as exc:
         logger.error("Falha ao abrir SPI para STM32: %s", exc)
@@ -920,7 +920,7 @@ def status(args: argparse.Namespace) -> int:
     try:
         st = cfg.get("stm32", {})
         base_client = STM32Client(bus=int(st.get("bus", 0)), dev=int(st.get("dev", 0)), speed_hz=int(st.get("speed", 1_000_000)))
-        min_iv = float(getattr(args, "stm32_min_interval", 3.0) or 3.0)
+        min_iv = float(getattr(args, "stm32_min_interval", 2.0) or 2.0)
         client = _ThrottledClient(base_client, min_iv)
     except Exception as exc:
         print("Falha ao abrir SPI para STM32:", exc)
@@ -968,8 +968,8 @@ def build_parser() -> argparse.ArgumentParser:
     prun.add_argument("sequence", help="Caminho do arquivo de sequência JSON")
     prun.add_argument("--config", default="application.cfg", help="application.cfg com limites e conexões")
     prun.add_argument("--timeout", type=float, default=120.0, help="Timeout aguardando conclusão (s)")
-    prun.add_argument("--stm32-min-interval", dest="stm32_min_interval", type=float, default=3.0,
-                      help="Intervalo mínimo entre transações SPI para o STM32 (s). Padrão: 3.0")
+    prun.add_argument("--stm32-min-interval", dest="stm32_min_interval", type=float, default=2.0,
+                      help="Intervalo mínimo entre transações SPI para o STM32 (s). Padrão: 2.0")
     prun.add_argument("--min-wait-s", type=float, default=None, help="Tempo mínimo total de espera para ACKs SPI (>=5s; sobrescreve cfg.spi.min_wait_s)")
     prun.add_argument("--queue-add-settle", type=float, default=None, help="Sobrescreve cfg.spi.queue_add_settle (s)")
     prun.add_argument("--start-move-settle", type=float, default=None, help="Sobrescreve cfg.spi.start_move_settle (s)")
@@ -979,8 +979,8 @@ def build_parser() -> argparse.ArgumentParser:
     pstat = sub.add_parser("status", help="Consulta MOVE_QUEUE_STATUS e imprime progresso/erro PID")
     pstat.add_argument("--config", default="application.cfg")
     pstat.add_argument("--frame-id", type=int, default=0x41)
-    pstat.add_argument("--stm32-min-interval", dest="stm32_min_interval", type=float, default=3.0,
-                      help="Intervalo mínimo entre transações SPI para o STM32 (s). Padrão: 3.0")
+    pstat.add_argument("--stm32-min-interval", dest="stm32_min_interval", type=float, default=2.0,
+                      help="Intervalo mínimo entre transações SPI para o STM32 (s). Padrão: 2.0")
     pstat.add_argument("--total", type=int, default=None, help="(Opcional) total de movimentos para estimar executados/pending")
     pstat.set_defaults(handler=status)
 
@@ -988,14 +988,14 @@ def build_parser() -> argparse.ArgumentParser:
     pms.add_argument("--config", default="application.cfg")
     pms.add_argument("--frame-id", type=int, default=0x40)
     pms.add_argument("--value", type=int, choices=[1,2,4,8,16,32,64,128,256], required=True)
-    pms.add_argument("--stm32-min-interval", dest="stm32_min_interval", type=float, default=3.0,
-                     help="Intervalo mínimo entre transações SPI para o STM32 (s). Padrão: 3.0")
+    pms.add_argument("--stm32-min-interval", dest="stm32_min_interval", type=float, default=2.0,
+                     help="Intervalo mínimo entre transações SPI para o STM32 (s). Padrão: 2.0")
     def _h_set_ms(args: argparse.Namespace) -> int:
         cfg = _load_cfg(args.config)
         try:
             st = cfg.get("stm32", {})
             base_client = STM32Client(bus=int(st.get("bus", 0)), dev=int(st.get("dev", 0)), speed_hz=int(st.get("speed", 1_000_000)))
-            min_iv = float(getattr(args, "stm32_min_interval", 3.0) or 3.0)
+            min_iv = float(getattr(args, "stm32_min_interval", 2.0) or 2.0)
             client = _ThrottledClient(base_client, min_iv)
         except Exception as exc:
             print("Falha ao abrir SPI para STM32:", exc)
@@ -1003,7 +1003,7 @@ def build_parser() -> argparse.ArgumentParser:
         try:
             v = int(args.value)
             req = STM32RequestBuilder.set_microsteps_axes(int(args.frame_id) & 0xFF, v, v, v)
-            _ = client.exchange(0x27, req, tries=2, settle_delay_s=2)
+            _ = client.exchange(0x27, req, tries=2, settle_delay_s=3)
             print(f"Enviado SET_MICROSTEPS_AX=({v},{v},{v}) (frame={int(args.frame_id) & 0xFF})")
             return 0
         except Exception as exc:
