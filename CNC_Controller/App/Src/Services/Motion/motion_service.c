@@ -56,7 +56,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_DEBUG_ENCODERS          1
 #endif
 #ifndef MOTION_DEBUG_FLOW
-#define MOTION_DEBUG_FLOW              0
+#define MOTION_DEBUG_FLOW              1
 #endif
 #ifndef MOTION_DEBUG_TIM6_PRINTS
 #define MOTION_DEBUG_TIM6_PRINTS       0
@@ -65,7 +65,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_DEBUG_STEP_DECIM        500u
 #endif
 #ifndef MOTION_DEBUG_AXIS_LOG_ENABLE
-#define MOTION_DEBUG_AXIS_LOG_ENABLE   1u
+#define MOTION_DEBUG_AXIS_LOG_ENABLE   0u
 #endif
 #ifndef MOTION_DEBUG_AXIS_LOG_DECIM
 #define MOTION_DEBUG_AXIS_LOG_DECIM    50u
@@ -136,18 +136,18 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  - B: atrito viscoso em permille (0..1000) sobre v_cmd
  * ======================= */
 #ifndef MOTION_FRICTION_ENABLE
-#define MOTION_FRICTION_ENABLE 1u
+#define MOTION_FRICTION_ENABLE 0u
 #endif
 
 /* Valores para o eixo X (ajuste depois conforme os testes) */
 #ifndef MOTION_FRICTION_C_X_SPS
-#define MOTION_FRICTION_C_X_SPS  80u      /* offset estático mínimo (~2% da Vx comum) */
+#define MOTION_FRICTION_C_X_SPS  0u       /* sem offset estático */
 #endif
 #ifndef MOTION_FRICTION_B_X_PM
-#define MOTION_FRICTION_B_X_PM   20u      /* ~2% de atrito viscoso */
+#define MOTION_FRICTION_B_X_PM   1u       /* 0,1% de atrito viscoso (quase nulo) */
 #endif
 #ifndef MOTION_FRICTION_AUTO_ENABLE_X
-#define MOTION_FRICTION_AUTO_ENABLE_X 0u   /* 1=liga atrito ao iniciar firmware */
+#define MOTION_FRICTION_AUTO_ENABLE_X 1u   /* 1=liga atrito ao iniciar firmware */
 #endif
 
 #ifndef MOTION_AUTO_FRICTION_DEFAULT_REVOLUTIONS
@@ -354,46 +354,9 @@ static void motion_auto_friction_try_arm_on_startmove(void);
 #define motion_auto_friction_is_armed() (0u)
 #endif /* MOTION_FRICTION_ENABLE */
 
-/* Estado do botão B2 para alternância com debounce/hold */
-static volatile uint8_t  g_b2_pressed = 0u;
-static volatile uint32_t g_b2_t0_ms  = 0u;
-
-void motion_test_b2_on_press(void) {
-    if (g_b2_pressed) return;
-    g_b2_pressed = 1u;
-    g_b2_t0_ms = HAL_GetTick();
-}
-
-void motion_test_b2_on_release(void) {
-    if (!g_b2_pressed) return;
-    uint32_t now = HAL_GetTick();
-    uint32_t dt  = now - g_b2_t0_ms;
-    g_b2_pressed = 0u;
-    if ((uint32_t)MOTION_TEST_B2_HOLD_MS == 0u || dt >= (uint32_t)MOTION_TEST_B2_HOLD_MS) {
-        static uint32_t last_toggle = 0u;
-        if ((uint32_t)(now - last_toggle) >= (uint32_t)MOTION_TEST_B2_DEBOUNCE_MS) {
-            last_toggle = now;
-#if MOTION_FRICTION_ENABLE
-            if (motion_auto_friction_is_armed()) {
-                LOGA_THIS(LOG_STATE_APPLIED, 0, "b2_toggle", "ignored_auto_fric_active");
-                return;
-            }
-            uint8_t cur = g_axis_friction_enabled[AXIS_X];
-            g_axis_friction_enabled[AXIS_X] = (cur ? 0u : 1u);
-
-            LOGA_THIS(LOG_STATE_APPLIED,
-                      (int32_t)g_axis_friction_enabled[AXIS_X],
-                      "b2_toggle",
-                      "friction_x=%u C=%lu B_pm=%u",
-                      (unsigned)g_axis_friction_enabled[AXIS_X],
-                      (unsigned long)g_axis_friction_C_sps[AXIS_X],
-                      (unsigned)g_axis_friction_B_pm[AXIS_X]);
-#else
-            (void)now; (void)dt; /* evita warning se atrito estiver desligado em build */
-#endif
-        }
-    }
-}
+/* B2 toggle desativado: handlers no-op */
+void motion_test_b2_on_press(void) { /* noop */ }
+void motion_test_b2_on_release(void) { /* noop */ }
 
 /* PI de velocidade baseado no encoder
  * Notas:
@@ -1985,6 +1948,10 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
     motion_refresh_status_locked();
     motion_unlock(primask);
 
+    /* Envia ACK do StartMove antes de ligar os timers, garantindo
+       que a resposta esteja disponível no próximo poll SPI */
+    motion_send_start_response(req.frameId, started ? 0u : 1u, g_status.queue_depth);
+
     (void)HAL_TIM_Base_Start_IT(&htim6);
     (void)HAL_TIM_Base_Start_IT(&htim7);
 
@@ -2012,7 +1979,6 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
 #endif
     }
 
-    motion_send_start_response(req.frameId, started ? 0u : 1u, g_status.queue_depth);
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "start_move", started ? "running" : "ignored");
 #if MOTION_DEBUG_FLOW
     printf("[FLOW start_move %s]\r\n", started ? "running" : "ignored");
@@ -2106,6 +2072,7 @@ void motion_on_encoder_status(const uint8_t *frame, uint32_t len) {
     }
 }
 
+#if MOTION_FRICTION_ENABLE
 void motion_on_auto_friction_request(const uint8_t *frame, uint32_t len) {
     motion_auto_friction_req_t req = motion_auto_friction_req_make_default();
     motion_auto_friction_resp_t resp = {0};
@@ -2186,6 +2153,21 @@ send_resp:
         LOGA_THIS(LOG_STATE_ERROR, status, "auto_fric_cmd", "status=%u", (unsigned)status);
     }
 }
+#else
+void motion_on_auto_friction_request(const uint8_t *frame, uint32_t len) {
+    (void)len;
+    motion_auto_friction_req_t req = motion_auto_friction_req_make_default();
+    motion_auto_friction_resp_t resp = {0};
+    (void)motion_auto_friction_req_decoder(frame, len, &req);
+    resp.frameId = req.frameId;
+    resp.status = MOTION_AUTO_FRICTION_STATUS_UNAVAILABLE;
+    uint8_t raw[8];
+    if (motion_auto_friction_resp_encoder(&resp, raw, sizeof raw) == PROTO_OK) {
+        (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
+    LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "auto_fric_cmd", "unavailable");
+}
+#endif
 
 void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
     set_microsteps_req_t req;
