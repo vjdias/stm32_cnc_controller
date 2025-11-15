@@ -622,9 +622,13 @@ def _process_steps(
                     else:
                         v = int(ms_field)
                         mx = my = mz = v
+                    mx_b, my_b, mz_b = (mx & 0xFF), (my & 0xFF), (mz & 0xFF)
+                    logger.info(
+                        "STM32 ← SET_MICROSTEPS_AX raw=(%d,%d,%d) masked=(%d,%d,%d) hex=(0x%02X,0x%02X,0x%02X)",
+                        mx, my, mz, mx_b, my_b, mz_b, mx_b, my_b, mz_b,
+                    )
                     req_ms_ax = STM32RequestBuilder.set_microsteps_axes(0x40, mx, my, mz)
                     _ = client.exchange(0x27, req_ms_ax, tries=2, settle_delay_s=3)
-                    logger.info("STM32 ← SET_MICROSTEPS_AX (x=%d,y=%d,z=%d) (alinha PI/telemetria)", mx, my, mz)
                 except Exception as exc:
                     logger.warning("Falha ao enviar SET_MICROSTEPS_AX ao STM32: %s", exc)
         if "pid" in st and isinstance(st["pid"], dict):
@@ -1016,8 +1020,12 @@ def build_parser() -> argparse.ArgumentParser:
         try:
             v = int(args.value)
             req = STM32RequestBuilder.set_microsteps_axes(int(args.frame_id) & 0xFF, v, v, v)
+            vx_b = v & 0xFF
+            print(
+                "Enviando SET_MICROSTEPS_AX raw=(%d,%d,%d) masked=(%d,%d,%d) hex=(0x%02X,0x%02X,0x%02X) (frame=%d)"
+                % (v, v, v, vx_b, vx_b, vx_b, vx_b, vx_b, vx_b, (int(args.frame_id) & 0xFF))
+            )
             _ = client.exchange(0x27, req, tries=2, settle_delay_s=3)
-            print(f"Enviado SET_MICROSTEPS_AX=({v},{v},{v}) (frame={int(args.frame_id) & 0xFF})")
             return 0
         except Exception as exc:
             print("Falha ao enviar SET_MICROSTEPS_AX:", exc)

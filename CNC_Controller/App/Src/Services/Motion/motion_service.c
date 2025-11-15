@@ -64,6 +64,15 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #ifndef MOTION_DEBUG_STEP_DECIM
 #define MOTION_DEBUG_STEP_DECIM        500u
 #endif
+#ifndef MOTION_DEBUG_AXIS_LOG_ENABLE
+#define MOTION_DEBUG_AXIS_LOG_ENABLE   1u
+#endif
+#ifndef MOTION_DEBUG_AXIS_LOG_DECIM
+#define MOTION_DEBUG_AXIS_LOG_DECIM    50u
+#endif
+#ifndef MOTION_DEBUG_AXIS_LOG_MASK
+#define MOTION_DEBUG_AXIS_LOG_MASK     (1u << AXIS_Y) /* bitmask dos eixos que imprimem */
+#endif
 
 // Emissão de CSV/telemetria
 #ifndef MOTION_CSV_AT_STEP
@@ -132,10 +141,13 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
 /* Valores para o eixo X (ajuste depois conforme os testes) */
 #ifndef MOTION_FRICTION_C_X_SPS
-#define MOTION_FRICTION_C_X_SPS  2000u    /* forte offset estático (steps/s) */
+#define MOTION_FRICTION_C_X_SPS  80u      /* offset estático mínimo (~2% da Vx comum) */
 #endif
 #ifndef MOTION_FRICTION_B_X_PM
-#define MOTION_FRICTION_B_X_PM   600u     /* 60% de atrito viscoso */
+#define MOTION_FRICTION_B_X_PM   20u      /* ~2% de atrito viscoso */
+#endif
+#ifndef MOTION_FRICTION_AUTO_ENABLE_X
+#define MOTION_FRICTION_AUTO_ENABLE_X 0u   /* 1=liga atrito ao iniciar firmware */
 #endif
 
 #ifndef MOTION_AUTO_FRICTION_DEFAULT_REVOLUTIONS
@@ -288,7 +300,7 @@ static uint32_t g_dbg_friction_drop[MOTION_AXIS_COUNT]   = { 0u, 0u, 0u };
 #define MOTION_AUTO_FRICTION_EFFECT_THRESHOLD_PM 20u /* 2% */
 #endif
 #ifndef MOTION_AUTO_FRICTION_STARTMOVE_ENABLE
-#define MOTION_AUTO_FRICTION_STARTMOVE_ENABLE 0u
+#define MOTION_AUTO_FRICTION_STARTMOVE_ENABLE 1u
 #endif
 #ifndef MOTION_AUTO_FRICTION_STARTMOVE_SAMPLE_LIMIT
 #define MOTION_AUTO_FRICTION_STARTMOVE_SAMPLE_LIMIT MOTION_AUTO_FRICTION_DEFAULT_SAMPLE_LIMIT
@@ -555,6 +567,50 @@ static uint32_t g_step_print_count[MOTION_AXIS_COUNT] = {0,0,0};
 static volatile uint8_t g_demo_continuous = 0u; /* 1 = gera passos continuamente (modo DEMO) */
 static const uint16_t  g_demo_speed_table[4] = { 5u, 10u, 20u, 40u }; /* ksteps/s aprox (TIM7 ~1kHz) */
 static volatile uint8_t g_demo_speed_idx = 1u;
+
+#if MOTION_DEBUG_AXIS_LOG_ENABLE
+static void motion_debug_axis_log(uint8_t axis,
+                                  uint32_t v_base_sps,
+                                  uint32_t v_cmd_sps,
+                                  uint32_t v_act_sps,
+                                  uint8_t friction_active,
+                                  uint32_t friction_drop_sps)
+{
+    static uint32_t dbg_cnt[MOTION_AXIS_COUNT] = {0};
+    if (axis >= MOTION_AXIS_COUNT) return;
+    if (((1u << axis) & (uint32_t)MOTION_DEBUG_AXIS_LOG_MASK) == 0u) return;
+    uint32_t decim = (uint32_t)MOTION_DEBUG_AXIS_LOG_DECIM;
+    if (decim == 0u) decim = 1u;
+    if (((dbg_cnt[axis]++) % decim) != 0u) return;
+#if MOTION_FRICTION_ENABLE
+    uint8_t fric_x = g_dbg_friction_active[AXIS_X];
+    uint32_t drop_x = g_dbg_friction_drop[AXIS_X];
+#else
+    uint8_t fric_x = 0u;
+    uint32_t drop_x = 0u;
+#endif
+    uint32_t cmd_pct = 0u;
+    uint32_t act_pct = 0u;
+    if (MOTION_MAX_SPS > 0u) {
+        cmd_pct = (uint32_t)(((uint64_t)v_cmd_sps * 100u) / (uint64_t)MOTION_MAX_SPS);
+        act_pct = (uint32_t)(((uint64_t)v_act_sps * 100u) / (uint64_t)MOTION_MAX_SPS);
+    }
+    printf("DBG axis=%u base=%lu cmd=%lu act=%lu max=%lu fric=%u drop=%lu fricX=%u dropX=%lu\r\n",
+           (unsigned)axis,
+           (unsigned long)v_base_sps,
+           (unsigned long)v_cmd_sps,
+           (unsigned long)v_act_sps,
+           (unsigned long)MOTION_MAX_SPS,
+           (unsigned)friction_active,
+           (unsigned long)friction_drop_sps,
+           (unsigned)fric_x,
+           (unsigned long)drop_x);
+    printf("DBG axis=%u pct cmd%%=%lu act%%=%lu\r\n",
+           (unsigned)axis,
+           (unsigned long)cmd_pct,
+           (unsigned long)act_pct);
+}
+#endif
 
 /* =======================
  *  Helpers de lock
@@ -934,6 +990,20 @@ static inline int8_t motion_clamp_error(int32_t value) {
     return (int8_t)value;
 }
 
+/* =======================
+ *  Helpers de microsteps (validação/normalização)
+ * ======================= */
+static inline uint8_t motion_microsteps_allowed(uint16_t ms)
+{
+    switch (ms) {
+        case 1u: case 2u: case 4u: case 8u:
+        case 16u: case 32u: case 64u: case 128u: case 256u:
+            return 1u;
+        default:
+            return 0u;
+    }
+}
+
 #if MOTION_FRICTION_ENABLE
 static inline uint32_t motion_apply_friction(uint8_t axis, uint32_t v_cmd_sps)
 {
@@ -1294,8 +1364,8 @@ void motion_service_init(void) {
     /* Inicializa parâmetros de atrito (por enquanto só X configurado por macro) */
     g_axis_friction_C_sps[AXIS_X] = MOTION_FRICTION_C_X_SPS;
     g_axis_friction_B_pm[AXIS_X]  = MOTION_FRICTION_B_X_PM;
-    /* Inicia com atrito ligado no eixo X para ficar perceptível de cara */
-    g_axis_friction_enabled[AXIS_X] = 1u;
+    /* Liga atrito automaticamente apenas se configurado explicitamente */
+    g_axis_friction_enabled[AXIS_X] = (uint8_t)(MOTION_FRICTION_AUTO_ENABLE_X ? 1u : 0u);
     /* Se quiser atrito em Y/Z:
      * g_axis_friction_C_sps[AXIS_Y] = ...;
      * g_axis_friction_B_pm[AXIS_Y]  = ...;
@@ -1794,26 +1864,10 @@ void motion_on_tim7_tick(void)
             g_dbg_friction_active[axis] = friction_active;
             g_dbg_friction_drop[axis] = friction_drop_sps;
 #endif
-            if (axis == AXIS_Y) {
-                static uint32_t dbg_cnt = 0;
-                if ((dbg_cnt++ % 50u) == 0u) {
-                    uint8_t fric_x = 0u;
-                    uint32_t drop_x = 0u;
-#if MOTION_FRICTION_ENABLE
-                    fric_x = g_dbg_friction_active[AXIS_X];
-                    drop_x = g_dbg_friction_drop[AXIS_X];
+#if MOTION_DEBUG_AXIS_LOG_ENABLE
+            motion_debug_axis_log(axis, v_base_sps, v_cmd_sps, ax->v_actual_sps,
+                                  friction_active, friction_drop_sps);
 #endif
-                    printf("DBG_Y: base=%lu cmd=%lu act=%lu max=%lu fricY=%u dropY=%lu fricX=%u dropX=%lu\r\n",
-                           (unsigned long)v_base_sps,
-                           (unsigned long)v_cmd_sps,
-                           (unsigned long)ax->v_actual_sps,
-                           (unsigned long)MOTION_MAX_SPS,
-                           (unsigned)friction_active,
-                           (unsigned long)friction_drop_sps,
-                           (unsigned)fric_x,
-                           (unsigned long)drop_x);
-                }
-            }
 #if MOTION_FRICTION_ENABLE
             motion_auto_friction_record_sample(axis, v_base_sps, v_cmd_sps, ax->v_actual_sps);
 #endif
@@ -2143,8 +2197,12 @@ void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
         /* Em execução: não aplica, mas responde ACK para o host não travar */
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps", "busy_running");
     } else {
-        uint16_t ms = (req.microsteps == 0u) ? 1u : req.microsteps;
-        if (ms > 256u) ms = 256u;
+        /* Campo é 1 byte; host pode enviar 0 para representar 256. */
+        uint16_t ms = (req.microsteps == 0u) ? 256u : req.microsteps;
+        if (!motion_microsteps_allowed(ms)) {
+            ms = 256u;
+            LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps", "invalid_ms_default_256");
+        }
         for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_microstep_factor[a] = ms;
         LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "all_axes_ms=%u", (unsigned)ms);
     }
@@ -2168,9 +2226,17 @@ void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
         /* Em execução: não aplica, mas responde ACK para o host não travar */
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps_ax", "busy_running");
     } else {
-        uint16_t msx = (req.ms_x == 0u) ? 1u : req.ms_x; if (msx > 256u) msx = 256u;
-        uint16_t msy = (req.ms_y == 0u) ? 1u : req.ms_y; if (msy > 256u) msy = 256u;
-        uint16_t msz = (req.ms_z == 0u) ? 1u : req.ms_z; if (msz > 256u) msz = 256u;
+        /* Cada campo é 1 byte; host pode enviar 0 para representar 256. */
+        uint16_t msx = (req.ms_x == 0u) ? 256u : req.ms_x;
+        uint16_t msy = (req.ms_y == 0u) ? 256u : req.ms_y;
+        uint16_t msz = (req.ms_z == 0u) ? 256u : req.ms_z;
+        uint8_t okx = motion_microsteps_allowed(msx);
+        uint8_t oky = motion_microsteps_allowed(msy);
+        uint8_t okz = motion_microsteps_allowed(msz);
+        if (!(okx && oky && okz)) {
+            msx = msy = msz = 256u;
+            LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps_ax", "invalid_ms_default_256");
+        }
         g_microstep_factor[AXIS_X] = msx;
         g_microstep_factor[AXIS_Y] = msy;
         g_microstep_factor[AXIS_Z] = msz;
