@@ -1015,9 +1015,14 @@ def build_parser() -> argparse.ArgumentParser:
     def _h_set_ms(args: argparse.Namespace) -> int:
         cfg = _load_cfg(args.config)
         try:
-        st = cfg.get("stm32", {})
-        log_fmt = "hex" if bool(getattr(args, "trace_spi", False)) else "off"
-        base_client = STM32Client(bus=int(st.get("bus", 0)), dev=int(st.get("dev", 0)), speed_hz=int(st.get("speed", 1_000_000)), log_format=log_fmt)
+            st = cfg.get("stm32", {})
+            log_fmt = "hex" if bool(getattr(args, "trace_spi", False)) else "off"
+            base_client = STM32Client(
+                bus=int(st.get("bus", 0)),
+                dev=int(st.get("dev", 0)),
+                speed_hz=int(st.get("speed", 1_000_000)),
+                log_format=log_fmt,
+            )
             min_iv = float(getattr(args, "stm32_min_interval", 2.0) or 2.0)
             client = _ThrottledClient(base_client, min_iv)
         except Exception as exc:
