@@ -7,6 +7,7 @@
 #include "Services/Safety/safety_service.h"
 #include "Services/Motion/motion_service.h"
 #include "app.h"
+#include "stm32l4xx.h"  /* ITM/DBGMCU presence for optional SWO dump */
 
 /*==============================================================================
  *  SPI (Slave) + DMA – TX/RX de 42 bytes
@@ -31,6 +32,36 @@ static uint8_t g_spi_tx_dma_buf[APP_SPI_DMA_BUF_LEN];
 static volatile uint8_t         g_spi_round_done = 0u;
 static volatile uint8_t         g_spi_error_flag = 0u;
 static volatile app_spi_state_t g_state          = APP_SPI_READY;
+
+/* Opcional: dump do payload de TX via SWO (ITM) antes de armar o DMA.
+ * - Leve: envia um marcador 'T', em seguida os bytes do payload e um '\n'.
+ * - Só emite quando há resposta (n>0) e SWO/ITM está habilitado no core.
+ * - Mantém overhead mínimo e não altera o timing do SPI.
+ */
+#ifndef APP_SWO_TX_DUMP_ENABLE
+#define APP_SWO_TX_DUMP_ENABLE 1u
+#endif
+#ifndef APP_SWO_TX_DUMP_CHANNEL
+#define APP_SWO_TX_DUMP_CHANNEL 0u
+#endif
+
+static inline int swo_enabled_app(void)
+{
+    return ((CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk) &&
+            (DBGMCU->CR & DBGMCU_CR_TRACE_IOEN) &&
+            (ITM->TCR & ITM_TCR_ITMENA_Msk) &&
+            (ITM->TER & (1UL << APP_SWO_TX_DUMP_CHANNEL)));
+}
+
+static inline void swo_dump_tx_payload(const uint8_t *p, uint16_t n)
+{
+    if (!p || n == 0u) return;
+    ITM_SendChar('T');
+    for (uint16_t i = 0; i < n; ++i) {
+        ITM_SendChar(p[i]);
+    }
+    ITM_SendChar('\n');
+}
 
 /*==============================================================================
  *  Layout fixo do TX (42 = 22 + 20)
@@ -127,6 +158,11 @@ static void prepare_next_tx(void)
         uint16_t src_off = (uint16_t)(n - to_copy);                   /* últimos 'to_copy' bytes */
 
         memcpy(&g_spi_tx_dma_buf[dst_off], &tmp[src_off], to_copy);
+#if APP_SWO_TX_DUMP_ENABLE
+        if (swo_enabled_app()) {
+            swo_dump_tx_payload(&g_spi_tx_dma_buf[dst_off], to_copy);
+        }
+#endif
         g_state = APP_SPI_PENDING;
     } else {
         /* Sem resposta -> mantém contrato visual: 22×0x00 + 20×filler */
@@ -256,6 +292,8 @@ void app_spi_isr_txrx_done(SPI_HandleTypeDef *hspi)
     if (hspi->Instance != APP_SPI_INSTANCE) return;
     g_spi_round_done = 1u;
 }
+
+/* HAL callbacks são implementados em Core/Src/main.c e chamam app_spi_isr_txrx_done(). */
 
 /*==============================================================================
  *  Fila de respostas (API do protocolo)

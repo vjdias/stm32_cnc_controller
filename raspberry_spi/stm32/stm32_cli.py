@@ -187,12 +187,16 @@ class STM32Client:
         try:
             if self._log_format == "bin":
                 print("SPI TX bits:", self._format_bytes(tx))
+            elif self._log_format == "hex":
+                print("SPI TX:", self._format_bytes_hex(tx))
         except Exception:
             pass
         rx = self.spi.xfer2(tx)
         try:
             if self._log_format == "bin":
                 print("SPI RX bits:", self._format_bytes(rx))
+            elif self._log_format == "hex":
+                print("SPI RX:", self._format_bytes_hex(rx))
         except Exception:
             pass
         return rx
