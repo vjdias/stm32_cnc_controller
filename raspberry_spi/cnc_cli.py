@@ -550,6 +550,14 @@ class _FrameSeq:
         return self._cur
 
 
+DEFAULT_SETTLE_SECONDS = {
+    "queue_add": 5.0,
+    "start_move": 5.0,
+    "queue_status": 5.0,
+    "set_microsteps": 5.0,
+}
+
+
 def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
     """Resolve (tries, settle) para uma operação SPI.
 
@@ -568,7 +576,7 @@ def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
         except Exception:
             settle = 5.0
     else:
-        settle = 5.0 if kind == "queue_add" else 3.0
+        settle = DEFAULT_SETTLE_SECONDS.get(kind, 5.0)
     settle = max(3.0, settle)
     specified_tries = spi.get(tries_key, None)
     if specified_tries is not None:
