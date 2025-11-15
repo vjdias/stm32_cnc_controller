@@ -146,24 +146,57 @@ class STM32Client:
         self.spi = spidev.SpiDev()
         self.spi.open(bus, dev)
         self.spi.max_speed_hz = int(speed_hz)
+        # Enforce MODE 3 (CPOL=1, CPHA=1)
         self.spi.mode = mode  # MODE 3: 0b11
         self.spi.bits_per_word = 8
+        # Garantir CS ativo-baixo por padrão (cshigh=False) quando disponível
+        try:
+            if hasattr(self.spi, "cshigh"):
+                setattr(self.spi, "cshigh", False)
+        except Exception:
+            pass
+
+        # Verificação defensiva: confirma que o modo efetivo é 3
+        try:
+            effective_mode = int(getattr(self.spi, "mode", mode)) & 0x3
+            if effective_mode != (mode & 0x3):
+                # Tenta aplicar novamente e, se falhar, aborta com mensagem clara
+                self.spi.mode = mode
+                effective_mode = int(getattr(self.spi, "mode", mode)) & 0x3
+                if effective_mode != (mode & 0x3):
+                    raise RuntimeError(
+                        f"Falha ao aplicar SPI mode=3 (CPOL=1, CPHA=1). Modo atual={effective_mode}. "
+                        "Verifique /boot/config.txt (dtoverlay=spiX), permissões e driver spidev."
+                    )
+        except Exception as _:
+            # Mantém execução; _print_spidev_info no comando 'spi-diag' ajuda a depurar
+            pass
         self._log_format = str(log_format or "hex").lower().strip()
 
     @staticmethod
     def _format_bytes(bs: List[int]) -> str:
         return " ".join(f"{b & 0xFF:08b}" for b in bs)
 
+    @staticmethod
+    def _format_bytes_hex(bs: List[int]) -> str:
+        if not bs:
+            return "(vazio)"
+        return " ".join(f"0x{b & 0xFF:02X}" for b in bs)
+
     def _xfer(self, tx: List[int]) -> List[int]:  # pragma: no cover - depende de hardware
         try:
             if self._log_format == "bin":
                 print("SPI TX bits:", self._format_bytes(tx))
+            elif self._log_format == "hex":
+                print("SPI TX:", self._format_bytes_hex(tx))
         except Exception:
             pass
         rx = self.spi.xfer2(tx)
         try:
             if self._log_format == "bin":
                 print("SPI RX bits:", self._format_bytes(rx))
+            elif self._log_format == "hex":
+                print("SPI RX:", self._format_bytes_hex(rx))
         except Exception:
             pass
         return rx
@@ -180,7 +213,9 @@ class STM32Client:
             raise ValueError("tries cannot be negative")
         spec = STM32ResponseDecoder.SPECS[request_type]
         dma_frame = _build_spi_dma_frame(request)
+        last_rx: List[int] = []
         rx_frame = self._xfer(dma_frame)
+        last_rx = list(rx_frame)
         _validate_handshake_frame(dma_frame, rx_frame, len(request))
         handshake_response = _extract_response_frame(rx_frame, spec.length, spec.response_type)
         if handshake_response is not None:
@@ -189,18 +224,27 @@ class STM32Client:
             time.sleep(settle_delay_s)
 
         if poll_byte is None:
-            raise TimeoutError("Polling desabilitado e resposta não estava presente no handshake.")
+            err = TimeoutError("Polling desabilitado e resposta não estava presente no handshake.")
+            setattr(err, "last_rx", last_rx)
+            raise err
 
-        poll_payload_len = max(1, len(request))
+        # Poll com quadro completo (42×poll_byte) para o firmware reconhecer como "apenas leitura"
+        poll_payload_len = 42
         for _ in range(max(1, tries)):
             poll = [poll_byte & 0xFF] * poll_payload_len
-            rx = self._xfer(_build_spi_dma_frame(poll))
+            rx = self._xfer(_build_spi_dma_frame(poll, filler=(poll_byte & 0xFF), frame_len=42))
+            last_rx = list(rx)
             r = _extract_response_frame(rx, spec.length, spec.response_type)
             if r is not None:
                 return r
             if settle_delay_s > 0:
                 time.sleep(settle_delay_s)
-        raise TimeoutError("Resposta não encontrada após polling SPI.")
+        err = TimeoutError(
+            "Resposta não encontrada após polling SPI. "
+            f"Último RX ({len(last_rx)} bytes): {self._format_bytes_hex(last_rx)}"
+        )
+        setattr(err, "last_rx", last_rx)
+        raise err
 
     def poll_for(
         self,
@@ -215,9 +259,9 @@ class STM32Client:
 
         Não envia nenhum comando, apenas quadros de polling (byte repetido).
         """
-        payload_len = 1
+        payload_len = 42
         for _ in range(max(1, tries)):
-            rx = self._xfer(_build_spi_dma_frame([poll_byte] * payload_len))
+            rx = self._xfer(_build_spi_dma_frame([poll_byte] * payload_len, filler=poll_byte, frame_len=42))
             r = _extract_response_frame(rx, expected_len, expected_response_type)
             if r is not None:
                 return r
@@ -397,6 +441,17 @@ def build_parser() -> argparse.ArgumentParser:
         q_add.add_argument(f"--kd-{axis}", type=int, default=0)
     q_add.set_defaults(handler="queue_add", needs_client=True)
 
+    auto_fric = sub.add_parser(
+        "auto-friction",
+        help="Executa sequência automática de 6 voltas para validar atrito (com logger embutido)",
+    )
+    _common_args(auto_fric, include_tries=True, include_settle_delay=True)
+    auto_fric.add_argument("--frame-id", type=int, default=0x60)
+    auto_fric.add_argument("--loops", type=int, default=6, help="Quantidade de segmentos (voltas) sequenciais")
+    auto_fric.add_argument("--friction-seg", type=int, default=2, help="Segmento (1-based) em que o atrito do X volta a ligar")
+    auto_fric.add_argument("--samples", type=int, default=400, help="Amostras coletadas antes/depois para a análise")
+    auto_fric.set_defaults(handler="motion_auto_friction", needs_client=True)
+
     # set-microsteps-axes: define microsteps por eixo no firmware
     set_ms_ax = sub.add_parser("set-microsteps-axes", help="Define microsteps por eixo (X,Y,Z) no firmware (afeta PI/telemetria)")
     _common_args(set_ms_ax, include_tries=True, include_settle_delay=True)
@@ -415,14 +470,7 @@ def build_parser() -> argparse.ArgumentParser:
     start_move.add_argument("--end-timeout", type=float, default=60.0, help="Tempo máximo (s) aguardando MOVE_END quando --wait-end")
     start_move.set_defaults(handler="start_move", needs_client=True)
 
-    # set-microsteps-axes
-    set_ms_ax = sub.add_parser("set-microsteps-axes", help="Define microsteps por eixo (X,Y,Z) no firmware (afeta PI/telemetria)")
-    _common_args(set_ms_ax, include_tries=True, include_settle_delay=True)
-    set_ms_ax.add_argument("--frame-id", type=int, default=0x40)
-    set_ms_ax.add_argument("--x", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
-    set_ms_ax.add_argument("--y", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
-    set_ms_ax.add_argument("--z", type=int, required=True, choices=[1,2,4,8,16,32,64,128,256])
-    set_ms_ax.set_defaults(handler="set_microsteps_axes", needs_client=True)
+    # (duplicata removida) set-microsteps-axes já definido acima
 
     end_move = sub.add_parser("end-move", help="Finalizar execução")
     _common_args(end_move, include_tries=True, include_settle_delay=True)
@@ -468,6 +516,34 @@ def build_parser() -> argparse.ArgumentParser:
     _common_args(encst, include_tries=True, include_settle_delay=True)
     encst.add_argument("--frame-id", type=int, default=0x43)
     encst.set_defaults(handler="encoder_status", needs_client=True)
+
+    # Diagnóstico do driver spidev e linhas de CS
+    diag = sub.add_parser(
+        "spi-diag",
+        help="Diagnóstico de /dev/spidevX.Y (modo, bpw, cshigh, no_cs, transfer)",
+    )
+    # Não requer cliente/STM32
+    diag.set_defaults(handler=cs_check, needs_client=False)
+    diag.add_argument("--expected-mode", type=int, default=3, help="Modo SPI esperado (padrão: 3)")
+    diag.add_argument("--expected-bpw", type=int, default=8, help="Bits por palavra esperados (padrão: 8)")
+    diag.add_argument(
+        "--expected-active-low",
+        action="store_true",
+        default=True,
+        help="Valida CS como ativo-baixo (cshigh=False). Padrão: ativo-baixo",
+    )
+    diag.add_argument(
+        "--manual-cs",
+        action="append",
+        default=None,
+        metavar="NAME=GPIO",
+        help="Opcional: mapeia linhas de CS manuais para leitura/toggle (ex.: TMCX=8)",
+    )
+    diag.add_argument(
+        "--toggle-test",
+        action="store_true",
+        help="Se informado, tenta alternar (alto→baixo→alto) os GPIOs de --manual-cs",
+    )
 
     return parser
 
