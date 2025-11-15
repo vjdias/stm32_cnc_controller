@@ -34,7 +34,7 @@ App/Src/Services/Motion/motion_service.o: \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../App/Inc/Protocol/router.h ../App/Inc/Protocol/frame_defs.h \
  ../Core/Inc/gpio.h ../Core/Inc/main.h ../Core/Inc/tim.h \
- ../App/Inc/Services/Log/log_service.h \
+ ../Core/Inc/lptim.h ../App/Inc/Services/Log/log_service.h \
  ../App/Inc/Services/Motion/motion_service.h \
  ../App/Inc/Services/Motion/motion_hw.h \
  ../App/Inc/Services/Safety/safety_service.h \
@@ -91,6 +91,7 @@ App/Src/Services/Motion/motion_service.o: \
 ../Core/Inc/gpio.h:
 ../Core/Inc/main.h:
 ../Core/Inc/tim.h:
+../Core/Inc/lptim.h:
 ../App/Inc/Services/Log/log_service.h:
 ../App/Inc/Services/Motion/motion_service.h:
 ../App/Inc/Services/Motion/motion_hw.h:

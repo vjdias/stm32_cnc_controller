@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "stm32l4xx.h"  /* ITM/DBGMCU presence for optional binary SWO */
+#include "lptim.h"      /* hlptim1 for Y encoder (LPTIM1) */
 
 #include "Services/Log/log_service.h"
 #include "Services/Motion/motion_service.h"
@@ -61,6 +62,39 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #endif
 #ifndef MOTION_DEBUG_STEP_DECIM
 #define MOTION_DEBUG_STEP_DECIM        500u
+#endif
+
+/* =======================
+ *  Diagnóstico de travamentos/bloqueios (desligado por padrão)
+ *  - Emite snapshots compactos em intervalos e quando detecta "stall"
+ *  - Completamente desacoplado e controlado por macros
+ * ======================= */
+#ifndef MOTION_DIAG_ENABLE
+#define MOTION_DIAG_ENABLE              1u   /* 0=off, 1=on (ativado p/ debug) */
+#endif
+#ifndef MOTION_DIAG_INTERVAL_MS
+#define MOTION_DIAG_INTERVAL_MS         200u /* período de log periódico */
+#endif
+#ifndef MOTION_DIAG_STALL_MS
+#define MOTION_DIAG_STALL_MS            150u /* ms sem STEP considerado stall */
+#endif
+#ifndef MOTION_DIAG_VERBOSE
+#define MOTION_DIAG_VERBOSE             1u   /* 0=leve, 1=inclui p/i/d/corr/v_adj no DIAG */
+#endif
+/* Print pontual de condição suspeita (rem>0 && v_cmd==0 && queue>0) */
+#ifndef MOTION_BUGCHECK_ENABLE
+#define MOTION_BUGCHECK_ENABLE          1u
+#endif
+
+/* Impressão periódica de encoder a cada N pulsos (selecionável por eixo) */
+#ifndef MOTION_ENC_PRINT_EVERY_N_ENABLE
+#define MOTION_ENC_PRINT_EVERY_N_ENABLE 1u
+#endif
+#ifndef MOTION_ENC_PRINT_N
+#define MOTION_ENC_PRINT_N              10u
+#endif
+#ifndef MOTION_ENC_PRINT_MASK
+#define MOTION_ENC_PRINT_MASK           0x03u /* bits X=1,Y=2,Z=4; X+Y */
 #endif
 
 // Emissão de CSV/telemetria
@@ -230,12 +264,58 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
 //#endif
 #define STEPS_PER_REV_BASE   400u
 #define DDA_STEPS_PER_REV    (STEPS_PER_REV_BASE * MICROSTEP_FACTOR)
-/* Encoders por rotação (fornecido): X/Z = 40000, Y = 5000 */
-static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 5000u, 40000u}; // X,Y,Z 
-static volatile uint16_t g_microstep_factor[MOTION_AXIS_COUNT] = { MICROSTEP_FACTOR, MICROSTEP_FACTOR, MICROSTEP_FACTOR };
-static inline uint32_t dda_steps_per_rev_axis(uint8_t axis) {
+
+/* Encoders por rotação (fornecido / medido):
+ * - Preencher X/Y/Z com os pulsos reais de cada encoder por volta.
+ *   Exemplo: X/Z = 40000, Y = 5000 (ou 2500, se você medir isso na bancada).
+ */
+static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 5000u, 40000u}; // X,Y,Z
+
+/* Microstep real do TMC em cada eixo (1,2,4,...,256) */
+static volatile uint16_t g_microstep_factor[MOTION_AXIS_COUNT] = {
+    MICROSTEP_FACTOR, MICROSTEP_FACTOR, MICROSTEP_FACTOR
+};
+
+/* Quantos "steps físicos" existem em 1 volta de eixo (por eixo):
+ * 400 passos base do motor (0,9°) × microstep configurado no TMC daquele eixo.
+ */
+static inline uint32_t control_steps_per_rev_axis(uint8_t axis)
+{
     if (axis >= MOTION_AXIS_COUNT) axis = 0;
     return STEPS_PER_REV_BASE * (uint32_t)g_microstep_factor[axis];
+}
+
+/* Mantemos o alias para DDA, se em algum lugar ainda usar esse nome. */
+static inline uint32_t dda_steps_per_rev_axis(uint8_t axis)
+{
+    return control_steps_per_rev_axis(axis);
+}
+
+/* Converte posição relativa do encoder -> steps físicos do eixo,
+ * na mesma unidade de ax->target_steps / emitted_steps.
+ */
+static inline int32_t motion_actual_steps_from_encoder(uint8_t axis)
+{
+    if (axis >= MOTION_AXIS_COUNT) axis = 0;
+
+    /* posição relativa do encoder (contagens) */
+    int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
+
+    /* converte contagens -> steps físicos:
+     * actual_steps ≈ enc_rel * (400 * microstep_axis) / ENC_COUNTS_PER_REV[axis]
+     */
+    int64_t num = enc_rel * (int64_t)control_steps_per_rev_axis(axis);
+
+    if (ENC_COUNTS_PER_REV[axis] == 0u) {
+        return 0;
+    }
+
+    int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
+
+    if (q > (int64_t)INT32_MAX) q = (int64_t)INT32_MAX;
+    else if (q < (int64_t)INT32_MIN) q = (int64_t)INT32_MIN;
+
+    return (int32_t)q;
 }
 
 /* Deadband em passos para o PI de posição (evita tremor próximo de zero) */
@@ -252,6 +332,26 @@ static int32_t g_pi_prev_err[MOTION_AXIS_COUNT];
 // Sombras 32-bit para uso com SWV Data Trace/Graph
 volatile int32_t g_enc_abs32[MOTION_AXIS_COUNT];
 volatile int32_t g_enc_rel32[MOTION_AXIS_COUNT];
+
+#if MOTION_DIAG_ENABLE
+/* Buffers de diagnóstico (capturam valores relevantes do controle) */
+static uint32_t g_dbg_v_cmd_sps[MOTION_AXIS_COUNT];
+static uint32_t g_dbg_scale_pm[MOTION_AXIS_COUNT];
+static int32_t  g_dbg_err[MOTION_AXIS_COUNT];
+static int32_t  g_dbg_pterm[MOTION_AXIS_COUNT];
+static int32_t  g_dbg_iterm[MOTION_AXIS_COUNT];
+static int32_t  g_dbg_dterm[MOTION_AXIS_COUNT];
+static int32_t  g_dbg_corr[MOTION_AXIS_COUNT];
+static int32_t  g_dbg_v_adj[MOTION_AXIS_COUNT];
+static int8_t   g_dbg_master_axis;
+/* Stall detection */
+static uint32_t g_diag_last_emit[MOTION_AXIS_COUNT];
+static uint16_t g_diag_no_step_ms[MOTION_AXIS_COUNT];
+static uint8_t  g_diag_stall_reported[MOTION_AXIS_COUNT];
+static uint32_t g_diag_next_print_ms;
+/* Bugcheck pontual */
+static uint8_t  g_bugcheck_reported[MOTION_AXIS_COUNT];
+#endif
 
 // Telemetria CSV: tempo(ms) desde início da variação do encoder,
 // posição relativa do encoder e total de passos emitidos desde o início
@@ -431,6 +531,136 @@ static inline int8_t motion_select_master_axis_progress(void)
     return master;
 }
 #endif /* MOTION_PROGRESS_MODE */
+
+#if MOTION_DIAG_ENABLE
+/* =======================
+ *  Diagnóstico: snapshots e detecção de stall
+ * ======================= */
+static inline void motion_diag_tick(void)
+{
+    /* Atualiza contadores de "sem passo" por eixo (1ms por tick TIM7) */
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        const motion_axis_state_t *ax = &g_axis_state[axis];
+        uint8_t expected = (g_status.state == MOTION_RUNNING) && g_has_active_segment && (ax->total_steps > ax->emitted_steps);
+        if (!expected) {
+            g_diag_no_step_ms[axis] = 0u;
+            g_diag_last_emit[axis]  = ax->emitted_steps;
+            g_diag_stall_reported[axis] = 0u;
+            continue;
+        }
+        if (ax->emitted_steps == g_diag_last_emit[axis]) {
+            if (g_diag_no_step_ms[axis] < 0xFFFFu) g_diag_no_step_ms[axis]++;
+        } else {
+            g_diag_no_step_ms[axis] = 0u;
+            g_diag_last_emit[axis]  = ax->emitted_steps;
+            g_diag_stall_reported[axis] = 0u;
+        }
+    }
+
+    /* Evento de STALL: nenhum passo por MOTION_DIAG_STALL_MS enquanto ainda há trabalho */
+    for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+        const motion_axis_state_t *ax = &g_axis_state[axis];
+        uint32_t active_rem = (ax->total_steps > ax->emitted_steps) ? (ax->total_steps - ax->emitted_steps) : 0u;
+        if (active_rem == 0u) continue;
+        if (g_diag_no_step_ms[axis] >= (uint16_t)MOTION_DIAG_STALL_MS && !g_diag_stall_reported[axis]) {
+            /* Snapshot compacto com variáveis que podem bloquear geração de passos */
+            int32_t enc_rel = (int32_t)(g_encoder_position[axis] - g_encoder_origin[axis]);
+            int32_t actual  = motion_actual_steps_from_encoder(axis);
+            printf("[STALL axis=%u] rem=%lu v_cmd=%lu v_act=%lu incQ16=%lu high=%u low=%u en_set=%u dir_set=%u err=%ld p=%ld i=%ld d=%ld corr=%ld v_adj=%ld ms=%u qdepth=%u actv=%u\r\n",
+                   (unsigned)axis,
+                   (unsigned long)active_rem,
+                   (unsigned long)g_dbg_v_cmd_sps[axis],
+                   (unsigned long)ax->v_actual_sps,
+                   (unsigned long)ax->dda_inc_q16,
+                   (unsigned)ax->step_high,
+                   (unsigned)ax->step_low,
+                   (unsigned)ax->en_settle_ticks,
+                   (unsigned)ax->dir_settle_ticks,
+                   (long)g_dbg_err[axis],
+                   (long)g_dbg_pterm[axis],
+                   (long)g_dbg_iterm[axis],
+                   (long)g_dbg_dterm[axis],
+                   (long)g_dbg_corr[axis],
+                   (long)g_dbg_v_adj[axis],
+                   (unsigned)g_diag_no_step_ms[axis],
+                   (unsigned)g_status.queue_depth,
+                   (unsigned)g_has_active_segment);
+            printf("[STALL axis=%u] enc_rel=%ld actual_steps=%ld ms_factor=%u enc_cpr=%lu scale_pm=%lu master=%d\r\n",
+                   (unsigned)axis,
+                   (long)enc_rel,
+                   (long)actual,
+                   (unsigned)g_microstep_factor[axis],
+                   (unsigned long)ENC_COUNTS_PER_REV[axis],
+                   (unsigned long)g_dbg_scale_pm[axis],
+                   (int)g_dbg_master_axis);
+            g_diag_stall_reported[axis] = 1u; /* evita flood até próximo passo */
+        }
+    }
+
+    /* Bugcheck pontual: rem>0 && v_cmd==0 && fila>0 */
+#if MOTION_BUGCHECK_ENABLE
+    {
+        uint8_t active_mask = 0u;
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            const motion_axis_state_t *ax = &g_axis_state[axis];
+            if (ax->total_steps > ax->emitted_steps) active_mask |= (1u << axis);
+        }
+        uint16_t qdepth = g_queue_count; /* somente fila (exclui ativo) */
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            const motion_axis_state_t *ax = &g_axis_state[axis];
+            uint32_t active_rem = (ax->total_steps > ax->emitted_steps) ? (ax->total_steps - ax->emitted_steps) : 0u;
+            uint32_t rem_total = active_rem + g_queue_rem_steps[axis];
+            if (rem_total > 0u && g_dbg_v_cmd_sps[axis] == 0u && qdepth > 0u) {
+                if (!g_bugcheck_reported[axis]) {
+                    g_bugcheck_reported[axis] = 1u;
+                    printf("[BUG axis=%u] rem=%lu v_cmd=0 qdepth=%u mask=0x%02X\r\n",
+                           (unsigned)axis,
+                           (unsigned long)rem_total,
+                           (unsigned)qdepth,
+                           (unsigned)active_mask);
+                }
+            } else {
+                g_bugcheck_reported[axis] = 0u; /* libera nova emissão quando sair da condição */
+            }
+        }
+    }
+#endif
+
+    /* Log periódico opcional */
+    uint32_t now_ms = g_tim6_ticks / (uint32_t)T6_TICKS_PER_MS;
+    if ((int32_t)(now_ms - g_diag_next_print_ms) >= 0) {
+        g_diag_next_print_ms = now_ms + (uint32_t)MOTION_DIAG_INTERVAL_MS;
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            const motion_axis_state_t *ax = &g_axis_state[axis];
+            uint32_t active_rem = (ax->total_steps > ax->emitted_steps) ? (ax->total_steps - ax->emitted_steps) : 0u;
+            printf("[DIAG axis=%u] state=%u actv=%u rem=%lu v_cmd=%lu v_act=%lu incQ16=%lu hi=%u lo=%u en=%u dir=%u err=%ld scale_pm=%lu\r\n",
+                   (unsigned)axis,
+                   (unsigned)g_status.state,
+                   (unsigned)g_has_active_segment,
+                   (unsigned long)active_rem,
+                   (unsigned long)g_dbg_v_cmd_sps[axis],
+                   (unsigned long)ax->v_actual_sps,
+                   (unsigned long)ax->dda_inc_q16,
+                   (unsigned)ax->step_high,
+                   (unsigned)ax->step_low,
+                   (unsigned)ax->en_settle_ticks,
+                   (unsigned)ax->dir_settle_ticks,
+                   (long)g_dbg_err[axis],
+                   (unsigned long)g_dbg_scale_pm[axis]);
+            /* Linha detalhada opcional (p/i/d/corr/v_adj) */
+#if MOTION_DIAG_VERBOSE
+            printf("[DIAG axis=%u] p=%ld i=%ld d=%ld corr=%ld v_adj=%ld\r\n",
+                   (unsigned)axis,
+                   (long)g_dbg_pterm[axis],
+                   (long)g_dbg_iterm[axis],
+                   (long)g_dbg_dterm[axis],
+                   (long)g_dbg_corr[axis],
+                   (long)g_dbg_v_adj[axis]);
+#endif
+        }
+    }
+}
+#endif /* MOTION_DIAG_ENABLE */
 /* =======================
  *  Helpers de acesso por eixo
  * ======================= */
@@ -528,20 +758,14 @@ static void motion_refresh_status_locked(void) {
             pct = (emitted >= total) ? 100u : (uint8_t)(((uint64_t)emitted * 100u) / total);
         }
 
-        /* Erro em UNIDADES DE PASSOS (alinhado ao PI de posição)
+        /* Erro em UNIDADES DE STEPS FÍSICOS
          * desired_steps = passos emitidos no segmento (target_steps)
-         * actual_steps  = encoder_rel convertido para passos DDA
+         * actual_steps  = encoder convertido para steps físicos do eixo
          */
-        int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
-        if (enc_rel > (int64_t)INT32_MAX) enc_rel = INT32_MAX;
-        else if (enc_rel < (int64_t)INT32_MIN) enc_rel = INT32_MIN;
-        int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
-        int32_t actual_steps = (ENC_COUNTS_PER_REV[axis]
-                                ? (int32_t)(num / (int64_t)ENC_COUNTS_PER_REV[axis])
-                                : 0);
+        int32_t actual_steps  = motion_actual_steps_from_encoder(axis);
         int32_t desired_steps = (int32_t)ax->target_steps;
-        int32_t err = desired_steps - actual_steps;
-        int8_t  err8 = motion_clamp_error(err);
+        int32_t err           = desired_steps - actual_steps;
+        int8_t  err8          = motion_clamp_error(err);
 
         switch (axis) {
             case AXIS_X: g_status.pctX = pct; g_status.pidErrX = err8; break;
@@ -681,7 +905,7 @@ static uint8_t motion_try_start_next_locked(void) {
     motion_begin_segment_locked(&next);
     g_active_frame_id = next.frameId;
 #if MOTION_DEBUG_FLOW
-    printf("[FLOW pop_next id=%u remaining=%u]\\r\\n", (unsigned)g_active_frame_id, (unsigned)g_queue_count);
+    printf("[FLOW pop_next id=%u remaining=%u]\r\n", (unsigned)g_active_frame_id, (unsigned)g_queue_count);
 #endif
     return 1u;
 }
@@ -787,6 +1011,22 @@ void motion_service_init(void) {
     memset(g_origin_base32, 0, sizeof g_origin_base32);
     memset(g_pi_d_filt, 0, sizeof g_pi_d_filt);
     memset(g_v_accum, 0, sizeof g_v_accum);
+#if MOTION_DIAG_ENABLE
+    memset(g_dbg_v_cmd_sps, 0, sizeof g_dbg_v_cmd_sps);
+    memset(g_dbg_scale_pm, 0, sizeof g_dbg_scale_pm);
+    memset(g_dbg_err, 0, sizeof g_dbg_err);
+    memset(g_dbg_pterm, 0, sizeof g_dbg_pterm);
+    memset(g_dbg_iterm, 0, sizeof g_dbg_iterm);
+    memset(g_dbg_dterm, 0, sizeof g_dbg_dterm);
+    memset(g_dbg_corr, 0, sizeof g_dbg_corr);
+    memset(g_dbg_v_adj, 0, sizeof g_dbg_v_adj);
+    g_dbg_master_axis = -1;
+    memset(g_diag_last_emit, 0, sizeof g_diag_last_emit);
+    memset(g_diag_no_step_ms, 0, sizeof g_diag_no_step_ms);
+    memset(g_diag_stall_reported, 0, sizeof g_diag_stall_reported);
+    g_diag_next_print_ms = 0u;
+    memset(g_bugcheck_reported, 0, sizeof g_bugcheck_reported);
+#endif
     for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_queue_rem_steps[a] = 0u;
     memset((void*)g_csv_active, 0, sizeof g_csv_active);
     memset((void*)g_csv_t0_ms, 0, sizeof g_csv_t0_ms);
@@ -810,6 +1050,34 @@ void motion_service_init(void) {
     motion_unlock(primask);
 
     motion_hw_init();
+
+    /* Debug: imprime configuração do encoder do eixo Y (LPTIM1) */
+#if MOTION_DEBUG_ENCODERS
+    {
+        const char *pol_str = "?";
+        const char *xmode_str = "?";
+#ifdef LPTIM_CLOCKPOLARITY_RISING
+        if (hlptim1.Init.UltraLowPowerClock.Polarity == LPTIM_CLOCKPOLARITY_RISING) {
+            pol_str = "RISING"; xmode_str = "1x";
+        }
+#endif
+#ifdef LPTIM_CLOCKPOLARITY_FALLING
+        if (hlptim1.Init.UltraLowPowerClock.Polarity == LPTIM_CLOCKPOLARITY_FALLING) {
+            pol_str = "FALLING"; xmode_str = "1x";
+        }
+#endif
+#ifdef LPTIM_CLOCKPOLARITY_RISING_FALLING
+        if (hlptim1.Init.UltraLowPowerClock.Polarity == LPTIM_CLOCKPOLARITY_RISING_FALLING) {
+            pol_str = "RISING_FALLING"; xmode_str = "2x";
+        }
+#endif
+        printf("[ENC_Y] bits=%u ENC_COUNTS_PER_REV=%lu microstep=%u pol=%s (modo %s)\r\n",
+               (unsigned)motion_hw_encoder_bits(AXIS_Y),
+               (unsigned long)ENC_COUNTS_PER_REV[AXIS_Y],
+               (unsigned)g_microstep_factor[AXIS_Y],
+               pol_str, xmode_str);
+    }
+#endif
 
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
         uint32_t raw = motion_hw_encoder_read_raw(axis);
@@ -966,7 +1234,7 @@ void motion_on_tim6_tick(void)
 #if MOTION_DEBUG_FLOW
                     #if MOTION_DEBUG_TIM6_PRINTS
                     if ((++g_step_print_count[axis] % MOTION_DEBUG_STEP_DECIM) == 1u) {
-                        printf("[STEP axis=%u emitted=%lu target=%lu total=%lu]\\r\\n",
+                    printf("[STEP axis=%u emitted=%lu target=%lu total=%lu]\r\n",
                                (unsigned)axis,
                                (unsigned long)ax->emitted_steps,
                                (unsigned long)ax->target_steps,
@@ -1063,6 +1331,25 @@ void motion_on_tim7_tick(void)
 {
     motion_update_encoders();
 
+    /* Debug: imprime encoder a cada N pulsos (por eixo via máscara) */
+#if MOTION_DEBUG_ENCODERS && MOTION_ENC_PRINT_EVERY_N_ENABLE
+    {
+        static int32_t last_print_rel[3] = { INT32_MIN, INT32_MIN, INT32_MIN };
+        for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
+            if ((MOTION_ENC_PRINT_MASK & (1u << axis)) == 0u) continue;
+            int32_t d = g_encoder_delta_tick[axis];
+            if (d == 0) continue;
+            int32_t rel = (int32_t)(g_encoder_position[axis] - g_encoder_origin[axis]);
+            int32_t absrel = (rel < 0) ? -rel : rel;
+            if (MOTION_ENC_PRINT_N > 0u && (absrel % (int32_t)MOTION_ENC_PRINT_N) == 0 && rel != last_print_rel[axis]) {
+                last_print_rel[axis] = rel;
+                char axch = (char)('X' + axis);
+                printf("[ENC_%c+%u] rel=%ld delta=%ld\r\n", axch, (unsigned)MOTION_ENC_PRINT_N, (long)rel, (long)d);
+            }
+        }
+    }
+#endif
+
 #if (MOTION_CSV_SAMPLE_MS + 0u) > 0u && !MOTION_CSV_PRODUCE_IN_TIM6
     // Emite CSV (axis,time,rel,steps) periodicamente usando base de tempo do TIM6
     uint32_t now_t6 = g_tim6_ticks;
@@ -1136,9 +1423,10 @@ void motion_on_tim7_tick(void)
     }
     /* Caminho da fila: rampa trapezoidal (acelera/cruza/desacelera) e define incremento DDA */
     if (g_status.state == MOTION_RUNNING && g_has_active_segment && !g_demo_continuous) {
-#if MOTION_PROGRESS_MODE
-        int8_t master_axis = motion_select_master_axis_progress();
+        int8_t master_axis = -1;
         uint32_t rem_master = 0u;
+#if MOTION_PROGRESS_MODE
+        master_axis = motion_select_master_axis_progress();
         if (master_axis >= 0) {
             const motion_axis_state_t *am = &g_axis_state[(uint8_t)master_axis];
             uint32_t active_m = (am->total_steps > am->emitted_steps)
@@ -1146,28 +1434,27 @@ void motion_on_tim7_tick(void)
             rem_master = active_m + g_queue_rem_steps[(uint8_t)master_axis];
         }
 #endif
+#if MOTION_DIAG_ENABLE
+        g_dbg_master_axis = master_axis;
+#endif
         for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
             motion_axis_state_t *ax = &g_axis_state[axis];
             /* Mesmo que o segmento ativo para este eixo tenha zerado, podemos ter
                passos remanescentes na fila — mantemos a rampa global da lista. */
 
             uint32_t v_cmd_sps = ((uint32_t)ax->velocity_per_tick) * 1000u; /* alvo/cruzeiro */
+#if MOTION_DIAG_ENABLE
+            g_dbg_scale_pm[axis] = 1000u;
+#endif
 
 #if MOTION_PROGRESS_MODE && MOTION_ERR_THROTTLE_ENABLE
             /* Throttle por erro (apenas eixos não-mestres):
-               - Usa erro posicional baseado em encoder (mesmo usado no PI)
+               - Usa o MESMO erro posicional do PI (steps físicos)
                - Ajusta v_cmd antes de aplicar correção PI */
             if (master_axis >= 0 && (int8_t)axis != master_axis) {
-                int32_t desired = (int32_t)ax->target_steps;
-                int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
-                int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
-                int32_t actual = 0;
-                if (ENC_COUNTS_PER_REV[axis] > 0u) {
-                    int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
-                    if (q > INT32_MAX) q = INT32_MAX; else if (q < INT32_MIN) q = INT32_MIN;
-                    actual = (int32_t)q;
-                }
-                int32_t err = desired - actual;
+                int32_t desired  = (int32_t)ax->target_steps;
+                int32_t actual   = motion_actual_steps_from_encoder(axis);
+                int32_t err      = desired - actual;
                 uint32_t err_abs = (err < 0) ? (uint32_t)(-err) : (uint32_t)err;
 
                 uint32_t scale_pm;
@@ -1180,23 +1467,18 @@ void motion_on_tim7_tick(void)
                 }
                 v_cmd_sps = (uint32_t)(((uint64_t)v_cmd_sps * (uint64_t)scale_pm) / 1000u);
                 if (v_cmd_sps > MOTION_MAX_SPS) v_cmd_sps = MOTION_MAX_SPS;
+#if MOTION_DIAG_ENABLE
+                g_dbg_scale_pm[axis] = scale_pm;
+#endif
             }
 #endif /* MOTION_PROGRESS_MODE && MOTION_ERR_THROTTLE_ENABLE */
             /* PI de posição: ajusta v_cmd_sps com base no erro posicional */
 #if MOTION_PI_ENABLE
             if ((ax->kp | ax->ki | ax->kd) != 0u) {
-                /* desired (em passos DDA) vs actual convertido de contagens do encoder para passos DDA */
+                /* desired e actual em steps físicos do eixo */
                 int32_t desired = (int32_t)ax->target_steps;
-                int64_t enc_rel = g_encoder_position[axis] - g_encoder_origin[axis];
-                /* actual_steps ≈ enc_rel * (DDA_STEPS_PER_REV(axis) / ENC_COUNTS_PER_REV) */
-                int64_t num = enc_rel * (int64_t)dda_steps_per_rev_axis(axis);
-                int32_t actual = 0;
-                if (ENC_COUNTS_PER_REV[axis] > 0u) {
-                    int64_t q = num / (int64_t)ENC_COUNTS_PER_REV[axis];
-                    if (q > INT32_MAX) q = INT32_MAX; else if (q < INT32_MIN) q = INT32_MIN;
-                    actual = (int32_t)q;
-                }
-                int32_t err = desired - actual;
+                int32_t actual  = motion_actual_steps_from_encoder(axis);
+                int32_t err     = desired - actual;
                 /* Deadband simples */
                 if (err > -((int32_t)MOTION_PI_DEADBAND_STEPS) && err < (int32_t)MOTION_PI_DEADBAND_STEPS) {
                     err = 0;
@@ -1220,11 +1502,23 @@ void motion_on_tim7_tick(void)
                 if (v_adj < 0) v_adj = 0;
                 if (v_adj > (int32_t)MOTION_MAX_SPS) v_adj = (int32_t)MOTION_MAX_SPS; /* limite físico */
                 v_cmd_sps = (uint32_t)v_adj;
+#if MOTION_DIAG_ENABLE
+                g_dbg_err[axis]   = err;
+                g_dbg_pterm[axis] = pterm;
+                g_dbg_iterm[axis] = iterm;
+                g_dbg_dterm[axis] = dterm;
+                g_dbg_corr[axis]  = corr;
+                g_dbg_v_adj[axis] = v_adj;
+#endif
                 /* Anti-windup por saturação: só aceita a integral quando não saturou */
                 if (!(v_adj == 0 || v_adj == (int32_t)MOTION_MAX_SPS)) {
                     g_pi_i_accum[axis] = iacc;
                 }
             }
+#endif
+            /* Guarda v_cmd resultante para diagnóstico */
+#if MOTION_DIAG_ENABLE
+            g_dbg_v_cmd_sps[axis] = v_cmd_sps;
 #endif
             uint32_t a_sps2    = (ax->accel_sps2 > 0u) ? ax->accel_sps2 : DEMO_ACCEL_SPS2;
 
@@ -1280,6 +1574,10 @@ void motion_on_tim7_tick(void)
         }
     }
 
+    /* Diagnóstico: snapshots e detecção de stall em baixa taxa (TIM7) */
+#if MOTION_DIAG_ENABLE
+    motion_diag_tick();
+#endif
 }
 
 /* =======================
