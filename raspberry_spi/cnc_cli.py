@@ -561,8 +561,14 @@ def _spi_params(cfg: dict, kind: str) -> tuple[int, float]:
     spi = cfg.get("spi", {}) if isinstance(cfg.get("spi"), dict) else {}
     tries_key = f"{kind}_tries"
     settle_key = f"{kind}_settle"
-    dsettle = 5.0
-    settle = float(spi.get(settle_key, dsettle))
+    settle_cfg = spi.get(settle_key, None)
+    if settle_cfg is not None:
+        try:
+            settle = float(settle_cfg)
+        except Exception:
+            settle = 5.0
+    else:
+        settle = 5.0 if kind == "queue_add" else 3.0
     settle = max(3.0, settle)
     specified_tries = spi.get(tries_key, None)
     if specified_tries is not None:
