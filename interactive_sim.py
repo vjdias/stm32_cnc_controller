@@ -1592,7 +1592,7 @@ if __name__ == "__main__":
 
     cfg = PlantConfig(
         microstep_factor=axis_map[0][1],  # assume todos os eixos usam o mesmo microstep
-        enc_cpr_xyz=(40000, 2500, 40000), # X, Y, Z
+        enc_cpr_xyz=(40000, 5000, 40000), # X, Y, Z
         kd_alpha_bits=8,
         step_high_ticks=1,
         step_low_ticks=1,

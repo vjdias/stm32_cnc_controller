@@ -131,7 +131,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  - Conclusão global quando restante do mestre chega a zero
  * ======================= */
 #ifndef MOTION_PROGRESS_MODE
-#define MOTION_PROGRESS_MODE 0
+#define MOTION_PROGRESS_MODE 1
 #endif
 
 /* =======================
@@ -143,7 +143,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  - Parâmetros alinhados ao interactive_old_sim (threshold=200, min_frac=0.25)
  * ======================= */
 #ifndef MOTION_ERR_THROTTLE_ENABLE
-#define MOTION_ERR_THROTTLE_ENABLE 1
+#define MOTION_ERR_THROTTLE_ENABLE 0
 #endif
 #ifndef MOTION_ERR_THROTTLE_THRESHOLD
 #define MOTION_ERR_THROTTLE_THRESHOLD 200u /* steps */
