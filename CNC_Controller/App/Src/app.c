@@ -44,6 +44,22 @@ static volatile app_spi_state_t g_state          = APP_SPI_READY;
 #ifndef APP_SWO_TX_DUMP_CHANNEL
 #define APP_SWO_TX_DUMP_CHANNEL 0u
 #endif
+/* Quando 1, também emite frames sem resposta (filler/poll) */
+#ifndef APP_SWO_TX_DUMP_ALL_FRAMES
+#define APP_SWO_TX_DUMP_ALL_FRAMES 1u
+#endif
+/* Quando 1, imprime os 42 bytes completos; caso 0, imprime só os 20 bytes finais */
+#ifndef APP_SWO_TX_DUMP_FULL_FRAME
+#define APP_SWO_TX_DUMP_FULL_FRAME 1u
+#endif
+
+/* Dump de RX (lado STM32) para diagnóstico de recepção */
+#ifndef APP_SWO_RX_DUMP_ENABLE
+#define APP_SWO_RX_DUMP_ENABLE 1u
+#endif
+#ifndef APP_SWO_RX_DUMP_FULL_FRAME
+#define APP_SWO_RX_DUMP_FULL_FRAME 1u
+#endif
 
 static inline int swo_enabled_app(void)
 {
@@ -67,6 +83,40 @@ static inline void swo_dump_tx_payload(const uint8_t *p, uint16_t n)
         ITM_SendChar(hexd[(b >> 4) & 0xF]);
         ITM_SendChar(hexd[b & 0xF]);
         if (i + 1u < n) ITM_SendChar(' ');
+    }
+    ITM_SendChar('\n');
+}
+
+static inline void swo_dump_tx_full42(const uint8_t *frame42)
+{
+    if (!frame42) return;
+    static const char hexd[16] = {
+        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    };
+    ITM_SendChar('T'); ITM_SendChar('X'); ITM_SendChar('4'); ITM_SendChar('2'); ITM_SendChar(' ');
+    for (uint16_t i = 0; i < APP_SPI_DMA_BUF_LEN; ++i) {
+        uint8_t b = frame42[i];
+        ITM_SendChar('0'); ITM_SendChar('x');
+        ITM_SendChar(hexd[(b >> 4) & 0xF]);
+        ITM_SendChar(hexd[b & 0xF]);
+        if (i + 1u < APP_SPI_DMA_BUF_LEN) ITM_SendChar(' ');
+    }
+    ITM_SendChar('\n');
+}
+
+static inline void swo_dump_rx_full42(const uint8_t *frame42)
+{
+    if (!frame42) return;
+    static const char hexd[16] = {
+        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    };
+    ITM_SendChar('R'); ITM_SendChar('X'); ITM_SendChar('4'); ITM_SendChar('2'); ITM_SendChar(' ');
+    for (uint16_t i = 0; i < APP_SPI_DMA_BUF_LEN; ++i) {
+        uint8_t b = frame42[i];
+        ITM_SendChar('0'); ITM_SendChar('x');
+        ITM_SendChar(hexd[(b >> 4) & 0xF]);
+        ITM_SendChar(hexd[b & 0xF]);
+        if (i + 1u < APP_SPI_DMA_BUF_LEN) ITM_SendChar(' ');
     }
     ITM_SendChar('\n');
 }
@@ -165,6 +215,18 @@ static void prepare_next_tx(void)
         uint16_t dst_off = (uint16_t)(APP_SPI_DMA_BUF_LEN - to_copy); /* 42 - to_copy */
         uint16_t src_off = (uint16_t)(n - to_copy);                   /* últimos 'to_copy' bytes */
 
+        /* Verificação opcional: payload deve iniciar com RESP_HEADER e terminar em RESP_TAIL */
+        if (to_copy >= 2u) {
+            const uint8_t *pl = &tmp[src_off];
+            if (!(pl[0] == RESP_HEADER && pl[to_copy - 1u] == RESP_TAIL)) {
+#if APP_SWO_TX_DUMP_ENABLE
+                if (swo_enabled_app()) {
+                    ITM_SendChar('T'); ITM_SendChar('X'); ITM_SendChar('B'); ITM_SendChar('A'); ITM_SendChar('D'); ITM_SendChar(' ');
+                    swo_dump_tx_payload(pl, (uint16_t)to_copy);
+                }
+#endif
+            }
+        }
         memcpy(&g_spi_tx_dma_buf[dst_off], &tmp[src_off], to_copy);
 #if APP_SWO_TX_DUMP_ENABLE
         if (swo_enabled_app()) {
@@ -249,6 +311,17 @@ void app_poll(void)
     if (!g_spi_round_done) return;
     g_spi_round_done = 0u;
 
+#if APP_SWO_RX_DUMP_ENABLE
+    if (swo_enabled_app()) {
+#if APP_SWO_RX_DUMP_FULL_FRAME
+        swo_dump_rx_full42(g_spi_rx_dma_buf);
+#else
+        /* imprime apenas os 20 bytes finais */
+        swo_dump_tx_payload(&g_spi_rx_dma_buf[RESP_LEFT_PAD_LEN], RESP_RIGHT_LEN);
+#endif
+    }
+#endif
+
     /* 1) Interpretar o RX atual */
     if (is_fill42(g_spi_rx_dma_buf, SPI_POLL_BYTE)) {
         /* 42×0x3C => cliente apenas leu respostas; não alimenta router */
@@ -256,6 +329,12 @@ void app_poll(void)
         /* Tenta extrair [REQ_HEADER ... REQ_TAIL] e empurra para o router */
         uint16_t off = 0, len = 0;
         if (find_frame(g_spi_rx_dma_buf, &off, &len)) {
+#if APP_SWO_RX_DUMP_ENABLE
+            if (swo_enabled_app()) {
+                /* dump apenas o frame válido detectado */
+                swo_dump_tx_payload(&g_spi_rx_dma_buf[off], len);
+            }
+#endif
             router_feed_bytes(&g_router, &g_spi_rx_dma_buf[off], len);
         } else {
             /* Quadro inválido/parcial ou outro padrão -> marca erro leve */

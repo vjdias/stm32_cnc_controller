@@ -194,7 +194,8 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 
     g_spi_last_error = hspi->ErrorCode;
     g_spi_error_count++;
-
+    /* Sinaliza o laço principal para rearmar o DMA na próxima iteração */
+    app_spi_isr_txrx_done(hspi);
     /* Indicação visual simples para diagnóstico */
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
 }

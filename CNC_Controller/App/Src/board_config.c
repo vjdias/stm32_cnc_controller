@@ -167,9 +167,11 @@ void board_config_apply_interrupt_priorities(void)
     HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
 
+    /* SPI2 RX DMA: volta prioridade anterior */
     HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
 
+    /* SPI2 TX DMA: volta prioridade anterior */
     HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
@@ -179,6 +181,7 @@ void board_config_apply_interrupt_priorities(void)
     HAL_NVIC_SetPriority(USART1_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
 
+    /* SPI2 IRQ: volta prioridade anterior (mais baixa) */
     HAL_NVIC_SetPriority(SPI2_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(SPI2_IRQn);
 

@@ -97,8 +97,9 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     hdma_spi2_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_spi2_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_spi2_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    /* DMA em modo circular: host pode realizar polls contínuos */
-    hdma_spi2_rx.Init.Mode = DMA_CIRCULAR;
+    /* DMA em modo NORMAL: app rearma a cada rodada (42 bytes) */
+    hdma_spi2_rx.Init.Mode = DMA_NORMAL;
+    /* Prioridade padrão (LOW) */
     hdma_spi2_rx.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_spi2_rx) != HAL_OK)
     {
@@ -115,8 +116,9 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     hdma_spi2_tx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_spi2_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_spi2_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    /* DMA em modo circular acompanha o RX */
-    hdma_spi2_tx.Init.Mode = DMA_CIRCULAR;
+    /* DMA em modo NORMAL acompanha o RX */
+    hdma_spi2_tx.Init.Mode = DMA_NORMAL;
+    /* Prioridade padrão (LOW) */
     hdma_spi2_tx.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_spi2_tx) != HAL_OK)
     {
