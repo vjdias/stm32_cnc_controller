@@ -3,7 +3,6 @@
 ../App/Src/Services/Motion/motion_service.c:431:20:motion_csv_print	1
 ../App/Src/Services/Motion/motion_service.c:478:24:motion_lock	1
 ../App/Src/Services/Motion/motion_service.c:483:20:motion_unlock	1
-../App/Src/Services/Motion/motion_service.c:494:22:motion_select_master_axis_progress	11
 ../App/Src/Services/Motion/motion_service.c:539:20:motion_diag_tick	24
 ../App/Src/Services/Motion/motion_service.c:667:24:motion_total_for_axis	3
 ../App/Src/Services/Motion/motion_service.c:676:24:motion_velocity_for_axis	3
@@ -26,8 +25,8 @@
 ../App/Src/Services/Motion/motion_service.c:986:13:motion_send_move_end_response	3
 ../App/Src/Services/Motion/motion_service.c:999:6:motion_service_init	9
 ../App/Src/Services/Motion/motion_service.c:1097:24:motion_status_get	1
-../App/Src/Services/Motion/motion_service.c:1107:6:motion_on_tim6_tick	44
-../App/Src/Services/Motion/motion_service.c:1330:6:motion_on_tim7_tick	64
+../App/Src/Services/Motion/motion_service.c:1107:6:motion_on_tim6_tick	40
+../App/Src/Services/Motion/motion_service.c:1330:6:motion_on_tim7_tick	56
 ../App/Src/Services/Motion/motion_service.c:1586:6:motion_on_move_queue_add	7
 ../App/Src/Services/Motion/motion_service.c:1633:6:motion_on_move_queue_status	2
 ../App/Src/Services/Motion/motion_service.c:1650:6:motion_on_start_move	8

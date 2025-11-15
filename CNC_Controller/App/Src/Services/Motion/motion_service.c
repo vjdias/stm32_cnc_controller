@@ -131,7 +131,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  - Conclusão global quando restante do mestre chega a zero
  * ======================= */
 #ifndef MOTION_PROGRESS_MODE
-#define MOTION_PROGRESS_MODE 1
+#define MOTION_PROGRESS_MODE 0
 #endif
 
 /* =======================

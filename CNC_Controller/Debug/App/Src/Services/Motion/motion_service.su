@@ -3,7 +3,6 @@
 ../App/Src/Services/Motion/motion_service.c:431:20:motion_csv_print	24	static
 ../App/Src/Services/Motion/motion_service.c:478:24:motion_lock	16	static,ignoring_inline_asm
 ../App/Src/Services/Motion/motion_service.c:483:20:motion_unlock	24	static,ignoring_inline_asm
-../App/Src/Services/Motion/motion_service.c:494:22:motion_select_master_axis_progress	104	static
 ../App/Src/Services/Motion/motion_service.c:539:20:motion_diag_tick	192	static
 ../App/Src/Services/Motion/motion_service.c:667:24:motion_total_for_axis	16	static
 ../App/Src/Services/Motion/motion_service.c:676:24:motion_velocity_for_axis	16	static
@@ -26,8 +25,8 @@
 ../App/Src/Services/Motion/motion_service.c:986:13:motion_send_move_end_response	40	static
 ../App/Src/Services/Motion/motion_service.c:999:6:motion_service_init	48	static
 ../App/Src/Services/Motion/motion_service.c:1097:24:motion_status_get	4	static
-../App/Src/Services/Motion/motion_service.c:1107:6:motion_on_tim6_tick	112	static
-../App/Src/Services/Motion/motion_service.c:1330:6:motion_on_tim7_tick	328	static
+../App/Src/Services/Motion/motion_service.c:1107:6:motion_on_tim6_tick	96	static
+../App/Src/Services/Motion/motion_service.c:1330:6:motion_on_tim7_tick	240	static
 ../App/Src/Services/Motion/motion_service.c:1586:6:motion_on_move_queue_add	104	static
 ../App/Src/Services/Motion/motion_service.c:1633:6:motion_on_move_queue_status	64	static
 ../App/Src/Services/Motion/motion_service.c:1650:6:motion_on_start_move	40	static
