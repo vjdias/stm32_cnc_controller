@@ -56,9 +56,17 @@ static inline int swo_enabled_app(void)
 static inline void swo_dump_tx_payload(const uint8_t *p, uint16_t n)
 {
     if (!p || n == 0u) return;
-    ITM_SendChar('T');
+    /* Emite apenas ASCII seguro: "TX " + bytes em hexa + "\n" */
+    static const char hexd[16] = {
+        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    };
+    ITM_SendChar('T'); ITM_SendChar('X'); ITM_SendChar(' ');
     for (uint16_t i = 0; i < n; ++i) {
-        ITM_SendChar(p[i]);
+        uint8_t b = p[i];
+        ITM_SendChar('0'); ITM_SendChar('x');
+        ITM_SendChar(hexd[(b >> 4) & 0xF]);
+        ITM_SendChar(hexd[b & 0xF]);
+        if (i + 1u < n) ITM_SendChar(' ');
     }
     ITM_SendChar('\n');
 }

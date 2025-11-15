@@ -616,7 +616,7 @@ def _process_steps(
     sent = 0
     qadd_tries, qadd_settle = _spi_params(cfg, "queue_add")
     # Ajuste: QUEUE_ADD usa settle fixo de 2s e tries=1
-    qadd_settle = 2.0
+    qadd_settle = 4.0
     qadd_tries = 1
     start_tries, start_settle = _spi_params(cfg, "start_move")
     fid = _FrameSeq(1)
