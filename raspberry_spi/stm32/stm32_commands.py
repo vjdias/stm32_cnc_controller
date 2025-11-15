@@ -17,7 +17,6 @@ if __package__:
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
         REQ_TEST_HELLO,
-        REQ_MOTION_AUTO_FRICTION,
         RESP_MOVE_END,
         bits_str,
     )
@@ -35,7 +34,6 @@ else:
         REQ_MOVE_QUEUE_STATUS,
         REQ_START_MOVE,
         REQ_TEST_HELLO,
-        REQ_MOTION_AUTO_FRICTION,
         RESP_MOVE_END,
         bits_str,
     )
@@ -144,14 +142,7 @@ class STM32CommandExecutor:
         )
         self._execute_request(REQ_MOVE_QUEUE_ADD, request, args)
 
-    def motion_auto_friction(self, args: argparse.Namespace) -> None:
-        request = STM32RequestBuilder.motion_auto_friction(
-            args.frame_id,
-            args.loops,
-            args.friction_seg,
-            args.samples,
-        )
-        self._execute_request(REQ_MOTION_AUTO_FRICTION, request, args)
+    # auto-friction removido
 
     # queue_status removido na versão sucinta
 

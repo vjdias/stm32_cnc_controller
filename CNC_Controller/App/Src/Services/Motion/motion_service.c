@@ -1515,10 +1515,19 @@ void motion_on_set_microsteps(const uint8_t *frame, uint32_t len) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps", "busy_running");
         return;
     }
-    uint16_t ms = (req.microsteps == 0u) ? 1u : req.microsteps;
+    /* Interpreta 0 como 256 para cobrir todo o conjunto {1,2,4,...,256} em 8 bits */
+    uint16_t ms = (req.microsteps == 0u) ? 256u : req.microsteps;
     if (ms > 256u) ms = 256u;
     for (uint8_t a = 0; a < MOTION_AXIS_COUNT; ++a) g_microstep_factor[a] = ms;
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps", "all_axes_ms=%u", (unsigned)ms);
+    /* Log humano-legível do valor aplicado */
+    printf("[MICROSTEPS] all_axes=%u\r\n", (unsigned)ms);
+    /* ACK detalhado (6 bytes): [HDR, TYPE, frameId, ms_hi, ms_lo, TAIL] */
+    {
+        uint8_t raw[6] = { RESP_HEADER, RESP_SET_MICROSTEPS, (uint8_t)req.frameId,
+                           (uint8_t)(ms >> 8), (uint8_t)(ms & 0xFF), RESP_TAIL };
+        (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
 }
 
 void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
@@ -1531,13 +1540,25 @@ void motion_on_set_microsteps_axes(const uint8_t *frame, uint32_t len) {
         LOGA_THIS(LOG_STATE_ERROR, PROTO_ERR_RANGE, "set_microsteps_ax", "busy_running");
         return;
     }
-    uint16_t msx = (req.ms_x == 0u) ? 1u : req.ms_x; if (msx > 256u) msx = 256u;
-    uint16_t msy = (req.ms_y == 0u) ? 1u : req.ms_y; if (msy > 256u) msy = 256u;
-    uint16_t msz = (req.ms_z == 0u) ? 1u : req.ms_z; if (msz > 256u) msz = 256u;
+    /* Interpreta 0 como 256 (sentinela) para cada eixo */
+    uint16_t msx = (req.ms_x == 0u) ? 256u : req.ms_x; if (msx > 256u) msx = 256u;
+    uint16_t msy = (req.ms_y == 0u) ? 256u : req.ms_y; if (msy > 256u) msy = 256u;
+    uint16_t msz = (req.ms_z == 0u) ? 256u : req.ms_z; if (msz > 256u) msz = 256u;
     g_microstep_factor[AXIS_X] = msx;
     g_microstep_factor[AXIS_Y] = msy;
     g_microstep_factor[AXIS_Z] = msz;
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "set_microsteps_ax", "ms=(%u,%u,%u)", (unsigned)msx, (unsigned)msy, (unsigned)msz);
+    /* Log humano-legível por eixo */
+    printf("[MICROSTEPS_AX] X=%u Y=%u Z=%u\r\n", (unsigned)msx, (unsigned)msy, (unsigned)msz);
+    /* ACK detalhado (10 bytes): [HDR, TYPE, frameId, msx_hi, msx_lo, msy_hi, msy_lo, msz_hi, msz_lo, TAIL] */
+    {
+        uint8_t raw[10] = { RESP_HEADER, RESP_SET_MICROSTEPS, (uint8_t)req.frameId,
+                            (uint8_t)(msx >> 8), (uint8_t)(msx & 0xFF),
+                            (uint8_t)(msy >> 8), (uint8_t)(msy & 0xFF),
+                            (uint8_t)(msz >> 8), (uint8_t)(msz & 0xFF),
+                            RESP_TAIL };
+        (void)app_resp_push(raw, (uint32_t)sizeof raw);
+    }
 }
 
 /* =====================================================================

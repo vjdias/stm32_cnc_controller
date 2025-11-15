@@ -19,7 +19,6 @@ if __package__:
         REQ_TEST_HELLO,
         REQ_SET_MICROSTEPS,
         REQ_SET_MICROSTEPS_AX,
-        REQ_MOTION_AUTO_FRICTION,
         REQ_SET_ORIGIN,
         REQ_ENCODER_STATUS,
         RESP_HEADER,
@@ -33,7 +32,6 @@ if __package__:
         RESP_START_MOVE,
         RESP_TEST_HELLO,
         RESP_SET_MICROSTEPS,
-        RESP_MOTION_AUTO_FRICTION,
         RESP_SET_ORIGIN,
         RESP_ENCODER_STATUS,
         RESP_TAIL,
@@ -54,7 +52,6 @@ else:
         REQ_TEST_HELLO,
         REQ_SET_MICROSTEPS,
         REQ_SET_MICROSTEPS_AX,
-        REQ_MOTION_AUTO_FRICTION,
         REQ_SET_ORIGIN,
         REQ_ENCODER_STATUS,
         RESP_HEADER,
@@ -68,7 +65,6 @@ else:
         RESP_START_MOVE,
         RESP_TEST_HELLO,
         RESP_SET_MICROSTEPS,
-        RESP_MOTION_AUTO_FRICTION,
         RESP_SET_ORIGIN,
         RESP_ENCODER_STATUS,
         RESP_TAIL,
@@ -158,21 +154,6 @@ class STM32ResponseDecoder:
             "pct": {"x": raw[7] & 0xFF, "y": raw[8] & 0xFF, "z": raw[9] & 0xFF},
         }
 
-    @staticmethod
-    def motion_auto_friction(raw: List[int]) -> Dict[str, Any]:
-        STM32ResponseDecoder._require_frame(raw, RESP_HEADER, RESP_TAIL, 9)
-        if raw[1] != RESP_MOTION_AUTO_FRICTION:
-            raise ValueError("AutoFriction resp inválida")
-        sample_limit = (raw[6] << 8) | raw[7]
-        return {
-            "type": raw[1],
-            "frameId": raw[2],
-            "status": raw[3],
-            "revolutions": raw[4],
-            "frictionSegment": raw[5],
-            "sampleLimit": sample_limit,
-        }
-
     SPECS: Dict[int, ResponseSpec] = {
         REQ_LED_CTRL: ResponseSpec(RESP_LED_CTRL, 7, led.__func__),
         REQ_MOVE_QUEUE_ADD: ResponseSpec(RESP_MOVE_QUEUE_ADD_ACK, 6, queue_add_ack.__func__),
@@ -190,7 +171,6 @@ class STM32ResponseDecoder:
         REQ_ENCODER_STATUS: ResponseSpec(RESP_ENCODER_STATUS, 20, None),
         # move_queue_status: 12 bytes (ver decoder queue_status)
         REQ_MOVE_QUEUE_STATUS: ResponseSpec(RESP_MOVE_QUEUE_STATUS, 12, queue_status.__func__),
-        REQ_MOTION_AUTO_FRICTION: ResponseSpec(RESP_MOTION_AUTO_FRICTION, 9, motion_auto_friction.__func__),
         # Outros tipos podem ser acrescentados aqui quando necessários.
     }
 

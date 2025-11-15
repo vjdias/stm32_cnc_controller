@@ -5,7 +5,7 @@
 
 typedef struct {
     uint8_t frameId;
-    uint16_t microsteps; // aplica globalmente (1..256)
+    uint16_t microsteps; // aplica globalmente; 0 => 256; caso contrário 1..255
 } set_microsteps_req_t;
 
 int set_microsteps_req_decoder(const uint8_t *raw, uint32_t len, set_microsteps_req_t *out);

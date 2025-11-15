@@ -20,7 +20,6 @@ if __package__:
         REQ_SET_MICROSTEPS,
         REQ_SET_MICROSTEPS_AX,
         REQ_TEST_HELLO,
-        REQ_MOTION_AUTO_FRICTION,
         REQ_TAIL,
         be16_bytes,
         be32_bytes,
@@ -44,7 +43,6 @@ else:
         REQ_SET_MICROSTEPS,
         REQ_SET_MICROSTEPS_AX,
         REQ_TEST_HELLO,
-        REQ_MOTION_AUTO_FRICTION,
         REQ_TAIL,
         be16_bytes,
         be32_bytes,
@@ -203,23 +201,7 @@ class STM32RequestBuilder:
         raw[6] = REQ_TAIL
         return pad_request(raw)
 
-    @staticmethod
-    def motion_auto_friction(frame_id: int, revolutions: int, friction_segment: int, sample_limit: int) -> List[int]:
-        """Empacota o comando REQ_MOTION_AUTO_FRICTION.
-
-        Layout: [HDR,TYPE,frameId,loops,friction_seg,sample_hi,sample_lo,TAIL]
-        """
-        raw = [0] * 8
-        raw[0] = REQ_HEADER
-        raw[1] = REQ_MOTION_AUTO_FRICTION
-        raw[2] = frame_id & 0xFF
-        raw[3] = revolutions & 0xFF
-        raw[4] = friction_segment & 0xFF
-        sample_hi, sample_lo = be16_bytes(sample_limit & 0xFFFF)
-        raw[5] = sample_hi
-        raw[6] = sample_lo
-        raw[7] = REQ_TAIL
-        return pad_request(raw)
+    # REQ_MOTION_AUTO_FRICTION removido: funcionalidade descontinuada
 
 
 __all__ = ["STM32RequestBuilder"]
