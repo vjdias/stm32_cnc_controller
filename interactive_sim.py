@@ -41,14 +41,14 @@ if _ENV_MPL == "agg" or _ENV_HEADLESS:
     matplotlib.use("Agg")
 else:
     try:
-        matplotlib.use("QtAgg") # ou "TkAgg"
+        matplotlib.use("QtAgg")  # ou "TkAgg"
     except ImportError:
         print("Backend QtAgg não encontrado, usando TkAgg.")
         try:
             matplotlib.use("TkAgg")
         except ImportError:
             print("Nenhum backend interativo encontrado. Widgets podem não funcionar.")
-            matplotlib.use("Agg") # Fallback para não-interativo
+            matplotlib.use("Agg")  # Fallback para não-interativo
 
 print("Backend ativo:", matplotlib.get_backend())
 
@@ -58,6 +58,8 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button, TextBox
 
 from tuning_profiles import AnalysisCatalog, AxisKey
+from matplotlib.patches import Rectangle
+from matplotlib.transforms import blended_transform_factory
 
 # =========================
 # [FIX GUI] Helpers de Otimização
@@ -73,15 +75,18 @@ mpl.rcParams['agg.path.chunksize'] = 20000
 # Remove toolbar de navegação para janelas interativas
 mpl.rcParams['toolbar'] = 'None'
 
+
 @contextmanager
 def drawing_off():
     """Context manager para congelar o desenho durante atualizações em lote."""
     was_ion = plt.isinteractive()
-    if was_ion: plt.ioff()
+    if was_ion:
+        plt.ioff()
     try:
         yield
     finally:
-        if was_ion: plt.ion()
+        if was_ion:
+            plt.ion()
 # ============================================================
 
 
@@ -94,17 +99,17 @@ class PlantConfig:
     """Configurações de hardware/físicas da planta."""
     Ts: float = 0.001        # passo de controle (TIM7) [s] - 1kHz
     tim6_hz: float = 50_000.0  # TIM6 (DDA) [Hz] - 50kHz
-    
-    step_high_ticks: int = 1   # (MOTION_STEP_HIGH_TICKS)
-    step_low_ticks:  int = 1   # (MOTION_STEP_LOW_TICKS)
-    
-    accel_sps2: float = 200_000.0 # aceleração [steps/s^2] (DEMO_ACCEL_SPS2)
 
-    enc_cpr_xyz: Tuple[int, int, int] = (40_000, 5000, 40_000) # (ENC_COUNTS_PER_REV)
-    microstep_factor: int = 256 # (MICROSTEP_FACTOR)
-    motor_steps_per_rev_base: int = 400 # (STEPS_PER_REV_BASE)
-    
-    k_scale: int = (1 << 8) # (MOTION_PI_SHIFT)
+    step_high_ticks: int = 1   # (MOTION_STEP_HIGH_TICKS)
+    step_low_ticks: int = 1   # (MOTION_STEP_LOW_TICKS)
+
+    accel_sps2: float = 200_000.0  # aceleração [steps/s^2] (DEMO_ACCEL_SPS2)
+
+    enc_cpr_xyz: Tuple[int, int, int] = (40_000, 5000, 40_000)  # (ENC_COUNTS_PER_REV)
+    microstep_factor: int = 256  # (MICROSTEP_FACTOR)
+    motor_steps_per_rev_base: int = 400  # (STEPS_PER_REV_BASE)
+
+    k_scale: int = (1 << 8)  # (MOTION_PI_SHIFT)
     kd_alpha_bits: int = 8          # (alpha de filtro da derivada, 8 = >> 8)
     i_clamp: float = 200_000.0    # (MOTION_PI_I_CLAMP)
     deadband_steps: int = 10      # (MOTION_PI_DEADBAND_STEPS)
@@ -118,18 +123,20 @@ class PlantConfig:
         low = max(1, self.step_low_ticks)
         return self.tim6_hz / (self.step_high_ticks + low)
 
+
 @dataclass
 class Scenario:
     """Configurações do movimento (move_queue_add_req_t)."""
-    s_xyz: Tuple[int, int, int] = (40000, 32000, 24000) 
+    s_xyz: Tuple[int, int, int] = (40000, 32000, 24000)
     v_xyz: Tuple[int, int, int] = (10000, 8000, 6000)
     dir_xyz: Tuple[int, int, int] = (1, 1, 1)
     kp_xyz: Tuple[int, int, int] = (800, 800, 800)
     ki_xyz: Tuple[int, int, int] = (40, 40, 40)
     kd_xyz: Tuple[int, int, int] = (120, 120, 120)
-    
-    sim_time_s: float = 5.0 # Tempo total da simulação
+
+    sim_time_s: float = 5.0  # Tempo total da simulação
     use_dda: bool = True
+
 
 LOG_HEADER = [
     "t_s",
@@ -186,41 +193,43 @@ def gains_from_catalog(axis_map: List[Tuple[str, int]]):
 def dda_steps_per_rev(cfg: PlantConfig) -> int:
     return cfg.motor_steps_per_rev_base * cfg.microstep_factor
 
+
 # Conversão Encoder -> DDA (Espelha 'motion_conv_enc_to_dda')
 def conv_enc_to_dda(cfg: PlantConfig, enc_counts: float, axis: int) -> float:
     enc_per_rev = cfg.enc_cpr_xyz[axis]
     if enc_per_rev == 0:
         return 0.0
-    
+
     dda_rev = dda_steps_per_rev(cfg)
     num = enc_counts * dda_rev
     den = enc_per_rev
-    return (num + (den // 2)) / den # Arredondamento
+    return (num + (den // 2)) / den  # Arredondamento
 
 # =========================
 # Classe DDA (Operário Burro)
 # =========================
+
 class DDAStepper:
-    __slots__ = ("acc_q16","q16_one","hz")
+    __slots__ = ("acc_q16", "q16_one", "hz")
 
     def __init__(self, tim6_hz: float):
         self.q16_one = float(1 << 16)
         self.hz = tim6_hz
         self.reset()
-        
+
     def reset(self):
         """Zera o acumulador de fase."""
         self.acc_q16 = 0.0
 
     def emit_steps(self, v_sps: float, Ts: float) -> int:
         """Ts aqui é o Ts do *Chefe* (ex: 0.001s)"""
-        substeps = int(round(self.hz * Ts)) # (ex: 50000 * 0.001 = 50)
-        
+        substeps = int(round(self.hz * Ts))  # (ex: 50000 * 0.001 = 50)
+
         inc = (v_sps / self.hz) * self.q16_one
-        
+
         acc = self.acc_q16
         emitted = 0
-        
+
         for _ in range(substeps):
             acc += inc
             if acc >= self.q16_one:
@@ -234,7 +243,17 @@ class DDAStepper:
 # =========================
 
 class InteractiveSim:
-    def __init__(self, cfg: PlantConfig, scn: Scenario, *, log_dir: Path | None = None, enable_logging: bool = True, auto_analyze: bool = False, headless: bool = False):
+    def __init__(
+        self,
+        cfg: PlantConfig,
+        scn: Scenario,
+        *,
+        log_dir: Path | None = None,
+        enable_logging: bool = True,
+        auto_analyze: bool = False,
+        headless: bool = False,
+        show_friction_band: bool = False,
+    ):
         self.cfg = cfg
         self.scn = scn
         self.log_enabled = enable_logging
@@ -250,7 +269,7 @@ class InteractiveSim:
         self._log_flush_interval = 200
         if self.log_enabled:
             self.log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.microsteps_per_rev = dda_steps_per_rev(cfg)
         self.N_steps_total = int(round(scn.sim_time_s / cfg.Ts))
         # Mantém, no mínimo, todo o histórico de um ciclo completo de simulação
@@ -258,13 +277,13 @@ class InteractiveSim:
         # Descola o t=0 do canto esquerdo para evitar sobreposição com a legenda
         self.graph_time_pad_left = max(0.1, 0.05 * self.scn.sim_time_s)
         self.graph_time_pad_right = max(self.cfg.Ts * 20, 0.02 * self.scn.sim_time_s)
-        
+
         # Estado da Simulação
         self.is_paused = True
-        
+
         # [FIX OTIMIZAÇÃO] Cache do background para blitting
         self.background = None
-        
+
         # [FIX REENTRANCY] Flag para evitar 'draw' síncrono sobreposto
         self._in_freeze_draw = False
 
@@ -279,31 +298,33 @@ class InteractiveSim:
 
         # --- Estado da Simulação Real ---
         self.ddas_real: List[DDAStepper] = []
-        self.pos_real: np.ndarray = np.zeros(3, dtype=float) 
-        self.enc_pos_counts: np.ndarray = np.zeros(3, dtype=float) 
+        self.pos_real: np.ndarray = np.zeros(3, dtype=float)
+        self.enc_pos_counts: np.ndarray = np.zeros(3, dtype=float)
         self.enc_origin_counts: np.ndarray = np.zeros(3, dtype=float)
-        
+
         dda_per_rev = dda_steps_per_rev(self.cfg)
-        self.steps_to_counts_ratio = np.array([
-            cpr / dda_per_rev if dda_per_rev > 0 else 0 
-            for cpr in self.cfg.enc_cpr_xyz
-        ])
-        
+        self.steps_to_counts_ratio = np.array(
+            [
+                cpr / dda_per_rev if dda_per_rev > 0 else 0
+                for cpr in self.cfg.enc_cpr_xyz
+            ]
+        )
+
         self.v_real: np.ndarray = np.zeros(3, dtype=float)
-        
+
         # --- Estado do CASC/PID (espelha C globals) ---
         self.g_pi_i_accum: np.ndarray = np.zeros(3, dtype=float)
         self.g_pi_prev_err: np.ndarray = np.zeros(3, dtype=float)
         self.g_pi_d_filt: np.ndarray = np.zeros(3, dtype=float)
         self.g_v_accum: np.ndarray = np.zeros(3, dtype=float)
         self.g_casc_err_s32: np.ndarray = np.zeros(3, dtype=float)
-        
+
         # Estados que mudam a cada passo
         self.k: int = 0
         self.t: float = 0.0
-        
+
         # [FIX 2] Lógica de Carga (lida no Reset, usada no runtime)
-        self.C_load_values: np.ndarray = np.zeros(3) 
+        self.C_load_values: np.ndarray = np.zeros(3)
         self.load_start_times: np.ndarray = np.zeros(3)
         self.load_end_times: np.ndarray = np.full(3, np.inf)
         self.active_C_load: np.ndarray = np.zeros(3)
@@ -312,10 +333,10 @@ class InteractiveSim:
 
         # Erro acumulado (IAE) por eixo [steps*s]
         self.err_accum_xyz: np.ndarray = np.zeros(3)
-        
+
         # Estado de Parada por Eixo (lido em tempo real)
         self.is_stopped: np.ndarray = np.array([False, False, False], dtype=bool)
-        self.btn_color_off = '0.85' # Cinza claro
+        self.btn_color_off = "0.85"  # Cinza claro
 
         # Buffers de histórico para plotagem
         self.history = {}
@@ -341,11 +362,16 @@ class InteractiveSim:
         self.sync_hold_enabled = True
         self.sync_ahead_margin_steps = 20.0
         # Estratégias e compatibilidade
-        self.master_select_strategy = 'remaining'  # 'remaining' | 'progress'
+        self.master_select_strategy = "remaining"  # 'remaining' | 'progress'
         self.prefer_loaded_master = True
         self.finish_all_axes = True
         self.ramp_use_worst_remaining = True
         self.global_stop_all_axes = False
+
+        self.show_friction_band = bool(show_friction_band)
+
+        # Mantém último instante conhecido de atrito por eixo
+        self.friction_last_end_times = np.full(3, np.nan)
 
         if not self.headless:
             # --- Configuração da Interface Gráfica (GUI) ---
@@ -359,64 +385,108 @@ class InteractiveSim:
                 except Exception:
                     pass
             gs = gridspec.GridSpec(4, 4, figure=self.fig)
-            self.fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.05, hspace=0.7, wspace=0.4)
+            self.fig.subplots_adjust(
+                left=0.07,
+                right=0.98,
+                top=0.95,
+                bottom=0.05,
+                hspace=0.7,
+                wspace=0.4,
+            )
 
             # Eixos dos Círculos (Linha 0)
-            self.ax_motor_x = self.fig.add_subplot(gs[0, 0], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
-            self.ax_motor_y = self.fig.add_subplot(gs[0, 1], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
-            self.ax_motor_z = self.fig.add_subplot(gs[0, 2], aspect='equal', xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
-            
+            self.ax_motor_x = self.fig.add_subplot(
+                gs[0, 0], aspect="equal", xlim=(-1.2, 1.2), ylim=(-1.2, 1.2)
+            )
+            self.ax_motor_y = self.fig.add_subplot(
+                gs[0, 1], aspect="equal", xlim=(-1.2, 1.2), ylim=(-1.2, 1.2)
+            )
+            self.ax_motor_z = self.fig.add_subplot(
+                gs[0, 2], aspect="equal", xlim=(-1.2, 1.2), ylim=(-1.2, 1.2)
+            )
+
             # Painéis de Input (Linha 1)
             self.ax_input_x = self.fig.add_subplot(gs[1, 0])
             self.ax_input_y = self.fig.add_subplot(gs[1, 1])
             self.ax_input_z = self.fig.add_subplot(gs[1, 2])
-            
+
             # Painel de Controle (Linhas 0-1, Coluna 3)
             self.ax_control_panel = self.fig.add_subplot(gs[0:2, 3])
-            
+
             # Gráficos (Linhas 2-3, Colunas 0,1,2)
-            gs_graphs = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=gs[2:4, 0:3], hspace=0.3)
+            gs_graphs = gridspec.GridSpecFromSubplotSpec(
+                3,
+                1,
+                subplot_spec=gs[2:4, 0:3],
+                hspace=0.3,
+            )
             self.ax_graph_pos = self.fig.add_subplot(gs_graphs[0, 0])
             self.ax_graph_vel = self.fig.add_subplot(gs_graphs[1, 0])
             self.ax_graph_err = self.fig.add_subplot(gs_graphs[2, 0])
-            
+
             # Painel de Atrito (Linhas 2-3, Coluna 3)
             self.ax_friction_panel = self.fig.add_subplot(gs[2:4, 3])
-            
+
             # Inicializa plots e widgets
             self.artists = []
             self._init_artists()
             self._init_widgets()
-            
+
             # [FIX V13.4] Agrupa TextBoxes e conecta callbacks estáticos
             self._tbs_scenario = [
-                self.txt_s_x, self.txt_v_x, self.txt_dir_x, self.txt_kp_x, self.txt_ki_x, self.txt_kd_x,
-                self.txt_s_y, self.txt_v_y, self.txt_dir_y, self.txt_kp_y, self.txt_ki_y, self.txt_kd_y,
-                self.txt_s_z, self.txt_v_z, self.txt_dir_z, self.txt_kp_z, self.txt_ki_z, self.txt_kd_z,
+                self.txt_s_x,
+                self.txt_v_x,
+                self.txt_dir_x,
+                self.txt_kp_x,
+                self.txt_ki_x,
+                self.txt_kd_x,
+                self.txt_s_y,
+                self.txt_v_y,
+                self.txt_dir_y,
+                self.txt_kp_y,
+                self.txt_ki_y,
+                self.txt_kd_y,
+                self.txt_s_z,
+                self.txt_v_z,
+                self.txt_dir_z,
+                self.txt_kp_z,
+                self.txt_ki_z,
+                self.txt_kd_z,
             ]
             self._tbs_runtime = [
-                self.txt_c_x, self.txt_t_start_x, self.txt_t_end_x,
-                self.txt_c_y, self.txt_t_start_y, self.txt_t_end_y,
-                self.txt_c_z, self.txt_t_start_z, self.txt_t_end_z
+                self.txt_c_x,
+                self.txt_t_start_x,
+                self.txt_t_end_x,
+                self.txt_c_y,
+                self.txt_t_start_y,
+                self.txt_t_end_y,
+                self.txt_c_z,
+                self.txt_t_start_z,
+                self.txt_t_end_z,
             ]
             # Para cenário: só aplica ao dar ENTER (não redesenha a cada tecla/foco)
             for tb in self._tbs_scenario:
                 tb.on_submit(lambda _=None: None)  # sem redraw; reset() que lê
-            
+
             # Guardar cids (connection ids) para (des)ligar live-update dos runtime
             self._live_cids = []
-            
+
             # Carrega os valores iniciais do Scn nos TextBoxes e no estado
-            self.reset(None) 
-            
+            self.reset(None)
+
             print("Interface Pronta. Pressione 'Play' para iniciar.")
-            
-            self.animation_interval_ms = 20 # 50Hz refresh rate
-            self.sim_steps_per_frame = int(self.animation_interval_ms / (self.cfg.Ts * 1000.0))
-            if self.sim_steps_per_frame == 0: self.sim_steps_per_frame = 1
-            
+
+            self.animation_interval_ms = 20  # 50Hz refresh rate
+            self.sim_steps_per_frame = int(
+                self.animation_interval_ms / (self.cfg.Ts * 1000.0)
+            )
+            if self.sim_steps_per_frame == 0:
+                self.sim_steps_per_frame = 1
+
             # Timer manual para animação (corrige lag)
-            self.timer = self.fig.canvas.new_timer(interval=self.animation_interval_ms)
+            self.timer = self.fig.canvas.new_timer(
+                interval=self.animation_interval_ms
+            )
             self.timer.add_callback(self._on_timer_tick)
             # O timer é iniciado pelo on_play()
         else:
@@ -430,8 +500,6 @@ class InteractiveSim:
             self.dir_xyz[self.dir_xyz >= 0] = 1
             self.dir_xyz[self.dir_xyz < 0] = -1
             self.target_s32 = self.target_mag * self.dir_xyz
-
-            # Limites Y não aplicáveis em headless
 
             # 2. Reseta estados de simulação
             self.ddas_real = [DDAStepper(self.cfg.tim6_hz) for _ in range(3)]
@@ -455,22 +523,22 @@ class InteractiveSim:
             self.is_stopped = np.array([False, False, False], dtype=bool)
             # História mínima
             self.history = {
-                't_s': deque(maxlen=self.plot_history_size),
-                'x_pos': deque(maxlen=self.plot_history_size),
-                'y_pos': deque(maxlen=self.plot_history_size),
-                'z_pos': deque(maxlen=self.plot_history_size),
-                'x_v': deque(maxlen=self.plot_history_size),
-                'y_v': deque(maxlen=self.plot_history_size),
-                'z_v': deque(maxlen=self.plot_history_size),
-                'x_err': deque(maxlen=self.plot_history_size),
-                'y_err': deque(maxlen=self.plot_history_size),
-                'z_err': deque(maxlen=self.plot_history_size),
-                'sync_span': deque(maxlen=self.plot_history_size),
+                "t_s": deque(maxlen=self.plot_history_size),
+                "x_pos": deque(maxlen=self.plot_history_size),
+                "y_pos": deque(maxlen=self.plot_history_size),
+                "z_pos": deque(maxlen=self.plot_history_size),
+                "x_v": deque(maxlen=self.plot_history_size),
+                "y_v": deque(maxlen=self.plot_history_size),
+                "z_v": deque(maxlen=self.plot_history_size),
+                "x_err": deque(maxlen=self.plot_history_size),
+                "y_err": deque(maxlen=self.plot_history_size),
+                "z_err": deque(maxlen=self.plot_history_size),
+                "sync_span": deque(maxlen=self.plot_history_size),
             }
             self._append_history(0.0, np.zeros(3), self.v_real, np.zeros(3), 0.0)
 
     # --- [FIX BLIT-FADE] Helpers para "congelar" o frame ao pausar ---
-    
+
     def _enable_blitting(self):
         """Ativa o blit: marca artistas como animados e cacheia o background."""
         print("Ativando blitting e cacheando background...")
@@ -478,10 +546,10 @@ class InteractiveSim:
             # 1. Marca artistas como animados
             for artist in self.artists:
                 artist.set_animated(True)
-            
+
             # 2. Força um 'draw' para ter um background limpo
             self.fig.canvas.draw()
-            
+
             # 3. Cacheia o background
             self.background = self.fig.canvas.copy_from_bbox(self.fig.bbox)
         except Exception as e:
@@ -490,32 +558,32 @@ class InteractiveSim:
 
     def _disable_blitting_and_redraw(self):
         """Desativa o blit: marca artistas como 'não animados' e força um redesenho completo."""
-        
+
         # [FIX REENTRANCY] Evita chamadas de 'draw' reentrantes.
         if self._in_freeze_draw:
             return
         self._in_freeze_draw = True
-        
+
         try:
             print("Desativando blitting e forçando redesenho final.")
-            
+
             # 1. Marca artistas como 'normais' (não-animados)
             for artist in self.artists:
                 artist.set_animated(False)
-            
+
             # 2. Invalida o cache
             self.background = None
-            
+
             # [FIX DEBOUNCE/DRAW] Troca 'draw_idle' por 'draw' síncrono.
-            # Isso "congela" a tela imediatamente no estado final.
-            if hasattr(self.fig.canvas, 'draw'):
+            if hasattr(self.fig.canvas, "draw"):
                 self.fig.canvas.draw()
-            elif hasattr(self.fig.canvas, 'draw_idle'):
+            elif hasattr(self.fig.canvas, "draw_idle"):
                 # Fallback caso 'draw' não esteja disponível
                 self.fig.canvas.draw_idle()
         finally:
             # Garante que a flag seja liberada
             self._in_freeze_draw = False
+
     # -----------------------------------------------------------------
 
     # --- Helpers de Log ---
@@ -523,7 +591,9 @@ class InteractiveSim:
         if (not self.log_enabled) or (self._log_writer is not None):
             return
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.log_session_path = self.log_dir / f"interactive_sim_{timestamp}.csv"
+        self.log_session_path = (
+            self.log_dir / f"interactive_sim_{timestamp}.csv"
+        )
         self._log_file = self.log_session_path.open("w", newline="")
         self._log_writer = csv.writer(self._log_file)
         self._log_writer.writerow(LOG_HEADER)
@@ -554,6 +624,7 @@ class InteractiveSim:
             return
         try:
             import csv, math
+
             rows = []
             with self.last_log_path.open() as f:
                 reader = csv.DictReader(f)
@@ -562,28 +633,49 @@ class InteractiveSim:
             if not rows:
                 print("Análise: log vazio.")
                 return
-            T = [r['t_s'] for r in rows]
-            dt = (T[-1] - T[0]) / max(1, (len(T)-1))
-            span = [r['span_steps'] for r in rows]
-            stops = [r['global_stop'] for r in rows]
+            T = [r["t_s"] for r in rows]
+            dt = (T[-1] - T[0]) / max(1, (len(T) - 1))
+            span = [r["span_steps"] for r in rows]
+            stops = [r["global_stop"] for r in rows]
             stop_time = sum(stops) * dt
-            axes = ['x','y','z']
-            targets = {'x': self.target_mag[0], 'y': self.target_mag[1], 'z': self.target_mag[2]}
+            axes = ["x", "y", "z"]
+            targets = {
+                "x": self.target_mag[0],
+                "y": self.target_mag[1],
+                "z": self.target_mag[2],
+            }
             print("\n===== Análise Automática =====")
-            print(f"Arquivo: {self.last_log_path.name}")
-            print(f"Duração: {T[-1]:.3f}s | stop_fraction: {stop_time/T[-1]:.3%} | max_span: {max(span):.0f} | final_span: {span[-1]:.0f}")
+            print(
+                f"Arquivo: {self.last_log_path.name}"
+            )
+            print(
+                f"Duração: {T[-1]:.3f}s | stop_fraction: {stop_time/T[-1]:.3%} | "
+                f"max_span: {max(span):.0f} | final_span: {span[-1]:.0f}"
+            )
             for ax in axes:
-                err = [r[f'err_steps_{ax}'] for r in rows]
+                err = [r[f"err_steps_{ax}"] for r in rows]
                 aerr = [abs(e) for e in err]
-                posf = rows[-1][f'dda_pos_{ax}']
-                print(f"{ax.upper()}: pos_final={posf:.0f} (meta {targets[ax]:.0f}) | max_err={max(aerr):.1f} | steady={err[-1]:.1f}")
+                posf = rows[-1][f"dda_pos_{ax}"]
+                print(
+                    f"{ax.upper()}: pos_final={posf:.0f} (meta {targets[ax]:.0f}) | "
+                    f"max_err={max(aerr):.1f} | steady={err[-1]:.1f}"
+                )
             # Dicas simples
             tips = []
             if span[-1] > self.finish_tol_steps:
-                tips.append("Aumentar finish_window_steps (ex.: +200) e reduzir finish_err_stop_steps (ex.: 40)")
-                tips.append("Subir piso do feed na fase final (finish_feed_min_fraction >= 0.3)")
-            if (stop_time/T[-1]) > 0.15:
-                tips.append("Aumentar stall_debounce (ex.: +4) e manter stall desabilitado na fase final")
+                tips.append(
+                    "Aumentar finish_window_steps (ex.: +200) e reduzir "
+                    "finish_err_stop_steps (ex.: 40)"
+                )
+                tips.append(
+                    "Subir piso do feed na fase final "
+                    "(finish_feed_min_fraction >= 0.3)"
+                )
+            if (stop_time / T[-1]) > 0.15:
+                tips.append(
+                    "Aumentar stall_debounce (ex.: +4) e manter stall "
+                    "desabilitado na fase final"
+                )
             if tips:
                 print("Sugestões:")
                 for t in tips:
@@ -594,11 +686,14 @@ class InteractiveSim:
 
     def _encoder_rel_dda(self) -> np.ndarray:
         pos_enc_rel = self.enc_pos_counts - self.enc_origin_counts
-        return np.array([
-            conv_enc_to_dda(self.cfg, pos_enc_rel[0], 0),
-            conv_enc_to_dda(self.cfg, pos_enc_rel[1], 1),
-            conv_enc_to_dda(self.cfg, pos_enc_rel[2], 2)
-        ], dtype=float)
+        return np.array(
+            [
+                conv_enc_to_dda(self.cfg, pos_enc_rel[0], 0),
+                conv_enc_to_dda(self.cfg, pos_enc_rel[1], 1),
+                conv_enc_to_dda(self.cfg, pos_enc_rel[2], 2),
+            ],
+            dtype=float,
+        )
 
     def _log_state(
         self,
@@ -642,7 +737,7 @@ class InteractiveSim:
             if hasattr(tb, "on_text_change"):
                 cid = tb.on_text_change(self._schedule_redraw)
                 self._live_cids.append((tb, cid))
-            else: # Fallback
+            else:  # Fallback
                 cid = tb.on_submit(self._schedule_redraw)
                 self._live_cids.append((tb, cid))
 
@@ -654,12 +749,12 @@ class InteractiveSim:
             except Exception:
                 pass
         self._live_cids.clear()
-        
+
     # [FIX V13.5] Adicionado helper de Restart
     def _restart_play(self):
         """Helper para 'Reset + Play' (usado pelo botão Play)."""
         # Recomeça com os valores atuais dos TextBoxes
-        self.reset(None)           # pausa, redesenha “congelado”
+        self.reset(None)  # pausa, redesenha “congelado”
         self.is_paused = False
         self._enable_blitting()
         self._attach_runtime_live()
@@ -677,7 +772,7 @@ class InteractiveSim:
             kp_x = int(self.txt_kp_x.text)
             ki_x = int(self.txt_ki_x.text)
             kd_x = int(self.txt_kd_x.text)
-            
+
             # Eixo Y
             s_y = int(self.txt_s_y.text)
             v_y = float(self.txt_v_y.text)
@@ -701,51 +796,54 @@ class InteractiveSim:
             self.kp_xyz = np.array([kp_x, kp_y, kp_z], dtype=int)
             self.ki_xyz = np.array([ki_x, ki_y, ki_z], dtype=int)
             self.kd_xyz = np.array([kd_x, kd_y, kd_z], dtype=int)
-            
+
             self.dir_xyz[self.dir_xyz >= 0] = 1
             self.dir_xyz[self.dir_xyz < 0] = -1
             self.target_s32 = self.target_mag * self.dir_xyz
-            
+
             # [FIX 2] Atualiza o estado do Atrito
             self.C_load_values[0] = float(self.txt_c_x.text)
             self.load_start_times[0] = float(self.txt_t_start_x.text)
             self.load_end_times[0] = float(self.txt_t_end_x.text)
-            
+
             self.C_load_values[1] = float(self.txt_c_y.text)
             self.load_start_times[1] = float(self.txt_t_start_y.text)
             self.load_end_times[1] = float(self.txt_t_end_y.text)
-            
+
             self.C_load_values[2] = float(self.txt_c_z.text)
             self.load_start_times[2] = float(self.txt_t_start_z.text)
             self.load_end_times[2] = float(self.txt_t_end_z.text)
 
         except ValueError as e:
             # Lida com "inf"
-            if 'inf' in str(e):
-                if 'txt_t_end_x' in str(e): self.load_end_times[0] = np.inf
-                if 'txt_t_end_y' in str(e): self.load_end_times[1] = np.inf
-                if 'txt_t_end_z' in str(e): self.load_end_times[2] = np.inf
+            if "inf" in str(e):
+                if "txt_t_end_x" in str(e):
+                    self.load_end_times[0] = np.inf
+                if "txt_t_end_y" in str(e):
+                    self.load_end_times[1] = np.inf
+                if "txt_t_end_z" in str(e):
+                    self.load_end_times[2] = np.inf
             else:
                 print(f"Erro ao ler inputs do cenário: {e}")
 
     def reset(self, event):
         """Reseta a simulação para o estado inicial."""
         print("Carregando cenário e resetando simulação...")
-        
+
         self.is_paused = True
-        if hasattr(self, 'timer'): # Só para se o timer já foi criado
-            self.timer.stop() # Para o loop de simulação
-        
+        if hasattr(self, "timer"):  # Só para se o timer já foi criado
+            self.timer.stop()  # Para o loop de simulação
+
         # [FIX V13.4] Garante que callbacks de runtime estão mortos
         self._detach_runtime_live()
         # Finaliza log anterior (se houver)
         self._stop_log_session()
-        
+
         # [FIX GUI] Congela o desenho enquanto atualiza a UI
         with drawing_off():
             # 1. Carrega os valores dos TextBoxes para o estado
-            if hasattr(self, 'txt_s_x'):
-                self._latch_all_inputs_from_gui() # [FIX 2]
+            if hasattr(self, "txt_s_x"):
+                self._latch_all_inputs_from_gui()  # [FIX 2]
             else:
                 # Primeira chamada (do __init__), usa o Scn
                 self.target_mag = np.array(self.scn.s_xyz, dtype=np.int64)
@@ -757,178 +855,287 @@ class InteractiveSim:
                 self.dir_xyz[self.dir_xyz >= 0] = 1
                 self.dir_xyz[self.dir_xyz < 0] = -1
                 self.target_s32 = self.target_mag * self.dir_xyz
-            
+
             # [FIX OTIMIZAÇÃO] Trava os limites Y dos gráficos
             # Pega os valores máximos do cenário
             s_max = np.max(self.target_mag)
             v_max = np.max(self.v_target_sps)
-            
+
             # Adiciona uma margem (ex: 20%)
             s_margin = max(10, s_max * 0.2)
             v_margin = max(10, v_max * 0.2)
-            
+
             # Define os limites Y (o erro deixamos mais solto)
             self.ax_graph_pos.set_ylim(-s_margin, s_max + s_margin)
             self.ax_graph_vel.set_ylim(-v_margin, v_max + v_margin)
             # Chute para o erro, ajuste se necessário
-            self.ax_graph_err.set_ylim(-500, 500) 
-            
+            self.ax_graph_err.set_ylim(-500, 500)
+
             # 2. Reseta os estados da simulação
             self.ddas_real = [DDAStepper(self.cfg.tim6_hz) for _ in range(3)]
-            self.pos_real = np.zeros(3, dtype=float)      # Passos emitidos (para gráfico)
-            self.enc_pos_counts = np.zeros(3, dtype=float)  # Posição encoder (para feedback)
-            self.enc_origin_counts = np.zeros(3, dtype=float) # "Zero" do CASC
-            self.v_real = np.zeros(3, dtype=float)          # v_actual_sps
-            
+            self.pos_real = np.zeros(3, dtype=float)  # Passos emitidos (para gráfico)
+            self.enc_pos_counts = np.zeros(
+                3, dtype=float
+            )  # Posição encoder (para feedback)
+            self.enc_origin_counts = np.zeros(3, dtype=float)  # "Zero" do CASC
+            self.v_real = np.zeros(3, dtype=float)  # v_actual_sps
+
             self.g_pi_i_accum = np.zeros(3, dtype=float)
             self.g_pi_prev_err = np.zeros(3, dtype=float)
             self.g_pi_d_filt = np.zeros(3, dtype=float)
             self.g_v_accum = np.zeros(3, dtype=float)
             self.g_casc_err_s32 = np.zeros(3, dtype=float)
-            
+
             self.k = 0
             self.t = 0.0
-            
+
             # [FIX 2] O estado de carga já foi lido. Zera apenas os timers.
             self.active_C_load = np.zeros(3)
             self.load_timer_xyz = np.zeros(3)
             # Zera erro acumulado (IAE)
             self.err_accum_xyz = np.zeros(3)
-            
+
+            # **NOVO**: Reinicia o cache de fim das faixas de atrito
+            self.friction_last_end_times = np.full(3, np.nan)
+
             self.is_stopped = np.array([False, False, False], dtype=bool)
 
             # 3. Limpa o histórico
             self.history = {
-                't_s': deque(maxlen=self.plot_history_size),
-                'x_pos': deque(maxlen=self.plot_history_size),
-                'y_pos': deque(maxlen=self.plot_history_size),
-                'z_pos': deque(maxlen=self.plot_history_size),
-                'x_v': deque(maxlen=self.plot_history_size),
-                'y_v': deque(maxlen=self.plot_history_size),
-                'z_v': deque(maxlen=self.plot_history_size),
-                'x_err': deque(maxlen=self.plot_history_size), # Erro CASC
-                'y_err': deque(maxlen=self.plot_history_size), # Erro CASC
-                'z_err': deque(maxlen=self.plot_history_size), # Erro CASC
-                'sync_span': deque(maxlen=self.plot_history_size),
+                "t_s": deque(maxlen=self.plot_history_size),
+                "x_pos": deque(maxlen=self.plot_history_size),
+                "y_pos": deque(maxlen=self.plot_history_size),
+                "z_pos": deque(maxlen=self.plot_history_size),
+                "x_v": deque(maxlen=self.plot_history_size),
+                "y_v": deque(maxlen=self.plot_history_size),
+                "z_v": deque(maxlen=self.plot_history_size),
+                "x_err": deque(maxlen=self.plot_history_size),  # Erro CASC
+                "y_err": deque(maxlen=self.plot_history_size),  # Erro CASC
+                "z_err": deque(maxlen=self.plot_history_size),  # Erro CASC
+                "sync_span": deque(maxlen=self.plot_history_size),
             }
             self._append_history(0.0, np.zeros(3), self.v_real, np.zeros(3), 0.0)
-            
+
             # 4. Reseta a GUI (botões)
-            if hasattr(self, 'btn_stop_x'):
+            if hasattr(self, "btn_stop_x"):
                 self.btn_stop_x.color = self.btn_color_off
                 self.btn_stop_y.color = self.btn_color_off
                 self.btn_stop_z.color = self.btn_color_off
-            
+
             # Envia dados vazios para os artistas
-            self._update_artists_data() 
-        
+            self._update_artists_data()
+
         # [FIX BLIT-FADE] O 'reset' deve terminar em um estado estático (blit desligado).
         self._disable_blitting_and_redraw()
-            
+
         print("Reset concluído. Pressione 'Play' para iniciar.")
 
+    # =========================
+    # _init_artists CORRIGIDO
+    # =========================
     def _init_artists(self) -> List:
         """Configura e limpa todos os artistas (linhas, textos) da GUI."""
         self.artists = []
-        
+
         # --- Círculos (Mostram a Posição REAL) ---
         self.motor_lines = []
         self.motor_texts = []
-        
-        for i, (ax, color, name) in enumerate(zip([self.ax_motor_x, self.ax_motor_y, self.ax_motor_z],
-                                                  ['r', 'g', 'b'], ['X', 'Y', 'Z'])):
+
+        for i, (ax, color, name) in enumerate(
+            zip(
+                [self.ax_motor_x, self.ax_motor_y, self.ax_motor_z],
+                ["r", "g", "b"],
+                ["X", "Y", "Z"],
+            )
+        ):
             ax.clear()
             ax.set_title(f"Eixo {name}", fontsize=9)
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_xlim(-1.2, 1.2)
             ax.set_ylim(-1.2, 1.2)
-            circle = plt.Circle((0, 0), 1.0, color='gray', fill=False, linestyle='--')
+            circle = plt.Circle((0, 0), 1.0, color="gray", fill=False, linestyle="--")
             ax.add_artist(circle)
-            line, = ax.plot([], [], f'{color}-o', lw=1.25, markersize=8, antialiased=False)
+            line, = ax.plot(
+                [],
+                [],
+                f"{color}-o",
+                lw=1.25,
+                markersize=8,
+                antialiased=False,
+            )
             self.motor_lines.append(line)
             self.artists.append(line)
-            
-            txt = ax.text(0, -1.6, '0.0v', ha='center', fontsize=8) # Fonte menor
+
+            txt = ax.text(0, -1.6, "0.0v", ha="center", fontsize=8)
             self.motor_texts.append(txt)
             self.artists.append(txt)
-        
-        self.time_text = self.fig.suptitle('Tempo: 0.00 s', fontsize=14)
+
+        self.time_text = self.fig.suptitle("Tempo: 0.00 s", fontsize=14)
         self.artists.append(self.time_text)
-            
-        # --- Gráficos (Mostram Posição/Velocidade REAL) ---
+
+        # ===================================================
+        # 1) Configura primeiro os 3 gráficos numéricos
+        #    (pos, vel, err) ANTES de criar as faixas.
+        # ===================================================
+
+        # --- Gráfico de Posição ---
         self.ax_graph_pos.clear()
         self.ax_graph_pos.set_ylabel("Posição (steps)")
         self.ax_graph_pos.grid(True)
-        self.ax_graph_pos.set_xlim(-self.graph_time_pad_left,
-                                   self.scn.sim_time_s + self.graph_time_pad_right)
-        self.line_pos_x, = self.ax_graph_pos.plot([], [], 'r-', label='X pos', antialiased=False, lw=1.25)
-        self.line_pos_y, = self.ax_graph_pos.plot([], [], 'g-', label='Y pos', antialiased=False, lw=1.25)
-        self.line_pos_z, = self.ax_graph_pos.plot([], [], 'b-', label='Z pos', antialiased=False, lw=1.25)
-        self.ax_graph_pos.legend(loc='upper left')
+        self.ax_graph_pos.set_xlim(
+            -self.graph_time_pad_left,
+            self.scn.sim_time_s + self.graph_time_pad_right,
+        )
+        self.line_pos_x, = self.ax_graph_pos.plot(
+            [], [], "r-", label="X pos", antialiased=False, lw=1.25
+        )
+        self.line_pos_y, = self.ax_graph_pos.plot(
+            [], [], "g-", label="Y pos", antialiased=False, lw=1.25
+        )
+        self.line_pos_z, = self.ax_graph_pos.plot(
+            [], [], "b-", label="Z pos", antialiased=False, lw=1.25
+        )
+        self.ax_graph_pos.legend(loc="upper left")
         self.artists.extend([self.line_pos_x, self.line_pos_y, self.line_pos_z])
 
+        # --- Gráfico de Velocidade ---
         self.ax_graph_vel.clear()
         self.ax_graph_vel.set_ylabel("Velocidade (sps)")
         self.ax_graph_vel.grid(True)
-        self.ax_graph_vel.set_xlim(-self.graph_time_pad_left,
-                                   self.scn.sim_time_s + self.graph_time_pad_right)
-        self.line_vel_x, = self.ax_graph_vel.plot([], [], 'r-', label='X vel', antialiased=False, lw=1.25)
-        self.line_vel_y, = self.ax_graph_vel.plot([], [], 'g-', label='Y vel', antialiased=False, lw=1.25)
-        self.line_vel_z, = self.ax_graph_vel.plot([], [], 'b-', label='Z vel', antialiased=False, lw=1.25)
-        self.ax_graph_vel.legend(loc='upper left')
+        self.ax_graph_vel.set_xlim(
+            -self.graph_time_pad_left,
+            self.scn.sim_time_s + self.graph_time_pad_right,
+        )
+        self.line_vel_x, = self.ax_graph_vel.plot(
+            [], [], "r-", label="X vel", antialiased=False, lw=1.25
+        )
+        self.line_vel_y, = self.ax_graph_vel.plot(
+            [], [], "g-", label="Y vel", antialiased=False, lw=1.25
+        )
+        self.line_vel_z, = self.ax_graph_vel.plot(
+            [], [], "b-", label="Z vel", antialiased=False, lw=1.25
+        )
+        self.ax_graph_vel.legend(loc="upper left")
         self.artists.extend([self.line_vel_x, self.line_vel_y, self.line_vel_z])
-        
-        # --- Gráfico de Erro (Mostra Erro CASC) ---
+
+        # --- Gráfico de Erro ---
         self.ax_graph_err.clear()
         self.ax_graph_err.set_ylabel("Erro CASC (steps)")
         self.ax_graph_err.set_xlabel("Tempo (s)")
         self.ax_graph_err.grid(True)
-        self.ax_graph_err.set_xlim(-self.graph_time_pad_left,
-                                   self.scn.sim_time_s + self.graph_time_pad_right)
-        self.line_err_x, = self.ax_graph_err.plot([], [], 'r-', label='Erro X', antialiased=False, lw=1.25)
-        self.line_err_y, = self.ax_graph_err.plot([], [], 'g-', label='Erro Y', antialiased=False, lw=1.25)
-        self.line_err_z, = self.ax_graph_err.plot([], [], 'b-', label='Erro Z', antialiased=False, lw=1.25)
-        self.ax_graph_err.legend(loc='upper left')
+        self.ax_graph_err.set_xlim(
+            -self.graph_time_pad_left,
+            self.scn.sim_time_s + self.graph_time_pad_right,
+        )
+        self.line_err_x, = self.ax_graph_err.plot(
+            [], [], "r-", label="Erro X", antialiased=False, lw=1.25
+        )
+        self.line_err_y, = self.ax_graph_err.plot(
+            [], [], "g-", label="Erro Y", antialiased=False, lw=1.25
+        )
+        self.line_err_z, = self.ax_graph_err.plot(
+            [], [], "b-", label="Erro Z", antialiased=False, lw=1.25
+        )
+        self.ax_graph_err.legend(loc="upper left")
         self.artists.extend([self.line_err_x, self.line_err_y, self.line_err_z])
-        
+
+        # ===================================================
+        # 2) AGORA sim cria as faixas de atrito para os
+        #    três gráficos (pos, vel, err).
+        #    Assim, nenhum 'clear()' apaga as patches.
+        # ===================================================
+
+        self.friction_rects_pos = []
+        self.friction_rects_vel = []
+        self.friction_rects_err = []
+
+        if self.show_friction_band:
+            colors = ["red", "green", "blue"]
+            trans_pos = blended_transform_factory(
+                self.ax_graph_pos.transData, self.ax_graph_pos.transAxes
+            )
+            trans_vel = blended_transform_factory(
+                self.ax_graph_vel.transData, self.ax_graph_vel.transAxes
+            )
+            trans_err = blended_transform_factory(
+                self.ax_graph_err.transData, self.ax_graph_err.transAxes
+            )
+
+            for c in colors:
+                rp = Rectangle(
+                    (0.0, 0.0),
+                    0.0,
+                    1.0,
+                    transform=trans_pos,
+                    facecolor=c,
+                    alpha=0.15,
+                    visible=False,
+                    zorder=0.5,
+                )
+                rv = Rectangle(
+                    (0.0, 0.0),
+                    0.0,
+                    1.0,
+                    transform=trans_vel,
+                    facecolor=c,
+                    alpha=0.15,
+                    visible=False,
+                    zorder=0.5,
+                )
+                re = Rectangle(
+                    (0.0, 0.0),
+                    0.0,
+                    1.0,
+                    transform=trans_err,
+                    facecolor=c,
+                    alpha=0.15,
+                    visible=False,
+                    zorder=0.5,
+                )
+
+                self.ax_graph_pos.add_patch(rp)
+                self.ax_graph_vel.add_patch(rv)
+                self.ax_graph_err.add_patch(re)
+
+                self.friction_rects_pos.append(rp)
+                self.friction_rects_vel.append(rv)
+                self.friction_rects_err.append(re)
+
+                self.artists.extend([rp, rv, re])
+
         # [FIX 1] Textos de Carga (Timers) - Removidos daqui
-        self.ax_friction_panel.clear(); self.ax_friction_panel.axis('off')
-        
+        self.ax_friction_panel.clear()
+        self.ax_friction_panel.axis("off")
+
         return self.artists
-    
+
     # --- [FIX GUI] Funções de Debounce ---
     def _setup_debounced_redraw(self):
         """Cria o timer de debounce para a GUI."""
         self._debounce_timer = self.fig.canvas.new_timer(interval=120)
-        
+
         # [FIX DEBOUNCE/DRAW] ESSENCIAL: Dispara apenas uma vez.
         self._debounce_timer.single_shot = True
-        
+
         def _fire():
             # [FIX REENTRANCY] Se já estiver pausado, NÃO faça nada.
-            # Isso evita a colisão de redraw com o TextBox.
             if self.is_paused:
                 return
-            
+
             # Se estava rodando, pausar é a ação correta.
-            # O on_pause() já chama _disable_blitting_and_redraw(),
-            # que faz o 'draw()' síncrono.
+            # O on_pause() já chama _disable_blitting_and_redraw().
             self.on_pause(None)
-            
-            # [FIX REENTRANCY] O 'draw_idle()' que estava aqui foi removido
-            # por ser redundante (on_pause já redesenha).
-                
+
         self._debounce_timer.add_callback(_fire)
 
     def _schedule_redraw(self, *_):
         """Agenda um redesenho (chamado pelos TextBoxes)."""
-        
+
         # [FIX REENTRANCY] Não agenda redraws se já estiver pausado.
-        # Isso é a chave para o TextBox não travar.
         if self.is_paused:
             return
-            
+
         try:
             self._debounce_timer.stop()
         except Exception:
@@ -936,130 +1143,295 @@ class InteractiveSim:
         # (Re)inicia o timer single-shot
         self._debounce_timer.start()
     # -----------------------------------
-        
+
     def _init_widgets(self):
         """Cria os botões e caixas de texto no layout correto."""
-        
+
         # --- Painel de Controle (Botões) ---
-        self.ax_control_panel.axis('off')
+        self.ax_control_panel.axis("off")
         gs_control = gridspec.GridSpecFromSubplotSpec(
-            2, 1,
+            2,
+            1,
             subplot_spec=self.ax_control_panel.get_subplotspec(),
             hspace=0.2,
         )
-        
+
         # Linha 0: Play / Pause
-        gs_play_pause = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=gs_control[0, 0], wspace=0.1)
+        gs_play_pause = gridspec.GridSpecFromSubplotSpec(
+            1, 2, subplot_spec=gs_control[0, 0], wspace=0.1
+        )
         ax_play = self.fig.add_subplot(gs_play_pause[0, 0])
-        self.btn_play = Button(ax_play, 'Play', color='lightgreen')
+        self.btn_play = Button(ax_play, "Play", color="lightgreen")
         self.btn_play.on_clicked(self.on_play)
 
         ax_pause = self.fig.add_subplot(gs_play_pause[0, 1])
-        self.btn_pause = Button(ax_pause, 'Pause', color='lightyellow')
+        self.btn_pause = Button(ax_pause, "Pause", color="lightyellow")
         self.btn_pause.on_clicked(self.on_pause)
 
         # Linha 1: Reset
         ax_reset = self.fig.add_subplot(gs_control[1, 0])
-        self.btn_reset = Button(ax_reset, 'Carregar Cenário e Resetar', color='lightcoral')
+        self.btn_reset = Button(
+            ax_reset, "Carregar Cenário e Resetar", color="lightcoral"
+        )
         self.btn_reset.on_clicked(self.reset)
-        
+
         # --- Painéis de Input (Cenário) ---
-        
+
         # Inputs Eixo X
-        self.ax_input_x.clear(); self.ax_input_x.axis('off'); self.ax_input_x.set_title("Eixo X (s*, v*, dir, Kp, Ki, Kd)", fontsize=10)
+        self.ax_input_x.clear()
+        self.ax_input_x.axis("off")
+        self.ax_input_x.set_title(
+            "Eixo X (s*, v*, dir, Kp, Ki, Kd)", fontsize=10
+        )
         gs_input_x = gridspec.GridSpecFromSubplotSpec(
-            6, 1,
+            6,
+            1,
             subplot_spec=self.ax_input_x.get_subplotspec(),
             hspace=0.1,
         )
-        self.txt_s_x   = TextBox(self.fig.add_subplot(gs_input_x[0, 0]), "s (passos): ", initial=str(self.scn.s_xyz[0]))
-        self.txt_v_x   = TextBox(self.fig.add_subplot(gs_input_x[1, 0]), "v (sps): ", initial=str(self.scn.v_xyz[0]))
-        self.txt_dir_x = TextBox(self.fig.add_subplot(gs_input_x[2, 0]), "dir (1/-1): ", initial=str(self.scn.dir_xyz[0]))
-        self.txt_kp_x  = TextBox(self.fig.add_subplot(gs_input_x[3, 0]), "Kp: ", initial=str(self.scn.kp_xyz[0]))
-        self.txt_ki_x  = TextBox(self.fig.add_subplot(gs_input_x[4, 0]), "Ki: ", initial=str(self.scn.ki_xyz[0]))
-        self.txt_kd_x  = TextBox(self.fig.add_subplot(gs_input_x[5, 0]), "Kd: ", initial=str(self.scn.kd_xyz[0]))
-        
+        self.txt_s_x = TextBox(
+            self.fig.add_subplot(gs_input_x[0, 0]),
+            "s (passos): ",
+            initial=str(self.scn.s_xyz[0]),
+        )
+        self.txt_v_x = TextBox(
+            self.fig.add_subplot(gs_input_x[1, 0]),
+            "v (sps): ",
+            initial=str(self.scn.v_xyz[0]),
+        )
+        self.txt_dir_x = TextBox(
+            self.fig.add_subplot(gs_input_x[2, 0]),
+            "dir (1/-1): ",
+            initial=str(self.scn.dir_xyz[0]),
+        )
+        self.txt_kp_x = TextBox(
+            self.fig.add_subplot(gs_input_x[3, 0]),
+            "Kp: ",
+            initial=str(self.scn.kp_xyz[0]),
+        )
+        self.txt_ki_x = TextBox(
+            self.fig.add_subplot(gs_input_x[4, 0]),
+            "Ki: ",
+            initial=str(self.scn.ki_xyz[0]),
+        )
+        self.txt_kd_x = TextBox(
+            self.fig.add_subplot(gs_input_x[5, 0]),
+            "Kd: ",
+            initial=str(self.scn.kd_xyz[0]),
+        )
+
         # Inputs Eixo Y
-        self.ax_input_y.clear(); self.ax_input_y.axis('off'); self.ax_input_y.set_title("Eixo Y (s*, v*, dir, Kp, Ki, Kd)", fontsize=10)
+        self.ax_input_y.clear()
+        self.ax_input_y.axis("off")
+        self.ax_input_y.set_title(
+            "Eixo Y (s*, v*, dir, Kp, Ki, Kd)", fontsize=10
+        )
         gs_input_y = gridspec.GridSpecFromSubplotSpec(
-            6, 1,
+            6,
+            1,
             subplot_spec=self.ax_input_y.get_subplotspec(),
             hspace=0.1,
         )
-        self.txt_s_y   = TextBox(self.fig.add_subplot(gs_input_y[0, 0]), "s (passos): ", initial=str(self.scn.s_xyz[1]))
-        self.txt_v_y   = TextBox(self.fig.add_subplot(gs_input_y[1, 0]), "v (sps): ", initial=str(self.scn.v_xyz[1]))
-        self.txt_dir_y = TextBox(self.fig.add_subplot(gs_input_y[2, 0]), "dir (1/-1): ", initial=str(self.scn.dir_xyz[1]))
-        self.txt_kp_y  = TextBox(self.fig.add_subplot(gs_input_y[3, 0]), "Kp: ", initial=str(self.scn.kp_xyz[1]))
-        self.txt_ki_y  = TextBox(self.fig.add_subplot(gs_input_y[4, 0]), "Ki: ", initial=str(self.scn.ki_xyz[1]))
-        self.txt_kd_y  = TextBox(self.fig.add_subplot(gs_input_y[5, 0]), "Kd: ", initial=str(self.scn.kd_xyz[1]))
+        self.txt_s_y = TextBox(
+            self.fig.add_subplot(gs_input_y[0, 0]),
+            "s (passos): ",
+            initial=str(self.scn.s_xyz[1]),
+        )
+        self.txt_v_y = TextBox(
+            self.fig.add_subplot(gs_input_y[1, 0]),
+            "v (sps): ",
+            initial=str(self.scn.v_xyz[1]),
+        )
+        self.txt_dir_y = TextBox(
+            self.fig.add_subplot(gs_input_y[2, 0]),
+            "dir (1/-1): ",
+            initial=str(self.scn.dir_xyz[1]),
+        )
+        self.txt_kp_y = TextBox(
+            self.fig.add_subplot(gs_input_y[3, 0]),
+            "Kp: ",
+            initial=str(self.scn.kp_xyz[1]),
+        )
+        self.txt_ki_y = TextBox(
+            self.fig.add_subplot(gs_input_y[4, 0]),
+            "Ki: ",
+            initial=str(self.scn.ki_xyz[1]),
+        )
+        self.txt_kd_y = TextBox(
+            self.fig.add_subplot(gs_input_y[5, 0]),
+            "Kd: ",
+            initial=str(self.scn.kd_xyz[1]),
+        )
 
         # Inputs Eixo Z
-        self.ax_input_z.clear(); self.ax_input_z.axis('off'); self.ax_input_z.set_title("Eixo Z (s*, v*, dir, Kp, Ki, Kd)", fontsize=10)
+        self.ax_input_z.clear()
+        self.ax_input_z.axis("off")
+        self.ax_input_z.set_title(
+            "Eixo Z (s*, v*, dir, Kp, Ki, Kd)", fontsize=10
+        )
         gs_input_z = gridspec.GridSpecFromSubplotSpec(
-            6, 1,
+            6,
+            1,
             subplot_spec=self.ax_input_z.get_subplotspec(),
             hspace=0.1,
         )
-        self.txt_s_z   = TextBox(self.fig.add_subplot(gs_input_z[0, 0]), "s (passos): ", initial=str(self.scn.s_xyz[2]))
-        self.txt_v_z   = TextBox(self.fig.add_subplot(gs_input_z[1, 0]), "v (sps): ", initial=str(self.scn.v_xyz[2]))
-        self.txt_dir_z = TextBox(self.fig.add_subplot(gs_input_z[2, 0]), "dir (1/-1): ", initial=str(self.scn.dir_xyz[2]))
-        self.txt_kp_z  = TextBox(self.fig.add_subplot(gs_input_z[3, 0]), "Kp: ", initial=str(self.scn.kp_xyz[2]))
-        self.txt_ki_z  = TextBox(self.fig.add_subplot(gs_input_z[4, 0]), "Ki: ", initial=str(self.scn.ki_xyz[2]))
-        self.txt_kd_z  = TextBox(self.fig.add_subplot(gs_input_z[5, 0]), "Kd: ", initial=str(self.scn.kd_xyz[2]))
-        
+        self.txt_s_z = TextBox(
+            self.fig.add_subplot(gs_input_z[0, 0]),
+            "s (passos): ",
+            initial=str(self.scn.s_xyz[2]),
+        )
+        self.txt_v_z = TextBox(
+            self.fig.add_subplot(gs_input_z[1, 0]),
+            "v (sps): ",
+            initial=str(self.scn.v_xyz[2]),
+        )
+        self.txt_dir_z = TextBox(
+            self.fig.add_subplot(gs_input_z[2, 0]),
+            "dir (1/-1): ",
+            initial=str(self.scn.dir_xyz[2]),
+        )
+        self.txt_kp_z = TextBox(
+            self.fig.add_subplot(gs_input_z[3, 0]),
+            "Kp: ",
+            initial=str(self.scn.kp_xyz[2]),
+        )
+        self.txt_ki_z = TextBox(
+            self.fig.add_subplot(gs_input_z[4, 0]),
+            "Ki: ",
+            initial=str(self.scn.ki_xyz[2]),
+        )
+        self.txt_kd_z = TextBox(
+            self.fig.add_subplot(gs_input_z[5, 0]),
+            "Kd: ",
+            initial=str(self.scn.kd_xyz[2]),
+        )
+
         # --- Painel de Atrito (Runtime) ---
         # [FIX 1] Alterado para 4 linhas
         gs_friction = gridspec.GridSpecFromSubplotSpec(
-            4, 1,
+            4,
+            1,
             subplot_spec=self.ax_friction_panel.get_subplotspec(),
             hspace=0.1,
         )
-        
+
         # Atrito X
         # [FIX 1] Aumentado wspace
-        gs_fric_x = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[0, 0], wspace=0.4)
-        self.txt_c_x = TextBox(self.fig.add_subplot(gs_fric_x[0, :]), "Atrito X (C): ", initial="700.0")
-        self.txt_t_start_x = TextBox(self.fig.add_subplot(gs_fric_x[1, 0]), "Início(s):", initial="0.35")
-        self.txt_t_end_x = TextBox(self.fig.add_subplot(gs_fric_x[1, 1]), "Fim(s):", initial="1.80")
-        self.btn_stop_x = Button(self.fig.add_subplot(gs_fric_x[2, :]), 'Stop X', color=self.btn_color_off)
+        gs_fric_x = gridspec.GridSpecFromSubplotSpec(
+            3, 2, subplot_spec=gs_friction[0, 0], wspace=0.4
+        )
+        self.txt_c_x = TextBox(
+            self.fig.add_subplot(gs_fric_x[0, :]),
+            "Atrito X (C): ",
+            initial="700.0",
+        )
+        self.txt_t_start_x = TextBox(
+            self.fig.add_subplot(gs_fric_x[1, 0]),
+            "Início(s):",
+            initial="0.35",
+        )
+        self.txt_t_end_x = TextBox(
+            self.fig.add_subplot(gs_fric_x[1, 1]),
+            "Fim(s):",
+            initial="1.80",
+        )
+        self.btn_stop_x = Button(
+            self.fig.add_subplot(gs_fric_x[2, :]),
+            "Stop X",
+            color=self.btn_color_off,
+        )
         self.btn_stop_x.on_clicked(self.on_stop_x)
-        
+
         # Atrito Y
         # [FIX 1] Aumentado wspace
-        gs_fric_y = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[1, 0], wspace=0.4)
-        self.txt_c_y = TextBox(self.fig.add_subplot(gs_fric_y[0, :]), "Atrito Y (C): ", initial="900.0")
-        self.txt_t_start_y = TextBox(self.fig.add_subplot(gs_fric_y[1, 0]), "Início(s):", initial="0.90")
-        self.txt_t_end_y = TextBox(self.fig.add_subplot(gs_fric_y[1, 1]), "Fim(s):", initial="2.60")
-        self.btn_stop_y = Button(self.fig.add_subplot(gs_fric_y[2, :]), 'Stop Y', color=self.btn_color_off)
+        gs_fric_y = gridspec.GridSpecFromSubplotSpec(
+            3, 2, subplot_spec=gs_friction[1, 0], wspace=0.4
+        )
+        self.txt_c_y = TextBox(
+            self.fig.add_subplot(gs_fric_y[0, :]),
+            "Atrito Y (C): ",
+            initial="900.0",
+        )
+        self.txt_t_start_y = TextBox(
+            self.fig.add_subplot(gs_fric_y[1, 0]),
+            "Início(s):",
+            initial="0.90",
+        )
+        self.txt_t_end_y = TextBox(
+            self.fig.add_subplot(gs_fric_y[1, 1]),
+            "Fim(s):",
+            initial="2.60",
+        )
+        self.btn_stop_y = Button(
+            self.fig.add_subplot(gs_fric_y[2, :]),
+            "Stop Y",
+            color=self.btn_color_off,
+        )
         self.btn_stop_y.on_clicked(self.on_stop_y)
-        
+
         # Atrito Z
         # [FIX 1] Aumentado wspace
-        gs_fric_z = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs_friction[2, 0], wspace=0.4)
-        #self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="1100.0")
-        self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="900.0")
-        self.txt_t_start_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 0]), "Início(s):", initial="1.40")
-        self.txt_t_end_z = TextBox(self.fig.add_subplot(gs_fric_z[1, 1]), "Fim(s):", initial="2.95")
-        self.btn_stop_z = Button(self.fig.add_subplot(gs_fric_z[2, :]), 'Stop Z', color=self.btn_color_off)
+        gs_fric_z = gridspec.GridSpecFromSubplotSpec(
+            3, 2, subplot_spec=gs_friction[2, 0], wspace=0.4
+        )
+        # self.txt_c_z = TextBox(self.fig.add_subplot(gs_fric_z[0, :]), "Atrito Z (C): ", initial="1100.0")
+        self.txt_c_z = TextBox(
+            self.fig.add_subplot(gs_fric_z[0, :]),
+            "Atrito Z (C): ",
+            initial="900.0",
+        )
+        self.txt_t_start_z = TextBox(
+            self.fig.add_subplot(gs_fric_z[1, 0]),
+            "Início(s):",
+            initial="1.40",
+        )
+        self.txt_t_end_z = TextBox(
+            self.fig.add_subplot(gs_fric_z[1, 1]),
+            "Fim(s):",
+            initial="2.95",
+        )
+        self.btn_stop_z = Button(
+            self.fig.add_subplot(gs_fric_z[2, :]),
+            "Stop Z",
+            color=self.btn_color_off,
+        )
         self.btn_stop_z.on_clicked(self.on_stop_z)
 
         # Painel de Erro Acumulado (na linha 4)
         ax_timers = self.fig.add_subplot(gs_friction[3, 0])
-        ax_timers.axis('off')
-        self.text_timer_x = ax_timers.text(0.5, 0.66, 'Erro acum X: 0.00 steps·s', ha='center', va='center', fontsize=9)
-        self.text_timer_y = ax_timers.text(0.5, 0.33, 'Erro acum Y: 0.00 steps·s', ha='center', va='center', fontsize=9)
-        self.text_timer_z = ax_timers.text(0.5, 0.0, 'Erro acum Z: 0.00 steps·s', ha='center', va='center', fontsize=9)
-        
+        ax_timers.axis("off")
+        self.text_timer_x = ax_timers.text(
+            0.5,
+            0.66,
+            "Erro acum X: 0.00 steps·s",
+            ha="center",
+            va="center",
+            fontsize=9,
+        )
+        self.text_timer_y = ax_timers.text(
+            0.5,
+            0.33,
+            "Erro acum Y: 0.00 steps·s",
+            ha="center",
+            va="center",
+            fontsize=9,
+        )
+        self.text_timer_z = ax_timers.text(
+            0.5,
+            0.0,
+            "Erro acum Z: 0.00 steps·s",
+            ha="center",
+            va="center",
+            fontsize=9,
+        )
+
         # [FIX OTIMIZAÇÃO] Adiciona os textos de timer aos artistas para o blitting
-        self.artists.extend([self.text_timer_x, self.text_timer_y, self.text_timer_z])
-        
+        self.artists.extend(
+            [self.text_timer_x, self.text_timer_y, self.text_timer_z]
+        )
+
         # --- [FIX GUI] Ligar o Debounce ---
         self._setup_debounced_redraw()
-        
-        # [FIX V13.4] O loop de conexão de 'all_textboxes' foi REMOVIDO daqui
-        # e substituído pela lógica em __init__ e nos helpers
-        # _attach_runtime_live / _detach_runtime_live.
-        # ---------------------------------
 
     # [FIX V13.5] Modificado para incluir o 'else'
     def on_play(self, event):
@@ -1074,72 +1446,82 @@ class InteractiveSim:
                     casc_err=self.g_casc_err_s32.copy(),
                     load_c=self.active_C_load.copy(),
                     load_timer=self.load_timer_xyz.copy(),
-                    span_steps=float(np.max(self.pos_real) - np.min(self.pos_real)),
+                    span_steps=float(
+                        np.max(self.pos_real) - np.min(self.pos_real)
+                    ),
                     global_stop=bool(np.any(self.is_stopped)),
                 )
             self.is_paused = False
-            
+
             # [FIX BLIT-FADE] Ativa o modo blit ANTES de iniciar o timer
             self._enable_blitting()
-            
+
             # [FIX V13.4] Liga live-update do Atrito
             self._attach_runtime_live()
-            
-            self.timer.start() # Inicia o loop de _on_timer_tick
+
+            self.timer.start()  # Inicia o loop de _on_timer_tick
             print("Simulação iniciada (com blit).")
         else:
             # [FIX V13.5] Clique de novo em Play = Reset + Play
             self._restart_play()
-        
+
     def on_pause(self, event):
         if not self.is_paused:
             self.is_paused = True
-            self.timer.stop() # Para o loop de _on_timer_tick
+            self.timer.stop()  # Para o loop de _on_timer_tick
             self._flush_log()
-            
+
             # [FIX V13.4] Desliga live-update do Atrito
             self._detach_runtime_live()
-            
+
             # [FIX BLIT-FADE] Desativa o blit e redesenha o frame final
             self._disable_blitting_and_redraw()
-            
+
             print("Simulação pausada (blit desativado).")
-            
+
     def on_stop_x(self, event):
-        self.is_stopped[0] = not self.is_stopped[0] # Toggle
-        self.btn_stop_x.color = 'red' if self.is_stopped[0] else self.btn_color_off
+        self.is_stopped[0] = not self.is_stopped[0]  # Toggle
+        self.btn_stop_x.color = (
+            "red" if self.is_stopped[0] else self.btn_color_off
+        )
         if self.is_stopped[0]:
-             self.g_pi_i_accum[0] = 0.0 # Reseta o integrador
-            
+            self.g_pi_i_accum[0] = 0.0  # Reseta o integrador
+
     def on_stop_y(self, event):
-        self.is_stopped[1] = not self.is_stopped[1] # Toggle
-        self.btn_stop_y.color = 'red' if self.is_stopped[1] else self.btn_color_off
+        self.is_stopped[1] = not self.is_stopped[1]  # Toggle
+        self.btn_stop_y.color = (
+            "red" if self.is_stopped[1] else self.btn_color_off
+        )
         if self.is_stopped[1]:
-             self.g_pi_i_accum[1] = 0.0 # Reseta o integrador
-            
+            self.g_pi_i_accum[1] = 0.0  # Reseta o integrador
+
     def on_stop_z(self, event):
-        self.is_stopped[2] = not self.is_stopped[2] # Toggle
-        self.btn_stop_z.color = 'red' if self.is_stopped[2] else self.btn_color_off
+        self.is_stopped[2] = not self.is_stopped[2]  # Toggle
+        self.btn_stop_z.color = (
+            "red" if self.is_stopped[2] else self.btn_color_off
+        )
         if self.is_stopped[2]:
-             self.g_pi_i_accum[2] = 0.0 # Reseta o integrador
-            
+            self.g_pi_i_accum[2] = 0.0  # Reseta o integrador
+
     def _read_inputs(self):
         """[FIX 2] Esta função foi DELETADA (movida para 'reset')"""
         pass
-            
-    def _append_history(self, t, pos_rel_dda_from_enc, v_real, casc_err, span_real):
+
+    def _append_history(
+        self, t, pos_rel_dda_from_enc, v_real, casc_err, span_real
+    ):
         """Adiciona o estado atual aos buffers de histórico."""
-        self.history['t_s'].append(t)
-        self.history['x_pos'].append(pos_rel_dda_from_enc[0])
-        self.history['y_pos'].append(pos_rel_dda_from_enc[1])
-        self.history['z_pos'].append(pos_rel_dda_from_enc[2])
-        self.history['x_v'].append(v_real[0])
-        self.history['y_v'].append(v_real[1])
-        self.history['z_v'].append(v_real[2])
-        self.history['x_err'].append(casc_err[0])
-        self.history['y_err'].append(casc_err[1])
-        self.history['z_err'].append(casc_err[2])
-        self.history['sync_span'].append(span_real)
+        self.history["t_s"].append(t)
+        self.history["x_pos"].append(pos_rel_dda_from_enc[0])
+        self.history["y_pos"].append(pos_rel_dda_from_enc[1])
+        self.history["z_pos"].append(pos_rel_dda_from_enc[2])
+        self.history["x_v"].append(v_real[0])
+        self.history["y_v"].append(v_real[1])
+        self.history["z_v"].append(v_real[2])
+        self.history["x_err"].append(casc_err[0])
+        self.history["y_err"].append(casc_err[1])
+        self.history["z_err"].append(casc_err[2])
+        self.history["sync_span"].append(span_real)
 
     # ===================================================================
     # "CHEFE" (TIM7 @ 1kHz) - CASC + PID + RAMPA
@@ -1150,15 +1532,20 @@ class InteractiveSim:
             # Verifica se precisa estender tempo para concluir (com pequeno custo)
             pos_rel_dda_from_enc = self._encoder_rel_dda()
             alvo_final_mag = self.target_mag
-            remaining_steps = np.array([
-                max(float(alvo_final_mag[i]) - abs(pos_rel_dda_from_enc[i]), 0.0)
-                if alvo_final_mag[i] > 0 else 0.0 for i in range(3)
-            ])
+            remaining_steps = np.array(
+                [
+                    max(float(alvo_final_mag[i]) - abs(pos_rel_dda_from_enc[i]), 0.0)
+                    if alvo_final_mag[i] > 0
+                    else 0.0
+                    for i in range(3)
+                ]
+            )
             active_axes_mask = alvo_final_mag > 0
             all_done = True
             for i in range(3):
                 if active_axes_mask[i] and remaining_steps[i] > self.finish_tol_steps:
-                    all_done = False; break
+                    all_done = False
+                    break
 
             if (not all_done) and (self.finish_extra_budget_steps > 0):
                 chunk = int(0.5 / self.cfg.Ts)  # estende em 0.5s por vez
@@ -1174,12 +1561,12 @@ class InteractiveSim:
                     self._detach_runtime_live()
                     self._disable_blitting_and_redraw()
                 self._stop_log_session()
-                if getattr(self, 'auto_analyze', False):
+                if getattr(self, "auto_analyze", False):
                     self._auto_analyze_last_log()
                 return
 
         t = self.k * self.cfg.Ts
-        
+
         # --- 1. Lógica de Carga (para a simulação Real) ---
         current_C_load = np.zeros(3)
         for i in range(3):
@@ -1190,16 +1577,15 @@ class InteractiveSim:
             else:
                 self.load_timer_xyz[i] = 0.0
         self.active_C_load = current_C_load
-        
-        
+
         # --- 2. LÓGICA CASC (Achar Mestre "Percentual") ---
-        
+
         master_axis = -1
         mestre_prog_num = 0.0
         mestre_prog_den = 1.0
-        
+
         pos_rel_dda_from_enc = self._encoder_rel_dda()
-        
+
         alvo_final_mag = self.target_mag
 
         progress_nums = np.zeros(3, dtype=float)
@@ -1214,7 +1600,7 @@ class InteractiveSim:
             progress_nums[i] = clamped_progress
             remaining_steps[i] = max(float(total_mag) - actual_mag, 0.0)
 
-        if self.master_select_strategy == 'progress':
+        if self.master_select_strategy == "progress":
             # Mestre = menor percentual de progresso
             for i in range(3):
                 total_mag = alvo_final_mag[i]
@@ -1240,7 +1626,9 @@ class InteractiveSim:
 
             candidates = None
             if self.prefer_loaded_master:
-                loaded_candidates = np.where(remaining_positive & active_load_mask)[0]
+                loaded_candidates = np.where(
+                    remaining_positive & active_load_mask
+                )[0]
                 if loaded_candidates.size > 0:
                     candidates = loaded_candidates
             if candidates is None:
@@ -1250,20 +1638,31 @@ class InteractiveSim:
                 candidate_rem = remaining_steps[candidates]
                 best_idx = candidates[int(np.argmax(candidate_rem))]
 
-                prev_master = self.current_master_axis if 0 <= self.current_master_axis < 3 else -1
+                prev_master = (
+                    self.current_master_axis
+                    if 0 <= self.current_master_axis < 3
+                    else -1
+                )
                 if prev_master != -1 and remaining_steps[prev_master] <= 0:
                     prev_master = -1
 
                 if (
                     prev_master != -1
                     and best_idx != prev_master
-                    and (remaining_steps[best_idx] - remaining_steps[prev_master]) < self.master_switch_margin_steps
-                    and not (self.prefer_loaded_master and np.any(active_load_mask[candidates]))
+                    and (
+                        remaining_steps[best_idx]
+                        - remaining_steps[prev_master]
+                    )
+                    < self.master_switch_margin_steps
+                    and not (
+                        self.prefer_loaded_master
+                        and np.any(active_load_mask[candidates])
+                    )
                 ):
                     master_axis = prev_master
                 else:
                     master_axis = best_idx
-                
+
                 mestre_prog_num = progress_nums[master_axis]
                 mestre_prog_den = float(alvo_final_mag[master_axis])
                 if mestre_prog_den <= 0:
@@ -1274,9 +1673,12 @@ class InteractiveSim:
                 mestre_prog_den = 1.0
 
         self.current_master_axis = master_axis
-        
+
         # Condições de término
-        original_end = (master_axis == -1 or (mestre_prog_den > 0 and mestre_prog_num >= mestre_prog_den))
+        original_end = (
+            master_axis == -1
+            or (mestre_prog_den > 0 and mestre_prog_num >= mestre_prog_den)
+        )
         # Condição de término: TODOS os eixos ativos dentro da tolerância
         active_axes_mask = alvo_final_mag > 0
         all_done = True
@@ -1287,71 +1689,86 @@ class InteractiveSim:
                     break
         if (not self.finish_all_axes and original_end) or all_done:
             if not self.is_paused:
-                print(f"Fim do movimento CASC (todos os eixos dentro de {self.finish_tol_steps} steps).")
+                print(
+                    f"Fim do movimento CASC (todos os eixos dentro de {self.finish_tol_steps} steps)."
+                )
                 self.is_paused = True
                 self.timer.stop()
                 self._detach_runtime_live()
+                # Atualiza faixas de atrito uma última vez antes de congelar
+                try:
+                    self._update_artists_data()
+                except Exception:
+                    pass
                 self._disable_blitting_and_redraw()
             # Finaliza log + análise (se habilitado)
             self._stop_log_session()
-            if getattr(self, 'auto_analyze', False):
+            if getattr(self, "auto_analyze", False):
                 self._auto_analyze_last_log()
             self.v_real = np.zeros(3)
-            for i in range(3): self.ddas_real[i].reset()
+            for i in range(3):
+                self.ddas_real[i].reset()
             return
 
         # --- 3. LOOP DE CONTROLE (PID + CASC + Rampa) ---
-        
-        v_final_sps = np.zeros(3) # Velocidade final pós-PID/CASC
-        v_ramped = np.zeros(3)    # Velocidade final pós-Rampa
-        
-        # Usa o pior caso de "passos restantes" para comandar frenagem da rampa (ou o progresso do mestre)
-        rem_steps_mestre = float(np.max(remaining_steps)) if self.ramp_use_worst_remaining else float(max(mestre_prog_den - mestre_prog_num, 0.0))
-        
+
+        v_final_sps = np.zeros(3)  # Velocidade final pós-PID/CASC
+        v_ramped = np.zeros(3)  # Velocidade final pós-Rampa
+
+        # Usa o pior caso de "passos restantes" para comandar frenagem da rampa
+        rem_steps_mestre = (
+            float(np.max(remaining_steps))
+            if self.ramp_use_worst_remaining
+            else float(max(mestre_prog_den - mestre_prog_num, 0.0))
+        )
+
         for axis in range(3):
             total_s32 = self.target_s32[axis]
             v_cmd_sps_ideal = self.v_target_sps[axis]
-            
+
             if total_s32 == 0:
-                 v_final_sps[axis] = 0.0
-                 continue # Vai para o próximo eixo
-            
+                v_final_sps[axis] = 0.0
+                continue  # Vai para o próximo eixo
+
             # 3a. CÁLCULO DO "ALVO SINCRONIZADO" (CASC)
             num_sync_64 = mestre_prog_num * total_s32
             desired_dda_steps = (num_sync_64 + (mestre_prog_den // 2)) / mestre_prog_den
-            
+
             # 3b. CÁLCULO DO PID (CASC + PID)
-            actual_dda_steps = pos_rel_dda_from_enc[axis] 
-            
+            actual_dda_steps = pos_rel_dda_from_enc[axis]
+
             err = desired_dda_steps - actual_dda_steps
             self.g_casc_err_s32[axis] = err
             # Acumula IAE (Integral do Erro Absoluto) em steps*s
             self.err_accum_xyz[axis] += abs(self.g_casc_err_s32[axis]) * self.cfg.Ts
-            
+
             if abs(err) < self.cfg.deadband_steps:
                 err = 0.0
-                
+
             iacc = self.g_pi_i_accum[axis] + err
             iacc = np.clip(iacc, -self.cfg.i_clamp, self.cfg.i_clamp)
-            
+
             draw = err - self.g_pi_prev_err[axis]
             self.g_pi_prev_err[axis] = err
-            
+
             # Filtro D Corrigido
             d_filt = self.g_pi_d_filt[axis]
-            decay = 1.0 / (1 << self.cfg.kd_alpha_bits) # 1/256
+            decay = 1.0 / (1 << self.cfg.kd_alpha_bits)  # 1/256
             d_filt = d_filt + (draw - d_filt) * decay
             self.g_pi_d_filt[axis] = d_filt
-            
+
             pterm = (self.kp_xyz[axis] * err) / self.cfg.k_scale
             iterm = (self.ki_xyz[axis] * iacc) / self.cfg.k_scale
             dterm = (self.kd_xyz[axis] * d_filt) / self.cfg.k_scale
-            
+
             corr = pterm + iterm + dterm
             corr = np.clip(corr, -self.cfg.max_sps, self.cfg.max_sps)
 
             # Ajuste de feed por erro (fora da fase final)
-            if (self.sync_err_feed_threshold > 0) and (axis != self.current_master_axis):
+            if (
+                self.sync_err_feed_threshold > 0
+                and axis != self.current_master_axis
+            ):
                 penalty = min(abs(err) / self.sync_err_feed_threshold, 1.0)
                 scale = 1.0 - (1.0 - self.sync_err_feed_min_fraction) * penalty
                 scale = max(self.sync_err_feed_min_fraction, scale)
@@ -1361,67 +1778,84 @@ class InteractiveSim:
             v_adj = np.clip(v_adj, 0, self.cfg.max_sps)
 
             # Na fase final, eixos adiantados param totalmente para permitir o alcance
-            if 'finish_phase' in locals() and finish_phase:
-                if err < -getattr(self, 'finish_err_stop_steps', 50.0):
+            if "finish_phase" in locals() and finish_phase:
+                if err < -getattr(self, "finish_err_stop_steps", 50.0):
                     v_adj = 0.0
                     # Força parada imediata do eixo adiantado
                     self.v_real[axis] = 0.0
 
-            # Trava de sincronismo (durante toda a trajetória):
-            # se eixo não-mestre estiver à frente do alvo sincronizado por mais que a margem, segura
+            # Trava de sincronismo (durante toda a trajetória)
             if self.sync_hold_enabled and (axis != self.current_master_axis):
                 if (actual_dda_steps - desired_dda_steps) > self.sync_ahead_margin_steps:
                     v_adj = 0.0
 
             if not (v_adj == 0 or v_adj == self.cfg.max_sps):
                 self.g_pi_i_accum[axis] = iacc
-                
+
             v_final_sps[axis] = v_adj
 
         # --- 4. CÁLCULO DE RAMPA ---
         a_sps2 = self.cfg.accel_sps2
-        v_now = self.v_real # v_actual_sps (estado salvo do último loop)
-        
+        v_now = self.v_real  # v_actual_sps (estado salvo do último loop)
+
         s_brake = np.zeros(3)
         denom = 2 * a_sps2
         if denom > 0:
             s_brake = (v_now * v_now) / denom
 
         steps_avail = a_sps2 * self.cfg.Ts
-        
+
         for axis in range(3):
             if rem_steps_mestre <= s_brake[axis]:
-                v_ramped[axis] = np.clip(v_now[axis] - steps_avail, 0, v_now[axis])
+                v_ramped[axis] = np.clip(
+                    v_now[axis] - steps_avail, 0, v_now[axis]
+                )
             elif v_now[axis] < v_final_sps[axis]:
-                v_ramped[axis] = np.clip(v_now[axis] + steps_avail, v_now[axis], v_final_sps[axis])
+                v_ramped[axis] = np.clip(
+                    v_now[axis] + steps_avail, v_now[axis], v_final_sps[axis]
+                )
             elif v_now[axis] > v_final_sps[axis]:
-                v_ramped[axis] = np.clip(v_now[axis] - steps_avail, v_final_sps[axis], v_now[axis])
+                v_ramped[axis] = np.clip(
+                    v_now[axis] - steps_avail, v_final_sps[axis], v_now[axis]
+                )
             else:
-                v_ramped[axis] = v_now[axis] # Cruzeiro
-                
-        self.v_real = np.clip(v_ramped, 0, self.cfg.max_sps) # Salva v_actual_sps
-        
+                v_ramped[axis] = v_now[axis]  # Cruzeiro
+
+        self.v_real = np.clip(v_ramped, 0, self.cfg.max_sps)  # Salva v_actual_sps
+
         # --- 5. FÍSICA (Atrito) ---
-        v_eff_real = self.v_real - np.sign(self.v_real) * (self.active_C_load + self.B_load * np.abs(self.v_real))
-        flip_mask = (np.sign(self.v_real) != np.sign(v_eff_real)) & (np.abs(self.v_real) > 1e-9)
+        v_eff_real = self.v_real - np.sign(self.v_real) * (
+            self.active_C_load + self.B_load * np.abs(self.v_real)
+        )
+        flip_mask = (np.sign(self.v_real) != np.sign(v_eff_real)) & (
+            np.abs(self.v_real) > 1e-9
+        )
         v_eff_real[flip_mask] = 0.0
 
         # --- 6. PARADA DE SEGURANÇA (Botões / Stall) ---
         # Debounce de stall por eixo e gating por eixo (evita parar o sistema inteiro)
-        if not hasattr(self, 'stall_counts'):
+        if not hasattr(self, "stall_counts"):
             self.stall_counts = np.zeros(3, dtype=int)
             self.stall_debounce = 3
         # Atualiza contadores
         self.stall_counts = np.where(flip_mask, self.stall_counts + 1, 0)
 
-        is_stalled_debounced = self.stall_counts >= getattr(self, 'stall_debounce', 8)
+        is_stalled_debounced = self.stall_counts >= getattr(
+            self, "stall_debounce", 8
+        )
         is_manually_stopped = self.is_stopped
         axis_stop = is_stalled_debounced | is_manually_stopped
 
-        # Checa janela de finalização usando 'remaining_steps' já computado acima
-        rem_global = float(np.max(remaining_steps)) if 'remaining_steps' in locals() else np.inf
-        finish_phase = rem_global <= getattr(self, 'finish_window_steps', 600.0)
-        if finish_phase and getattr(self, 'finish_disable_stall', True):
+        # Checa janela de finalização usando 'remaining_steps'
+        rem_global = (
+            float(np.max(remaining_steps))
+            if "remaining_steps" in locals()
+            else np.inf
+        )
+        finish_phase = rem_global <= getattr(
+            self, "finish_window_steps", 600.0
+        )
+        if finish_phase and getattr(self, "finish_disable_stall", True):
             # Desabilita stall automático na fase final, mantendo apenas stop manual
             axis_stop = is_manually_stopped
 
@@ -1436,28 +1870,38 @@ class InteractiveSim:
         for i in range(3):
             if axis_stop[i]:
                 self.g_pi_i_accum[i] = 0.0
-        
+
         # Reset do Acumulador DDA
         for i in range(3):
             if abs(v_final_DDA[i]) < 1e-12:
                 self.ddas_real[i].reset()
-        
+
         # --- 7. "OPERÁRIO" DDA (TIM6 @ 50kHz) ---
-        steps_emit_real_mag = np.array([self.ddas_real[i].emit_steps(v_final_DDA[i], self.cfg.Ts) for i in range(3)], dtype=float)
-        
+        steps_emit_real_mag = np.array(
+            [
+                self.ddas_real[i].emit_steps(v_final_DDA[i], self.cfg.Ts)
+                for i in range(3)
+            ],
+            dtype=float,
+        )
+
         steps_emit_real = steps_emit_real_mag * self.dir_xyz
-        
+
         self.pos_real += steps_emit_real
-        
-        emitted_enc_counts = (steps_emit_real_mag * self.dir_xyz) * self.steps_to_counts_ratio
+
+        emitted_enc_counts = (
+            steps_emit_real_mag * self.dir_xyz
+        ) * self.steps_to_counts_ratio
         self.enc_pos_counts += emitted_enc_counts
-        
-        v_emit_real = steps_emit_real_mag / self.cfg.Ts 
+
+        v_emit_real = steps_emit_real_mag / self.cfg.Ts
 
         span_real = float(np.max(self.pos_real) - np.min(self.pos_real))
-        
+
         # --- 8. Salvar no Histórico ---
-        self._append_history(t, pos_rel_dda_from_enc, v_emit_real, self.g_casc_err_s32, span_real)
+        self._append_history(
+            t, pos_rel_dda_from_enc, v_emit_real, self.g_casc_err_s32, span_real
+        )
         self._log_state(
             t=t,
             pos_steps=self.pos_real.copy(),
@@ -1474,72 +1918,75 @@ class InteractiveSim:
 
     def _on_timer_tick(self):
         """Função chamada pelo self.timer a cada 20ms."""
-        
+
         # Roda a simulação (ex: 20 steps de 1ms)
-        for _ in range(self.sim_steps_per_frame): 
+        for _ in range(self.sim_steps_per_frame):
             if not self.is_paused:
                 self._step()
             else:
-                break # Para o loop for se o _step() pausar
-        
+                break  # Para o loop for se o _step() pausar
+
         # [FIX BLIT-FADE] Se o _step() pausou a simulação, o blit
         # foi desativado (self.background = None), e não devemos desenhar.
         if self.is_paused or self.background is None:
             return
-            
+
         # --- Início do Bloco de Desenho ---
-        
+
         for i in range(3):
             pos_mod = self.pos_real[i] % self.microsteps_per_rev
             angle = (pos_mod / self.microsteps_per_rev) * 2 * np.pi
-            
+
             x_coord = np.cos(angle)
             y_coord = np.sin(angle)
             self.motor_lines[i].set_data([0, x_coord], [0, y_coord])
-            
+
             revs = self.pos_real[i] / self.microsteps_per_rev
             self.motor_texts[i].set_text(f"{revs:.2f}v")
 
-        self.time_text.set_text(f'Tempo: {self.t:.2f} s / {self.scn.sim_time_s:.2f} s')
+        self.time_text.set_text(
+            f"Tempo: {self.t:.2f} s / {self.scn.sim_time_s:.2f} s"
+        )
 
         # Gráficos (mostram dados do Histórico, que vem do Encoder)
         self._update_artists_data()
-        
+
         # [FIX OTIMIZAÇÃO] Usa Blitting ao invés de draw_idle()
         try:
             # 1. Restaura o background limpo (muito rápido)
             self.fig.canvas.restore_region(self.background)
-            
+
             # 2. Redesenha *apenas* os artistas que mudaram (muito rápido)
             for artist in self.artists:
                 self.fig.draw_artist(artist)
-                
+
             # 3. "Cola" os artistas atualizados na tela (muito rápido)
             self.fig.canvas.blit(self.fig.bbox)
-            
+
         except Exception as e:
             # Blit falhou (provavelmente redimensionamento da janela).
-            print(f"Erro de Blit ({e}). Pausando e forçando redesenho estático.")
-            self.on_pause(None) # Força um pause para "congelar" o frame
- 
+            print(
+                f"Erro de Blit ({e}). Pausando e forçando redesenho estático."
+            )
+            self.on_pause(None)  # Força um pause para "congelar" o frame
 
     def _update_artists_data(self):
         """Helper para atualizar todos os dados dos gráficos."""
-        t_data = self.history['t_s']
-        self.line_pos_x.set_data(t_data, self.history['x_pos'])
-        self.line_pos_y.set_data(t_data, self.history['y_pos'])
-        self.line_pos_z.set_data(t_data, self.history['z_pos'])
-        
-        self.line_vel_x.set_data(t_data, self.history['x_v'])
-        self.line_vel_y.set_data(t_data, self.history['y_v'])
-        self.line_vel_z.set_data(t_data, self.history['z_v'])
-        
-        self.line_err_x.set_data(t_data, self.history['x_err'])
-        self.line_err_y.set_data(t_data, self.history['y_err'])
-        self.line_err_z.set_data(t_data, self.history['z_err'])
-        
+        t_data = self.history["t_s"]
+        self.line_pos_x.set_data(t_data, self.history["x_pos"])
+        self.line_pos_y.set_data(t_data, self.history["y_pos"])
+        self.line_pos_z.set_data(t_data, self.history["z_pos"])
+
+        self.line_vel_x.set_data(t_data, self.history["x_v"])
+        self.line_vel_y.set_data(t_data, self.history["y_v"])
+        self.line_vel_z.set_data(t_data, self.history["z_v"])
+
+        self.line_err_x.set_data(t_data, self.history["x_err"])
+        self.line_err_y.set_data(t_data, self.history["y_err"])
+        self.line_err_z.set_data(t_data, self.history["z_err"])
+
         if len(t_data) >= 1:
-            # Garante uma folga fixa no eixo X para que o t=0 fique afastado da legenda.
+            # Garante uma folga fixa no eixo X
             t_min = t_data[0]
             t_max = t_data[-1]
             span = max(self.cfg.Ts, t_max - t_min)
@@ -1548,22 +1995,86 @@ class InteractiveSim:
             for ax in [self.ax_graph_pos, self.ax_graph_vel, self.ax_graph_err]:
                 ax.relim()
                 ax.set_xlim(left, right)
-                
+
+            # Atualiza faixas por eixo (tempo de execução)
+            if self.show_friction_band and (
+                self.friction_rects_pos
+                or self.friction_rects_vel
+                or self.friction_rects_err
+            ):
+                active_mask = self.active_C_load > 0.0
+                for axis_i in range(3):
+                    t_start = float(self.load_start_times[axis_i])
+                    if bool(active_mask[axis_i]):
+                        # Durante atrito: expande faixa até o tempo atual e memoriza t_end
+                        t_end = float(t_max)
+                        self.friction_last_end_times[axis_i] = t_end
+                        width = max(0.0, t_end - t_start)
+                        for lst in (
+                            self.friction_rects_pos,
+                            self.friction_rects_vel,
+                            self.friction_rects_err,
+                        ):
+                            r = lst[axis_i]
+                            r.set_x(t_start)
+                            r.set_width(width)
+                            r.set_visible(True)
+                    else:
+                        # Após o atrito: mantém faixa congelada até o último t_end conhecido
+                        end_cached = self.friction_last_end_times[axis_i]
+                        t_end_cfg = float(self.load_end_times[axis_i])
+                        # Usa fim em cache se conhecido; senão usa o configurado (se finito)
+                        if not np.isnan(end_cached):
+                            t_end = end_cached
+                        elif np.isfinite(t_end_cfg) and (t_end_cfg > t_start):
+                            t_end = min(t_end_cfg, float(t_max))
+                        else:
+                            t_end = float("nan")
+
+                        if not np.isnan(t_end) and (t_end > t_start):
+                            width = max(0.0, t_end - t_start)
+                            for lst in (
+                                self.friction_rects_pos,
+                                self.friction_rects_vel,
+                                self.friction_rects_err,
+                            ):
+                                r = lst[axis_i]
+                                r.set_x(t_start)
+                                r.set_width(width)
+                                r.set_visible(True)
+                        else:
+                            for lst in (
+                                self.friction_rects_pos,
+                                self.friction_rects_vel,
+                                self.friction_rects_err,
+                            ):
+                                lst[axis_i].set_visible(False)
+
         # Atualiza os textos de erro acumulado (IAE)
-        for i, timer_text in enumerate([self.text_timer_x, self.text_timer_y, self.text_timer_z]):
-            timer_text.set_text(f'Erro acum {["X","Y","Z"][i]}: {self.err_accum_xyz[i]:.2f} steps·s')
-            timer_text.set_color('black')
+        for i, timer_text in enumerate(
+            [self.text_timer_x, self.text_timer_y, self.text_timer_z]
+        ):
+            timer_text.set_text(
+                f"Erro acum {['X','Y','Z'][i]}: {self.err_accum_xyz[i]:.2f} steps·s"
+            )
+            timer_text.set_color("black")
+
 
 # =========================
 # Ponto de Entrada Principal
 # =========================
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Simulador CASC/PID com ganhos derivados dos dados SWV.")
+    parser = argparse.ArgumentParser(
+        description="Simulador CASC/PID com ganhos derivados dos dados SWV."
+    )
     parser.add_argument(
         "--axes",
         default="X:256,Y:256,Z:256",
-        help="Mapa de eixos no formato X:microstep,Y:microstep (default: X/Y/Z em 1/256).",
+        help=(
+            "Mapa de eixos no formato X:microstep,Y:microstep "
+            "(default: X/Y/Z em 1/256)."
+        ),
     )
     parser.add_argument(
         "--log-dir",
@@ -1578,12 +2089,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "--auto-analyze",
         action="store_true",
-        help="Após finalizar, analisa automaticamente o CSV gerado e imprime métricas e dicas.",
+        help=(
+            "Após finalizar, analisa automaticamente o CSV gerado e "
+            "imprime métricas e dicas."
+        ),
     )
     parser.add_argument(
         "--headless",
         action="store_true",
         help="Roda a simulação sem abrir GUI (força backend Agg).",
+    )
+    parser.add_argument(
+        "--show-friction-band",
+        action="store_true",
+        help="Mostra faixa vertical vermelha durante aplicação de atrito nos gráficos.",
     )
     args = parser.parse_args()
 
@@ -1592,29 +2111,31 @@ if __name__ == "__main__":
 
     cfg = PlantConfig(
         microstep_factor=axis_map[0][1],  # assume todos os eixos usam o mesmo microstep
-        enc_cpr_xyz=(40000, 5000, 40000), # X, Y, Z
+        enc_cpr_xyz=(40000, 5000, 40000),  # X, Y, Z
         kd_alpha_bits=8,
         step_high_ticks=1,
         step_low_ticks=1,
     )
-    
+
     scn = Scenario(
         s_xyz=(40000, 32000, 24000),
-        v_xyz=(10000, 8000,  6000),
+        v_xyz=(10000, 8000, 6000),
         dir_xyz=(1, 1, 1),
         kp_xyz=kp_xyz,
         ki_xyz=ki_xyz,
         kd_xyz=kd_xyz,
         sim_time_s=5.0,
-        use_dda=True
+        use_dda=True,
     )
 
     sim_app = InteractiveSim(
-        cfg, scn,
+        cfg,
+        scn,
         log_dir=Path(args.log_dir),
         enable_logging=not args.no_log,
         auto_analyze=args.auto_analyze,
         headless=args.headless,
+        show_friction_band=bool(args.show_friction_band),
     )
     if args.headless:
         # Headless: roda direto
@@ -1627,7 +2148,9 @@ if __name__ == "__main__":
             casc_err=sim_app.g_casc_err_s32.copy(),
             load_c=sim_app.active_C_load.copy(),
             load_timer=sim_app.load_timer_xyz.copy(),
-            span_steps=float(np.max(sim_app.pos_real) - np.min(sim_app.pos_real)),
+            span_steps=float(
+                np.max(sim_app.pos_real) - np.min(sim_app.pos_real)
+            ),
             global_stop=False,
         )
         while sim_app.k < sim_app.N_steps_total:

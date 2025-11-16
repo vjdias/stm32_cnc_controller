@@ -235,6 +235,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
                 /* Se usa PWM em TIM15 para indicação, retome */
                 HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
             }
+#if MOTION_SIM_FRICTION_BUTTON_B2
+            /* Alterna simulação de atrito (teste) */
+            motion_sim_friction_toggle();
+#endif
         }
         break;
     case GPIO_PIN_1:

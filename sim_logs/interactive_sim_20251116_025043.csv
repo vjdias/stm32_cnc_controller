@@ -1,0 +1,2 @@
+t_s,dda_pos_x,dda_pos_y,dda_pos_z,enc_rel_x,enc_rel_y,enc_rel_z,vel_sps_x,vel_sps_y,vel_sps_z,err_steps_x,err_steps_y,err_steps_z,active_load_x,active_load_y,active_load_z,load_timer_x,load_timer_y,load_timer_z,span_steps,global_stop
+1.703,11998.0,11980.0,11980.0,11998.5,11980.5,11980.5,0.0,0.0,0.0,-17.5,0.5,0.5,700.0,900.0,900.0,1.3549999999999616,0.8050000000000006,0.3050000000000002,18.0,0

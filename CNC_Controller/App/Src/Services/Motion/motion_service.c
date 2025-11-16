@@ -129,6 +129,53 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #endif
 
 /* =======================
+ *  Simulação de atrito (teste)
+ * ======================= */
+#ifndef MOTION_SIM_FRICTION_ENABLE
+#define MOTION_SIM_FRICTION_ENABLE      1u
+#endif
+#ifndef MOTION_SIM_FRICTION_BUTTON_B2
+#define MOTION_SIM_FRICTION_BUTTON_B2   1u
+#endif
+#ifndef MOTION_SIM_FRICTION_AUTO_HALF
+#define MOTION_SIM_FRICTION_AUTO_HALF   1u
+#endif
+#ifndef MOTION_SIM_FRICTION_AXIS_DEFAULT
+#define MOTION_SIM_FRICTION_AXIS_DEFAULT AXIS_Y
+#endif
+/* Modelo físico (pós-rampa): v_eff = max(0, v - (C + B*v/1000))
+ * Ajustado para 10x o atrito do simulador (C e B).
+ */
+#ifndef MOTION_SIM_FRICTION_C_SPS
+#define MOTION_SIM_FRICTION_C_SPS       9000u   /* Y: 900 × 10 */
+#endif
+#ifndef MOTION_SIM_FRICTION_B_PERMILLE
+#define MOTION_SIM_FRICTION_B_PERMILLE  250u    /* Y: 2.5% × 10 = 25.0% */
+#endif
+/* Defaults por eixo (10× o simulador): */
+#ifndef MOTION_SIM_FRICTION_C_SPS_X
+#define MOTION_SIM_FRICTION_C_SPS_X     7000u   /* X: 700 × 10 */
+#endif
+#ifndef MOTION_SIM_FRICTION_C_SPS_Y
+#define MOTION_SIM_FRICTION_C_SPS_Y     9000u   /* Y: 900 × 10 */
+#endif
+#ifndef MOTION_SIM_FRICTION_C_SPS_Z
+#define MOTION_SIM_FRICTION_C_SPS_Z     9000u   /* Z: 900 × 10 */
+#endif
+#ifndef MOTION_SIM_FRICTION_B_PERMILLE_X
+#define MOTION_SIM_FRICTION_B_PERMILLE_X 200u   /* X: 2.0% × 10 = 20.0% */
+#endif
+#ifndef MOTION_SIM_FRICTION_B_PERMILLE_Y
+#define MOTION_SIM_FRICTION_B_PERMILLE_Y 250u   /* Y: 2.5% × 10 = 25.0% */
+#endif
+#ifndef MOTION_SIM_FRICTION_B_PERMILLE_Z
+#define MOTION_SIM_FRICTION_B_PERMILLE_Z 300u   /* Z: 3.0% × 10 = 30.0% */
+#endif
+#ifndef MOTION_SIM_FRICTION_POST_RAMP_ONLY
+#define MOTION_SIM_FRICTION_POST_RAMP_ONLY 1u
+#endif
+
+/* =======================
  *  Compatibilidade "progress" (interactive_old_sim)
  *  - Seleciona mestre por menor progresso (emitted/total)
  *  - Rampa guiada pelo restante do mestre (fila inclusa)
@@ -147,7 +194,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  - Parâmetros alinhados ao interactive_old_sim (threshold=200, min_frac=0.25)
  * ======================= */
 #ifndef MOTION_ERR_THROTTLE_ENABLE
-#define MOTION_ERR_THROTTLE_ENABLE 0
+#define MOTION_ERR_THROTTLE_ENABLE 1
 #endif
 #ifndef MOTION_ERR_THROTTLE_THRESHOLD
 #define MOTION_ERR_THROTTLE_THRESHOLD 200u /* steps */
@@ -428,6 +475,17 @@ static inline int csv_ring_pop(uint8_t axis, motion_csv_sample_t *out)
     return 1;
 }
 #endif /* MOTION_CSV_PRODUCE_IN_TIM6 */
+
+#if MOTION_SIM_FRICTION_ENABLE
+static volatile uint8_t  g_sim_friction_active = 0u;
+static volatile uint8_t  g_sim_friction_axis   = (uint8_t)MOTION_SIM_FRICTION_AXIS_DEFAULT;
+static volatile uint16_t g_sim_friction_c_sps  = (uint16_t)MOTION_SIM_FRICTION_C_SPS;
+static volatile uint16_t g_sim_friction_b_pm   = (uint16_t)MOTION_SIM_FRICTION_B_PERMILLE;
+static volatile uint8_t  g_sim_friction_post_ramp = (uint8_t)MOTION_SIM_FRICTION_POST_RAMP_ONLY;
+static volatile uint8_t  g_sim_ramp_done[MOTION_AXIS_COUNT] = {0,0,0};
+static uint16_t g_sim_initial_items = 0u;   /* itens na fila (inclui ativo) no start_move */
+static uint16_t g_sim_processed_items = 0u; /* quantos segmentos já iniciaram */
+#endif
 
 // Forward declarations for lock helpers used below
 static inline uint32_t motion_lock(void);
@@ -908,6 +966,16 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
            (unsigned)g_axis_state[AXIS_X].ki, (unsigned)g_axis_state[AXIS_Y].ki, (unsigned)g_axis_state[AXIS_Z].ki,
            (unsigned)g_axis_state[AXIS_X].kd, (unsigned)g_axis_state[AXIS_Y].kd, (unsigned)g_axis_state[AXIS_Z].kd);
 #endif
+#if MOTION_SIM_FRICTION_ENABLE && MOTION_SIM_FRICTION_AUTO_HALF
+    /* Conta segmentos processados e ativa atrito ao chegar no meio da fila */
+    g_sim_processed_items++;
+    uint16_t half = (uint16_t)((g_sim_initial_items + 1u) / 2u);
+    if (!g_sim_friction_active && half > 0u && g_sim_processed_items >= half) {
+        g_sim_friction_active = 1u;
+        printf("[FRIC] auto_half: axis=%u C=%u Bpm=%u\r\n",
+               (unsigned)g_sim_friction_axis, (unsigned)g_sim_friction_c_sps, (unsigned)g_sim_friction_b_pm);
+    }
+#endif
 #if MOTION_DEBUG_FLOW
     printf("[FLOW begin_segment id=%u dirMask=0x%02X V(x,y,z)=(%u,%u,%u) S(x,y,z)=(%lu,%lu,%lu) ]\r\n",
            (unsigned)seg->frameId,
@@ -1111,7 +1179,65 @@ void motion_service_init(void) {
     if (HAL_TIM_Base_Start_IT(&htim7) != HAL_OK) Error_Handler();
 
     LOGT_THIS(LOG_STATE_START, PROTO_OK, "init", "timers_ready");
+#if MOTION_SIM_FRICTION_ENABLE
+    printf("[FRIC] feature=on axis=%u C=%u Bpm=%u post_ramp=%u\r\n",
+           (unsigned)g_sim_friction_axis,
+           (unsigned)g_sim_friction_c_sps,
+           (unsigned)g_sim_friction_b_pm,
+           (unsigned)g_sim_friction_post_ramp);
+#endif
 }
+
+#if MOTION_SIM_FRICTION_ENABLE
+void motion_sim_friction_toggle(void)
+{
+    g_sim_friction_active = g_sim_friction_active ? 0u : 1u;
+    printf("[FRIC] toggle: active=%u axis=%u C=%u Bpm=%u post_ramp=%u\r\n",
+           (unsigned)g_sim_friction_active,
+           (unsigned)g_sim_friction_axis,
+           (unsigned)g_sim_friction_c_sps,
+           (unsigned)g_sim_friction_b_pm,
+           (unsigned)g_sim_friction_post_ramp);
+}
+
+void motion_sim_friction_set_axis(uint8_t axis)
+{
+    if (axis >= MOTION_AXIS_COUNT) return;
+    g_sim_friction_axis = axis;
+    /* Carrega defaults por eixo (iguais ao simulador) */
+    switch (axis) {
+        case AXIS_X:
+            g_sim_friction_c_sps = (uint16_t)MOTION_SIM_FRICTION_C_SPS_X;
+            g_sim_friction_b_pm  = (uint16_t)MOTION_SIM_FRICTION_B_PERMILLE_X;
+            break;
+        case AXIS_Y:
+            g_sim_friction_c_sps = (uint16_t)MOTION_SIM_FRICTION_C_SPS_Y;
+            g_sim_friction_b_pm  = (uint16_t)MOTION_SIM_FRICTION_B_PERMILLE_Y;
+            break;
+        case AXIS_Z:
+        default:
+            g_sim_friction_c_sps = (uint16_t)MOTION_SIM_FRICTION_C_SPS_Z;
+            g_sim_friction_b_pm  = (uint16_t)MOTION_SIM_FRICTION_B_PERMILLE_Z;
+            break;
+    }
+    printf("[FRIC] set_axis=%u C=%u Bpm=%u\r\n", (unsigned)axis,
+           (unsigned)g_sim_friction_c_sps, (unsigned)g_sim_friction_b_pm);
+}
+
+void motion_sim_friction_set_scale(uint16_t permille)
+{
+    if (permille > 1000u) permille = 1000u;
+    g_sim_friction_b_pm = permille;
+    printf("[FRIC] set_Bpermille=%u\r\n", (unsigned)permille);
+}
+
+/* Opcional: ajuste de C (Coulomb) via runtime */
+void motion_sim_friction_set_c(uint16_t c_sps)
+{
+    g_sim_friction_c_sps = c_sps;
+    printf("[FRIC] set_C=%u sps\r\n", (unsigned)c_sps);
+}
+#endif
 
 const motion_status_t* motion_status_get(void) {
     return &g_status;
@@ -1437,7 +1563,28 @@ void motion_on_tim7_tick(void)
                 }
             }
             if (ax->v_actual_sps > MOTION_MAX_SPS) ax->v_actual_sps = MOTION_MAX_SPS;
-            ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
+            {
+                uint32_t v_eff = ax->v_actual_sps;
+#if MOTION_SIM_FRICTION_ENABLE
+                if (g_sim_friction_active && axis == g_sim_friction_axis) {
+                    uint8_t apply = 1u;
+                    if (g_sim_friction_post_ramp && !g_sim_ramp_done[axis]) apply = 0u;
+                    if (apply) {
+                        uint32_t c = g_sim_friction_c_sps;
+                        uint32_t b = g_sim_friction_b_pm;
+                        uint32_t visc = (uint32_t)(((uint64_t)v_eff * (uint64_t)b) / 1000u);
+                        uint32_t loss = c + visc;
+                        v_eff = (loss >= v_eff) ? 0u : (v_eff - loss);
+                    }
+                }
+#endif
+                ax->dda_inc_q16 = Q16_DIV_UINT(v_eff, MOTION_TIM6_HZ);
+            }
+#if MOTION_SIM_FRICTION_ENABLE
+            if (ax->v_actual_sps >= ax->v_target_sps) {
+                g_sim_ramp_done[axis] = 1u;
+            }
+#endif
         }
     }
     /* Caminho da fila: rampa trapezoidal (acelera/cruza/desacelera) e define incremento DDA */
@@ -1592,14 +1739,35 @@ void motion_on_tim7_tick(void)
                     if (ax->v_actual_sps < v_cmd_sps) ax->v_actual_sps = v_cmd_sps;
                 }
             }
+#if MOTION_SIM_FRICTION_ENABLE
+            if (ax->v_actual_sps >= ax->v_target_sps) {
+                g_sim_ramp_done[axis] = 1u;
+            }
+#endif
 
             /* Se não há mais nada a emitir neste eixo, força zero */
             if (rem_steps == 0u) ax->v_actual_sps = 0u;
             if (v_cmd_sps > MOTION_MAX_SPS) v_cmd_sps = MOTION_MAX_SPS;
             if (ax->v_actual_sps > MOTION_MAX_SPS) ax->v_actual_sps = MOTION_MAX_SPS;
 
-            /* Incremento do DDA a 50 kHz */
-            ax->dda_inc_q16 = Q16_DIV_UINT(ax->v_actual_sps, MOTION_TIM6_HZ);
+            /* Incremento do DDA a 50 kHz (aplica atrito pós-rampa) */
+            {
+                uint32_t v_eff = ax->v_actual_sps;
+#if MOTION_SIM_FRICTION_ENABLE
+                if (g_sim_friction_active && axis == g_sim_friction_axis) {
+                    uint8_t apply = 1u;
+                    if (g_sim_friction_post_ramp && !g_sim_ramp_done[axis]) apply = 0u;
+                    if (apply) {
+                        uint32_t c = g_sim_friction_c_sps;
+                        uint32_t b = g_sim_friction_b_pm;
+                        uint32_t visc = (uint32_t)(((uint64_t)v_eff * (uint64_t)b) / 1000u);
+                        uint32_t loss = c + visc;
+                        v_eff = (loss >= v_eff) ? 0u : (v_eff - loss);
+                    }
+                }
+#endif
+                ax->dda_inc_q16 = Q16_DIV_UINT(v_eff, MOTION_TIM6_HZ);
+            }
         }
     }
 
@@ -1742,6 +1910,12 @@ void motion_on_start_move(const uint8_t *frame, uint32_t len) {
     LOGA_THIS(LOG_STATE_APPLIED, PROTO_OK, "start_move", started ? "running" : "ignored");
 #if MOTION_DEBUG_FLOW
     printf("[FLOW start_move %s]\r\n", started ? "running" : "ignored");
+#endif
+#if MOTION_SIM_FRICTION_ENABLE
+    /* Captura tamanho inicial da fila (inclui ativo) para auto_half */
+    uint16_t depth = (uint16_t)(g_queue_count + (g_has_active_segment ? 1u : 0u));
+    g_sim_initial_items = depth;
+    g_sim_processed_items = 0u;
 #endif
 }
 

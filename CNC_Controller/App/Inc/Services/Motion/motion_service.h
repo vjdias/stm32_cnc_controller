@@ -52,6 +52,12 @@ uint8_t motion_demo_is_active(void);
 // - Avança para a próxima velocidade predefinida (4 passos) e aplica ao demo
 void motion_demo_cycle_speed(void);
 
+// Simulação de atrito (teste)
+void motion_sim_friction_toggle(void);
+void motion_sim_friction_set_axis(uint8_t axis);
+void motion_sim_friction_set_scale(uint16_t permille);
+void motion_sim_friction_set_c(uint16_t c_sps);
+
 // Sombras 32-bit para SWV/Data Trace (opcionais)
 // - g_enc_abs32: posição absoluta acumulada desde o boot (cast p/ int32)
 // - g_enc_rel32: posição relativa ao "zero" lógico atual (cast p/ int32)
@@ -59,3 +65,13 @@ void motion_demo_cycle_speed(void);
 // SWV Graph/Data Trace (tamanhos suportados: 4 bytes).
 extern volatile int32_t g_enc_abs32[3];
 extern volatile int32_t g_enc_rel32[3];
+/* Opcional: Simulação de atrito (teste) */
+#ifndef MOTION_SIM_FRICTION_ENABLE
+#define MOTION_SIM_FRICTION_ENABLE      1u
+#endif
+#ifndef MOTION_SIM_FRICTION_BUTTON_B2
+#define MOTION_SIM_FRICTION_BUTTON_B2   1u
+#endif
+#ifndef MOTION_SIM_FRICTION_AUTO_HALF
+#define MOTION_SIM_FRICTION_AUTO_HALF   1u
+#endif

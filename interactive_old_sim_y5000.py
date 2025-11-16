@@ -29,6 +29,8 @@ def main():
     parser.add_argument("--no-log", action="store_true")
     parser.add_argument("--auto-analyze", action="store_true")
     parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--show-friction-band", action="store_true",
+                        help="Mostra faixa vertical vermelha durante aplicação de atrito nos gráficos.")
     args = parser.parse_args()
 
     axis_map = parse_axis_map(args.axes)
@@ -59,6 +61,7 @@ def main():
         enable_logging=not args.no_log,
         auto_analyze=args.auto_analyze,
         headless=args.headless,
+        show_friction_band=bool(args.show_friction_band),
     )
 
     # Configuração compatível com o modo OLD
@@ -102,4 +105,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
