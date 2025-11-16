@@ -201,44 +201,14 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 
 /* Botões de segurança (EXTI):
  * - B1 (PC13): E-STOP imediato (pressionado = nível baixo)
- * - B2 (PC0): Release/recover + funções extras do demo (pressionado = baixo)
+ * - B2 (PC0): Toggle de atrito simulado (pressionado = nível baixo)
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin) {
     case GPIO_PIN_13: /* B1 - E-STOP */
         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET) {
-            /* Pressionado: aciona E-STOP e para tudo agora */
-            safety_estop_assert();
-            motion_emergency_stop();
-            /* Opcionalmente interrompe os timers para cessar qualquer atividade em ISR */
-            HAL_TIM_Base_Stop_IT(&htim6);
-            HAL_TIM_Base_Stop_IT(&htim7);
-            /* Se houver PWM em TIM15 (LED/auxiliar), pare também */
-            HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1);
-        }
-        break;
-    case GPIO_PIN_0:  /* B2 - Release/Resume + demo speed step */
-        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == GPIO_PIN_RESET) {
-            /* Libera segurança */
-            safety_estop_release();
-            /* Garante que os timers base voltem a rodar */
-            HAL_TIM_Base_Start_IT(&htim6);
-            HAL_TIM_Base_Start_IT(&htim7);
-            /* Reativa movimentos conforme contexto */
-            if (motion_demo_is_active()) {
-                /* Cicla velocidade no modo demo contínuo */
-                motion_demo_cycle_speed();
-            } else {
-                /* Se o demo estava desligado (ex.: após E-STOP), religa */
-                motion_demo_set_continuous(1);
-                /* Se usa PWM em TIM15 para indicação, retome */
-                HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
-            }
-#if MOTION_SIM_FRICTION_BUTTON_B2
-            /* Alterna simulação de atrito (teste) */
             motion_sim_friction_toggle();
-#endif
         }
         break;
     case GPIO_PIN_1:

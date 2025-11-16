@@ -52,7 +52,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define Q16_FROM_UINT(x)               ((uint32_t)(x) << 16)
 #define Q16_DIV_UINT(numer,den)        ((uint32_t)(((uint64_t)(numer) << 16) / (uint32_t)(den)))
 #ifndef MOTION_DEBUG_ENCODERS
-#define MOTION_DEBUG_ENCODERS          1
+#define MOTION_DEBUG_ENCODERS          0
 #endif
 #ifndef MOTION_DEBUG_FLOW
 #define MOTION_DEBUG_FLOW              0
@@ -65,7 +65,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #endif
 /* Print de ganhos PID por segmento */
 #ifndef MOTION_DEBUG_GAINS_PRINT
-#define MOTION_DEBUG_GAINS_PRINT       1u
+#define MOTION_DEBUG_GAINS_PRINT       0u
 #endif
 
 /* =======================
@@ -74,7 +74,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  - Completamente desacoplado e controlado por macros
  * ======================= */
 #ifndef MOTION_DIAG_ENABLE
-#define MOTION_DIAG_ENABLE              1u   /* 0=off, 1=on (ativado p/ debug) */
+#define MOTION_DIAG_ENABLE              0u   /* 0=off, 1=on (ativado p/ debug) */
 #endif
 #ifndef MOTION_DIAG_INTERVAL_MS
 #define MOTION_DIAG_INTERVAL_MS         200u /* período de log periódico */
@@ -83,16 +83,16 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_DIAG_STALL_MS            150u /* ms sem STEP considerado stall */
 #endif
 #ifndef MOTION_DIAG_VERBOSE
-#define MOTION_DIAG_VERBOSE             1u   /* 0=leve, 1=inclui p/i/d/corr/v_adj no DIAG */
+#define MOTION_DIAG_VERBOSE             0u   /* 0=leve, 1=inclui p/i/d/corr/v_adj no DIAG */
 #endif
 /* Print pontual de condição suspeita (rem>0 && v_cmd==0 && queue>0) */
 #ifndef MOTION_BUGCHECK_ENABLE
-#define MOTION_BUGCHECK_ENABLE          1u
+#define MOTION_BUGCHECK_ENABLE          0u
 #endif
 
 /* Impressão periódica de encoder a cada N pulsos (selecionável por eixo) */
 #ifndef MOTION_ENC_PRINT_EVERY_N_ENABLE
-#define MOTION_ENC_PRINT_EVERY_N_ENABLE 1u
+#define MOTION_ENC_PRINT_EVERY_N_ENABLE 0u
 #endif
 #ifndef MOTION_ENC_PRINT_N
 #define MOTION_ENC_PRINT_N              10u
@@ -119,7 +119,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_CSV_PRODUCE_IN_TIM6      0u   /* amostra e imprime no TIM7, sempre após atualizar encoders */
 #endif
 #ifndef MOTION_CSV_TEXT_ENABLE
-#define MOTION_CSV_TEXT_ENABLE           0u   /* 0=desliga printf textual; 1=liga printf textual */
+#define MOTION_CSV_TEXT_ENABLE           1u   /* 0=desliga printf textual; 1=liga printf textual */
 #endif
 #ifndef MOTION_CSV_RING_CAP
 #define MOTION_CSV_RING_CAP             512u /* 16 bytes × 512 × 3 eixos ≈ 24 KB */
@@ -144,32 +144,32 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define MOTION_SIM_FRICTION_AXIS_DEFAULT AXIS_Y
 #endif
 /* Modelo físico (pós-rampa): v_eff = max(0, v - (C + B*v/1000))
- * Ajustado para 10x o atrito do simulador (C e B).
+ * Ajustado para IGUAL ao simulador (1×).
  */
 #ifndef MOTION_SIM_FRICTION_C_SPS
-#define MOTION_SIM_FRICTION_C_SPS       9000u   /* Y: 900 × 10 */
+#define MOTION_SIM_FRICTION_C_SPS       900u    /* Y: 900 steps/s (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_B_PERMILLE
-#define MOTION_SIM_FRICTION_B_PERMILLE  250u    /* Y: 2.5% × 10 = 25.0% */
+#define MOTION_SIM_FRICTION_B_PERMILLE  25u     /* Y: 2.5% (sim) */
 #endif
-/* Defaults por eixo (10× o simulador): */
+/* Defaults por eixo (iguais ao simulador): */
 #ifndef MOTION_SIM_FRICTION_C_SPS_X
-#define MOTION_SIM_FRICTION_C_SPS_X     7000u   /* X: 700 × 10 */
+#define MOTION_SIM_FRICTION_C_SPS_X     700u    /* X: 700 steps/s (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_C_SPS_Y
-#define MOTION_SIM_FRICTION_C_SPS_Y     9000u   /* Y: 900 × 10 */
+#define MOTION_SIM_FRICTION_C_SPS_Y     900u    /* Y: 900 steps/s (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_C_SPS_Z
-#define MOTION_SIM_FRICTION_C_SPS_Z     9000u   /* Z: 900 × 10 */
+#define MOTION_SIM_FRICTION_C_SPS_Z     900u    /* Z: 900 steps/s (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_B_PERMILLE_X
-#define MOTION_SIM_FRICTION_B_PERMILLE_X 200u   /* X: 2.0% × 10 = 20.0% */
+#define MOTION_SIM_FRICTION_B_PERMILLE_X 20u    /* X: 2.0% (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_B_PERMILLE_Y
-#define MOTION_SIM_FRICTION_B_PERMILLE_Y 250u   /* Y: 2.5% × 10 = 25.0% */
+#define MOTION_SIM_FRICTION_B_PERMILLE_Y 25u    /* Y: 2.5% (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_B_PERMILLE_Z
-#define MOTION_SIM_FRICTION_B_PERMILLE_Z 300u   /* Z: 3.0% × 10 = 30.0% */
+#define MOTION_SIM_FRICTION_B_PERMILLE_Z 30u    /* Z: 3.0% (sim) */
 #endif
 #ifndef MOTION_SIM_FRICTION_POST_RAMP_ONLY
 #define MOTION_SIM_FRICTION_POST_RAMP_ONLY 1u
