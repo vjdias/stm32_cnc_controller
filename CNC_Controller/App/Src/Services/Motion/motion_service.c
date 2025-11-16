@@ -63,6 +63,10 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #ifndef MOTION_DEBUG_STEP_DECIM
 #define MOTION_DEBUG_STEP_DECIM        500u
 #endif
+/* Print de ganhos PID por segmento */
+#ifndef MOTION_DEBUG_GAINS_PRINT
+#define MOTION_DEBUG_GAINS_PRINT       1u
+#endif
 
 /* =======================
  *  Diagnóstico de travamentos/bloqueios (desligado por padrão)
@@ -274,6 +278,16 @@ static const uint32_t ENC_COUNTS_PER_REV[3] = { 40000u, 5000u, 40000u}; // X,Y,Z
 /* Microstep real do TMC em cada eixo (1,2,4,...,256) */
 static volatile uint16_t g_microstep_factor[MOTION_AXIS_COUNT] = {
     MICROSTEP_FACTOR, MICROSTEP_FACTOR, MICROSTEP_FACTOR
+};
+
+/* Sinal do encoder por eixo:
+ *  +1 = mesmo sentido dos steps físicos
+ *  -1 = encoder montado invertido (contagem contrária ao movimento "+")
+ */
+static const int8_t ENC_SIGN[MOTION_AXIS_COUNT] = {
+    +1, /* X normal */
+    -1, /* Y invertido    */
+    +1  /* Z normal    */
 };
 
 /* Quantos "steps físicos" existem em 1 volta de eixo (por eixo):
@@ -887,6 +901,13 @@ static void motion_begin_segment_locked(const move_queue_add_req_t *seg) {
         g_pi_i_accum[axis] = 0;
         g_pi_prev_err[axis] = 0;
     }
+#if MOTION_DEBUG_GAINS_PRINT
+    /* Imprime ganhos PID aplicados para todos os eixos (inteiros do firmware) */
+    printf("[PID] Kp=(%u,%u,%u) Ki=(%u,%u,%u) Kd=(%u,%u,%u)\r\n",
+           (unsigned)g_axis_state[AXIS_X].kp, (unsigned)g_axis_state[AXIS_Y].kp, (unsigned)g_axis_state[AXIS_Z].kp,
+           (unsigned)g_axis_state[AXIS_X].ki, (unsigned)g_axis_state[AXIS_Y].ki, (unsigned)g_axis_state[AXIS_Z].ki,
+           (unsigned)g_axis_state[AXIS_X].kd, (unsigned)g_axis_state[AXIS_Y].kd, (unsigned)g_axis_state[AXIS_Z].kd);
+#endif
 #if MOTION_DEBUG_FLOW
     printf("[FLOW begin_segment id=%u dirMask=0x%02X V(x,y,z)=(%u,%u,%u) S(x,y,z)=(%lu,%lu,%lu) ]\r\n",
            (unsigned)seg->frameId,
@@ -917,24 +938,22 @@ static void motion_update_encoders(void) {
     for (uint8_t axis = 0; axis < MOTION_AXIS_COUNT; ++axis) {
         uint32_t now = motion_hw_encoder_read_raw(axis);
         uint8_t bits = motion_hw_encoder_bits(axis);
+        int32_t delta_signed;
         if (bits == 16u) {
             uint16_t prev = (uint16_t)g_encoder_last_raw[axis];
-            int16_t delta = (int16_t)((uint16_t)now - prev);
+            int16_t delta16 = (int16_t)((uint16_t)now - prev);
             g_encoder_last_raw[axis] = (uint16_t)now;
-            g_encoder_position[axis] += delta;
-            g_encoder_delta_tick[axis] = (int32_t)delta;
-#if MOTION_DEBUG_ENCODERS
-            // Prints antigos removidos; CSV emitido no TIM7
-#endif
+            delta_signed = (int32_t)delta16;
         } else {
-            int32_t delta = (int32_t)(now - g_encoder_last_raw[axis]);
+            delta_signed = (int32_t)(now - g_encoder_last_raw[axis]);
             g_encoder_last_raw[axis] = now;
-            g_encoder_position[axis] += delta;
-            g_encoder_delta_tick[axis] = delta;
-#if MOTION_DEBUG_ENCODERS
-            // Prints antigos removidos; CSV emitido no TIM7
-#endif
         }
+
+        /* aplica o fator de sinal do encoder */
+        delta_signed *= (int32_t)ENC_SIGN[axis];
+
+        g_encoder_position[axis]   += delta_signed;
+        g_encoder_delta_tick[axis]  = delta_signed;
     }
 }
 
@@ -1502,6 +1521,16 @@ void motion_on_tim7_tick(void)
                 if (v_adj < 0) v_adj = 0;
                 if (v_adj > (int32_t)MOTION_MAX_SPS) v_adj = (int32_t)MOTION_MAX_SPS; /* limite físico */
                 v_cmd_sps = (uint32_t)v_adj;
+
+                /* <<< AQUI entra o if de breakpoint >>> */
+                if (axis == AXIS_Y &&                  // eixo que você quer estudar
+                    g_status.state == MOTION_RUNNING && 
+                    ax->emitted_steps < ax->total_steps &&  // ainda falta passo pra emitir
+                    v_cmd_sps == 0u) {                     // PI derrubou a velocidade pra zero
+//                    __BKPT(0);  // coloque breakpoint aqui ou deixe o BKPT mesmo
+//                    __BKPT(0);  // coloque breakpoint aqui ou deixe o BKPT mesmo
+                }
+
 #if MOTION_DIAG_ENABLE
                 g_dbg_err[axis]   = err;
                 g_dbg_pterm[axis] = pterm;
