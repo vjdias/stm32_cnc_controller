@@ -1,0 +1,638 @@
+Mapa de citações x referências do TCC
+(Observação: os números de página devem ser conferidos manualmente no PDF gerado do TCC;
+os números de página apontados nos documentos de base foram obtidos automaticamente e podem exigir conferência visual.)
+
+Referência nº 1
+Capítulo: Capítulo 1
+Arquivo: Cap01/Capitulo1.tex (linha 12)
+Chave da referência: st_an4013
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2013). \newblock {\em AN4013: Introduction to timers for STM32 MCUs}. \newblock Application note.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A popularização de máquinas de Controle Numérico Computadorizado (CNC) depende de controladores capazes de converter instruções digitais em movimentos sincronizados com elevado grau de previsibilidade. No contexto de manufatura de pequeno e médio porte, soluções baseadas em computadores pessoais apresentam custo acessível, mas sofrem com a variabilidade de latência inerente aos sistemas operacionais de propósito geral. Este trabalho investiga uma alternativa embarcada utilizando o microcontrolador STM32L475, capaz de operar a \SI{80}{\mega\hertz} e oferecer temporizadores avançados para geração de pulsos e amostragem de dados~\cite{st_an4013}. Ao combinar a unidade embarcada com uma Raspberry Pi responsável pela interface de alto nível, busca-se garantir escalabilidade e facilidade de integração com pipelines de produção.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/application_note/an4013-introduction-to-timers-for-stm32-mcus-stmicroelectronics.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 2
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 15)
+Chave da referência: groover2015
+Texto da referência (Bibliografia):
+  Groover, M.~P. (2015). \newblock {\em Automation, Production Systems, and Computer-Integrated Manufacturing}. \newblock Pearson, 4 edition.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Máquinas de Controle Numérico Computadorizado interpretam instruções codificadas (por exemplo, G-code) e convertem essas ordens em movimentos coordenados entre múltiplos eixos, garantindo precisão repetível no processo de usinagem ou manufatura~\cite{groover2015}. Controladores modernos combinam processamento em tempo real com interfaces de alto nível para planejar trajetórias, compensar erros e monitorar a execução. A adoção de arquiteturas híbridas---com uma unidade embarcada responsável pelo tempo real e um computador auxiliar para supervisão--- diminui a suscetibilidade a jitter e a perdas de sincronismo, mantendo a flexibilidade de integração com sistemas de gestão.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+
+Referencia atualizada:
+Chave da referência: idc_cnc_interp
+Texto da referência (Bibliografia):
+  {IDC Technologies} (2014). \newblock {\em CNC Machines -- Interpolation, Control and Drive}. \newblock Technical training note.
+Texto de base (fonte de consulta sugerida):
+  The most critical and specialised activity in a CNC is axis management, which involves interpolation, servo control and drive of the motion axes.
+Link:
+  https://www.idc-online.com/technical_references/pdfs/mechanical_engineering/CNC_Machines_Interpolation_Control_and_Drive.pdf
+Pagina:
+  1
+------------------------------------------------------------------------
+
+Referência nº 3
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 36)
+Chave da referência: st_an4013
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2013). \newblock {\em AN4013: Introduction to timers for STM32 MCUs}. \newblock Application note.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O microcontrolador STM32L475 disponibiliza temporizadores de uso geral e avançado capazes de operar na faixa de \SI{80}{\mega\hertz} com alta resolução temporal. A configuração de um temporizador baseia-se na relação \begin{equation} f_{\text{TIM}} = \frac{f_{\text{bus}}}{(PSC+1)(ARR+1)}, \end{equation} onde $f_{\text{bus}}$ representa a frequência do barramento APB, $PSC$ o prescaler e $ARR$ o registrador de auto-reload. O guia de aplicação oficial descreve como esses parâmetros possibilitam gerar bases de tempo precisas para laços de controle, captura de entradas e geração de pulsos PWM~\cite{st_an4013}. No projeto, o TIM6 é configurado com $PSC = 79$ e $ARR = 19$ para obter interrupções em \SI{50}{\kilo\hertz}, enquanto o TIM7 opera com $PSC = 7999$ e $ARR = 9$, produzindo um laço de \SI{1}{\kilo\hertz}. Os temporizadores TIM2, TIM3 e TIM5 operam em modo encoder para rastrear incrementalmente a posição dos eixos.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/application_note/an4013-introduction-to-timers-for-stm32-mcus-stmicroelectronics.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 4
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 47)
+Chave da referência: fussell2003
+Texto da referência (Bibliografia):
+  Fussell, D. (2003). \newblock Digital differential analyzer algorithms. \newblock In {\em Computer Graphics}. University of Texas at Austin.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
+Texto de base (fonte de consulta sugerida):
+  hearn-50265;ISBN: 0-13-015390-7 book August 8,2003 14:53 CHAPTER 3 GraphicsOutput Primitives Ascene from thewolfmanvideo .
+Link:
+  https://www.cs.utexas.edu/~fussell/courses/cs324e2003/hear50265_ch03.pdf
+Pagina:
+  1
+------------------------------------------------------------------------
+
+Referência nº 5
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 53)
+Chave da referência: idc_cnc_interp
+Texto da referência (Bibliografia):
+  {IDC Technologies} (2014). \newblock {\em CNC Machines -- Interpolation, Control and Drive}. \newblock Technical training note.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
+Texto de base (fonte de consulta sugerida):
+  Module 5 CNC Machines Version 2 EE IIT, Kharagpur 1
+Link:
+  https://www.idc-online.com/technical_references/pdfs/mechanical_engineering/CNC_Machines_Interpolation_Control_and_Drive.pdf
+Pagina:
+  1
+------------------------------------------------------------------------
+
+Referência nº 6
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 53)
+Chave da referência: koren_reference
+Texto da referência (Bibliografia):
+  Koren, Y. (1978). \newblock Reference-pulse circular interpolators for cnc systems. \newblock Available at the University of Michigan Manufacturing Research website.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://ykoren.engin.umich.edu/wp-content/uploads/sites/5/2014/12/C12_Reference-Pulse-Circular-Interpolators-for-CNC-Systems.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 7
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 53)
+Chave da referência: efficient_reference
+Texto da referência (Bibliografia):
+  Wang, L. and Hu, J. (2016). \newblock Efficient reference-pulse cnc interpolator. \newblock Technical report, School of Mechanical Engineering. \newblock Academic report with reference-pulse control diagrams.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.academia.edu/7038782/Efficient_Reference_Pulse_CNC_Interpolator
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 8
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 53)
+Chave da referência: unit3_interpolators
+Texto da referência (Bibliografia):
+  {Dronacharya Group of Institutions} (2019). \newblock {\em Unit 3: Interpolators and Control on NC System}. \newblock Teaching material on CNC interpolators and servo loops.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://gn.dronacharya.info/civil/DeptStudyMaterial/Notes/NCSem7/Unit3.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 9
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 57)
+Chave da referência: koren_cnc_interpolators
+Texto da referência (Bibliografia):
+  Koren, Y. (2010). \newblock Cnc interpolators: Algorithms and analysis. \newblock Technical monograph on interpolator design.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://ykoren.engin.umich.edu/wp-content/uploads/sites/5/2014/12/CNC-Interpolators-Algorithms-and-Analysis.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 10
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 73)
+Chave da referência: kenjo1994
+Texto da referência (Bibliografia):
+  Kenjo, T. and Sugawara, A. (1994). \newblock {\em Stepping Motors and Their Microprocessor Controls}. \newblock Oxford University Press.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Motores de passo híbridos apresentam dinâmica eletromecânica dominada por indutâncias de fase, resistência de enrolamento e um torque relacionado à diferença angular entre rotor e campo magnético. Modelos clássicos de motores de passo descrevem a relação entre corrente, torque e velocidade angular por meio de equações diferenciais acopladas que podem ser discretizadas para implementação em controladores digitais ~\cite{kenjo1994}. A precisão do controle depende da estimação do torque de carga $T_L$, do momento de inércia equivalente $J$ e da compensação de efeitos como ressonâncias de meia etapa. A utilização de encoders em modo quadratura provê realimentação adicional para compensar perda de passos e acúmulo de erro estático.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 11
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 85)
+Chave da referência: astrom1995
+Texto da referência (Bibliografia):
+  {\AA}str{\"o}m, K.~J. and H{\"a}gglund, T. (1995). \newblock {\em PID Controllers: Theory, Design, and Tuning}. \newblock Instrument Society of America, 2 edition.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 12
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 88)
+Chave da referência: efficient_reference
+Texto da referência (Bibliografia):
+  Wang, L. and Hu, J. (2016). \newblock Efficient reference-pulse cnc interpolator. \newblock Technical report, School of Mechanical Engineering. \newblock Academic report with reference-pulse control diagrams.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.academia.edu/7038782/Efficient_Reference_Pulse_CNC_Interpolator
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 13
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 88)
+Chave da referência: real_time_interpolators
+Texto da referência (Bibliografia):
+  Koren, Y. (1980). \newblock Real-time interpolators for multi-axis cnc machine tools. \newblock {\em CIRP Annals}, 29(1):333--336.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 14
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 88)
+Chave da referência: kung_fpga_motion
+Texto da referência (Bibliografia):
+  Kung, Y.-S., Tsai, M.-C., and Chang, C.-H. (2005). \newblock Development of a fpga-based motion control ic for robot arm. \newblock In {\em Proceedings of the IEEE International Conference on Industrial Technology}, pages 1185--1190.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 15
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 100)
+Chave da referência: adaptive_fuzzy_pid
+Texto da referência (Bibliografia):
+  Wang, S., Chen, Y., and Zhang, G. (2021). \newblock Adaptive fuzzy pid cross coupled control for multi-axis motion system based on sliding mode disturbance observation. \newblock {\em Science Progress}, 104(3):1--21. \end{thebibliography}
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 16
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 114)
+Chave da referência: mori2005dda
+Texto da referência (Bibliografia):
+  Mori, M., Sato, S., and Ohashi, T. (2005). \newblock High-speed interpolation using digital differential analyzer techniques for multi-axis cnc systems. \newblock {\em International Journal of Machine Tools and Manufacture}, 45(4--5):529--536.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 17
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 114)
+Chave da referência: efficient_reference
+Texto da referência (Bibliografia):
+  Wang, L. and Hu, J. (2016). \newblock Efficient reference-pulse cnc interpolator. \newblock Technical report, School of Mechanical Engineering. \newblock Academic report with reference-pulse control diagrams.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.academia.edu/7038782/Efficient_Reference_Pulse_CNC_Interpolator
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 18
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 118)
+Chave da referência: idc_cnc_interp
+Texto da referência (Bibliografia):
+  {IDC Technologies} (2014). \newblock {\em CNC Machines -- Interpolation, Control and Drive}. \newblock Technical training note.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+Texto de base (fonte de consulta sugerida):
+  Module 5 CNC Machines Version 2 EE IIT, Kharagpur 1
+Link:
+  https://www.idc-online.com/technical_references/pdfs/mechanical_engineering/CNC_Machines_Interpolation_Control_and_Drive.pdf
+Pagina:
+  1
+------------------------------------------------------------------------
+
+Referência nº 19
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 118)
+Chave da referência: unit3_interpolators
+Texto da referência (Bibliografia):
+  {Dronacharya Group of Institutions} (2019). \newblock {\em Unit 3: Interpolators and Control on NC System}. \newblock Teaching material on CNC interpolators and servo loops.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://gn.dronacharya.info/civil/DeptStudyMaterial/Notes/NCSem7/Unit3.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 20
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 121)
+Chave da referência: kung_fpga_motion
+Texto da referência (Bibliografia):
+  Kung, Y.-S., Tsai, M.-C., and Chang, C.-H. (2005). \newblock Development of a fpga-based motion control ic for robot arm. \newblock In {\em Proceedings of the IEEE International Conference on Industrial Technology}, pages 1185--1190.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 21
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 121)
+Chave da referência: real_time_interpolators
+Texto da referência (Bibliografia):
+  Koren, Y. (1980). \newblock Real-time interpolators for multi-axis cnc machine tools. \newblock {\em CIRP Annals}, 29(1):333--336.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 22
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 169)
+Chave da referência: adaptive_fuzzy_pid
+Texto da referência (Bibliografia):
+  Wang, S., Chen, Y., and Zhang, G. (2021). \newblock Adaptive fuzzy pid cross coupled control for multi-axis motion system based on sliding mode disturbance observation. \newblock {\em Science Progress}, 104(3):1--21. \end{thebibliography}
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Durante a fase final do movimento, define-se uma \emph{janela de acabamento} de largura $W$ (em passos ou fração do deslocamento global), na qual se aplicam regras mais conservadoras: desabilita-se detecção de \emph{stall}, eleva-se $\sigma_{\min}$ e relaxam-se as trocas de mestre para evitar oscilações. Tais práticas são consistentes com técnicas de controle cruzado de eixos \emph{cross-coupled} que utilizam o erro de contorno/ sincronismo para melhorar a precisão em trajetórias 2D/3D \cite{adaptive_fuzzy_pid}.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 23
+Capítulo: Capítulo 2
+Arquivo: Cap02/Capitulo2.tex (linha 189)
+Chave da referência: um2153
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2018b). \newblock {\em UM2153: Discovery kit for IoT node multichannel communication with STM32L4}. \newblock User manual. \bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, ]{tmc5160_ds} {TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}. \newblock {\em TMC5160A: Datasheet and Register Description}. \newblock Stepper Motor Driver IC. \bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, 2022]{tmcs28_datasheet} {TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)} (2022). \newblock {\em TMCS-28 Hardware Manual: Optical Incremental Encoder (Rev. 1.80)}. \newblock Accessories for Stepper \& BLDC, Hardware Version V1.00.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  A comunicação com a Raspberry Pi utiliza o periférico SPI1 em modo escravo com DMA circular. Esse desenho reduz a carga da CPU e garante que as transferências de 42 bytes sejam executadas dentro da janela entre interrupções do TIM6 e TIM7. A USART1, configurada como \emph{Virtual COM Port}, é utilizada para depuração e registro de eventos críticos, com uma fila não bloqueante que impede o impacto sobre o laço de controle. A coordenação entre SPI e USART é fundamental para evitar inversões de prioridade que poderiam comprometer o determinismo do sistema~\cite{um2153}. A análise do pipeline de polls evidencia como o firmware pausa e reinicia o DMA para garantir que cada resposta seja transmitida somente após processamento completo.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/user_manual/um2153-discovery-kit-for-iot-node-multichannel-communication-with-stm32l4-stmicroelectronics.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 24
+Capítulo: Capítulo 2
+Arquivo: Cap02/DriversTMC.tex (linha 68)
+Chave da referência: tmcs28_datasheet
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O TMCS-28 \`e um encoder \'{o}ptico incremental de baixo custo e dimens\~ao reduzida para motores de passo e PMSM/BLDC. Utiliza roda c\'odigo \'{o}ptica e fornece sa\'idas em quadratura \textbf{A} e \textbf{B} mais \textbf{N} (\emph{index}). Principais pontos (\cite{tmcs28_datasheet}):
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.analog.com/media/en/technical-documentation/data-sheets/TMCS-28_datasheet_rev1.80.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 25
+Capítulo: Capítulo 2
+Arquivo: Cap02/FOPDT_PID.tex (linha 60)
+Chave da referência: astrom1995
+Texto da referência (Bibliografia):
+  {\AA}str{\"o}m, K.~J. and H{\"a}gglund, T. (1995). \newblock {\em PID Controllers: Theory, Design, and Tuning}. \newblock Instrument Society of America, 2 edition.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Com base nesse modelo, adotou-se um regulador proporcional–derivativo (PD) na malha de velocidade, mantendo $K_i=0$ por já existir ação integrativa no nível de posição. As constantes são sintetizadas pelas regras de Ziegler–Nichols para curva de reação (processos do tipo FOPDT), a saber \cite{astrom1995}: \begin{equation} K_p = 1{,}2\,\frac{\tau}{K\,L},\quad T_d = 0{,}5\,L,\quad K_d = K_p\,T_d,\quad K_i = 0. \end{equation} Para implementação digital, os ganhos podem ser escalonados para representação inteira utilizando um fator de escala $S>0$ (\emph{fixed-point}), \emph{e.g.}, $k_{p,i}=\operatorname{round}(S\,K_p)$ e análogos para $k_{i,i}$ e $k_{d,i}$. Tal mapeamento preserva a coerência entre a análise contínua e o controlador discreto executado em tempo real.
+Texto de base (fonte de consulta sugerida):
+  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+Link:
+  (não disponível neste projeto)
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 26
+Capítulo: Capítulo 2
+Arquivo: Cap02/RegTables.tex (linha 12)
+Chave da referência: st_an4013
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2013). \newblock {\em AN4013: Introduction to timers for STM32 MCUs}. \newblock Application note.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \begin{table}[H] \centering \caption{Registros STM32 L4 utilizados neste trabalho (ver \cite{st_an4013,stm32l4_rm}).} \label{tab:regs-stm32} \setlength{\tabcolsep}{4pt}\footnotesize \begin{tabularx}{\textwidth}{lllX} \toprule Perif. & Registro & Campo/Valor & Finalidade \\ \midrule TIM6 & PSC & 79 & Prescaler para \SI{50}{kHz} (DDA). \\ TIM6 & ARR & 19 & Per\'iodo de \SI{20}{\micro s}. \\ TIM7 & PSC & 7999 & Prescaler para \SI{1}{kHz} (PID). \\ TIM7 & ARR & 9 & Per\'iodo de \SI{1}{ms}. \\ TIM2/3/5 & SMCR & SMS=0b011 & Modo encoder (contagem em TI1 e TI2). \\ TIM2/3/5 & CCMR1 & CC1S=01; CC2S=01 & Entradas mapeadas para TI1/TI2. \\ TIM2/3/5 & CCER & CC1P=0; CC2P=0 & Polaridade n\~ao invertida (conforme liga\c{c}\~ao). \\ SPI1 & CR1 & MSTR=0; CPOL=0; CPHA=0 & Modo escravo, fase/polaridade padr\~ao. \\ SPI1 & CR2 & RXDMAEN=1; TXDMAEN=1; DS=8 & SPI com DMA e palavra de 8 bits. \\ DMAx & CCR(RX/TX) & MINC=1; CIRC=1; DIR & DMA circular para SPI1 RX/TX. \\ DMAx & CNDTR/CPAR/CMAR & -- & Tamanho e endere\c{c}os de perif. e mem\'oria. \\ USART1 & BRR & 115200 & Baud rate para logs/telemetria. \\ EXTI & IMR/RTSR/FTSR & Linhas de E-STOP/limites & Interrup\c{c}\~oes de seguran\c{c}a. \\ NVIC & PRIO & -- & Prioriza\c{c}\~ao: seguran\c{c}a, TIM6, SPI/DMA, TIM7, USART. \\ \bottomrule \end{tabularx} \end{table}
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/application_note/an4013-introduction-to-timers-for-stm32-mcus-stmicroelectronics.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 27
+Capítulo: Capítulo 2
+Arquivo: Cap02/RegTables.tex (linha 12)
+Chave da referência: stm32l4_rm
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2018a). \newblock {\em RM0394: STM32L4x5/STM32L4x6 Advanced ARM\textregistered{}-based 32-bit MCUs reference manual}. \newblock Reference manual.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \begin{table}[H] \centering \caption{Registros STM32 L4 utilizados neste trabalho (ver \cite{st_an4013,stm32l4_rm}).} \label{tab:regs-stm32} \setlength{\tabcolsep}{4pt}\footnotesize \begin{tabularx}{\textwidth}{lllX} \toprule Perif. & Registro & Campo/Valor & Finalidade \\ \midrule TIM6 & PSC & 79 & Prescaler para \SI{50}{kHz} (DDA). \\ TIM6 & ARR & 19 & Per\'iodo de \SI{20}{\micro s}. \\ TIM7 & PSC & 7999 & Prescaler para \SI{1}{kHz} (PID). \\ TIM7 & ARR & 9 & Per\'iodo de \SI{1}{ms}. \\ TIM2/3/5 & SMCR & SMS=0b011 & Modo encoder (contagem em TI1 e TI2). \\ TIM2/3/5 & CCMR1 & CC1S=01; CC2S=01 & Entradas mapeadas para TI1/TI2. \\ TIM2/3/5 & CCER & CC1P=0; CC2P=0 & Polaridade n\~ao invertida (conforme liga\c{c}\~ao). \\ SPI1 & CR1 & MSTR=0; CPOL=0; CPHA=0 & Modo escravo, fase/polaridade padr\~ao. \\ SPI1 & CR2 & RXDMAEN=1; TXDMAEN=1; DS=8 & SPI com DMA e palavra de 8 bits. \\ DMAx & CCR(RX/TX) & MINC=1; CIRC=1; DIR & DMA circular para SPI1 RX/TX. \\ DMAx & CNDTR/CPAR/CMAR & -- & Tamanho e endere\c{c}os de perif. e mem\'oria. \\ USART1 & BRR & 115200 & Baud rate para logs/telemetria. \\ EXTI & IMR/RTSR/FTSR & Linhas de E-STOP/limites & Interrup\c{c}\~oes de seguran\c{c}a. \\ NVIC & PRIO & -- & Prioriza\c{c}\~ao: seguran\c{c}a, TIM6, SPI/DMA, TIM7, USART. \\ \bottomrule \end{tabularx} \end{table}
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/reference_manual/rm0394-stm32l4-series.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 28
+Capítulo: Capítulo 2
+Arquivo: Cap02/RegTables.tex (linha 41)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \begin{table}[H] \centering \caption{Registros TMC5160 utilizados neste trabalho (ver \cite{tmc5160_ds}).} \label{tab:regs-tmc5160} \setlength{\tabcolsep}{4pt}\footnotesize \begin{tabularx}{\textwidth}{llX} \toprule Registro & Campo/Valor & Finalidade \\ \midrule \texttt{IHOLD\_IRUN} & IHOLD, IRUN, IHOLDDELAY & Correntes de hold/run e rampa de corrente. \\ \texttt{TPOWERDOWN} & Tempo (\,\textmu s) & Tempo para redu\c{c}\~ao de corrente em inatividade. \\ \texttt{CHOPCONF} & spreadCycle/\,hysteresis & Chopper de corrente e modo de comuta\c{c}\~ao. \\ \texttt{PWMCONF} & stealthChop2 (PWM\_AMPL/GRAD) & Chaveamento silencioso e par\^ametros PWM. \\ \texttt{SGTHRS} & Limiar & Limiar do StallGuard2 para homing \emph{sensorless}. \\ \texttt{TCOOLTHRS} & Velocidade limiar & Janela de atua\c{c}\~ao para StallGuard/coolStep. \\ \texttt{TPWMTHRS} & Velocidade limiar & Limite de comuta\c{c}\~ao stealthChop2\,$\leftrightarrow$\,spreadCycle. \\ \texttt{DRV\_STATUS} & Flags & Diagn\'ostico: sobrecorrente, subtens\~ao, temperatura, SG\_RESULT. \\ \bottomrule \end{tabularx} \end{table}
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 29
+Capítulo: Capítulo 2
+Arquivo: Cap02/RegTables.tex (linha 63)
+Chave da referência: stm32l4_rm
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2018a). \newblock {\em RM0394: STM32L4x5/STM32L4x6 Advanced ARM\textregistered{}-based 32-bit MCUs reference manual}. \newblock Reference manual.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \vspace{2mm} \noindent\textit{Observa\c{c}\~ao}: valores exatos de bits podem variar conforme a placa/variante e roteiro de testes; recomenda-se validar com os manuais do STM32 L4 (\cite{stm32l4_rm}) e o datasheet do TMC5160 (\cite{tmc5160_ds}).
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/reference_manual/rm0394-stm32l4-series.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 30
+Capítulo: Capítulo 2
+Arquivo: Cap02/RegTables.tex (linha 63)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \vspace{2mm} \noindent\textit{Observa\c{c}\~ao}: valores exatos de bits podem variar conforme a placa/variante e roteiro de testes; recomenda-se validar com os manuais do STM32 L4 (\cite{stm32l4_rm}) e o datasheet do TMC5160 (\cite{tmc5160_ds}).
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 31
+Capítulo: Capítulo 2
+Arquivo: Cap02/SPIProtocol.tex (linha 164)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  O TMC5160 expõe um barramento SPI para configuração e diagnóstico por meio de transações de \textbf{40~bits} (\,5~bytes por quadro\,), compostas por um byte de endereço e quatro bytes de dados. O bit mais significativo do byte de endereço indica leitura/escrita (\,\textbf{1}=leitura, \textbf{0}=escrita\,) e os 7~bits menos significativos selecionam o registrador. O protocolo apresenta \textbf{latência de uma transação}: os dados retornados em \texttt{SDO} referem-se ao comando emitido no quadro anterior. Recomenda-se emitir uma leitura “de preparo” antes de coletar o valor válido do registrador desejado (ver \cite{tmc5160_ds}). Em implementações usuais o SPI opera em modo~3 (CPOL=1, CPHA=1).
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 32
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaHardware.tex (linha 78)
+Chave da referência: romeros_tcc_ifmg_2022
+Texto da referência (Bibliografia):
+  Romeros, F.~M. (2022). \newblock Trabalho de conclus\~{a}o de curso (tcc). \newblock Instituto Federal de Minas Gerais (IFMG) -- Campus Formiga. \newblock Acesso em: 20 out. 2025.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Como refer\^encia adicional de montagem e integra\c{c}\~ao de hardware, ver \cite{romeros_tcc_ifmg_2022}.
+Texto de base (fonte de consulta sugerida):
+  MEC -SETEC INSTITUTO FEDERAL MINAS GERAIS – Campus Formiga Bacharelado em de Engenharia Elétrica DESENVOLVIMENTO DE MÁQUINA CNC ROUTER PARA USINAGEM DE MODELOS DE FUNDIÇÃO EM AREIA VERDE Felipe Machado Romeros Orientador...
+Link:
+  https://formiga.ifmg.edu.br/documents/2022/Biblioteca/TCC_Felipe%20Machado%20Romeros.pdf
+Pagina:
+  1
+------------------------------------------------------------------------
+
+Referência nº 33
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 15)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  De acordo com o datasheet do TMC5160, as entradas \emph{STEP} e \emph{DIR} possuem filtragem anal\'ogica ($t_{\text{FILTSD}}\approx\SI{20}{ns}$) e requerem tempos m\'inimos: $t_{SH}$ (alto de STEP) e $t_{SL}$ (baixo de STEP) $\ge \max(t_{\text{FILTSD}},\,t_{\text{CLK}}+20\text{ ns})$ (tipicamente $\ge\SI{100}{ns}$). Os tempos de \emph{setup/hold} s\~ao $t_{DSU}=\SI{20}{ns}$ (DIR antes de STEP) e $t_{DSH}=\SI{20}{ns}$ (DIR ap\'os STEP) \cite{tmc5160_ds}. No nosso projeto, com \textbf{TIM6 a 50 kHz}, configuramos \emph{guardas} muito acima do m\'inimo (margem de seguran\c{c}a): \begin{itemize} \item Largura alta de STEP: $t_{SH} = \texttt{MOTION\_STEP\_HIGH\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$; \item Tempo baixo entre pulsos: $t_{SL} = \texttt{MOTION\_STEP\_LOW\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$; \item \emph{Setup} de DIR: $t_{DSU} = \texttt{MOTION\_DIR\_SETUP\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$; \item \emph{Settle} de ENABLE: $\texttt{MOTION\_ENABLE\_SETTLE\_TICKS}\cdot\SI{20}{\micro s} = \SI{40}{\micro s}$. \end{itemize}
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 34
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 59)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \subsection{MicroPlyer, resolu\c{c}\~ao e DEDGE} Quando \texttt{intpol}=1 em \texttt{CHOPCONF}, o TMC5160 interpola cada pulso de STEP at\'e 256 microsteps (\emph{MicroPlyer}), melhorando suavidade a partir de entradas com resolu\c{c}\~ao mais grossa. O bit \texttt{dedge} define se as duas bordas do STEP contam (requer duty de 50\%) ou apenas a borda de subida. No nosso sistema, os pulsos t\^em duty controlado e largura fixa, e a contagem por borda de subida (padr\~ao) j\'a atende estabilidade e evita assimetria. Veja \cite{tmc5160_ds} para detalhes.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 35
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 163)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \subsection{Gera\c{c}\~ao de STEP/DIR (\emph{``PWM'' de passo})} O driver TMC5160 em modo \emph{STEP/DIR} espera pulsos compat\'iveis com os tempos da Tabela~\ref{tab:tmc-timing-vs-projeto}. O nosso \emph{backend} de GPIO (\texttt{motion\_hw\_*}) implementa: \begin{enumerate} \item \textbf{Largura de STEP} fixa, via \texttt{step\_high} (\SI{20}{\micro s}), garantindo $t_{SH}$. \item \textbf{Baixo m\'inimo} via \texttt{step\_low} (\SI{20}{\micro s}), garantindo $t_{SL}$. \item \textbf{Setup de DIR} antes do primeiro STEP do trecho, via \texttt{dir\_settle\_ticks}=\SI{20}{\micro s}. \item \textbf{ENABLE settle} (\SI{40}{\micro s}) antes de iniciar emiss\~ao. \end{enumerate} Com isso, o sinal \emph{STEP} tem duty $\approx$50\% em regime (1~tick alto, 1~tick baixo), o que tamb\'em \'e adequado caso \texttt{dedge}=1 (duas bordas) \cite{tmc5160_ds}.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 36
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 166)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \subsection{Resolu\c{c}\~ao de microstepping e MicroPlyer} O host pode ajustar \texttt{MICROSTEP\_FACTOR} em tempo de parada via comando \texttt{set\_microsteps}. Quando \texttt{intpol}=1 no TMC5160, a resolu\c{c}\~ao efetiva de corrente/torque nas bobinas pode ser maior do que a resolu\c{c}\~ao de STEP, garantindo suavidade (Se\c{c}\~ao 15.3, \emph{MicroPlyer}) \cite{tmc5160_ds}.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 37
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 295)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  \begin{itemize} \item \textbf{Ordem dos eventos}: ajustar DIR $\rightarrow$ respeitar \texttt{dir\_settle\_ticks} $\rightarrow$ habilitar driver $\rightarrow$ respeitar \texttt{en\_settle\_ticks} $\rightarrow$ iniciar STEP. \item \textbf{Jitter baixo no STEP}: manter o trabalho pesado (PI, rampa, telemetria) no TIM7; evitar \texttt{printf} em interrup\c{c}\~oes do TIM6 (\texttt{MOTION\_DEBUG\_TIM6\_PRINTS}=0). \item \textbf{Telemetria}: \texttt{encoder\_status} e \texttt{set\_origin} exp\~oem posi\c{c}\~ao absoluta/relativa, erro do PI e refer\^encia do zero. \item \textbf{Compatibilidade com o TMC5160}: manter $t_{SH}$, $t_{SL}$, $t_{DSU}$ e $t_{DSH}$ com folga; se usar \texttt{dedge}=1, garantir duty de 50\% e bordas limpas (\cite{tmc5160_ds}). \end{itemize}
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 38
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 302)
+Chave da referência: stm32l4_rm
+Texto da referência (Bibliografia):
+  {STMicroelectronics} (2018a). \newblock {\em RM0394: STM32L4x5/STM32L4x6 Advanced ARM\textregistered{}-based 32-bit MCUs reference manual}. \newblock Reference manual.
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Para temporizadores e modos de encoder do STM32L4, ver \cite{stm32l4_rm}. Para o modo \emph{STEP/DIR}, \emph{MicroPlyer} e \emph{timing} do TMC5160, ver \cite{tmc5160_ds}.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.st.com/resource/en/reference_manual/rm0394-stm32l4-series.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
+
+Referência nº 39
+Capítulo: Capítulo 3
+Arquivo: Cap03/ArquiteturaSoftware.tex (linha 302)
+Chave da referência: tmc5160_ds
+Texto da referência (Bibliografia):
+  (referência não encontrada em main.bbl)
+Trecho do texto onde a referência é citada no TCC (parágrafo completo):
+  Para temporizadores e modos de encoder do STM32L4, ver \cite{stm32l4_rm}. Para o modo \emph{STEP/DIR}, \emph{MicroPlyer} e \emph{timing} do TMC5160, ver \cite{tmc5160_ds}.
+Texto de base (fonte de consulta sugerida):
+  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+Link:
+  https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
+Pagina:
+  (não determinada automaticamente)
+------------------------------------------------------------------------
