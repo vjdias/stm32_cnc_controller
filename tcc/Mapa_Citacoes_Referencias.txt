@@ -11,11 +11,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   A popularização de máquinas de Controle Numérico Computadorizado (CNC) depende de controladores capazes de converter instruções digitais em movimentos sincronizados com elevado grau de previsibilidade. No contexto de manufatura de pequeno e médio porte, soluções baseadas em computadores pessoais apresentam custo acessível, mas sofrem com a variabilidade de latência inerente aos sistemas operacionais de propósito geral. Este trabalho investiga uma alternativa embarcada utilizando o microcontrolador STM32L475, capaz de operar a \SI{80}{\mega\hertz} e oferecer temporizadores avançados para geração de pulsos e amostragem de dados~\cite{st_an4013}. Ao combinar a unidade embarcada com uma Raspberry Pi responsável pela interface de alto nível, busca-se garantir escalabilidade e facilidade de integração com pipelines de produção.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The purpose of this document is to present an overview of the timer peripherals for the STM32 product series, describe the various modes and specific timer features such as clock sources, explain how to use the available modes and features, and explain how to compute the time base in each configuration. The STM32 series devices have various built-in timers: general-purpose timers for timing, delay generation, input capture and encoder interfaces; advanced timers with additional features for motor control and digital power conversion; basic timers used as timebase or DAC triggers; low-power timers that can operate in low-power modes; and high-resolution timers designed for applications that require very fine timing resolution.
+Tradução Texto base:
+  O objetivo deste documento é apresentar uma visão geral dos periféricos de temporizador das famílias STM32, descrever os diversos modos e recursos específicos, como fontes de clock, explicar como utilizar os modos e recursos disponíveis e como calcular a base de tempo em cada configuração. Os dispositivos da família STM32 possuem vários temporizadores integrados: temporizadores de uso geral para temporização, geração de atrasos, captura de entrada e interface com encoders; temporizadores avançados com recursos adicionais para controle de motores e conversão de potência digital; temporizadores básicos usados como base de tempo ou disparo de DAC; temporizadores de baixo consumo que podem operar em modos de baixa potência; e temporizadores de alta resolução projetados para aplicações que exigem resolução temporal muito fina.
 Link:
   https://www.st.com/resource/en/application_note/an4013-introduction-to-timers-for-stm32-mcus-stmicroelectronics.pdf
 Pagina:
-  (não determinada automaticamente)
+  1, 6
 ------------------------------------------------------------------------
 
 Referência nº 2
@@ -27,22 +29,26 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Máquinas de Controle Numérico Computadorizado interpretam instruções codificadas (por exemplo, G-code) e convertem essas ordens em movimentos coordenados entre múltiplos eixos, garantindo precisão repetível no processo de usinagem ou manufatura~\cite{groover2015}. Controladores modernos combinam processamento em tempo real com interfaces de alto nível para planejar trajetórias, compensar erros e monitorar a execução. A adoção de arquiteturas híbridas---com uma unidade embarcada responsável pelo tempo real e um computador auxiliar para supervisão--- diminui a suscetibilidade a jitter e a perdas de sincronismo, mantendo a flexibilidade de integração com sistemas de gestão.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  For example, one of the important automation technologies discussed in this part of the book is computer numerical control (CNC, Chapter 7). A modern CNC machine tool is a highly automated system that is composed of multiple control systems. Any CNC machine has at least two axes of motion, and some machines have more than five axes. Each of these axes operates as a positioning system, as described in Section 4.1.3., and is, in effect, an automated system. [...] The machine tools also receive instructions (e.g., part programs) from the computer.
+Tradução Texto base:
+  Por exemplo, uma das tecnologias de automação importantes discutidas nesta parte do livro é o controle numérico computadorizado (CNC, Capítulo 7). Uma máquina-ferramenta CNC moderna é um sistema altamente automatizado, composto por múltiplos sistemas de controle. Qualquer máquina CNC possui pelo menos dois eixos de movimento, e algumas máquinas têm mais de cinco eixos. Cada um desses eixos opera como um sistema de posicionamento, conforme descrito na Seção 4.1.3., e é, em essência, um sistema automatizado. [...] As máquinas-ferramenta também recebem instruções (por exemplo, programas de peça) do computador.
 Link:
   (não disponível neste projeto)
 Pagina:
-  (não determinada automaticamente)
+  108
 
 Referencia atualizada:
-Chave da referência: idc_cnc_interp
+Chave da referência: machining_dynamics_mdpi
 Texto da referência (Bibliografia):
-  {IDC Technologies} (2014). \newblock {\em CNC Machines -- Interpolation, Control and Drive}. \newblock Technical training note.
+  Urbicain, G.; Olvera Trejo, D. (Eds.). Machining Dynamics and Parameters Process Optimization. Basel: MDPI, 2021.
 Texto de base (fonte de consulta sugerida):
-  The most critical and specialised activity in a CNC is axis management, which involves interpolation, servo control and drive of the motion axes.
+  The optimal setting of the computer numerical control (CNC) plays an important role in the machining performance; specifically, Yu et al. [6] developed a practical methodology to tune the CNC parameters effectively for easy implementation in a commercial CNC controller. They studied three turning machining modes: high-speed, high-accuracy and high-surface quality in terms of dynamics errors.
+Tradução Texto base:
+  Ajustar corretamente o controle numérico computadorizado (CNC) tem papel importante no desempenho de usinagem; em particular, Yu et al. [6] desenvolveram uma metodologia prática para sintonizar os parâmetros do CNC de forma eficaz, facilitando a implementação em um controlador comercial. Os autores estudaram três modos de torneamento — alta velocidade, alta precisão e alta qualidade de superfície — avaliando os erros dinâmicos.
 Link:
-  https://www.idc-online.com/technical_references/pdfs/mechanical_engineering/CNC_Machines_Interpolation_Control_and_Drive.pdf
+  https://mdpi-res.com/bookfiles/book/3521/Machining_Dynamics_and_Parameters_Process_Optimization.pdf?v=1763345053
 Pagina:
-  1
+  11
 ------------------------------------------------------------------------
 
 Referência nº 3
@@ -54,11 +60,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O microcontrolador STM32L475 disponibiliza temporizadores de uso geral e avançado capazes de operar na faixa de \SI{80}{\mega\hertz} com alta resolução temporal. A configuração de um temporizador baseia-se na relação \begin{equation} f_{\text{TIM}} = \frac{f_{\text{bus}}}{(PSC+1)(ARR+1)}, \end{equation} onde $f_{\text{bus}}$ representa a frequência do barramento APB, $PSC$ o prescaler e $ARR$ o registrador de auto-reload. O guia de aplicação oficial descreve como esses parâmetros possibilitam gerar bases de tempo precisas para laços de controle, captura de entradas e geração de pulsos PWM~\cite{st_an4013}. No projeto, o TIM6 é configurado com $PSC = 79$ e $ARR = 19$ para obter interrupções em \SI{50}{\kilo\hertz}, enquanto o TIM7 opera com $PSC = 7999$ e $ARR = 9$, produzindo um laço de \SI{1}{\kilo\hertz}. Os temporizadores TIM2, TIM3 e TIM5 operam em modo encoder para rastrear incrementalmente a posição dos eixos.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  In this mode, the update event period is calculated as follows: Update_event = ETR_CLK/((ETR_PSC)*(PSC + 1)*(ARR + 1)*(RCR + 1)) [...] In this mode, the update event period is calculated as follows: Update_event = TIx_CLK/((PSC + 1)*(ARR + 1)*(RCR + 1)) [...] In this mode, the update event period is calculated as follows: Update_event = ITRx_CLK/((PSC + 1)*(ARR + 1)*(RCR + 1)).
+Tradução Texto base:
+  Nesse modo, o período do evento de atualização é calculado como: Update_event = ETR_CLK/((ETR_PSC)*(PSC + 1)*(ARR + 1)*(RCR + 1)) [...]. Em outro modo, o período de atualização é dado por: Update_event = TIx_CLK/((PSC + 1)*(ARR + 1)*(RCR + 1)) [...]. De forma análoga, para o gatilho interno vale: Update_event = ITRx_CLK/((PSC + 1)*(ARR + 1)*(RCR + 1)).
 Link:
   https://www.st.com/resource/en/application_note/an4013-introduction-to-timers-for-stm32-mcus-stmicroelectronics.pdf
 Pagina:
-  (não determinada automaticamente)
+  13–14
 ------------------------------------------------------------------------
 
 Referência nº 4
@@ -70,11 +78,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
 Texto de base (fonte de consulta sugerida):
-  hearn-50265;ISBN: 0-13-015390-7 book August 8,2003 14:53 CHAPTER 3 GraphicsOutput Primitives Ascene from thewolfmanvideo .
+  DDA Algorithm The digital differential analyzer (DDA) is a scan-conversion line algorithm based on calculating either Δy or Δx, using Eq. 3-4 or Eq. 3-5. A line is sampled at unit intervals in one coordinate and the corresponding integer values nearest the line path are determined for the other coordinate. We consider first a line with positive slope, as shown in Fig. 3-6. If the slope is less than or equal to 1, we sample at unit x intervals (Δx = 1) and compute successive y values as y_{k+1} = y_k + m.
+Tradução Texto base:
+  O algoritmo DDA (digital differential analyzer) é um algoritmo de varredura de linhas baseado no cálculo de Δy ou Δx, usando as Equações 3-4 ou 3-5. A linha é amostrada em intervalos unitários em uma coordenada e os valores inteiros mais próximos do traçado da linha são determinados para a outra coordenada. Considera-se primeiro uma linha com inclinação positiva, como na Fig. 3-6; se a inclinação é menor ou igual a 1, amostra-se em passos unitários de x (Δx = 1) e calculam-se os valores sucessivos de y como y_{k+1} = y_k + m.
 Link:
   https://www.cs.utexas.edu/~fussell/courses/cs324e2003/hear50265_ch03.pdf
 Pagina:
-  1
+  11
 ------------------------------------------------------------------------
 
 Referência nº 5
@@ -86,11 +96,27 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
 Texto de base (fonte de consulta sugerida):
-  Module 5 CNC Machines Version 2 EE IIT, Kharagpur 1
+  Reference-pulse interpolators are simpler to program, but there is a restriction on the maximum axis velocity imposed by the interpolation execution time. Reference-pulse interpolators execute cyclically with a clock. The maximum axis velocity is proportional to the maximum attainable clock frequency, which, in turn, depends on the execution time of the interpolator algorithm. Consequently, reference-pulse interpolators are often written in assembly language to improve the computing speed so as to attain higher maximum attainable axis velocity. Below we present a linear reference pulse interpolation technique. At the heart of the interpolator is a Digital Differential Analyser (DDA) algorithm. DDA Algorithm DDA is essentially an algorithm for digital integration and generates a pulse train varying in frequency. Digital integration is performed by successive additions using an Euler approximation method.
+Tradução Texto base:
+  Interpoladores por pulso de referência são mais simples de programar, mas existe uma limitação na velocidade máxima de eixo imposta pelo tempo de execução da interpolação. Esses interpoladores operam ciclicamente com um relógio, e a velocidade máxima do eixo é proporcional à frequência máxima de clock atingível, que por sua vez depende do tempo de execução do algoritmo de interpolação. Por isso, interpoladores por pulso de referência são muitas vezes implementados em linguagem de montagem para aumentar a velocidade de cálculo e permitir maiores velocidades de eixo. Em seguida é apresentada uma técnica de interpolação linear por pulso de referência. No núcleo do interpolador está um algoritmo DDA (Digital Differential Analyser). O DDA é essencialmente um algoritmo de integração digital que gera um trem de pulsos com frequência variável, realizando a integração por meio de somas sucessivas usando a aproximação de Euler.
 Link:
   https://www.idc-online.com/technical_references/pdfs/mechanical_engineering/CNC_Machines_Interpolation_Control_and_Drive.pdf
 Pagina:
   1
+------------------------------------------------------------------------
+
+Referencia atualizada:
+Chave da referência: theory_cnc_systems
+Texto da referência (Bibliografia):
+  Suh, S.-H.; Kang, S.-K.; Chung, D.-H.; Stroud, I. Theory and Design of CNC Systems. London: Springer, 2008.
+Texto de base (fonte de consulta sugerida):
+  The interpreter, interpolator, acceleration/deceleration controller, and position controller are the main functions of the NCK unit. An interpolator plays the role of sequentially reading the data from the internal data buffer, calculating the position and velocity per unit time of each axis, and storing the result in a FIFO buffer for the acceleration/deceleration controller. The interpolator generates a pulse corresponding to the path data according to the type of path (e.g. line, circle, parabola, and spline) and sends the pulse to the FIFO buffer. The number of pulses is decided based on the length of path and the frequency of the pulses is based on the velocity.
+Tradução Texto base:
+  O intérprete, o interpolador, o controlador de aceleração/desaceleração e o controlador de posição são as funções principais da unidade NCK. O interpolador lê sequencialmente os dados do buffer interno, calcula a posição e a velocidade por unidade de tempo de cada eixo e armazena o resultado em um buffer FIFO para o controlador de aceleração/desaceleração. O interpolador gera pulsos correspondentes aos dados de trajetória de acordo com o tipo de trajetória (por exemplo, linha, círculo, parábola e spline) e envia esses pulsos ao buffer FIFO. O número de pulsos é determinado pelo comprimento da trajetória e a frequência dos pulsos é determinada pela velocidade.
+Link:
+  https://doi.org/10.1007/978-1-84800-336-1
+Pagina:
+  43
 ------------------------------------------------------------------------
 
 Referência nº 6
@@ -102,11 +128,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  Interpolation techniques for CNC manufacturing systems are either of the Reference-Pulse or Reference-Word type. Reference-Pulse interpolators emit a sequence of pulses as reference signals to the control loops, whereas Reference-Word interpolators provide binary words as references to sampled-data control loops. In the present paper, a number of Reference-Pulse interpolation methods are described, all of which function in an online iterative mode controlled by an external interrupt source. These methods are compared in terms of accuracy, maximum radius, uniformity of feedrate along the circular path, and maximum feedrate attainable. With CNC, a minicomputer is provided as part of the controller to perform the basic numerical control functions. From a control point of view, the significant common requirement of all CNC systems is to generate coordinated movement of the separately driven axes of motion to achieve a desired path of the tool relative to the workpiece.
+Tradução Texto base:
+  As técnicas de interpolação para sistemas de manufatura CNC são, em geral, do tipo pulso de referência (Reference-Pulse) ou palavra de referência (Reference-Word). Interpoladores por pulso de referência emitem uma sequência de pulsos como sinais de referência para os laços de controle, enquanto interpoladores por palavra de referência fornecem palavras binárias como referências para laços de controle amostrados. No artigo, são descritos vários métodos de interpolação por pulso de referência, todos operando em modo iterativo em tempo real, controlado por uma fonte de interrupção externa. Esses métodos são comparados em termos de precisão, raio máximo, uniformidade do avanço ao longo da trajetória circular e avanço máximo atingível. Nos sistemas CNC, um minicomputador é incorporado ao controlador para executar as funções básicas de controle numérico, e o requisito comum é gerar movimento coordenado dos eixos acionados separadamente para obter a trajetória desejada da ferramenta em relação à peça.
 Link:
-  https://ykoren.engin.umich.edu/wp-content/uploads/sites/5/2014/12/C12_Reference-Pulse-Circular-Interpolators-for-CNC-Systems.pdf
+  https://doi.org/10.1115/1.3184454
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 7
@@ -118,11 +146,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  This report presents an efficient interpolator algorithm for reference-pulse CNC controller. The developed algorithm permits higher maximum allowable feedrate by reducing the number of required evaluated terms and employing less-extensive mathematical operations. Unlike an existing interpolator which utilizes true distance calculation, the proposed interpolator is using the concept of predefined closest-distance-volumes whereby, if the next point on curve is known and always resides into one of the volumes, the next interpolated point is identified. Results from computer simulations and experiments show that the developed algorithm is more efficient by at least a factor of 2.5.
+Tradução Texto base:
+  Este relatório apresenta um algoritmo de interpolador eficiente para controladores CNC do tipo pulso de referência (reference-pulse). O algoritmo desenvolvido permite um avanço máximo admissível maior, reduzindo o número de termos que precisam ser avaliados e empregando operações matemáticas menos complexas. Diferentemente de interpoladores existentes que utilizam o cálculo de distância verdadeira, o interpolador proposto usa o conceito de volumes de “menor distância” pré-definidos; sabendo-se o próximo ponto da curva e garantindo que ele sempre pertença a um desses volumes, identifica-se o próximo ponto interpolado. Resultados de simulações em computador e de experimentos mostram que o algoritmo desenvolvido é pelo menos 2,5 vezes mais eficiente.
 Link:
   https://www.academia.edu/7038782/Efficient_Reference_Pulse_CNC_Interpolator
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 8
@@ -130,15 +160,17 @@ Capítulo: Capítulo 2
 Arquivo: Cap02/Capitulo2.tex (linha 53)
 Chave da referência: unit3_interpolators
 Texto da referência (Bibliografia):
-  {Dronacharya Group of Institutions} (2019). \newblock {\em Unit 3: Interpolators and Control on NC System}. \newblock Teaching material on CNC interpolators and servo loops.
+  Suh, S.-H.; Kang, S.-K.; Chung, D.-H.; Stroud, I. \newblock {\em Theory and Design of CNC Systems}. \newblock London: Springer, 2008.
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  A CNC system provides rapid movement, linear interpolation, circular interpolation, helical interpolation, and spline interpolation functions as interpolation functions. A CNC system is widely used for the position control of different positioning machines including robots, chip mounters, semiconductor handlers as well as machine tools. The servo control system of the positioning machines is the core and most important part for the machine performance and quality, and the control strategy of each axis results in various positioning errors. Generally, the axis control strategy of a CNC system can be classified into point-to-point control, tracking control, and contour control. In contour control, the most important factor is to decrease the contour error occurring with simultaneous movement of more than two axes.
+Tradução Texto base:
+  Um sistema CNC oferece funções de interpolação que incluem movimentos rápidos, interpolação linear, interpolação circular, interpolação helicoidal e interpolação por splines. Sistemas CNC são amplamente utilizados para o controle de posição de diferentes máquinas de posicionamento, incluindo robôs, montadoras de componentes, manipuladores de semicondutores e máquinas-ferramenta. O sistema de controle servo dessas máquinas é a parte central e mais importante para o desempenho e a qualidade, e a estratégia de controle de cada eixo resulta em diferentes erros de posicionamento. Em geral, a estratégia de controle de eixos em um CNC pode ser classificada em controle ponto-a-ponto, controle de seguimento e controle de contorno. No controle de contorno, o fator mais importante é reduzir o erro de contorno que ocorre com o movimento simultâneo de mais de dois eixos.
 Link:
-  https://gn.dronacharya.info/civil/DeptStudyMaterial/Notes/NCSem7/Unit3.pdf
+  https://doi.org/10.1007/978-1-84800-336-1
 Pagina:
-  (não determinada automaticamente)
+  59, 176
 ------------------------------------------------------------------------
 
 Referência nº 9
@@ -150,11 +182,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Algoritmos DDA são integradores digitais que aproximam trajetórias contínuas por meio de incrementos discretos, amplamente utilizados em sistemas de gráficos e em controladores de movimento para motores de passo~\cite{fussell2003}. O método acumula um erro fracionário em cada interação e emite um pulso quando a soma ultrapassa um limiar definido, resultando em uma sequência de passos que aproxima a velocidade ou a trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA como núcleo do gerador de pulsos, responsável por alimentar os laços de posição e velocidade que seguem a referência calculada amostra a amostra~\cite{idc_cnc_interp,koren_reference,efficient_reference,unit3_interpolators}. Panoramas comparativos mostram como variantes circular, linear e por superfície mantêm avanço constante mesmo em trajetórias multi-eixo, o que fundamenta a escolha de incrementos acumulativos sincronizados para o firmware do STM32~\cite{koren_cnc_interpolators}. No contexto deste trabalho, o DDA implementado no TIM6 gera sinais STEP com resolução de \SI{20}{\micro\second} e tolera ajustes de velocidade em tempo real sem quebrar a coesão dos múltiplos eixos. A abordagem permite sincronizar movimentos lineares e circulares através da atualização de incrementos acumulados por eixo durante a ISR do temporizador, preservando a planicidade de avanço descrita pelas referências.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  CAD systems today interpolate general curves by dividing each curve into many straight-line segments which are downloaded to the CNC. Determining the number of lines to be transferred from the CAD to the CNC poses a conflict between the desired precision of the part and the feedrate fidelity. The current method results in severe variations in the feedrate, leading, in turn, to variations in the surface smoothness and a substantial increase in machining time. These problems are caused by the acceleration/deceleration at the ends of each segment and are inherent in the CNC interpolator. These problems can be solved by the development of curve interpolation algorithms for CNC. In this paper, a real-time interpolation algorithm for curves presented in their parametric forms is proposed and compared with existing CAD interpolators; analysis shows that with this new interpolator a constant feed is maintained along the cut and the machining time is as expected, with much smaller contour errors.
+Tradução Texto base:
+  Sistemas CAD interpolam curvas gerais dividindo cada curva em muitos segmentos de reta que são enviados ao CNC. A escolha do número de segmentos a serem transferidos cria um conflito entre a precisão desejada da peça e a fidelidade do avanço (feedrate). O método atual resulta em variações severas de avanço, o que leva a variações na suavidade de superfície e a um aumento significativo do tempo de usinagem. Esses problemas são causados pelas acelerações e desacelerações nas extremidades de cada segmento e são inerentes ao interpolador do CNC. Eles podem ser resolvidos com o desenvolvimento de algoritmos de interpolação de curvas específicos para CNC. No artigo, é proposto um algoritmo de interpolação em tempo real para curvas em forma paramétrica, comparado com interpoladores de CAD existentes; a análise mostra que, com esse novo interpolador, o avanço é mantido constante ao longo do corte, o tempo de usinagem é o esperado e os erros de contorno são muito menores.
 Link:
   https://ykoren.engin.umich.edu/wp-content/uploads/sites/5/2014/12/CNC-Interpolators-Algorithms-and-Analysis.pdf
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 10
@@ -166,11 +200,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Motores de passo híbridos apresentam dinâmica eletromecânica dominada por indutâncias de fase, resistência de enrolamento e um torque relacionado à diferença angular entre rotor e campo magnético. Modelos clássicos de motores de passo descrevem a relação entre corrente, torque e velocidade angular por meio de equações diferenciais acopladas que podem ser discretizadas para implementação em controladores digitais ~\cite{kenjo1994}. A precisão do controle depende da estimação do torque de carga $T_L$, do momento de inércia equivalente $J$ e da compensação de efeitos como ressonâncias de meia etapa. A utilização de encoders em modo quadratura provê realimentação adicional para compensar perda de passos e acúmulo de erro estático.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  (2) Pull-out torque characteristics. This is alternatively called the slewing characteristic. After the test motor is started by a specified driver in the specified excitation mode in the self-starting range, the pulse frequency is gradually increased; the motor will eventually run out of synchronism. The relation between the frictional load torque and the maximum pulse frequency with which the motor can synchronize is called the pull-out characteristic (see Fig. 2.75). The pull-out curve is greatly affected by the driver circuit, coupling, measuring instruments, and other conditions.
+Tradução Texto base:
+  (2) Características de torque de pull-out. Também chamadas de característica de \emph{slewing}. Após o motor de teste ser acionado por um driver especificado, em um modo de excitação definido e dentro da faixa de auto-partida, a frequência de pulsos é aumentada gradualmente; o motor acabará perdendo o sincronismo. A relação entre o torque de carga por atrito e a frequência máxima de pulsos com a qual o motor consegue se manter sincronizado é chamada de característica de pull-out (ver Fig. 2.75). A curva de pull-out é fortemente influenciada pelo circuito de acionamento, pelo acoplamento mecânico, pelos instrumentos de medição e por outras condições.
 Link:
   (não disponível neste projeto)
 Pagina:
-  (não determinada automaticamente)
+  64
 ------------------------------------------------------------------------
 
 Referência nº 11
@@ -182,11 +218,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  The PID controller is by far the most common control algorithm. Most feedback loops are controlled by this algorithm or minor variations of it. It is implemented in many different forms, as a stand-alone controller or as a part of a DDC (Direct Digital Control) package or a hierarchical distributed process control system. Many thousands of instrument and control engineers worldwide are using such controllers in their daily work. This chapter gives an introduction to PID control. The basic algorithm and various representations are presented in detail. A description of the properties of the controller in a closed loop based on intuitive arguments is given. The phenomenon of reset windup, which occurs when a controller with integral action is connected to a process with a saturating actuator, is discussed, including several methods to avoid it.
+Tradução Texto base:
+  O controlador PID é, de longe, o algoritmo de controle mais comum. A maior parte dos laços de realimentação é controlada por esse algoritmo ou por variações menores dele. Ele é implementado em muitas formas diferentes, como controlador dedicado ou como parte de um pacote de controle digital direto (DDC) ou de um sistema distribuído hierárquico de controle de processos. Muitos milhares de engenheiros de instrumentação e controle em todo o mundo utilizam esses controladores em seu trabalho diário. Este capítulo apresenta uma introdução ao controle PID. O algoritmo básico e suas várias representações são detalhados, assim como as propriedades do controlador em malha fechada, discutidas de forma intuitiva. O fenômeno de “windup” (saturação do integrador), que ocorre quando um controlador com ação integral é conectado a um processo com atuador saturante, é discutido, incluindo vários métodos para evitá-lo.
 Link:
-  (não disponível neste projeto)
+  https://www.ucg.ac.me/skladiste/blog_2146/objava_92847/fajlovi/Astrom.pdf
 Pagina:
-  (não determinada automaticamente)
+  65
 ------------------------------------------------------------------------
 
 Referência nº 12
@@ -198,11 +236,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  This report presents an efficient interpolator algorithm for reference-pulse CNC controller. The developed algorithm permits higher maximum allowable feedrate by reducing the number of required evaluated terms and employing less-extensive mathematical operations. Unlike an existing interpolator which utilizes true distance calculation, the proposed interpolator is using the concept of predefined closest-distance-volumes whereby, if the next point on curve is known and always resides into one of the volumes, the next interpolated point is identified. Results from computer simulations and experiments show that the developed algorithm is more efficient by at least a factor of 2.5.
+Tradução Texto base:
+  Este relatório apresenta um algoritmo de interpolador eficiente para controladores CNC do tipo pulso de referência (reference-pulse). O algoritmo desenvolvido permite um avanço máximo admissível maior, reduzindo o número de termos que precisam ser avaliados e empregando operações matemáticas menos complexas. Diferentemente de interpoladores existentes que utilizam o cálculo de distância verdadeira, o interpolador proposto usa o conceito de volumes de “menor distância” pré-definidos; sabendo-se o próximo ponto da curva e garantindo que ele sempre pertença a um desses volumes, identifica-se o próximo ponto interpolado. Resultados de simulações em computador e de experimentos mostram que o algoritmo desenvolvido é pelo menos 2,5 vezes mais eficiente.
 Link:
-  https://www.academia.edu/7038782/Efficient_Reference_Pulse_CNC_Interpolator
+  https://www.academia.edu/7058395/Efficient_Reference_pulse_CNC_Interpolator_WAN_AZHAR_BIN_WAN_YUSOFF
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 13
@@ -214,29 +254,14 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  Abstract This paper presents a new real-time interpolation architecture for CNC machine tools. The real-time approach calculates new commands for the control loops during a short period of one sampling time. This makes the real-time interpolator capable of generating accurate references for the axes and eliminates unneeded in-segment accelerations and decelerations. Consequently, it produces smoother part surfaces and requires less machining time compared with conventional off-line approaches.
+Tradução Texto base:
+  Resumo: este artigo apresenta uma nova arquitetura de interpolação em tempo real para máquinas-ferramenta CNC. A abordagem em tempo real calcula novos comandos para os laços de controle em um curto intervalo equivalente a um período de amostragem. Isso torna o interpolador em tempo real capaz de gerar referências precisas para os eixos e eliminar acelerações e desacelerações desnecessárias dentro dos segmentos. Consequentemente, a solução produz superfícies usinadas mais suaves e exige menor tempo de usinagem em comparação com abordagens convencionais fora de linha.
 Link:
   (não disponível neste projeto)
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
-
-Referência nº 14
-Capítulo: Capítulo 2
-Arquivo: Cap02/Capitulo2.tex (linha 88)
-Chave da referência: kung_fpga_motion
-Texto da referência (Bibliografia):
-  Kung, Y.-S., Tsai, M.-C., and Chang, C.-H. (2005). \newblock Development of a fpga-based motion control ic for robot arm. \newblock In {\em Proceedings of the IEEE International Conference on Industrial Technology}, pages 1185--1190.
-Trecho do texto onde a referência é citada no TCC (parágrafo completo):
-  O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
-Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
-Link:
-  (não disponível neste projeto)
-Pagina:
-  (não determinada automaticamente)
-------------------------------------------------------------------------
-
 Referência nº 15
 Capítulo: Capítulo 2
 Arquivo: Cap02/Capitulo2.tex (linha 100)
@@ -246,11 +271,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O controlador Proporcional-Integral-Derivativo (PID) continua sendo uma das estratégias mais difundidas para controle de processos, combinando uma ação proporcional que reage ao erro instantâneo, um termo integral que remove erro estacionário e um termo derivativo que prevê tendências de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as posições discretizadas pelo interpolador e corrigem desvios com ganhos sintonizados para cada eixo, podendo incluir observadores ou compensação de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}. Para implementação digital, é comum utilizar a forma incremental \begin{equation} u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]), \end{equation} onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço computacional e facilita a análise de estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo derivativo, são essenciais para lidar com o ruído proveniente dos encoders e das variações do torque de carga. Pesquisas recentes destacam ainda controladores PID acoplados/cross-coupled que tratam o erro de contorno entre eixos como variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  Multi-axis motion system is widely applied in commercial industrial machines such as precision CNC machine tools, robot manipulators and laser cutting machines. Contour accuracy plays a major role for the multi-axis servo motion system, and it depends on both single-axis tracking error and multi-axis linkage accuracy. The primary objective of this study was to design a contour control method to improve single-axis tracking accuracy and multi-axis contour accuracy. A control strategy that combines a sliding mode tracking controller, a disturbance observer and an adaptive fuzzy PID cross coupled controller is proposed to reduce tracking errors, improve contour accuracy and ensure synchronization between axes.
+Tradução Texto base:
+  Sistemas de movimento multi-eixo são amplamente aplicados em máquinas industriais, como máquinas-ferramenta CNC de precisão, manipuladores robóticos e máquinas de corte a laser. A precisão de contorno tem papel central nesses sistemas servo multi-eixo e depende tanto do erro de seguimento de cada eixo quanto da precisão de acoplamento entre eixos. O objetivo principal do estudo é projetar um método de controle de contorno que melhore simultaneamente a precisão de seguimento de cada eixo e a precisão de contorno do sistema multi-eixo. Para isso, é proposta uma estratégia de controle que combina um controlador de seguimento em modo deslizante, um observador de distúrbios e um controlador PID fuzzy adaptativo com acoplamento cruzado, de forma a reduzir erros de seguimento, melhorar a precisão de contorno e garantir a sincronização entre os eixos.
 Link:
-  (não disponível neste projeto)
+  https://doi.org/10.1177/00368504211011847
 Pagina:
-  (não determinada automaticamente)
+  1–3
 ------------------------------------------------------------------------
 
 Referência nº 16
@@ -260,13 +287,15 @@ Chave da referência: mori2005dda
 Texto da referência (Bibliografia):
   Mori, M., Sato, S., and Ohashi, T. (2005). \newblock High-speed interpolation using digital differential analyzer techniques for multi-axis cnc systems. \newblock {\em International Journal of Machine Tools and Manufacture}, 45(4--5):529--536.
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
-  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
+  A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  As a consequence, we see that very fine segmentation causes severe problems in maintaining a uniform and desired feedrate V. This and the other reasons discussed show the importance of a reliable real-time CNC interpolator. In order to generate a constant feed along general curves with multiple axes, the interpolator must compute new position commands in real time at every sampling period, based on the parametric representation of the path, so that coordinated multi-axis motion follows the desired contour with minimal contour error.
+Tradução Texto base:
+  Como consequência, observa-se que uma segmentação muito fina causa sérios problemas para manter um avanço uniforme e desejado V. Isso, somado a outros fatores discutidos, evidencia a importância de um interpolador CNC em tempo real confiável. Para gerar um avanço constante ao longo de curvas gerais com múltiplos eixos, o interpolador deve calcular, em tempo real a cada período de amostragem, novos comandos de posição com base na representação paramétrica da trajetória, de modo que o movimento multi-eixo coordenado siga o contorno desejado com erro de contorno mínimo.
 Link:
-  (não disponível neste projeto)
+  https://ykoren.engin.umich.edu/wp-content/uploads/sites/5/2014/12/CNC-Interpolators-Algorithms-and-Analysis.pdf
 Pagina:
-  (não determinada automaticamente)
+  4
 ------------------------------------------------------------------------
 
 Referência nº 17
@@ -278,11 +307,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  This report presents an efficient interpolator algorithm for reference-pulse CNC controller. The developed algorithm permits higher maximum allowable feedrate by reducing the number of required evaluated terms and employing less-extensive mathematical operations. Unlike an existing interpolator which utilizes true distance calculation, the proposed interpolator is using the concept of predefined closest-distance-volumes whereby, if the next point on curve is known and always resides into one of the volumes, the next interpolated point is identified. Results from computer simulations and experiments show that the developed algorithm is more efficient by at least a factor of 2.5.
+Tradução Texto base:
+  Este relatório apresenta um algoritmo de interpolador eficiente para controladores CNC do tipo pulso de referência (reference-pulse). O algoritmo desenvolvido permite um avanço máximo admissível maior, reduzindo o número de termos que precisam ser avaliados e empregando operações matemáticas menos complexas. Diferentemente de interpoladores existentes que utilizam o cálculo de distância verdadeira, o interpolador proposto usa o conceito de volumes de “menor distância” pré-definidos; sabendo-se o próximo ponto da curva e garantindo que ele sempre pertença a um desses volumes, identifica-se o próximo ponto interpolado. Resultados de simulações em computador e de experimentos mostram que o algoritmo desenvolvido é pelo menos 2,5 vezes mais eficiente.
 Link:
-  https://www.academia.edu/7038782/Efficient_Reference_Pulse_CNC_Interpolator
+  https://www.academia.edu/7058395/Efficient_Reference_pulse_CNC_Interpolator_WAN_AZHAR_BIN_WAN_YUSOFF
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 18
@@ -306,31 +337,35 @@ Capítulo: Capítulo 2
 Arquivo: Cap02/Capitulo2.tex (linha 118)
 Chave da referência: unit3_interpolators
 Texto da referência (Bibliografia):
-  {Dronacharya Group of Institutions} (2019). \newblock {\em Unit 3: Interpolators and Control on NC System}. \newblock Teaching material on CNC interpolators and servo loops.
+  Suh, S.-H.; Kang, S.-K.; Chung, D.-H.; Stroud, I. \newblock {\em Theory and Design of CNC Systems}. \newblock London: Springer, 2008.
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  A CNC system provides rapid movement, linear interpolation, circular interpolation, helical interpolation, and spline interpolation functions as interpolation functions. A CNC system is widely used for the position control of different positioning machines including robots, chip mounters, semiconductor handlers as well as machine tools. The servo control system of the positioning machines is the core and most important part for the machine performance and quality, and the control strategy of each axis results in various positioning errors. Generally, the axis control strategy of a CNC system can be classified into point-to-point control, tracking control, and contour control. In contour control, the most important factor is to decrease the contour error occurring with simultaneous movement of more than two axes.
+Tradução Texto base:
+  Um sistema CNC oferece funções de interpolação que incluem movimentos rápidos, interpolação linear, interpolação circular, interpolação helicoidal e interpolação por splines. Sistemas CNC são amplamente utilizados para o controle de posição de diferentes máquinas de posicionamento, incluindo robôs, montadoras de componentes, manipuladores de semicondutores e máquinas-ferramenta. O sistema de controle servo dessas máquinas é a parte central e mais importante para o desempenho e a qualidade, e a estratégia de controle de cada eixo resulta em diferentes erros de posicionamento. Em geral, a estratégia de controle de eixos em um CNC pode ser classificada em controle ponto-a-ponto, controle de seguimento e controle de contorno. No controle de contorno, o fator mais importante é reduzir o erro de contorno que ocorre com o movimento simultâneo de mais de dois eixos.
 Link:
-  https://gn.dronacharya.info/civil/DeptStudyMaterial/Notes/NCSem7/Unit3.pdf
+  https://doi.org/10.1007/978-1-84800-336-1
 Pagina:
-  (não determinada automaticamente)
+  59, 176
 ------------------------------------------------------------------------
 
 Referência nº 20
 Capítulo: Capítulo 2
 Arquivo: Cap02/Capitulo2.tex (linha 121)
-Chave da referência: kung_fpga_motion
+Chave da referência: koren_cnc_interpolators_20
 Texto da referência (Bibliografia):
-  Kung, Y.-S., Tsai, M.-C., and Chang, C.-H. (2005). \newblock Development of a fpga-based motion control ic for robot arm. \newblock In {\em Proceedings of the IEEE International Conference on Industrial Technology}, pages 1185--1190.
+  Koren, Y.; Lo, C. C.; Shpitalni, M. (1993). CNC Interpolators: Algorithms and Analysis. In: PED-Vol. 64, Manufacturing Science and Engineering. ASME.
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  CAD systems today interpolate general curves by dividing each curve into many straight-line segments which are downloaded to the CNC. Determining the number of lines to be transferred from the CAD to the CNC poses a conflict between the desired precision of the part and the feedrate fidelity. The current method results in severe variations in the feedrate, leading, in turn, to variations in the surface smoothness and a substantial increase in machining time. These problems are caused by the acceleration/deceleration at the ends of each segment and are inherent in the CNC interpolator. These problems can be solved by the development of curve interpolation algorithms for CNC. In this paper, a real-time interpolation algorithm for curves presented in their parametric forms is proposed and compared with existing CAD interpolators; analysis shows that with this new interpolator a constant feed is maintained along the cut and the machining time is as expected, with much smaller contour errors.
+Tradução Texto base:
+  Sistemas CAD interpolam curvas gerais dividindo cada curva em muitos segmentos de reta que são enviados ao CNC. A escolha do número de segmentos a serem transferidos cria um conflito entre a precisão desejada da peça e a fidelidade do avanço (feedrate). O método atual resulta em variações severas de avanço, o que leva a variações na suavidade de superfície e a um aumento significativo do tempo de usinagem. Esses problemas são causados pelas acelerações e desacelerações nas extremidades de cada segmento e são inerentes ao interpolador do CNC. Eles podem ser resolvidos com o desenvolvimento de algoritmos de interpolação de curvas específicos para CNC. No artigo, é proposto um algoritmo de interpolação em tempo real para curvas em forma paramétrica, comparado com interpoladores de CAD existentes; a análise mostra que, com esse novo interpolador, o avanço é mantido constante ao longo do corte, o tempo de usinagem é o esperado e os erros de contorno são muito menores.
 Link:
-  (não disponível neste projeto)
+  https://ykoren.engin.umich.edu/wp-content/uploads/sites/5/2014/12/CNC-Interpolators-Algorithms-and-Analysis.pdf
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 21
@@ -342,11 +377,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   A sincronização entre o DDA e o controlador PID ocorre ao transformar o comando de posição desejada em incrementos de passos por período do TIM6. Métodos de distribuição diferencial garantem que ajustes produzidos pelo PID sejam refletidos sem rupturas na geração de pulsos, mantendo o alinhamento entre eixos~\cite{mori2005dda,efficient_reference}. Materiais didáticos e relatórios industriais ilustram o fluxo completo: o interpolador entrega referências de posição, o encoder fornece o retorno real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}. Implementações modernas combinam esses blocos em FPGAs ou SoCs para reduzir latência e habilitar interpolação multi-eixo síncrona com laços servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No firmware do STM32, o laço de controle alimenta as metas de velocidade e microstepping de cada eixo, enquanto o DDA executa as transições discretas, possibilitando perfis suaves e respeitando os limites de aceleração definidos pelo firmware.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  Abstract This paper presents a new real-time interpolation architecture for CNC machine tools. The real-time approach calculates new commands for the control loops during a short period of one sampling time. This makes the real-time interpolator capable of generating accurate references for the axes and eliminates unneeded in-segment accelerations and decelerations. Consequently, it produces smoother part surfaces and requires less machining time compared with conventional off-line approaches.
+Tradução Texto base:
+  Resumo: este artigo apresenta uma nova arquitetura de interpolação em tempo real para máquinas-ferramenta CNC. A abordagem em tempo real calcula novos comandos para os laços de controle em um curto intervalo equivalente a um período de amostragem. Isso torna o interpolador em tempo real capaz de gerar referências precisas para os eixos e eliminar acelerações e desacelerações desnecessárias dentro dos segmentos. Consequentemente, a solução produz superfícies usinadas mais suaves e exige menor tempo de usinagem em comparação com abordagens convencionais fora de linha.
 Link:
-  (não disponível neste projeto)
+https://ykoren.engin.umich.edu/wp-content/uploads/sites/122/2014/05/63.-Real-Time-Interpolators-for-Multi-axis-CNC-Machine-Tools-CIRP-Mfg-Systs-1995.pdf
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 22
@@ -358,11 +395,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Durante a fase final do movimento, define-se uma \emph{janela de acabamento} de largura $W$ (em passos ou fração do deslocamento global), na qual se aplicam regras mais conservadoras: desabilita-se detecção de \emph{stall}, eleva-se $\sigma_{\min}$ e relaxam-se as trocas de mestre para evitar oscilações. Tais práticas são consistentes com técnicas de controle cruzado de eixos \emph{cross-coupled} que utilizam o erro de contorno/ sincronismo para melhorar a precisão em trajetórias 2D/3D \cite{adaptive_fuzzy_pid}.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  Multi-axis motion system is widely applied in commercial industrial machines such as precision CNC machine tools, robot manipulators and laser cutting machines. Contour accuracy plays a major role for the multi-axis servo motion system, and it depends on both single-axis tracking error and multi-axis linkage accuracy. The primary objective of this study was to design a contour control method to improve single-axis tracking accuracy and multi-axis contour accuracy. A control strategy that combines a sliding mode tracking controller, a disturbance observer and an adaptive fuzzy PID cross coupled controller is proposed to reduce tracking errors, improve contour accuracy and ensure synchronization between axes.
+Tradução Texto base:
+  Sistemas de movimento multi-eixo são amplamente aplicados em máquinas industriais, como máquinas-ferramenta CNC de precisão, manipuladores robóticos e máquinas de corte a laser. A precisão de contorno tem papel central nesses sistemas servo multi-eixo e depende tanto do erro de seguimento de cada eixo quanto da precisão de acoplamento entre eixos. O objetivo principal do estudo é projetar um método de controle de contorno que melhore simultaneamente a precisão de seguimento de cada eixo e a precisão de contorno do sistema multi-eixo. Para isso, é proposta uma estratégia de controle que combina um controlador de seguimento em modo deslizante, um observador de distúrbios e um controlador PID fuzzy adaptativo com acoplamento cruzado, de forma a reduzir erros de seguimento, melhorar a precisão de contorno e garantir a sincronização entre os eixos.
 Link:
-  (não disponível neste projeto)
+  https://doi.org/10.1177/00368504211011847
 Pagina:
-  (não determinada automaticamente)
+  1–3
 ------------------------------------------------------------------------
 
 Referência nº 23
@@ -390,11 +429,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O TMCS-28 \`e um encoder \'{o}ptico incremental de baixo custo e dimens\~ao reduzida para motores de passo e PMSM/BLDC. Utiliza roda c\'odigo \'{o}ptica e fornece sa\'idas em quadratura \textbf{A} e \textbf{B} mais \textbf{N} (\emph{index}). Principais pontos (\cite{tmcs28_datasheet}):
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  TMCS-28 is a low-cost and small-size optical incremental encoder for use with stepper motors and 3-phase PMSM/BLDC motors. It comes with high resolution optical code wheels with a resolution of up to 625 lines (40,000 counts). It is intended for applications such as stepper motor FOC, servo motors, precision motion control, automated equipment and robotics.
+Tradução Texto base:
+  O TMCS-28 é um encoder incremental óptico de baixo custo e dimensões reduzidas, para uso com motores de passo e motores trifásicos PMSM/BLDC. Ele é fornecido com discos ópticos de alta resolução, com até 625 linhas (40.000 contagens). É destinado a aplicações como controle orientado a campo (FOC) de motores de passo, servomotores, controle de movimento de precisão, equipamentos automatizados e robótica.
 Link:
   https://www.analog.com/media/en/technical-documentation/data-sheets/TMCS-28_datasheet_rev1.80.pdf
 Pagina:
-  (não determinada automaticamente)
+  1
 ------------------------------------------------------------------------
 
 Referência nº 25
@@ -406,11 +447,13 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Com base nesse modelo, adotou-se um regulador proporcional–derivativo (PD) na malha de velocidade, mantendo $K_i=0$ por já existir ação integrativa no nível de posição. As constantes são sintetizadas pelas regras de Ziegler–Nichols para curva de reação (processos do tipo FOPDT), a saber \cite{astrom1995}: \begin{equation} K_p = 1{,}2\,\frac{\tau}{K\,L},\quad T_d = 0{,}5\,L,\quad K_d = K_p\,T_d,\quad K_i = 0. \end{equation} Para implementação digital, os ganhos podem ser escalonados para representação inteira utilizando um fator de escala $S>0$ (\emph{fixed-point}), \emph{e.g.}, $k_{p,i}=\operatorname{round}(S\,K_p)$ e análogos para $k_{i,i}$ e $k_{d,i}$. Tal mapeamento preserva a coerência entre a análise contínua e o controlador discreto executado em tempo real.
 Texto de base (fonte de consulta sugerida):
-  A obra citada não possui link cadastrado neste projeto; consulte o livro/artigo/manual correspondente e selecione um trecho que descreva o conceito usado no parágrafo do TCC mostrado acima.
+  The first design method presented by Ziegler and Nichols is based on a registration of the open-loop step response of the system, which is characterized by two parameters. The parameters are determined from a unit step response of the process, as shown in Figure 4.6. The point where the slope of the step response has its maximum is first determined, and the tangent at this point is drawn. The intersections between the tangent and the coordinate axes give the parameters a and L. In Chapter 2, a model of the process to be controlled was derived from these parameters. This corresponds to modeling a process by an integrator and a time delay. Ziegler and Nichols have given PID parameters directly as functions of a and L; these are given in Table 4.1.
+Tradução Texto base:
+  O primeiro método de projeto apresentado por Ziegler e Nichols baseia-se no registro da resposta ao degrau em malha aberta do sistema, caracterizada por dois parâmetros. Esses parâmetros são determinados a partir da resposta a um degrau unitário do processo, como ilustrado na Figura 4.6. Primeiro identifica-se o ponto em que a inclinação da resposta ao degrau é máxima e traça-se a tangente nesse ponto. As interseções dessa tangente com os eixos de coordenadas fornecem os parâmetros a e L. No Capítulo 2, obtém-se a partir desses parâmetros um modelo do processo a ser controlado, equivalente a um integrador com tempo morto. Ziegler e Nichols fornecem então diretamente os parâmetros do controlador PID como funções de a e L, organizados na Tabela 4.1.
 Link:
-  (não disponível neste projeto)
+  https://www.ucg.ac.me/skladiste/blog_2146/objava_92847/fajlovi/Astrom.pdf
 Pagina:
-  (não determinada automaticamente)
+  141–142
 ------------------------------------------------------------------------
 
 Referência nº 26
@@ -454,7 +497,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   \begin{table}[H] \centering \caption{Registros TMC5160 utilizados neste trabalho (ver \cite{tmc5160_ds}).} \label{tab:regs-tmc5160} \setlength{\tabcolsep}{4pt}\footnotesize \begin{tabularx}{\textwidth}{llX} \toprule Registro & Campo/Valor & Finalidade \\ \midrule \texttt{IHOLD\_IRUN} & IHOLD, IRUN, IHOLDDELAY & Correntes de hold/run e rampa de corrente. \\ \texttt{TPOWERDOWN} & Tempo (\,\textmu s) & Tempo para redu\c{c}\~ao de corrente em inatividade. \\ \texttt{CHOPCONF} & spreadCycle/\,hysteresis & Chopper de corrente e modo de comuta\c{c}\~ao. \\ \texttt{PWMCONF} & stealthChop2 (PWM\_AMPL/GRAD) & Chaveamento silencioso e par\^ametros PWM. \\ \texttt{SGTHRS} & Limiar & Limiar do StallGuard2 para homing \emph{sensorless}. \\ \texttt{TCOOLTHRS} & Velocidade limiar & Janela de atua\c{c}\~ao para StallGuard/coolStep. \\ \texttt{TPWMTHRS} & Velocidade limiar & Limite de comuta\c{c}\~ao stealthChop2\,$\leftrightarrow$\,spreadCycle. \\ \texttt{DRV\_STATUS} & Flags & Diagn\'ostico: sobrecorrente, subtens\~ao, temperatura, SG\_RESULT. \\ \bottomrule \end{tabularx} \end{table}
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -486,7 +531,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   \vspace{2mm} \noindent\textit{Observa\c{c}\~ao}: valores exatos de bits podem variar conforme a placa/variante e roteiro de testes; recomenda-se validar com os manuais do STM32 L4 (\cite{stm32l4_rm}) e o datasheet do TMC5160 (\cite{tmc5160_ds}).
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -502,7 +549,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   O TMC5160 expõe um barramento SPI para configuração e diagnóstico por meio de transações de \textbf{40~bits} (\,5~bytes por quadro\,), compostas por um byte de endereço e quatro bytes de dados. O bit mais significativo do byte de endereço indica leitura/escrita (\,\textbf{1}=leitura, \textbf{0}=escrita\,) e os 7~bits menos significativos selecionam o registrador. O protocolo apresenta \textbf{latência de uma transação}: os dados retornados em \texttt{SDO} referem-se ao comando emitido no quadro anterior. Recomenda-se emitir uma leitura “de preparo” antes de coletar o valor válido do registrador desejado (ver \cite{tmc5160_ds}). Em implementações usuais o SPI opera em modo~3 (CPOL=1, CPHA=1).
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -518,11 +567,11 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   Como refer\^encia adicional de montagem e integra\c{c}\~ao de hardware, ver \cite{romeros_tcc_ifmg_2022}.
 Texto de base (fonte de consulta sugerida):
-  MEC -SETEC INSTITUTO FEDERAL MINAS GERAIS – Campus Formiga Bacharelado em de Engenharia Elétrica DESENVOLVIMENTO DE MÁQUINA CNC ROUTER PARA USINAGEM DE MODELOS DE FUNDIÇÃO EM AREIA VERDE Felipe Machado Romeros Orientador...
+  No diagrama elétrico de comando mostrado na Fig. 30, são mostradas todas as interconexões de operação entre os componentes elétricos da máquina, que realizam as transições de dados para o controle e ações da máquina. Finalmente, no projeto mecânico do quadro, são detalhados os aspectos da organização dos componentes, montagem do painel e a interface de comando manual, como mostrado na Fig. 31. No Apêndice A é apresentada uma versão mais completa do projeto do quadro.
 Link:
   https://formiga.ifmg.edu.br/documents/2022/Biblioteca/TCC_Felipe%20Machado%20Romeros.pdf
 Pagina:
-  1
+  47
 ------------------------------------------------------------------------
 
 Referência nº 33
@@ -534,7 +583,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   De acordo com o datasheet do TMC5160, as entradas \emph{STEP} e \emph{DIR} possuem filtragem anal\'ogica ($t_{\text{FILTSD}}\approx\SI{20}{ns}$) e requerem tempos m\'inimos: $t_{SH}$ (alto de STEP) e $t_{SL}$ (baixo de STEP) $\ge \max(t_{\text{FILTSD}},\,t_{\text{CLK}}+20\text{ ns})$ (tipicamente $\ge\SI{100}{ns}$). Os tempos de \emph{setup/hold} s\~ao $t_{DSU}=\SI{20}{ns}$ (DIR antes de STEP) e $t_{DSH}=\SI{20}{ns}$ (DIR ap\'os STEP) \cite{tmc5160_ds}. No nosso projeto, com \textbf{TIM6 a 50 kHz}, configuramos \emph{guardas} muito acima do m\'inimo (margem de seguran\c{c}a): \begin{itemize} \item Largura alta de STEP: $t_{SH} = \texttt{MOTION\_STEP\_HIGH\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$; \item Tempo baixo entre pulsos: $t_{SL} = \texttt{MOTION\_STEP\_LOW\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$; \item \emph{Setup} de DIR: $t_{DSU} = \texttt{MOTION\_DIR\_SETUP\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$; \item \emph{Settle} de ENABLE: $\texttt{MOTION\_ENABLE\_SETTLE\_TICKS}\cdot\SI{20}{\micro s} = \SI{40}{\micro s}$. \end{itemize}
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -550,7 +601,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   \subsection{MicroPlyer, resolu\c{c}\~ao e DEDGE} Quando \texttt{intpol}=1 em \texttt{CHOPCONF}, o TMC5160 interpola cada pulso de STEP at\'e 256 microsteps (\emph{MicroPlyer}), melhorando suavidade a partir de entradas com resolu\c{c}\~ao mais grossa. O bit \texttt{dedge} define se as duas bordas do STEP contam (requer duty de 50\%) ou apenas a borda de subida. No nosso sistema, os pulsos t\^em duty controlado e largura fixa, e a contagem por borda de subida (padr\~ao) j\'a atende estabilidade e evita assimetria. Veja \cite{tmc5160_ds} para detalhes.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -566,7 +619,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   \subsection{Gera\c{c}\~ao de STEP/DIR (\emph{``PWM'' de passo})} O driver TMC5160 em modo \emph{STEP/DIR} espera pulsos compat\'iveis com os tempos da Tabela~\ref{tab:tmc-timing-vs-projeto}. O nosso \emph{backend} de GPIO (\texttt{motion\_hw\_*}) implementa: \begin{enumerate} \item \textbf{Largura de STEP} fixa, via \texttt{step\_high} (\SI{20}{\micro s}), garantindo $t_{SH}$. \item \textbf{Baixo m\'inimo} via \texttt{step\_low} (\SI{20}{\micro s}), garantindo $t_{SL}$. \item \textbf{Setup de DIR} antes do primeiro STEP do trecho, via \texttt{dir\_settle\_ticks}=\SI{20}{\micro s}. \item \textbf{ENABLE settle} (\SI{40}{\micro s}) antes de iniciar emiss\~ao. \end{enumerate} Com isso, o sinal \emph{STEP} tem duty $\approx$50\% em regime (1~tick alto, 1~tick baixo), o que tamb\'em \'e adequado caso \texttt{dedge}=1 (duas bordas) \cite{tmc5160_ds}.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -582,7 +637,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   \subsection{Resolu\c{c}\~ao de microstepping e MicroPlyer} O host pode ajustar \texttt{MICROSTEP\_FACTOR} em tempo de parada via comando \texttt{set\_microsteps}. Quando \texttt{intpol}=1 no TMC5160, a resolu\c{c}\~ao efetiva de corrente/torque nas bobinas pode ser maior do que a resolu\c{c}\~ao de STEP, garantindo suavidade (Se\c{c}\~ao 15.3, \emph{MicroPlyer}) \cite{tmc5160_ds}.
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:
@@ -598,7 +655,9 @@ Texto da referência (Bibliografia):
 Trecho do texto onde a referência é citada no TCC (parágrafo completo):
   \begin{itemize} \item \textbf{Ordem dos eventos}: ajustar DIR $\rightarrow$ respeitar \texttt{dir\_settle\_ticks} $\rightarrow$ habilitar driver $\rightarrow$ respeitar \texttt{en\_settle\_ticks} $\rightarrow$ iniciar STEP. \item \textbf{Jitter baixo no STEP}: manter o trabalho pesado (PI, rampa, telemetria) no TIM7; evitar \texttt{printf} em interrup\c{c}\~oes do TIM6 (\texttt{MOTION\_DEBUG\_TIM6\_PRINTS}=0). \item \textbf{Telemetria}: \texttt{encoder\_status} e \texttt{set\_origin} exp\~oem posi\c{c}\~ao absoluta/relativa, erro do PI e refer\^encia do zero. \item \textbf{Compatibilidade com o TMC5160}: manter $t_{SH}$, $t_{SL}$, $t_{DSU}$ e $t_{DSH}$ com folga; se usar \texttt{dedge}=1, garantir duty de 50\% e bordas limpas (\cite{tmc5160_ds}). \end{itemize}
 Texto de base (fonte de consulta sugerida):
-  Não foi possível extrair automaticamente um trecho legível do PDF associado; recomenda-se abrir o documento pelo link abaixo e selecionar manualmente um trecho que comprove o conceito utilizado.
+  The TMC5160/TMC5160A is a high-power stepper motor controller and driver IC for 2-phase stepper motors with coil currents up to several 10 A. It integrates a motion controller with SixPoint ramp, a step/dir interface with microstep interpolation (MicroPlyer), SPI and UART interfaces, encoder interface and reference switch inputs, and supports up to 256 microsteps per full step. The device provides advanced features such as StealthChop2 for quiet operation, SpreadCycle for highly dynamic current control, StallGuard2 for sensorless load detection, and CoolStep current control for energy savings.
+Tradução Texto base:
+  O TMC5160/TMC5160A é um CI controlador e driver de potência para motores de passo bifásicos, com correntes de fase de até dezenas de ampères. Ele integra um controlador de movimento com rampa SixPoint, interface step/dir com interpolação de micropassos (MicroPlyer), interfaces SPI e UART, interface para encoder e entradas de fim de curso, suportando até 256 microsteps por passo completo. O dispositivo oferece recursos avançados como StealthChop2 para operação silenciosa, SpreadCycle para controle de corrente altamente dinâmico, StallGuard2 para detecção de carga sem sensor e CoolStep para economia de energia.
 Link:
   https://www.trinamic.com/fileadmin/assets/Products/ICs_Documents/TMC5160A_datasheet.pdf
 Pagina:

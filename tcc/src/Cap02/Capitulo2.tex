@@ -85,7 +85,7 @@ que remove erro estacionário e um termo derivativo que prevê tendências
 de variação~\cite{astrom1995}. Loops servo em máquinas CNC seguem as
 posições discretizadas pelo interpolador e corrigem desvios com ganhos
 sintonizados para cada eixo, podendo incluir observadores ou compensação
-de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators,kung_fpga_motion}.
+de distúrbios para manter a precisão em alta velocidade~\cite{efficient_reference,real_time_interpolators}.
 Para implementação digital, é comum utilizar a forma incremental
 \begin{equation}
     u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]),
@@ -118,7 +118,7 @@ real e o PID calcula o esforço aplicado ao motor para cancelar o erro, em
 um ciclo repetido a cada \SI{1}{\milli\second}~\cite{idc_cnc_interp,unit3_interpolators}.
 Implementações modernas combinam esses blocos em FPGAs ou SoCs para
 reduzir latência e habilitar interpolação multi-eixo síncrona com laços
-servo dedicados~\cite{kung_fpga_motion,real_time_interpolators}. No
+servo dedicados~\cite{real_time_interpolators}. No
 firmware do STM32, o laço de controle alimenta as metas de velocidade e
 microstepping de cada eixo, enquanto o DDA executa as transições
 discretas, possibilitando perfis suaves e respeitando os limites de
