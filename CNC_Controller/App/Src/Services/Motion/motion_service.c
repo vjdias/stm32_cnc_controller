@@ -296,6 +296,12 @@ static int32_t  g_origin_base32[MOTION_AXIS_COUNT]; /* offset externo (origin-se
 // para compatibilidade retroativa.
 #define MOTION_PI_SHIFT              8
 #define MOTION_PI_I_CLAMP            (200000)
+/* Limite de correção do PI: em vez de usar o máximo global,
+ * aplica-se um teto dinâmico baseado no alvo de velocidade do segmento
+ * com uma margem configurável (permille). Ex.: 800 => 80% do alvo. */
+#ifndef MOTION_PI_MARGIN_PERMILLE
+#define MOTION_PI_MARGIN_PERMILLE      800u  /* manter 20% de folga do alvo */
+#endif
 #define MOTION_PI_CORR_MAX_SPS       (MOTION_MAX_SPS)
 // Controle PI desativado por padrão (somente telemetria)
 //#ifndef MOTION_PI_ENABLE
@@ -1662,8 +1668,11 @@ void motion_on_tim7_tick(void)
                 int32_t iterm = ((int32_t)ax->ki * iacc) >> MOTION_PI_SHIFT;     /* steps/s */
                 int32_t dterm = (ax->kd != 0u) ? (((int32_t)ax->kd * g_pi_d_filt[axis]) >> MOTION_PI_SHIFT) : 0; /* steps/s */
                 int32_t corr = pterm + iterm + dterm; /* correção em steps/s */
-                if (corr > (int32_t)MOTION_PI_CORR_MAX_SPS) corr = (int32_t)MOTION_PI_CORR_MAX_SPS;
-                else if (corr < -(int32_t)MOTION_PI_CORR_MAX_SPS) corr = -(int32_t)MOTION_PI_CORR_MAX_SPS;
+                /* Teto dinâmico: mantém 20% de folga em relação ao alvo do segmento */
+                uint32_t v_lim = ax->v_target_sps;
+                uint32_t corr_cap = (uint32_t)(((uint64_t)v_lim * (uint64_t)MOTION_PI_MARGIN_PERMILLE) / 1000u);
+                if (corr > (int32_t)corr_cap) corr = (int32_t)corr_cap;
+                else if (corr < -(int32_t)corr_cap) corr = -(int32_t)corr_cap;
                 int32_t v_adj = (int32_t)v_cmd_sps + corr;
                 if (v_adj < 0) v_adj = 0;
                 if (v_adj > (int32_t)MOTION_MAX_SPS) v_adj = (int32_t)MOTION_MAX_SPS; /* limite físico */

@@ -14,6 +14,7 @@ from interactive_sim import (
     PlantConfig,
     Scenario,
     parse_axis_map,
+    parse_pid_triple,
     gains_from_catalog,
     InteractiveSim,
 )
@@ -42,6 +43,30 @@ def main():
         help="Analisa automaticamente o CSV ao finalizar",
     )
     parser.add_argument(
+        "--kp",
+        default=None,
+        help=(
+            "Ganhos Kp por eixo (inteiros do firmware). Formatos: "
+            "'X:800,Y:800,Z:800' ou '800,800,800' ou '800'."
+        ),
+    )
+    parser.add_argument(
+        "--ki",
+        default=None,
+        help=(
+            "Ganhos Ki por eixo (inteiros do firmware). Formatos: "
+            "'X:40,Y:40,Z:40' ou '40,40,40' ou '40'."
+        ),
+    )
+    parser.add_argument(
+        "--kd",
+        default=None,
+        help=(
+            "Ganhos Kd por eixo (inteiros do firmware). Formatos: "
+            "'X:120,Y:120,Z:120' ou '120,120,120' ou '120'."
+        ),
+    )
+    parser.add_argument(
         "--headless",
         action="store_true",
         help="Roda sem GUI (usa backend Agg)",
@@ -55,6 +80,12 @@ def main():
 
     axis_map = parse_axis_map(args.axes)
     kp_xyz, ki_xyz, kd_xyz = gains_from_catalog(axis_map)
+    if args.kp is not None:
+        kp_xyz = parse_pid_triple(args.kp)
+    if args.ki is not None:
+        ki_xyz = parse_pid_triple(args.ki)
+    if args.kd is not None:
+        kd_xyz = parse_pid_triple(args.kd)
 
     cfg = PlantConfig(
         microstep_factor=axis_map[0][1],

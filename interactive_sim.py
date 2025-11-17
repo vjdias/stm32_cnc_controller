@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import json
 import math
@@ -168,6 +168,48 @@ def parse_axis_map(text: str) -> List[Tuple[str, int]]:
         raise ValueError("Informe exatamente três eixos (ex.: X:256,Y:256,Z:256).")
     return mapping
 
+
+def parse_pid_triple(text: str, *, allow_single: bool = True) -> Tuple[int, int, int]:
+    """Parsa string de ganhos por eixo.
+
+    Formatos aceitos:
+      - "X:800,Y:800,Z:800" (mapeado)
+      - "800,800,800"        (ordem X,Y,Z)
+      - "800"                (repete para X,Y,Z se allow_single=True)
+    Retorna tupla de inteiros (Kx, Ky, Kz).
+    """
+    if text is None:
+        raise ValueError("texto de PID ausente")
+    s = text.strip()
+    if not s:
+        raise ValueError("texto de PID vazio")
+    # Mapa rotulado
+    if (":" in s) or ("x:" in s.lower()) or ("y:" in s.lower()) or ("z:" in s.lower()):
+        vals: Dict[str, int] = {"X": 0, "Y": 0, "Z": 0}
+        for token in s.split(','):
+            token = token.strip()
+            if not token:
+                continue
+            if ':' not in token:
+                raise ValueError(f"Token PID sem rótulo 'X:Y': {token}")
+            letter, sval = token.split(':', 1)
+            letter = letter.strip().upper()
+            if letter not in vals:
+                raise ValueError(f"Eixo inválido em PID: {letter}")
+            vals[letter] = int(round(float(sval.strip())))
+        return (vals["X"], vals["Y"], vals["Z"])
+    # Lista simples
+    parts = [p.strip() for p in s.split(',') if p.strip()]
+    if len(parts) == 1 and allow_single:
+        v = int(round(float(parts[0])))
+        return (v, v, v)
+    if len(parts) != 3:
+        raise ValueError("Informe 3 valores (X,Y,Z) ou use rótulos X:/Y:/Z:")
+    return (
+        int(round(float(parts[0]))),
+        int(round(float(parts[1]))),
+        int(round(float(parts[2]))),
+    )
 
 def gains_from_catalog(axis_map: List[Tuple[str, int]]):
     catalog = AnalysisCatalog()
@@ -2077,6 +2119,30 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--kp",
+        default=None,
+        help=(
+            "Ganhos Kp por eixo (inteiros do firmware). Formatos: "
+            "'X:800,Y:800,Z:800' ou '800,800,800' ou '800'."
+        ),
+    )
+    parser.add_argument(
+        "--ki",
+        default=None,
+        help=(
+            "Ganhos Ki por eixo (inteiros do firmware). Formatos: "
+            "'X:40,Y:40,Z:40' ou '40,40,40' ou '40'."
+        ),
+    )
+    parser.add_argument(
+        "--kd",
+        default=None,
+        help=(
+            "Ganhos Kd por eixo (inteiros do firmware). Formatos: "
+            "'X:120,Y:120,Z:120' ou '120,120,120' ou '120'."
+        ),
+    )
+    parser.add_argument(
         "--log-dir",
         default="sim_logs",
         help="Diretório onde os logs CSV serão salvos (default: sim_logs/).",
@@ -2108,6 +2174,13 @@ if __name__ == "__main__":
 
     axis_map = parse_axis_map(args.axes)
     kp_xyz, ki_xyz, kd_xyz = gains_from_catalog(axis_map)
+    # Overrides opcionais via CLI
+    if args.kp is not None:
+        kp_xyz = parse_pid_triple(args.kp)
+    if args.ki is not None:
+        ki_xyz = parse_pid_triple(args.ki)
+    if args.kd is not None:
+        kd_xyz = parse_pid_triple(args.kd)
 
     cfg = PlantConfig(
         microstep_factor=axis_map[0][1],  # assume todos os eixos usam o mesmo microstep
