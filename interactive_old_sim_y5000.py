@@ -33,6 +33,11 @@ def main():
     parser.add_argument("--show-friction-band", action="store_true",
                         help="Mostra faixa vertical vermelha durante aplicação de atrito nos gráficos.")
     parser.add_argument(
+        "--no-friction",
+        action="store_true",
+        help="Desabilita atrito (C e B) na simulação.",
+    )
+    parser.add_argument(
         "--kp",
         default=None,
         help=(
@@ -94,6 +99,27 @@ def main():
         headless=args.headless,
         show_friction_band=bool(args.show_friction_band),
     )
+
+    if args.no_friction:
+        try:
+            # Zera atrito interno
+            sim.C_load_values[:] = 0.0
+            sim.B_load[:] = 0.0
+            sim.load_start_times[:] = 0.0
+            sim.load_end_times[:] = 0.0
+            # Se houver GUI, limpa também os inputs de atrito e tempos
+            if not args.headless:
+                sim.txt_c_x.set_val("0.0")
+                sim.txt_c_y.set_val("0.0")
+                sim.txt_c_z.set_val("0.0")
+                sim.txt_t_start_x.set_val("0.0")
+                sim.txt_t_start_y.set_val("0.0")
+                sim.txt_t_start_z.set_val("0.0")
+                sim.txt_t_end_x.set_val("0.0")
+                sim.txt_t_end_y.set_val("0.0")
+                sim.txt_t_end_z.set_val("0.0")
+        except Exception:
+            pass
 
     # Configuração compatível com o modo OLD
     sim.master_select_strategy = 'progress'
