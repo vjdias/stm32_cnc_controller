@@ -5,11 +5,6 @@
 \newblock {\em PID Controllers: Theory, Design, and Tuning}.
 \newblock Instrument Society of America, 2 edition.
 
-\bibitem[{Dronacharya Group of Institutions}, 2019]{unit3_interpolators}
-{Dronacharya Group of Institutions} (2019).
-\newblock {\em Unit 3: Interpolators and Control on NC System}.
-\newblock Teaching material on CNC interpolators and servo loops.
-
 \bibitem[Fussell, 2003]{fussell2003}
 Fussell, D. (2003).
 \newblock Digital differential analyzer algorithms.
@@ -47,12 +42,6 @@ Koren, Y. (2010).
 \newblock Cnc interpolators: Algorithms and analysis.
 \newblock Technical monograph on interpolator design.
 
-\bibitem[Kung et~al., 2005]{kung_fpga_motion}
-Kung, Y.-S., Tsai, M.-C., and Chang, C.-H. (2005).
-\newblock Development of a fpga-based motion control ic for robot arm.
-\newblock In {\em Proceedings of the IEEE International Conference on
-  Industrial Technology}, pages 1185--1190.
-
 \bibitem[Mori et~al., 2005]{mori2005dda}
 Mori, M., Sato, S., and Ohashi, T. (2005).
 \newblock High-speed interpolation using digital differential analyzer
@@ -82,6 +71,12 @@ Romeros, F.~M. (2022).
 \newblock {\em UM2153: Discovery kit for IoT node multichannel communication
   with STM32L4}.
 \newblock User manual.
+
+\bibitem[Suh et~al., 2008]{unit3_interpolators}
+Suh, S.-H., Kang, S.-K., Chung, D.-H., and Stroud, I. (2008).
+\newblock {\em Theory and Design of CNC Systems}.
+\newblock Springer, London.
+\newblock Key chapters on interpolators, NCK architecture and servo control.
 
 \bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
   ]{tmc5160_ds}
