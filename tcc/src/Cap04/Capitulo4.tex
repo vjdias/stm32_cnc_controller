@@ -67,83 +67,186 @@ monitoramento de falhas do TMC5160.
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[
-    node distance=8mm and 10mm,
-    every node/.style={font=\small},
+    scale=0.9,
+    transform shape,
+    node distance=9mm and 12mm,
+    every node/.style={font=\footnotesize},
+    % Estilos dos nós
     box/.style={
-      draw=blue!80, 
-      fill=blue!10, 
-      rounded corners, 
-      align=center, 
-      inner sep=4pt, 
-      minimum width=3.8cm
+      draw=cyan!60!blue,
+      fill=cyan!8,
+      rounded corners=3pt,
+      align=center,
+      inner sep=5pt,
+      line width=0.8pt,
+      minimum width=4cm,
+      minimum height=10mm
     },
     io/.style={
-      draw=blue!80, 
-      fill=blue!10, 
-      trapezium, 
-      trapezium left angle=70, 
-      trapezium right angle=110, 
-      align=center, 
-      minimum height=8mm
+      draw=teal!70!blue,
+      fill=teal!10,
+      trapezium,
+      trapezium left angle=70,
+      trapezium right angle=110,
+      align=center,
+      inner sep=4pt,
+      line width=0.8pt,
+      minimum width=4cm,
+      minimum height=10mm
     },
     decision/.style={
-      draw=blue!80, 
-      fill=blue!10, 
-      diamond, 
-      aspect=1.8, 
-      inner sep=1pt, align=center
+      draw=orange!70!red,
+      fill=orange!10,
+      diamond,
+      aspect=2,
+      inner sep=2pt,
+      align=center,
+      line width=0.8pt,
+      minimum width=2.5cm
     },
-    terminator/.style={draw=blue!80, fill=blue!10, ellipse, align=center, inner sep=3pt, minimum width=2.8cm},
-    arrow/.style={->, >=Stealth, line width=0.9pt, blue!60, rounded corners=2pt, shorten <=2pt, shorten >=2pt}
+    terminator/.style={
+      draw=green!60!black,
+      fill=green!12,
+      ellipse,
+      align=center,
+      inner sep=4pt,
+      line width=0.8pt,
+      minimum width=3cm,
+      minimum height=10mm
+    },
+    % Estilo das setas
+    arrow/.style={
+      ->,
+      >=Stealth,
+      line width=1pt,
+      draw=gray!70,
+      rounded corners=3pt
+    },
+    % Labels nas setas
+    arrow label/.style={
+      font=\scriptsize,
+      text=gray!80,
+      fill=white,
+      inner sep=2pt
+    }
   ]
+
+    % Fluxo principal
     \node[io] (start) {Ler application.cfg\\e arquivo de sequência};
-    \node[box, below=of start] (validate) {Validar limites (PID, vel, TMC)\\conforme cfg.limits};
+
+    \node[box, below=of start] (validate) {Validar limites\\(PID, vel, TMC)};
+
     \node[decision, below=of validate] (ok) {Válido?};
-    \node[box, right=22mm of ok] (abort) {Abortar execução\\Log de motivos};
+
+    \node[box, right=24mm of ok] (abort) {Abortar execução\\Log de motivos};
+
     \node[box, below=of ok] (connect) {Abrir SPI\\STM32 (dev 0)};
-    \node[box, below=of connect] (ledblink) {LED pisca (execução)};
-    \node[box, below=of ledblink] (steps) {Iterar passos da sequência:};
 
-    \node[box, below left=of steps, xshift=-5mm] (tmc) {tmc\{:\} aplica patch\\(TOFF/HSTRT/HEND/TBL/\\MRES/INTPOL/DEDGE/\ldots)};
-    \node[box, below right=of steps, xshift=5mm] (pid) {pid\{:\} atualizar ganhos\\default (x,y,z)};
-    
-    \node[box, below=32mm of steps] (move) {move\{:\} enfileirar REQ\_MOVE\_QUEUE\_ADD\\(pos/vel/dir, PID atual)\\frameId interno incremental};
-    \node[box, below=of move] (startmv) {REQ\_START\_MOVE};
-    \node[box, below=of startmv] (monitor) {Loop de monitoramento:\\QueueStatus + TMC DRV\_STATUS/GSTAT};
-    
-    \node[decision, below left=of monitor, xshift=12mm] (tmcerr) {TMC erro?\\(OT/OTPW/DRV\_ERR)};
-    \node[decision, below right=of monitor, xshift=-12mm] (done) {STM32 concluiu?};
-    
-    \node[box, below=of tmcerr] (tmcstop) {Segurança: TOFF=0, IHOLD/IRUN=0\\LED aceso (falha)};
-    \node[box, below=of done] (finish) {LED apagado\\TOFF=0 (pós-execução)};
-    \node[terminator, below=of tmcstop] (endfail) {Encerrar (falha)};
-    \node[terminator, below=of finish] (endok) {Encerrar (sucesso)};
+    \node[box, below=of connect] (ledblink) {LED pisca\\(execução)};
 
+    \node[box, below=of ledblink] (steps) {Iterar passos\\da sequência};
+
+    % Ramificações dos tipos de passos
+    \node[box, below left=12mm and 8mm of steps] (tmc) {
+      \textbf{tmc\{:\}}\\
+      Aplicar patch TMC\\
+      {\scriptsize (TOFF/HSTRT/MRES/\ldots)}
+    };
+
+    \node[box, below right=12mm and 8mm of steps] (pid) {
+      \textbf{pid\{:\}}\\
+      Atualizar ganhos\\
+      {\scriptsize (x, y, z)}
+    };
+
+    \node[box, below=28mm of steps] (move) {
+      \textbf{move\{:\}}\\
+      Enfileirar movimento\\
+      {\scriptsize REQ\_MOVE\_QUEUE\_ADD}
+    };
+
+    \node[box, below=of move] (startmv) {Enviar\\REQ\_START\_MOVE};
+
+    \node[box, below=of startmv] (monitor) {
+      Loop de monitoramento\\
+      {\scriptsize QueueStatus + TMC DRV\_STATUS}
+    };
+
+    % Decisões de finalização
+    \node[decision, below left=12mm and 5mm of monitor] (tmcerr) {
+      TMC\\erro?
+    };
+
+    \node[decision, below right=12mm and 5mm of monitor] (done) {
+      STM32\\concluiu?
+    };
+
+    % Tratamento de erro
+    \node[box, below=of tmcerr] (tmcstop) {
+      Segurança:\\
+      TOFF=0, IHOLD/IRUN=0\\
+      LED aceso (falha)
+    };
+
+    % Finalização normal
+    \node[box, below=of done] (finish) {
+      LED apagado\\
+      TOFF=0
+    };
+
+    % Terminadores
+    \node[terminator, below=of tmcstop] (endfail) {Encerrar\\(falha)};
+    \node[terminator, below=of finish] (endok) {Encerrar\\(sucesso)};
+
+    % Conexões
     \draw[arrow] (start) -- (validate);
     \draw[arrow] (validate) -- (ok);
-    \draw[arrow] (ok.east) to[out=0, in=180] node[midway, above]{não} (abort.west);
-    \draw[arrow] (ok.south) to[out=-90, in=90] node[midway, right]{sim} (connect.north);
+
+    \draw[arrow] (ok.east) -- node[arrow label, above] {não} (abort.west);
+
+    \draw[arrow] (ok.south) -- node[arrow label, right] {sim} (connect.north);
+
     \draw[arrow] (connect) -- (ledblink);
     \draw[arrow] (ledblink) -- (steps);
-    
-    \draw[arrow] (steps.south) to[out=-90, in=90] (tmc.north);
-    \draw[arrow] (steps.south) to[out=-90, in=90] (pid.north);
-    \draw[arrow] (tmc.south) to[out=-90, in=135] (move.north);
-    \draw[arrow] (pid.south) to[out=-90, in=45] (move.north);
+
+    % Ramificações dos passos
+    \draw[arrow] (steps.south) -- ++(0,-3mm) -| (tmc.north);
+    \draw[arrow] (steps.south) -- ++(0,-3mm) -| (pid.north);
+    \draw[arrow] (steps.south) -- (move.north);
+
+    \draw[arrow] (tmc.south) |- (move.west);
+    \draw[arrow] (pid.south) |- (move.east);
 
     \draw[arrow] (move) -- (startmv);
     \draw[arrow] (startmv) -- (monitor);
-    
-    \draw[arrow] (monitor.south) to[out=-90, in=90] (tmcerr.north);
-    \draw[arrow] (monitor.south) to[out=-90, in=90] (done.north);
-    
-    \draw[arrow] (tmcerr.south) -- node[midway, left]{sim} (tmcstop.north);
-    \draw[arrow] (done.south) -- node[midway, right]{sim} (finish.north);
 
-    % Saídas finais e loop "não concluiu"
+    % Monitoramento para decisões
+    \draw[arrow] (monitor.south) -- ++(0,-3mm) -| (tmcerr.north);
+    \draw[arrow] (monitor.south) -- ++(0,-3mm) -| (done.north);
+
+    % Caminhos de erro e sucesso
+    \draw[arrow] (tmcerr.south) -- node[arrow label, left] {sim} (tmcstop.north);
+    \draw[arrow] (done.south) -- node[arrow label, right] {sim} (finish.north);
+
+    % Finalizações
     \draw[arrow] (tmcstop) -- (endfail);
     \draw[arrow] (finish) -- (endok);
-    \draw[arrow] (done.west) to[out=180, in=180, looseness=1.25] node[midway, below]{não} (monitor.west);
+
+    % Loop de monitoramento (não concluiu - TMC)
+    \draw[arrow] (tmcerr.west)
+      -- ++(-10mm,0)
+      -- ++(0,14mm)
+      -- ([xshift=-10mm]monitor.west)
+      -- node[arrow label, above] {não}
+         ([xshift=-2mm]monitor.west);
+
+    % Loop de monitoramento (não concluiu - STM32)
+    \draw[arrow] (done.east)
+      -- ++(10mm,0)
+      -- ++(0,14mm)
+      -- ([xshift=10mm]monitor.east)
+      -- node[arrow label, above] {não}
+         ([xshift=2mm]monitor.east);
 
   \end{tikzpicture}
   \caption{Fluxo do comando \texttt{cnc\text{-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}
