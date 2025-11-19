@@ -2,8 +2,16 @@
 
 Esta seção descreve o procedimento de identificação adotado para
 estimativa de $K$, $L$ e $\tau$ a partir de respostas a degrau de
-velocidade obtidas em bancada. O método opera inteiramente no domínio do
-tempo e é robusto a ruídos moderados.
+velocidade obtidas em bancada. Os ensaios foram conduzidos com o firmware
+instrumentado para emitir amostras de posição e velocidade via USART e
+SWV, em formato CSV, a partir das rotinas de telemetria do
+\texttt{motion\_service.c}. Para cada combinação de eixo e microstepping,
+foi aplicado um perfil de degrau de velocidade gerado pelo DDA, e os
+Sinais de referência (\texttt{v\_cmd\_sps}) e de medição (velocidade do
+encoder) foram registrados para posterior processamento em Python. O
+método opera inteiramente no domínio do tempo, em linha com as abordagens
+clássicas de identificação por curva de reação descritas
+por~\cite{astrom1995}, e mostra-se robusto a níveis moderados de ruído.
 
 \subsection{Pré-processamento e séries derivadas}\label{subsec:fopdt_preproc}
 Considere amostras ordenadas por tempo contendo os campos $(t,\,p,\,c)$,
@@ -71,17 +79,17 @@ microsteppings avaliados.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_X_mstep4.png}
         \caption{Eixo X @ 1/4}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_X_mstep16.png}
         \caption{Eixo X @ 1/16}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_X_mstep256.png}
         \caption{Eixo X @ 1/256}
@@ -92,17 +100,17 @@ microsteppings avaliados.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_Y_mstep4.png}
         \caption{Eixo Y @ 1/4}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_Y_mstep16.png}
         \caption{Eixo Y @ 1/16}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_Y_mstep256.png}
         \caption{Eixo Y @ 1/256}
@@ -113,17 +121,17 @@ microsteppings avaliados.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_Z_mstep4.png}
         \caption{Eixo Z @ 1/4}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_Z_mstep16.png}
         \caption{Eixo Z @ 1/16}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.32\textwidth}
+    \begin{subfigure}[t]{0.30\textwidth}
         \centering
         \includegraphics[width=\linewidth]{Cap03/img/overlay_Z_mstep256.png}
         \caption{Eixo Z @ 1/256}

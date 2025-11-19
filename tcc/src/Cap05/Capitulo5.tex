@@ -23,9 +23,9 @@ manuais na fila de logs para cenários com tráfego intenso. Como trabalhos
 futuros, propõe-se: (i) explorar mecanismos de reinicialização imediata
 do DMA assim que um serviço disponibilizar a resposta; (ii) investigar
 estratégias adaptativas de prescaler para acomodar perfis de movimento
-mais agressivos; e (iii) avaliar a migração para controladores de campo
-orientado (FOC) em motores de passo híbridos para reduzir vibrações em
-altas velocidades.
+mais agressivos; e (iii) avaliar o envio de múltiplos comandos por ciclo
+SPI, reduzindo o número de polls necessários e melhorando a utilização do
+canal de comunicação.
 
 A documentação consolidada no presente texto fornece base para replicar
 a solução e evoluir o controlador CNC conforme novos requisitos

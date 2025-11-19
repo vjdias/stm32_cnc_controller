@@ -51,14 +51,15 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 #define Q16_1                          (1u<<16)
 #define Q16_FROM_UINT(x)               ((uint32_t)(x) << 16)
 #define Q16_DIV_UINT(numer,den)        ((uint32_t)(((uint64_t)(numer) << 16) / (uint32_t)(den)))
+/* Debug textual (desativado por padrão para não poluir o fluxo CSV) */
 #ifndef MOTION_DEBUG_ENCODERS
-#define MOTION_DEBUG_ENCODERS          0
+#define MOTION_DEBUG_ENCODERS          0u
 #endif
 #ifndef MOTION_DEBUG_FLOW
-#define MOTION_DEBUG_FLOW              0
+#define MOTION_DEBUG_FLOW              0u
 #endif
 #ifndef MOTION_DEBUG_TIM6_PRINTS
-#define MOTION_DEBUG_TIM6_PRINTS       0
+#define MOTION_DEBUG_TIM6_PRINTS       0u
 #endif
 #ifndef MOTION_DEBUG_STEP_DECIM
 #define MOTION_DEBUG_STEP_DECIM        500u
@@ -132,13 +133,13 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
  *  Simulação de atrito (teste)
  * ======================= */
 #ifndef MOTION_SIM_FRICTION_ENABLE
-#define MOTION_SIM_FRICTION_ENABLE      1u
+#define MOTION_SIM_FRICTION_ENABLE      0u   /* 0=desliga simulação de atrito no firmware */
 #endif
 #ifndef MOTION_SIM_FRICTION_BUTTON_B2
-#define MOTION_SIM_FRICTION_BUTTON_B2   1u
+#define MOTION_SIM_FRICTION_BUTTON_B2   0u
 #endif
 #ifndef MOTION_SIM_FRICTION_AUTO_HALF
-#define MOTION_SIM_FRICTION_AUTO_HALF   1u
+#define MOTION_SIM_FRICTION_AUTO_HALF   0u
 #endif
 #ifndef MOTION_SIM_FRICTION_AXIS_DEFAULT
 #define MOTION_SIM_FRICTION_AXIS_DEFAULT AXIS_Y
@@ -205,7 +206,7 @@ LOG_SVC_DEFINE(LOG_SVC_MOTION, "motion");
 
 // Opções de formato/rápidez (padrões conservadores p/ compatibilidade)
 #ifndef MOTION_CSV_INCLUDE_ID
-#define MOTION_CSV_INCLUDE_ID           0u   /* adiciona um id incremental por eixo */
+#define MOTION_CSV_INCLUDE_ID           1u   /* 1=emite axis,id,time,rel,steps */
 #endif
 #ifndef MOTION_CSV_TIME_IN_TICKS
 #define MOTION_CSV_TIME_IN_TICKS        0u   /* 0=imprime tempo em ms (compat), 1=ticks TIM6 (mais barato) */
