@@ -24,13 +24,9 @@
 ../App/Src/Services/Motion/motion_service.c:1071:13:motion_send_start_response	40	static
 ../App/Src/Services/Motion/motion_service.c:1080:13:motion_send_move_end_response	40	static
 ../App/Src/Services/Motion/motion_service.c:1093:6:motion_service_init	40	static
-../App/Src/Services/Motion/motion_service.c:1199:6:motion_sim_friction_toggle	24	static
-../App/Src/Services/Motion/motion_service.c:1210:6:motion_sim_friction_set_axis	16	static
-../App/Src/Services/Motion/motion_service.c:1234:6:motion_sim_friction_set_scale	16	static
-../App/Src/Services/Motion/motion_service.c:1242:6:motion_sim_friction_set_c	16	static
 ../App/Src/Services/Motion/motion_service.c:1249:24:motion_status_get	4	static
 ../App/Src/Services/Motion/motion_service.c:1259:6:motion_on_tim6_tick	112	static
-../App/Src/Services/Motion/motion_service.c:1482:6:motion_on_tim7_tick	448	static
+../App/Src/Services/Motion/motion_service.c:1482:6:motion_on_tim7_tick	360	static
 ../App/Src/Services/Motion/motion_service.c:1793:6:motion_on_move_queue_add	104	static
 ../App/Src/Services/Motion/motion_service.c:1840:6:motion_on_move_queue_status	64	static
 ../App/Src/Services/Motion/motion_service.c:1857:6:motion_on_start_move	40	static

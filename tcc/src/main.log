@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  19 NOV 2025 10:49
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  19 NOV 2025 12:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1043,7 +1043,7 @@ rtuges.trsl' found. on input line 29.
 \openout2 = `Identificacao.aux'.
 
 (Identificacao.tex)
-<Cap00/IC.jpg, id=277, 1185.42876pt x 1185.42876pt>
+<Cap00/IC.jpg, id=281, 1185.42876pt x 1185.42876pt>
 File: Cap00/IC.jpg Graphic file (type jpg)
 <use Cap00/IC.jpg>
 Package pdftex.def Info: Cap00/IC.jpg  used on input line 32.
@@ -1119,7 +1119,6 @@ l.38 \agradecimentos
 ] (Cap00/Epigrafe.tex)
 
 [3
-
 
 
 ] (Cap00/Resumo.tex)
@@ -1318,54 +1317,50 @@ Underfull \hbox (badness 10000) in paragraph at lines 57--57
 
 [17] (Cap03/Capitulo3.tex
 Cap\'{\i }tulo 3.
-LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 47.
-
-LaTeX Warning: Reference `fig:cnc-seq-flow' on page 18 undefined on input line 
-50.
-
 
 
 [18
 
 
 ]
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <14.4> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 52.
+
+
+LaTeX Warning: Reference `fig:cnc-seq-flow' on page 19 undefined on input line 
+55.
+
 LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 1
-27.
- (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\omscmr.fd
+32.
+(C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\omscmr.fd
 File: omscmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/bx/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/b/n' tried instead on input line 127.
+(Font)              Font shape `OMS/cmsy/b/n' tried instead on input line 132.
 
 
 [19]
-Overfull \vbox (47.16953pt too high) has occurred while \output is active []
-
-
-
-[20]
-Underfull \hbox (badness 1789) in paragraph at lines 218--219
+Underfull \hbox (badness 1789) in paragraph at lines 223--224
 []\OT1/cmr/bx/n/10 Valida^^Xc~ao \OT1/cmr/m/n/10 (no Rasp-berry): cada item da 
 sequ^encia ^^Se ve-ri-fi-cado con-tra os li-mi-tes do
  []
 
 LaTeX Font Info:    Trying to load font information for OMS+cmtt on input line 
-219.
-LaTeX Font Info:    No file OMScmtt.fd. on input line 219.
+224.
+LaTeX Font Info:    No file OMScmtt.fd. on input line 224.
 
 LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
 (Font)              using `OMS/cmsy/m/n' instead
-(Font)              for symbol `textbraceleft' on input line 219.
+(Font)              for symbol `textbraceleft' on input line 224.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 223--224
+Underfull \hbox (badness 10000) in paragraph at lines 228--229
 []\OT1/cmtt/m/n/10 tmc\OMS/cmtt/m/n/10 f\OT1/cmtt/m/n/10 ...\OMS/cmtt/m/n/10 g\
 OT1/cmr/m/n/10 : aplica patches no CHOP-CONF/PWMCONF/registradores cor-re-la-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 223--224
+Underfull \hbox (badness 10000) in paragraph at lines 228--229
 \OT1/cmr/m/n/10 tos (\OT1/cmtt/m/n/10 toff\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 hs
 trt\OT1/cmr/m/n/10 /\OT1/cmtt/m/n/10 hend\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 tbl
 \OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 dedge\OT1/cmr/m/n/10 , \OT1/cmtt/m/n/10 micr
@@ -1375,7 +1370,7 @@ m/n/10 globalscaler\OT1/cmr/m/n/10 ,
 
 (Cap03/IdentFOPDT.tex
 
-[21]
+[20]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 51.
@@ -1406,64 +1401,64 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 
 
-[22]
-<Cap03/img/overlay_X_mstep4.png, id=704, 433.62pt x 231.264pt>
+[21]
+<Cap03/img/overlay_X_mstep4.png, id=708, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_X_mstep4.png Graphic file (type png)
 <use Cap03/img/overlay_X_mstep4.png>
 Package pdftex.def Info: Cap03/img/overlay_X_mstep4.png  used on input line 84.
 
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_X_mstep16.png, id=706, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_X_mstep16.png, id=710, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_X_mstep16.png Graphic file (type png)
 <use Cap03/img/overlay_X_mstep16.png>
 Package pdftex.def Info: Cap03/img/overlay_X_mstep16.png  used on input line 89
 .
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_X_mstep256.png, id=707, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_X_mstep256.png, id=711, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_X_mstep256.png Graphic file (type png)
 <use Cap03/img/overlay_X_mstep256.png>
 Package pdftex.def Info: Cap03/img/overlay_X_mstep256.png  used on input line 9
 4.
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Y_mstep4.png, id=708, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_Y_mstep4.png, id=712, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Y_mstep4.png Graphic file (type png)
 <use Cap03/img/overlay_Y_mstep4.png>
 Package pdftex.def Info: Cap03/img/overlay_Y_mstep4.png  used on input line 105
 .
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Y_mstep16.png, id=709, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_Y_mstep16.png, id=713, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Y_mstep16.png Graphic file (type png)
 <use Cap03/img/overlay_Y_mstep16.png>
 Package pdftex.def Info: Cap03/img/overlay_Y_mstep16.png  used on input line 11
 0.
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Y_mstep256.png, id=710, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_Y_mstep256.png, id=714, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Y_mstep256.png Graphic file (type png)
 <use Cap03/img/overlay_Y_mstep256.png>
 Package pdftex.def Info: Cap03/img/overlay_Y_mstep256.png  used on input line 1
 15.
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Z_mstep4.png, id=711, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_Z_mstep4.png, id=715, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Z_mstep4.png Graphic file (type png)
 <use Cap03/img/overlay_Z_mstep4.png>
 Package pdftex.def Info: Cap03/img/overlay_Z_mstep4.png  used on input line 126
 .
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Z_mstep16.png, id=712, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_Z_mstep16.png, id=716, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Z_mstep16.png Graphic file (type png)
 <use Cap03/img/overlay_Z_mstep16.png>
 Package pdftex.def Info: Cap03/img/overlay_Z_mstep16.png  used on input line 13
 1.
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
-<Cap03/img/overlay_Z_mstep256.png, id=713, 433.62pt x 231.264pt>
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
+<Cap03/img/overlay_Z_mstep256.png, id=717, 433.62pt x 231.264pt>
 File: Cap03/img/overlay_Z_mstep256.png Graphic file (type png)
 <use Cap03/img/overlay_Z_mstep256.png>
 Package pdftex.def Info: Cap03/img/overlay_Z_mstep256.png  used on input line 1
 36.
-(pdftex.def)             Requested size: 145.68144pt x 77.69711pt.
+(pdftex.def)             Requested size: 136.57462pt x 72.83795pt.
 )) (Cap03/ArquiteturaHardware.tex
 
-[23 <./Cap03/img/overlay_X_mstep4.png> <./Cap03/img/overlay_X_mstep16.png> <./C
+[22 <./Cap03/img/overlay_X_mstep4.png> <./Cap03/img/overlay_X_mstep16.png> <./C
 ap03/img/overlay_X_mstep256.png> <./Cap03/img/overlay_Y_mstep4.png> <./Cap03/im
 g/overlay_Y_mstep16.png> <./Cap03/img/overlay_Y_mstep256.png> <./Cap03/img/over
 lay_Z_mstep4.png> <./Cap03/img/overlay_Z_mstep16.png> <./Cap03/img/overlay_Z_ms
@@ -1474,14 +1469,14 @@ L475 ope-rando a $3\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 3$$V$, cris-tal de re-fer^
 encia e in-ter-fa-ces
  []
 
-<Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png, id=728, 1285.05093pt x 804.7
+<Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png, id=732, 1285.05093pt x 804.7
 5656pt>
 File: Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png Graphic file (type png)
 <use Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png>
 Package pdftex.def Info: Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png  used
  on input line 33.
 (pdftex.def)             Requested size: 218.51521pt x 136.84364pt.
-<Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png, id=729, 748.29562pt x 737
+<Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png, id=733, 748.29562pt x 737
 .75626pt>
 File: Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png Graphic file (type pn
 g)
@@ -1491,23 +1486,20 @@ sed on input line 38.
 (pdftex.def)             Requested size: 218.51521pt x 215.44104pt.
 
 
-[24 <./Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png> <./Cap03/imagens/TCC_C
+[23 <./Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png> <./Cap03/imagens/TCC_C
 IRCUITO_CONTROLE_SEMFAN_CIMA.png>]
 Underfull \hbox (badness 10000) in paragraph at lines 92--96
 []\OT1/cmr/m/n/10 Neste tra-ba-lho emprega-se o mo-delo \OT1/cmr/bx/n/10 TMCS-2
 8-10k\OT1/cmr/m/n/10 , com re-solu^^Xc~ao efe-tiva de
  []
 
-<Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png, id=738, 974.89218pt x 680.5425
+<Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png, id=742, 974.89218pt x 680.5425
 pt>
 File: Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png Graphic file (type png)
 <use Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png>
 Package pdftex.def Info: Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png  used o
 n input line 117.
 (pdftex.def)             Requested size: 318.66948pt x 222.45094pt.
-
-
-[25]
 <Cap03/imagens/TCC_VISTA_MOTORES_PONTEIROS_ENCODERS_REAL.jpg, id=743, 4015.0pt 
 x 2260.445pt>
 File: Cap03/imagens/TCC_VISTA_MOTORES_PONTEIROS_ENCODERS_REAL.jpg Graphic file 
@@ -1517,6 +1509,8 @@ Package pdftex.def Info: Cap03/imagens/TCC_VISTA_MOTORES_PONTEIROS_ENCODERS_REA
 L.jpg  used on input line 124.
 (pdftex.def)             Requested size: 455.24411pt x 256.27235pt.
 
+
+[24 <./Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png>]
 Underfull \hbox (badness 6063) in paragraph at lines 131--141
 []\OT1/cmr/m/n/10 A prote^^Xc~ao el^^Setrica dos mo-to-res de passo ba-se-a-dos
  no TMC5160 faz uso dos avi-
@@ -1531,18 +1525,16 @@ Underfull \hbox (badness 10000) in paragraph at lines 131--141
 
 
 
-[26 <./Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png> <./Cap03/imagens/TCC_VIS
-TA_MOTORES_PONTEIROS_ENCODERS_REAL.jpg>]
-<Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg, id=751, 4015.0pt x 2260.445p
+[25 <./Cap03/imagens/TCC_VISTA_MOTORES_PONTEIROS_ENCODERS_REAL.jpg>]
+<Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg, id=755, 4015.0pt x 2260.445p
 t>
 File: Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg Graphic file (type jpg)
 <use Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg>
 Package pdftex.def Info: Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg  used
  on input line 184.
 (pdftex.def)             Requested size: 455.24411pt x 256.27235pt.
-
-
-[27]) (Cap03/ArquiteturaSoftware.tex
+)
+(Cap03/ArquiteturaSoftware.tex
 Underfull \hbox (badness 10000) in paragraph at lines 11--11
 []\OT1/cmr/bx/n/14.4 Compatibilidade de \OT1/cmr/bx/it/14.4 ti-ming \OT1/cmr/bx
 /n/14.4 com o TMC5160
@@ -1550,8 +1542,8 @@ Underfull \hbox (badness 10000) in paragraph at lines 11--11
 
 
 
-[28 <./Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg>]
-<Cap03/step_pulse_comparison.png, id=764, 867.24pt x 361.35pt>
+[26 <./Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg>]
+<Cap03/step_pulse_comparison.png, id=763, 867.24pt x 361.35pt>
 File: Cap03/step_pulse_comparison.png Graphic file (type png)
 <use Cap03/step_pulse_comparison.png>
 Package pdftex.def Info: Cap03/step_pulse_comparison.png  used on input line 40
@@ -1564,7 +1556,7 @@ Underfull \hbox (badness 10000) in alignment at lines 61--61
 
 
 
-[29 <./Cap03/step_pulse_comparison.png>]
+[27 <./Cap03/step_pulse_comparison.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `\leavevmode@ifvmode' on input line 99.
@@ -1574,7 +1566,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                \kern 1.66702pt
 (hyperref)                removed on input line 99.
 
-<Cap03/firmware_dda_simulation.png, id=774, 867.24pt x 578.16pt>
+<Cap03/firmware_dda_simulation.png, id=773, 867.24pt x 578.16pt>
 File: Cap03/firmware_dda_simulation.png Graphic file (type png)
 <use Cap03/firmware_dda_simulation.png>
 Package pdftex.def Info: Cap03/firmware_dda_simulation.png  used on input line 
@@ -1582,14 +1574,14 @@ Package pdftex.def Info: Cap03/firmware_dda_simulation.png  used on input line
 (pdftex.def)             Requested size: 455.24411pt x 303.49443pt.
 
 
-[30]
+[28]
 
-[31 <./Cap03/firmware_dda_simulation.png>]
+[29 <./Cap03/firmware_dda_simulation.png>]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
 put line 164.
 
 
-[32]
+[30]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `\leavevmode@ifvmode' on input line 204.
@@ -1601,15 +1593,15 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 
 
 
-[33]
-<Cap03/rampa_trapezoidal.png, id=799, 1084.05pt x 722.7pt>
+[31]
+<Cap03/rampa_trapezoidal.png, id=798, 1084.05pt x 722.7pt>
 File: Cap03/rampa_trapezoidal.png Graphic file (type png)
 <use Cap03/rampa_trapezoidal.png>
 Package pdftex.def Info: Cap03/rampa_trapezoidal.png  used on input line 268.
 (pdftex.def)             Requested size: 364.19667pt x 242.79245pt.
 
 
-[34]
+[32]
 Underfull \hbox (badness 7012) in paragraph at lines 292--294
 \OT1/cmr/m/n/10 com \OT1/cmr/m/it/10 anti-windup \OT1/cmr/m/n/10 (clamp da in-t
 e-gral em $\OMS/cmtt/m/n/10 ^^F $\OT1/cmtt/m/n/10 MOTION[]PI[]I[]CLAMP\OT1/cmr/
@@ -1618,7 +1610,7 @@ m/n/10 ) e sa-tura^^Xc~ao sim^^Setrica em
 
 
 
-[35 <./Cap03/rampa_trapezoidal.png>]
+[33 <./Cap03/rampa_trapezoidal.png>]
 Underfull \hbox (badness 3568) in paragraph at lines 320--321
 \OT1/cmr/m/n/10 Quando \OT1/cmtt/m/n/10 intpol\OT1/cmr/m/n/10 =1 no TMC5160, a 
 re-solu^^Xc~ao efe-tiva de cor-rente/torque nas bo-bi-nas pode
@@ -1632,9 +1624,9 @@ Underfull \hbox (badness 5260) in paragraph at lines 320--321
 
 
 
-[36]
+[34]
 
-[37]
+[35]
 <Cap03/imagens/TCC_SIMULACAO_COM_ATRITO.png, id=840, 1926.44719pt x 812.28468pt
 >
 File: Cap03/imagens/TCC_SIMULACAO_COM_ATRITO.png Graphic file (type png)
@@ -1644,16 +1636,27 @@ put line 454.
 (pdftex.def)             Requested size: 455.24411pt x 191.95285pt.
 
 
-[38])
+[36])
 
-[39 <./Cap03/imagens/TCC_SIMULACAO_COM_ATRITO.png>] (Cap04/Capitulo4.tex
+[37 <./Cap03/imagens/TCC_SIMULACAO_COM_ATRITO.png>] (Cap04/Capitulo4.tex
 Cap\'{\i }tulo 4.
-)
-
-[40
 
 
-] (Cap05/Capitulo5.tex
+[38
+
+
+]
+<Cap03/imagens/TCC_SIMULACAO_SEM_ATRITO.png, id=873, 542.025pt x 614.295pt>
+File: Cap03/imagens/TCC_SIMULACAO_SEM_ATRITO.png Graphic file (type png)
+<use Cap03/imagens/TCC_SIMULACAO_SEM_ATRITO.png>
+Package pdftex.def Info: Cap03/imagens/TCC_SIMULACAO_SEM_ATRITO.png  used on in
+put line 94.
+(pdftex.def)             Requested size: 455.24411pt x 515.95741pt.
+
+
+[39])
+
+[40 <./Cap03/imagens/TCC_SIMULACAO_SEM_ATRITO.png>] (Cap05/Capitulo5.tex
 Cap\'{\i }tulo 5.
 )
 
@@ -1685,13 +1688,13 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 5602BFD77CFD691E5F344499389ACA6C;13964.
+(rerunfilecheck)             Checksum: 5109F1995322728D1C474B9E99565B57;14299.
  ) 
 Here is how much of TeX's memory you used:
- 31948 strings out of 468081
- 647238 string characters out of 5425304
- 1114650 words of memory out of 5000000
- 59780 multiletter control sequences out of 15000+600000
+ 31961 strings out of 468081
+ 647681 string characters out of 5425304
+ 1114789 words of memory out of 5000000
+ 59792 multiletter control sequences out of 15000+600000
  649932 words of font info for 122 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,15n,87p,858b,1215s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1737,9 +1740,9 @@ s/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt8.pfb
 ><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/sym
 bols/msam10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/amsfonts/symbols/msbm10.pfb>
-Output written on main.pdf (59 pages, 8422080 bytes).
+Output written on main.pdf (59 pages, 8539371 bytes).
 PDF statistics:
- 1096 PDF objects out of 1200 (max. 8388607)
- 228 named destinations out of 1000 (max. 500000)
- 652 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1109 PDF objects out of 1200 (max. 8388607)
+ 229 named destinations out of 1000 (max. 500000)
+ 665 words of extra memory for PDF output out of 10000 (max. 10000000)
 

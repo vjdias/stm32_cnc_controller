@@ -201,14 +201,14 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 
 /* Botões de segurança (EXTI):
  * - B1 (PC13): E-STOP imediato (pressionado = nível baixo)
- * - B2 (PC0): Toggle de atrito simulado (pressionado = nível baixo)
+ * - B2 (PC0): Reservado para futuros sensores/limites
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     switch (GPIO_Pin) {
     case GPIO_PIN_13: /* B1 - E-STOP */
         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET) {
-            motion_sim_friction_toggle();
+            motion_emergency_stop();
         }
         break;
     case GPIO_PIN_1:

@@ -40,3 +40,59 @@ entre polls em \SI{18}{\percent}. Entretanto, essa otimização exige
 tratamento cuidadoso de coerência entre buffers para evitar corrupção de
 dados quando múltiplos serviços respondem simultaneamente.
 
+\section{Comparação entre simulação e experimento com carga}
+
+Para avaliar a aderência do modelo numérico da malha de velocidade, foi
+realizado um ensaio multi-eixos em que os três motores receberam o mesmo
+alvo de seis voltas completas, com micro\-passo configurado em $1/256$,
+baixa corrente de regime e ganhos proporcionais derivados da curva de
+reação ($K_p\approx 801$ nos eixos X/Y e $K_p\approx 797$ no eixo Z, com
+$K_i=K_d=0$). A telemetria foi amostrada a cada
+\SI{1}{\milli\second}, registrando identificador, tempo, posição de
+encoder e contagem acumulada de pulsos de passo.
+
+Os dados medidos foram pré-processados aplicando os mesmos critérios
+utilizados nas análises de resposta a degrau: remoção de linhas
+corrompidas, aceitação apenas de registros com cinco campos numéricos
+válidos, imposição de monotonicidade estrita para o identificador e
+monotonicidade não decrescente para tempo e contagem de pulsos, além da
+utilização do valor absoluto do encoder. A partir da sequência de
+contagens acumuladas, derivou-se a velocidade em passos por segundo
+para cada eixo, mantendo a mesma calibração de encoders usada na
+identificação do modelo.
+
+Em paralelo, foi executada uma simulação numérica com os mesmos
+parâmetros de micro\-passo, ganhos e alvo de seis voltas, utilizando o
+esquema de sincronização entre eixos descrito no
+Capítulo~\ref{cap:metodologia}. Da simulação foram extraídas as curvas
+de velocidade comandada em passos por segundo por eixo. A
+Figura~\ref{fig:comp-sim-atrito} mostra a sobreposição das curvas de
+velocidade medidas e simuladas.
+
+No eixo X, a velocidade média de regime medida ficou cerca de
+\SI{10}{\percent} abaixo da velocidade simulada, indicando que o
+atravessamento da carga e o atrito estático reduzem o ganho efetivo
+quando o sistema opera com baixa corrente de excitação. No eixo Y, a
+diferença relativa ficou em torno de \SI{8}{\percent}, com boa
+coerência na forma da curva, sugerindo que o modelo captura
+adequadamente a resposta dinâmica e o acoplamento cruzado nesse eixo.
+No eixo Z, por outro lado, a velocidade medida superou a simulada em
+cerca de \SI{23}{\percent}, evidenciando que a combinação de massa
+carregada, gravidade e atrito gera um comportamento mais agres\-sivo
+que o previsto pelo modelo nominal.
+
+Esses resultados indicam que a simulação reproduz bem a dinâmica de
+velocidade em condições de carga moderada, mas que a presença de
+cargas assimétricas e atrito não linear leva a desvios sistemáticos em
+certain eixos. Em aplicações industriais, esse tipo de análise é útil
+para orientar ajustes finos de ganhos, inclusão de termos de
+compensação de atrito ou adoção de observadores de perturbação quando
+se deseja reduzir o erro em regime de velocidade sob carga.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Cap03/imagens/TCC_SIMULACAO_SEM_ATRITO.png}
+  \caption{Comparação entre velocidade de passo medida e simulada para o ensaio de seis voltas completas, por eixo.}
+  \label{fig:comp-sim-atrito}
+\end{figure}
+

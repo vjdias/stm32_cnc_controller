@@ -2,17 +2,18 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces Fluxo do comando \texttt {cnc\text {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}}{20}{figure.caption.27}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Sobreposição entre velocidade medida e FOPDT (eixo X).}}{23}{figure.caption.29}%
-\contentsline {figure}{\numberline {3.3}{\ignorespaces Sobreposição entre velocidade medida e FOPDT (eixo Y).}}{23}{figure.caption.30}%
-\contentsline {figure}{\numberline {3.4}{\ignorespaces Sobreposição entre velocidade medida e FOPDT (eixo Z).}}{23}{figure.caption.31}%
-\contentsline {figure}{\numberline {3.5}{\ignorespaces Modelo 3D do controlador CNC com placa STM32, interface para Raspberry~Pi, base de prototipagem e m\'odulos de pot\^encia TMC5160.}}{24}{figure.caption.32}%
-\contentsline {figure}{\numberline {3.6}{\ignorespaces Modelo 3D do suporte do encoder TMCS-28 e do ponteiro acoplado ao eixo do motor de passo.}}{26}{figure.caption.33}%
-\contentsline {figure}{\numberline {3.7}{\ignorespaces Vista dos motores de passo com suportes impressos em 3D, ponteiros e encoder TMCS-28 acoplado ao eixo para realimenta\c {c}\~ao de posi\c {c}\~ao.}}{26}{figure.caption.34}%
-\contentsline {figure}{\numberline {3.8}{\ignorespaces Prot\'otipo do controlador CNC montado em bancada, com fonte de alimenta\c {c}\~ao, motores de passo, drivers TMC5160, placa STM32 e Raspberry~Pi.}}{28}{figure.caption.35}%
-\contentsline {figure}{\numberline {3.9}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{29}{figure.caption.36}%
-\contentsline {figure}{\numberline {3.10}{\ignorespaces Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}}{31}{figure.caption.38}%
-\contentsline {figure}{\numberline {3.11}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos par\^ametros do firmware.}}{35}{figure.caption.39}%
-\contentsline {figure}{\numberline {3.12}{\ignorespaces Cenário de simulação com atrito programável por eixo, destacando as janelas de carga e o impacto sobre as curvas de posição, velocidade e erro de sincronismo.}}{39}{figure.caption.43}%
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Fluxo do comando \texttt {cnc\text {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}}{19}{figure.caption.26}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Sobreposição entre velocidade medida e FOPDT (eixo X).}}{22}{figure.caption.28}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Sobreposição entre velocidade medida e FOPDT (eixo Y).}}{22}{figure.caption.29}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Sobreposição entre velocidade medida e FOPDT (eixo Z).}}{22}{figure.caption.30}%
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Modelo 3D do controlador CNC com placa STM32, interface para Raspberry~Pi, base de prototipagem e m\'odulos de pot\^encia TMC5160.}}{23}{figure.caption.31}%
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Modelo 3D do suporte do encoder TMCS-28 e do ponteiro acoplado ao eixo do motor de passo.}}{24}{figure.caption.32}%
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Vista dos motores de passo com suportes impressos em 3D, ponteiros e encoder TMCS-28 acoplado ao eixo para realimenta\c {c}\~ao de posi\c {c}\~ao.}}{25}{figure.caption.33}%
+\contentsline {figure}{\numberline {3.8}{\ignorespaces Prot\'otipo do controlador CNC montado em bancada, com fonte de alimenta\c {c}\~ao, motores de passo, drivers TMC5160, placa STM32 e Raspberry~Pi.}}{26}{figure.caption.34}%
+\contentsline {figure}{\numberline {3.9}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{27}{figure.caption.35}%
+\contentsline {figure}{\numberline {3.10}{\ignorespaces Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}}{29}{figure.caption.37}%
+\contentsline {figure}{\numberline {3.11}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos par\^ametros do firmware.}}{33}{figure.caption.38}%
+\contentsline {figure}{\numberline {3.12}{\ignorespaces Cenário de simulação com atrito programável por eixo, destacando as janelas de carga e o impacto sobre as curvas de posição, velocidade e erro de sincronismo.}}{37}{figure.caption.42}%
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Comparação entre velocidade de passo medida e simulada para o ensaio de seis voltas completas, por eixo.}}{40}{figure.caption.43}%
 \addvspace {10\p@ }

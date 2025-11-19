@@ -65,13 +65,13 @@ void motion_sim_friction_set_c(uint16_t c_sps);
 // SWV Graph/Data Trace (tamanhos suportados: 4 bytes).
 extern volatile int32_t g_enc_abs32[3];
 extern volatile int32_t g_enc_rel32[3];
-/* Opcional: Simulação de atrito (teste) */
+/* Opcional: Simulação de atrito (teste) — desativada no firmware final */
 #ifndef MOTION_SIM_FRICTION_ENABLE
-#define MOTION_SIM_FRICTION_ENABLE      1u
+#define MOTION_SIM_FRICTION_ENABLE      0u
 #endif
 #ifndef MOTION_SIM_FRICTION_BUTTON_B2
-#define MOTION_SIM_FRICTION_BUTTON_B2   1u
+#define MOTION_SIM_FRICTION_BUTTON_B2   0u
 #endif
 #ifndef MOTION_SIM_FRICTION_AUTO_HALF
-#define MOTION_SIM_FRICTION_AUTO_HALF   1u
+#define MOTION_SIM_FRICTION_AUTO_HALF   0u
 #endif

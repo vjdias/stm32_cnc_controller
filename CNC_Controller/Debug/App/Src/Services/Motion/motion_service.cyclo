@@ -16,7 +16,7 @@
 ../App/Src/Services/Motion/motion_service.c:888:13:motion_queue_clear_locked	2
 ../App/Src/Services/Motion/motion_service.c:895:23:motion_queue_push_locked	3
 ../App/Src/Services/Motion/motion_service.c:909:12:motion_queue_pop_locked	5
-../App/Src/Services/Motion/motion_service.c:924:13:motion_begin_segment_locked	10
+../App/Src/Services/Motion/motion_service.c:924:13:motion_begin_segment_locked	7
 ../App/Src/Services/Motion/motion_service.c:997:16:motion_try_start_next_locked	2
 ../App/Src/Services/Motion/motion_service.c:1012:13:motion_update_encoders	3
 ../App/Src/Services/Motion/motion_service.c:1038:13:motion_send_queue_add_ack	3
@@ -24,16 +24,12 @@
 ../App/Src/Services/Motion/motion_service.c:1071:13:motion_send_start_response	3
 ../App/Src/Services/Motion/motion_service.c:1080:13:motion_send_move_end_response	3
 ../App/Src/Services/Motion/motion_service.c:1093:6:motion_service_init	6
-../App/Src/Services/Motion/motion_service.c:1199:6:motion_sim_friction_toggle	1
-../App/Src/Services/Motion/motion_service.c:1210:6:motion_sim_friction_set_axis	4
-../App/Src/Services/Motion/motion_service.c:1234:6:motion_sim_friction_set_scale	2
-../App/Src/Services/Motion/motion_service.c:1242:6:motion_sim_friction_set_c	1
 ../App/Src/Services/Motion/motion_service.c:1249:24:motion_status_get	1
 ../App/Src/Services/Motion/motion_service.c:1259:6:motion_on_tim6_tick	44
-../App/Src/Services/Motion/motion_service.c:1482:6:motion_on_tim7_tick	74
+../App/Src/Services/Motion/motion_service.c:1482:6:motion_on_tim7_tick	60
 ../App/Src/Services/Motion/motion_service.c:1793:6:motion_on_move_queue_add	7
 ../App/Src/Services/Motion/motion_service.c:1840:6:motion_on_move_queue_status	2
-../App/Src/Services/Motion/motion_service.c:1857:6:motion_on_start_move	9
+../App/Src/Services/Motion/motion_service.c:1857:6:motion_on_start_move	8
 ../App/Src/Services/Motion/motion_service.c:1932:6:motion_on_move_end	2
 ../App/Src/Services/Motion/motion_service.c:1959:6:motion_on_set_origin	7
 ../App/Src/Services/Motion/motion_service.c:1987:6:motion_on_encoder_status	8
