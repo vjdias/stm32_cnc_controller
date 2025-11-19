@@ -12,62 +12,63 @@
 \contentsline {section}{\numberline {2.5}Controlador PID digital}{5}{section.2.5}%
 \contentsline {section}{\numberline {2.6}Modelo FOPDT e síntese de ganhos PD}{5}{section.2.6}%
 \contentsline {subsection}{\numberline {2.6.1}Derivação da resposta ao degrau}{5}{subsection.2.6.1}%
-\contentsline {section}{\numberline {2.7}Integração PID-DDA}{6}{section.2.7}%
+\contentsline {subsection}{\numberline {2.6.2}Aplicação no projeto}{6}{subsection.2.6.2}%
+\contentsline {section}{\numberline {2.7}Integração PID-DDA}{7}{section.2.7}%
 \contentsline {section}{\numberline {2.8}Sincronização Cruzada de Eixos}{7}{section.2.8}%
-\contentsline {section}{\numberline {2.9}Comunicação SPI e USART}{8}{section.2.9}%
-\contentsline {section}{\numberline {2.10}Driver Trinamic TMC5160 e Encoder TMCS-28}{11}{section.2.10}%
-\contentsline {subsection}{\numberline {2.10.1}TMC5160}{11}{subsection.2.10.1}%
-\contentsline {subsection}{\numberline {2.10.2}TMCS-28 (Trinamic/Analog Devices)}{12}{subsection.2.10.2}%
-\contentsline {subsection}{\numberline {2.10.3}Implic\c {c}\~oes de projeto}{12}{subsection.2.10.3}%
-\contentsline {section}{\numberline {2.11}Motores de Passo NEMA 23, Passo de 0{,}9\textdegree {} e Seleção da Corrente $I_{RMS}$}{13}{section.2.11}%
-\contentsline {subsection}{\numberline {2.11.1}NEMA 23: geometria e implicações mecânicas}{13}{subsection.2.11.1}%
-\contentsline {subsection}{\numberline {2.11.2}Passo elétrico: 1{,}8\textdegree {} vs 0{,}9\textdegree {}}{13}{subsection.2.11.2}%
-\contentsline {paragraph}{Efeitos práticos do passo de 0{,}9\textdegree {}.}{13}{section*.22}%
-\contentsline {subsection}{\numberline {2.11.3}Microstepping, suavidade e taxa de passos}{13}{subsection.2.11.3}%
-\contentsline {subsection}{\numberline {2.11.4}Parâmetros elétricos e modelo de primeira ordem}{14}{subsection.2.11.4}%
-\contentsline {subsection}{\numberline {2.11.5}Torques relevantes}{14}{subsection.2.11.5}%
-\contentsline {subsection}{\numberline {2.11.6}Resumo para os motores usados}{14}{subsection.2.11.6}%
-\contentsline {subsection}{\numberline {2.11.7}Fundamentação teórica para a seleção de $I_{RMS}$}{14}{subsection.2.11.7}%
-\contentsline {section}{\numberline {2.12}Registros de Configura\c {c}\~ao Utilizados}{15}{section.2.12}%
-\contentsline {subsection}{\numberline {2.12.1}STM32L475}{16}{subsection.2.12.1}%
-\contentsline {subsection}{\numberline {2.12.2}TMC5160}{17}{subsection.2.12.2}%
-\contentsline {chapter}{\numberline {3}Metodologia}{18}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Roteiro incremental de inicializa\c {c}\~ao}{18}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Arquitetura de software}{18}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Fluxo do comando \texttt {cnc\text {-}cli}}{19}{subsection.3.2.1}%
-\contentsline {section}{\numberline {3.3}Procedimentos de teste}{20}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Identificação experimental do modelo FOPDT}{20}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Pré-processamento e séries derivadas}{21}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Extração de marcos temporais}{21}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Estimativas $K$, $L$ e $\tau $}{21}{subsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.4.4}Síntese PD e validação}{21}{subsection.3.4.4}%
-\contentsline {subsection}{\numberline {3.4.5}Validação gráfica do modelo FOPDT}{22}{subsection.3.4.5}%
-\contentsline {section}{\numberline {3.5}Arquitetura de Hardware}{22}{section.3.5}%
-\contentsline {subsection}{\numberline {3.5.1}Vis\~ao geral do sistema}{23}{subsection.3.5.1}%
-\contentsline {subsection}{\numberline {3.5.2}Alimenta\c {c}\~ao e EMC}{23}{subsection.3.5.2}%
-\contentsline {subsection}{\numberline {3.5.3}Drivers TMC5160}{23}{subsection.3.5.3}%
-\contentsline {subsection}{\numberline {3.5.4}Encoder \'{o}ptico TMCS-28}{24}{subsection.3.5.4}%
-\contentsline {subsection}{\numberline {3.5.5}Intertravamentos e seguran\c {c}a}{25}{subsection.3.5.5}%
-\contentsline {subsection}{\numberline {3.5.6}PCB, cabeamento e montagem}{25}{subsection.3.5.6}%
-\contentsline {section}{\numberline {3.6}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{26}{section.3.6}%
-\contentsline {subsection}{\numberline {3.6.1}Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{27}{subsection.3.6.1}%
-\contentsline {subsection}{\numberline {3.6.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{28}{subsection.3.6.2}%
-\contentsline {section}{\numberline {3.7}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{28}{section.3.7}%
-\contentsline {section}{\numberline {3.8}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{31}{section.3.8}%
-\contentsline {section}{\numberline {3.9}Controle PI de Posi\c {c}\~ao com Encoder}{33}{section.3.9}%
-\contentsline {section}{\numberline {3.10}Fila de Movimentos e Segmenta\c {c}\~ao}{33}{section.3.10}%
-\contentsline {section}{\numberline {3.11}Mapeamento para o TMC5160}{34}{section.3.11}%
-\contentsline {subsection}{\numberline {3.11.1}Gera\c {c}\~ao de STEP/DIR (\emph {``PWM'' de passo})}{34}{subsection.3.11.1}%
-\contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{34}{subsection.3.11.2}%
-\contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{34}{section.3.12}%
-\contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos}{34}{section.3.13}%
-\contentsline {section}{\numberline {3.14}Simulador Interativo em Python}{35}{section.3.14}%
-\contentsline {paragraph}{O que a simulação cobre e como.}{36}{section*.40}%
-\contentsline {paragraph}{Saídas e diagnósticos.}{36}{section*.41}%
-\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{37}{section.3.15}%
-\contentsline {chapter}{\numberline {4}Resultados e Discussão}{38}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{38}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{38}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Comparação entre simulação e experimento com carga}{39}{section.4.3}%
-\contentsline {chapter}{\numberline {5}Conclusão}{41}{chapter.5}%
-\contentsline {chapter}{Bibliografia}{42}{chapter.5}%
+\contentsline {section}{\numberline {2.9}Comunicação SPI e USART}{9}{section.2.9}%
+\contentsline {section}{\numberline {2.10}Driver Trinamic TMC5160 e Encoder TMCS-28}{12}{section.2.10}%
+\contentsline {subsection}{\numberline {2.10.1}TMC5160}{12}{subsection.2.10.1}%
+\contentsline {subsection}{\numberline {2.10.2}TMCS-28 (Trinamic/Analog Devices)}{13}{subsection.2.10.2}%
+\contentsline {subsection}{\numberline {2.10.3}Implic\c {c}\~oes de projeto}{13}{subsection.2.10.3}%
+\contentsline {section}{\numberline {2.11}Motores de Passo NEMA 23, Passo de 0{,}9\textdegree {} e Seleção da Corrente $I_{RMS}$}{14}{section.2.11}%
+\contentsline {subsection}{\numberline {2.11.1}NEMA 23: geometria e implicações mecânicas}{14}{subsection.2.11.1}%
+\contentsline {subsection}{\numberline {2.11.2}Passo elétrico: 1{,}8\textdegree {} vs 0{,}9\textdegree {}}{14}{subsection.2.11.2}%
+\contentsline {paragraph}{Efeitos práticos do passo de 0{,}9\textdegree {}.}{14}{section*.22}%
+\contentsline {subsection}{\numberline {2.11.3}Microstepping, suavidade e taxa de passos}{14}{subsection.2.11.3}%
+\contentsline {subsection}{\numberline {2.11.4}Parâmetros elétricos e modelo de primeira ordem}{15}{subsection.2.11.4}%
+\contentsline {subsection}{\numberline {2.11.5}Torques relevantes}{15}{subsection.2.11.5}%
+\contentsline {subsection}{\numberline {2.11.6}Resumo para os motores usados}{15}{subsection.2.11.6}%
+\contentsline {subsection}{\numberline {2.11.7}Fundamentação teórica para a seleção de $I_{RMS}$}{15}{subsection.2.11.7}%
+\contentsline {section}{\numberline {2.12}Registros de Configura\c {c}\~ao Utilizados}{16}{section.2.12}%
+\contentsline {subsection}{\numberline {2.12.1}STM32L475}{17}{subsection.2.12.1}%
+\contentsline {subsection}{\numberline {2.12.2}TMC5160}{18}{subsection.2.12.2}%
+\contentsline {chapter}{\numberline {3}Metodologia}{19}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Roteiro incremental de inicializa\c {c}\~ao}{19}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Arquitetura de software}{19}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Fluxo do comando \texttt {cnc\text {-}cli}}{20}{subsection.3.2.1}%
+\contentsline {section}{\numberline {3.3}Procedimentos de teste}{21}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Identificação experimental do modelo FOPDT}{21}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Pré-processamento e séries derivadas}{22}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Extração de marcos temporais}{22}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Estimativas $K$, $L$ e $\tau $}{22}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Síntese PD e validação}{22}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Validação gráfica do modelo FOPDT}{23}{subsection.3.4.5}%
+\contentsline {section}{\numberline {3.5}Arquitetura de Hardware}{23}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Vis\~ao geral do sistema}{24}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}Alimenta\c {c}\~ao e EMC}{24}{subsection.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3}Drivers TMC5160}{24}{subsection.3.5.3}%
+\contentsline {subsection}{\numberline {3.5.4}Encoder \'{o}ptico TMCS-28}{25}{subsection.3.5.4}%
+\contentsline {subsection}{\numberline {3.5.5}Intertravamentos e seguran\c {c}a}{26}{subsection.3.5.5}%
+\contentsline {subsection}{\numberline {3.5.6}PCB, cabeamento e montagem}{26}{subsection.3.5.6}%
+\contentsline {section}{\numberline {3.6}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{27}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{28}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{29}{subsection.3.6.2}%
+\contentsline {section}{\numberline {3.7}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{29}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{32}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Controle PI de Posi\c {c}\~ao com Encoder}{34}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Fila de Movimentos e Segmenta\c {c}\~ao}{34}{section.3.10}%
+\contentsline {section}{\numberline {3.11}Mapeamento para o TMC5160}{35}{section.3.11}%
+\contentsline {subsection}{\numberline {3.11.1}Gera\c {c}\~ao de STEP/DIR (\emph {``PWM'' de passo})}{35}{subsection.3.11.1}%
+\contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{35}{subsection.3.11.2}%
+\contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{35}{section.3.12}%
+\contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos}{35}{section.3.13}%
+\contentsline {section}{\numberline {3.14}Simulador Interativo em Python}{36}{section.3.14}%
+\contentsline {paragraph}{O que a simulação cobre e como.}{37}{section*.40}%
+\contentsline {paragraph}{Saídas e diagnósticos.}{37}{section*.41}%
+\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{38}{section.3.15}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{39}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{39}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{39}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Comparação entre simulação e experimento com carga}{40}{section.4.3}%
+\contentsline {chapter}{\numberline {5}Conclusão}{42}{chapter.5}%
+\contentsline {chapter}{Bibliografia}{43}{chapter.5}%

@@ -6,20 +6,16 @@ do pipeline SPI e a interação com o cliente Raspberry Pi.
 
 \section{Desempenho dos serviços principais}
 
-A medição do gerador de passos configurado no TIM6 demonstrou a
-estabilidade do DDA em \SI{50}{\kilo\hertz}, com variação máxima de
-\SI{0.4}{\percent} entre ciclos consecutivos. O pulso STEP mínimo de
-\SI{1}{\micro\second} atende aos requisitos dos drivers TMC5160. O laço
-PID executado no TIM7 manteve variação temporal (\emph{jitter}) inferior a \SI{3}{\micro\second}
-segundo o tempo instrumentado na ISR. Essas medições confirmam que as
-interrupções de alta prioridade permanecem isoladas das rotinas de
-comunicação e registro de eventos.
-
-Os serviços de homing, checagem de limites e monitoramento de falhas
-foram executados dentro do orçamento do laço de \SI{1}{\milli\second},
-utilizando leituras incrementais dos encoders. Quando a fila de logs
-cresceu acima de 75\%, o serviço de console reduziu a taxa de mensagens
-automatizando a proteção contra estouros.
+As medições realizadas no gerador de passos configurado no TIM6
+indicam que o DDA opera de forma estável em torno de
+\SI{50}{\kilo\hertz}, com variação pequena entre ciclos consecutivos.
+O pulso STEP mínimo de \SI{1}{\micro\second} permanece dentro dos
+limites recomendados pelo fabricante dos drivers TMC5160. O laço de
+controle executado no TIM7 apresentou variações temporais
+(\emph{jitter}) na faixa de poucos \si{\micro\second}, segundo o tempo
+instrumentado na ISR, o que sugere que as interrupções de alta
+prioridade permanecem bem isoladas das rotinas de comunicação e
+registro de eventos.
 
 \section{Análise do pipeline SPI}
 
@@ -45,9 +41,10 @@ dados quando múltiplos serviços respondem simultaneamente.
 Para avaliar a aderência do modelo numérico da malha de velocidade, foi
 realizado um ensaio multi-eixos em que os três motores receberam o mesmo
 alvo de seis voltas completas, com micro\-passo configurado em $1/256$,
-baixa corrente de regime e ganhos proporcionais derivados da curva de
-reação ($K_p\approx 801$ nos eixos X/Y e $K_p\approx 797$ no eixo Z, com
-$K_i=K_d=0$). A telemetria foi amostrada a cada
+baixa corrente de regime e ganhos PID ajustados a partir da análise
+FOPDT. No firmware, os ganhos inteiros utilizados foram
+$K_p=(801,\,6408,\,797)$, $K_i=(0,\,0,\,0)$ e $K_d=(0,\,4,\,0)$ para os
+eixos $(X,Y,Z)$, respectivamente. A telemetria foi amostrada a cada
 \SI{1}{\milli\second}, registrando identificador, tempo, posição de
 encoder e contagem acumulada de pulsos de passo.
 

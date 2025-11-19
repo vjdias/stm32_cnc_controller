@@ -69,3 +69,35 @@ representação inteira utilizando um fator de escala $S>0$ (\emph{fixed-point})
 \emph{e.g.}, $k_{p,i}=\operatorname{round}(S\,K_p)$ e análogos para $k_{i,i}$ e
 $k_{d,i}$. Tal mapeamento preserva a coerência entre a análise contínua e o
 controlador discreto executado em tempo real.
+
+\subsection{Aplicação no projeto}\label{subsec:fopdt_aplicacao}
+
+No projeto deste trabalho, o modelo FOPDT foi utilizado como elo entre
+os dados experimentais de velocidade e a síntese sistemática dos ganhos
+do regulador. A partir dos traços de degrau obtidos via telemetria, a
+velocidade de comando $v_\text{cmd}(t)$ e a velocidade medida pelo
+encoder $v_\text{enc}(t)$ foram reconstruídas e suavizadas em janela
+deslizante. Para cada combinação de eixo e micro\-passo, identificou-se
+o ganho estático $K$ como a razão entre os patamares de regime
+($v_\text{enc}/v_\text{cmd}$), enquanto o tempo morto $L$ e a constante
+de tempo $\tau$ foram extraídos de características temporais da curva
+(\emph{curva de reação}), em linha com o procedimento descrito em
+\cite{astrom1995}.
+
+Os parâmetros $(K,L,\tau)$ alimentam um catálogo de perfis por eixo e
+micro\-passo. Em seguida, os ganhos contínuos $(K_p,K_i,K_d)$ obtidos
+pelas regras de Ziegler–Nichols são convertidos para o formato inteiro
+utilizado no firmware, adotando a mesma escala do controlador de
+posição ($S = 256$). Assim, os valores inteiros $(k_{p,i},k_{i,i},k_{d,i})$
+armazenados em cada perfil são exatamente aqueles aplicados na malha de
+velocidade do microcontrolador e também no simulador numérico
+interativo, garantindo consistência entre identificação, síntese e
+validação.
+
+Por fim, a adequação do modelo FOPDT foi verificada por meio de
+sobreposição gráfica entre $v_\text{enc}(t)$ e a resposta teórica
+$K\,U\bigl(1-\mathrm{e}^{-(t-L)/\tau}\bigr)$ para cada eixo, conforme
+apresentado na Seção~\ref{sec:ident_fopdt}. Essa comparação mostra que,
+para a faixa de operação de interesse, o modelo de primeira ordem com
+atraso puro captura adequadamente o ganho e a dinâmica dominante da
+malha de velocidade, justificando seu uso na sintonia dos ganhos PD.

@@ -26,23 +26,36 @@ comprometer as janelas temporais estabelecidas.
 
 \subsection{Objetivo Geral}
 
-Projetar e documentar um controlador CNC determinístico baseado no
-STM32L475, integrando geração DDA de pulsos, controle PID em tempo real e
-protocolo de comunicação SPI com um cliente Raspberry Pi.
+Projetar, implementar e documentar um controlador CNC determinístico
+baseado no STM32L475, integrado a um cliente Raspberry Pi, capaz de
+gerar pulsos STEP/DIR em alta frequência, fechar a malha de posição com
+realimentação por encoders e expor telemetria suficiente para
+identificação de modelo e sintonia sistemática de ganhos PID.
 
 \subsection{Objetivos Específicos}
 
 \begin{itemize}
-    \item Configurar o temporizador TIM6 para gerar pulsos em
-          \SI{50}{\kilo\hertz} utilizando o método DDA.
-    \item Implementar o loop de controle PID a \SI{1}{\kilo\hertz}
-          no TIM7, incorporando leitura incremental dos encoders.
+    \item Configurar o temporizador TIM6 para gerar pulsos STEP em
+          \SI{50}{\kilo\hertz} utilizando o método DDA, respeitando os
+          tempos mínimos dos drivers TMC5160.
+    \item Implementar o laço de controle em \SI{1}{\kilo\hertz} no TIM7,
+          combinando realimentação incremental dos encoders com o
+          esquema de sincronização cruzada entre eixos (CASC) e ganhos
+          PID inteiros compatíveis com o firmware.
     \item Estruturar o firmware em camadas modulares (Core, App e
-          Services) que facilitem a validação incremental.
-    \item Validar o pipeline de comunicação SPI escravo com DMA circular
-          e logs assíncronos via USART1.
-    \item Registrar testes que comprovem baixa variação temporal (\emph{jitter}) e estabilidade
-          nos serviços críticos.
+          Services) que facilitem a validação incremental, a inclusão de
+          novos serviços e a manutenção do determinismo temporal.
+    \item Desenvolver um pipeline de telemetria baseado em SWV/USART,
+          scripts Python para filtragem dos logs e reconstrução de
+          respostas a degrau de velocidade.
+    \item Identificar, para cada eixo e configuração de micro\-passo, um
+          modelo FOPDT da malha de velocidade e sintetizar ganhos PD com
+          base nesse modelo, convertendo-os para o formato inteiro
+          utilizado pelo STM32 e pelos simuladores numéricos.
+    \item Validar experimentalmente o controlador, comparando as curvas
+          de velocidade medidas com as simulações e com as respostas
+          FOPDT, bem como caracterizando jitter, desempenho do pipeline
+          SPI e comportamento sob carga.
 \end{itemize}
 
 \section{Organização do texto}\label{sec:organizacao}
