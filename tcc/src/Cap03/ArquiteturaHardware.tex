@@ -19,6 +19,29 @@ O sistema \'e composto por:
   regulador \SI{3.3}{V} local para o microcontrolador; alimenta\c{c}\~ao separada/filtrada
   para os est\'agios de pot\^encia dos motores.
 
+A Figura~\ref{fig:arq-hw-3d} apresenta o modelo tridimensional do conjunto
+do controlador CNC, destacando a placa STM32L475, o m\'odulo de interface
+com a Raspberry~Pi, a base de prototipagem e as placas de pot\^encia
+TMC5160 posicionadas na regi\~ao superior. Essa organiza\c{c}\~ao em n\'iveis
+facilita o roteamento de sinais de baixa tens\~ao e a separa\c{c}\~ao f\'isica
+dos est\'agios de pot\^encia.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png}
+    \caption{Vista em perspectiva do conjunto eletr\^onico.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png}
+    \caption{Vista superior com a distribui\c{c}\~ao das placas.}
+  \end{subfigure}
+  \caption{Modelo 3D do controlador CNC com placa STM32, interface para Raspberry~Pi, base de prototipagem e m\'odulos de pot\^encia TMC5160.}
+  \label{fig:arq-hw-3d}
+\end{figure}
+
 \subsection{Alimenta\c{c}\~ao e EMC}
 
 - \textbf{\SI{5}{V} l\'ogica}: entrada regulada (fonte externa), com
@@ -46,33 +69,122 @@ O sistema \'e composto por:
 
 \subsection{Encoder \'{o}ptico TMCS-28}
 
-- \textbf{Sa\'idas}: \textbf{A}, \textbf{B} (quadratura) e \textbf{N}
-  (\emph{index}) em TTL \SI{5}{V}. Adaptar n\'{\i}vel para \SI{3.3}{V}
-  (divisores/\emph{level shifter}) antes de entrar no STM32.
-- \textbf{Conex\~ao no STM32}: A/B em temporizadores com modo encoder
-  (por exemplo, TIM2/TIM3/TIM5); N em entrada de captura/interrup\c{c}\~ao para
-  refer\^encia de zero.
-- \textbf{Resolu\c{c}\~ao}: neste TCC utiliza\-se \textbf{TMCS-28-10k}
-  (625\,lpr, \textbf{40\,000\,cpr}). Convers\~ao \(\theta = 360^{\circ}\cdot
-  \text{count}/40{,}000\). Velocidade: \(\text{rpm} = 60\,\text{CPS}/40{,}000\).
+O encoder \'{o}ptico incremental TMCS-28 fornece tr\^es sa\'idas digitais em
+n\'ivel TTL \SI{5}{V}: canais \textbf{A} e \textbf{B} em quadratura e canal
+\textbf{N} (\emph{index}). Para compatibiliza\c{c}\~ao com o STM32, todos os
+sinais s\~ao condicionados para \SI{3.3}{V} por meio de divisores resistivos,
+garantindo margens de ru\'ido adequadas.
+
+No microcontrolador, os canais A/B s\~ao ligados a perif\'ericos com modo
+\emph{encoder} habilitado: o eixo X utiliza o \textbf{TIM3} (16~bits), o eixo
+Y utiliza o \textbf{LPTIM1} (16~bits em modo encoder) e o eixo Z utiliza o
+\textbf{TIM5} (32~bits), conforme o mapeamento definido em
+\texttt{motion\_hw.c}. Nesses modos, o caminho entre as entradas A/B e o
+registrador de contagem \'e implementado em hardware: a cada transi\c{c}\~ao
+em quadratura o contador interno \'e atualizado diretamente, sem que a CPU
+precise tratar interrup\c{c}\~oes ou movimentar dados via DMA, o que reduz
+sobrecarga e varia\c{c}\~oes temporais na medi\c{c}\~ao de posi\c{c}\~ao.
+
+O canal N \'e conectado a uma entrada de captura/interrup\c{c}\~ao e utilizado
+como refer\^encia de zero: durante a rotina de homing, um pulso em N permite
+associar um ``zero absoluto'' \`a posi\c{c}\~ao mec\^anica do ponteiro.
+
+Neste trabalho emprega-se o modelo \textbf{TMCS-28-10k}, com resolu\c{c}\~ao efetiva de
+\(\texttt{ENC\_COUNTS\_PER\_REV} = \num{40\,000}\) contagens por volta do
+ponteiro (considerando a rela\c{c}\~ao mec\^anica do conjunto e a decodifica\c{c}\~ao
+em quadratura). A convers\~ao de contagens para \^angulo segue
+\[
+  \theta\,[^{\circ}] = 360^{\circ}\cdot
+  \frac{\text{count}}{\texttt{ENC\_COUNTS\_PER\_REV}},
+\]
+de modo que, para os eixos X/Z, utiliza-se \(\texttt{ENC\_COUNTS\_PER\_REV} =
+\num{40\,000}\). A velocidade em rota\c{c}\~oes por minuto (rpm) \'e obtida a partir
+da taxa de contagens por segundo (CPS):
+\[
+  \text{rpm} = 60\cdot\frac{\text{CPS}}{\texttt{ENC\_COUNTS\_PER\_REV}}.
+\]
+
+A Figura~\ref{fig:encoder-cad} apresenta o modelo em CAD do suporte
+impresso em 3D projetado para acoplar o encoder TMCS-28 ao eixo do motor
+de passo e fornecer um ponteiro vis\'ivel. O suporte garante alinhamento
+axial, espa\c{c}o para o disco graduado e pontos de fixa\c{c}\~ao compat\'iveis
+com o padr\~ao NEMA~23. A Figura~\ref{fig:encoder-montado} mostra a
+implementa\c{c}\~ao f\'isica, com o encoder e o ponteiro instalados nos
+tr\^es eixos do prot\'otipo.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{Cap03/imagens/TCC_PONTEIRO_E_APOIO_ENCODER.png}
+  \caption{Modelo 3D do suporte do encoder TMCS-28 e do ponteiro acoplado ao eixo do motor de passo.}
+  \label{fig:encoder-cad}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,angle=180]{Cap03/imagens/TCC_VISTA_MOTORES_PONTEIROS_ENCODERS_REAL.jpg}
+  \caption{Vista dos motores de passo com suportes impressos em 3D, ponteiros e encoder TMCS-28 acoplado ao eixo para realimenta\c{c}\~ao de posi\c{c}\~ao.}
+  \label{fig:encoder-montado}
+\end{figure}
 
 \subsection{Intertravamentos e seguran\c{c}a}
 
-- \textbf{E-STOP}: linha f\'isica que desabilita \texttt{EN} dos drivers e
-  gera EXTI no STM32 para parada ordenada.
-- \textbf{Fins de curso}: entradas com resistores de \emph{pull-up}
-  e filtros RC opcionais; priorizar roteamento distante de trilhas de
-  pot\^encia.
+A prote\c{c}\~ao el\'etrica dos motores de passo baseados no TMC5160 faz uso
+dos avisos de tens\~ao e corrente expostos nos registradores
+\texttt{GSTAT} e \texttt{DRV\_STATUS} do driver~\cite{tmc5160_ds}. Esses
+registradores indicam condi\c{c}\~oes como subtens\~ao,
+sobretens\~ao/curto nas fases e sobretemperatura (\emph{OT}/\emph{OTPW}). No
+sistema desenvolvido, tais flags s\~ao lidos periodicamente pelo cliente
+na Raspberry~Pi (\texttt{cnc\_cli}), servindo como diagn\'ostico indireto do
+estado dos motores e do cabeamento: a aus\^encia de falhas sugere opera\c{c}\~ao
+normal, enquanto qualquer alerta indica degrada\c{c}\~ao ou condi\c{c}\~ao de
+falha.
+
+Quando uma falha cr\'itica \'e detectada (por exemplo, \emph{overtemp},
+\emph{OTPW} ou \emph{driver\_error}), aplica-se uma rotina de seguran\c{c}a
+que desliga o est\'agio de pot\^encia de forma controlada: o script
+for\c{c}a \(\texttt{IHOLD} = \texttt{IRUN} = 0\), ajusta
+\(\texttt{CHOPCONF.TOFF} = 0\) e configura \(\texttt{PWMCONF.FREEWHEEL}=1\),
+removendo corrente das bobinas e colocando o TMC5160 em estado seguro.
+Esse mecanismo complementa as prote\c{c}\~oes internas do driver e fornece um
+meio simples de interromper o sistema sempre que os avisos de tens\~ao ou
+temperatura indicarem condi\c{c}\~oes anormais.
 
 \subsection{PCB, cabeamento e montagem}
 
-- \textbf{Layout}: separar dom\'inios de l\'ogica e pot\^encia; manter
-  pares de A/B e linhas de SPI curtos e com retorno pr\'oximo.
-- \textbf{Cabeamento}: utilizar pares tr\'ancados para A/B e sinais STEP/DIR;
-  blindagem quando o ambiente possuir ru\'{\i}do elevado.
-- \textbf{Ordem de testes}: valida\c{c}\~ao da alimenta\c{c}\~ao (teste inicial),
-  clock/USART, SPI dos TMC5160, leitura ABN do TMCS-28 e, por fim,
-  acionamento de motores sem carga.
+- \textbf{Layout}: a base mec\^anica foi organizada em tr\^es n\'iveis bem
+  definidos. A regi\~ao inferior abriga a placa STM32 e a Raspberry~Pi, com
+  trilhas de l\'ogica e alimenta\c{c}\~ao de baixa pot\^encia. Sobre elas,
+  uma \'area central de \emph{protoboard} foi reservada exclusivamente para
+  acomoda\c{c}\~ao de conex\~oes, divisores e pequenos ajustes de circuito,
+  facilitando reconfigura\c{c}\~oes sem retrabalho de PCB. Na parte superior
+  ficam os m\'odulos TMC5160 e os dissipadores, mantendo o dom\'inio de
+  pot\^encia fisicamente afastado do microcontrolador e da Raspberry~Pi.
+
+- \textbf{Cabeamento}: pares A/B do encoder e sinais STEP/DIR s\~ao
+  roteados em pares tr\^ancados, reduzindo a suscetibilidade a ru\'ido
+  eletromagn\'etico. As linhas de SPI entre STM32, TMC5160 e Raspberry~Pi
+  s\~ao mantidas curtas e com retorno pr\'oximo, minimizando la\c{c}os de
+  corrente.
+
+- \textbf{Ordem de testes}: a comissiona\c{c}\~ao do hardware segue uma
+  sequ\^encia conservadora: (i) valida\c{c}\~ao da alimenta\c{c}\~ao e dos
+  reguladores; (ii) verifica\c{c}\~ao de clock e USART; (iii) testes do SPI
+  com os TMC5160; (iv) leitura incremental ABN do TMCS-28; e, somente ao
+  fim, (v) acionamento dos motores sem carga, antes de aplicar perfis mais
+  agressivos de corrente e velocidade.
+
+A Figura~\ref{fig:prototipo-bancada} mostra a montagem do prot\'otipo em
+bancada, com a fonte de alimenta\c{c}\~ao, os tr\^es motores de passo, o
+conjunto de drivers TMC5160, a placa STM32 e a Raspberry~Pi interligados.
+A disposi\c{c}\~ao segue as recomenda\c{c}\~oes de separa\c{c}\~ao entre dom\'inios de
+pot\^encia e l\'ogica descritas nesta se\c{c}\~ao.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Cap03/imagens/TCC_VISTA_DECIMA_CIRCUITO_REAL.jpg}
+  \caption{Prot\'otipo do controlador CNC montado em bancada, com fonte de alimenta\c{c}\~ao, motores de passo, drivers TMC5160, placa STM32 e Raspberry~Pi.}
+  \label{fig:prototipo-bancada}
+\end{figure}
 
 Como refer\^encia adicional de montagem e integra\c{c}\~ao de hardware, ver
 \cite{romeros_tcc_ifmg_2022}.

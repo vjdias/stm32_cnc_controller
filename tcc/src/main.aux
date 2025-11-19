@@ -136,74 +136,91 @@
 \@writefile{toc}{\contentsline {section}{\numberline {3.5}Arquitetura de Hardware}{21}{section.3.5}\protected@file@percent }
 \newlabel{sec:arq_hw}{{3.5}{21}{Arquitetura de Hardware}{section.3.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.5.1}Vis\~ao geral do sistema}{21}{subsection.3.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Alimenta\c {c}\~ao e EMC}{21}{subsection.3.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.3}Drivers TMC5160}{21}{subsection.3.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.4}Encoder \'{o}ptico TMCS-28}{21}{subsection.3.5.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces Modelo 3D do controlador CNC com placa STM32, interface para Raspberry~Pi, base de prototipagem e m\'odulos de pot\^encia TMC5160.}}{21}{figure.caption.30}\protected@file@percent }
+\newlabel{fig:arq-hw-3d}{{3.4}{21}{Modelo 3D do controlador CNC com placa STM32, interface para Raspberry~Pi, base de prototipagem e m\'odulos de pot\^encia TMC5160}{figure.caption.30}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.2}Alimenta\c {c}\~ao e EMC}{22}{subsection.3.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.3}Drivers TMC5160}{22}{subsection.3.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.4}Encoder \'{o}ptico TMCS-28}{22}{subsection.3.5.4}\protected@file@percent }
+\citation{tmc5160_ds}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces Modelo 3D do suporte do encoder TMCS-28 e do ponteiro acoplado ao eixo do motor de passo.}}{23}{figure.caption.31}\protected@file@percent }
+\newlabel{fig:encoder-cad}{{3.5}{23}{Modelo 3D do suporte do encoder TMCS-28 e do ponteiro acoplado ao eixo do motor de passo}{figure.caption.31}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.6}{\ignorespaces Vista dos motores de passo com suportes impressos em 3D, ponteiros e encoder TMCS-28 acoplado ao eixo para realimenta\c {c}\~ao de posi\c {c}\~ao.}}{23}{figure.caption.32}\protected@file@percent }
+\newlabel{fig:encoder-montado}{{3.6}{23}{Vista dos motores de passo com suportes impressos em 3D, ponteiros e encoder TMCS-28 acoplado ao eixo para realimenta\c {c}\~ao de posi\c {c}\~ao}{figure.caption.32}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.5}Intertravamentos e seguran\c {c}a}{23}{subsection.3.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.6}PCB, cabeamento e montagem}{24}{subsection.3.5.6}\protected@file@percent }
 \citation{romeros_tcc_ifmg_2022}
 \citation{tmc5160_ds}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.5}Intertravamentos e seguran\c {c}a}{22}{subsection.3.5.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5.6}PCB, cabeamento e montagem}{22}{subsection.3.5.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.6}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{22}{section.3.6}\protected@file@percent }
-\newlabel{sec:ctrl-visao-geral}{{3.6}{22}{Arquitetura de Controle de Movimento (Vis\~ao Geral)}{section.3.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.1}Compatibilidade de \emph  {timing} com o TMC5160 (\emph  {STEP}/\emph  {DIR})}{22}{subsection.3.6.1}\protected@file@percent }
-\newlabel{subsec:tmc-step-dir}{{3.6.1}{22}{Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{subsection.3.6.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.7}{\ignorespaces Prot\'otipo do controlador CNC montado em bancada, com fonte de alimenta\c {c}\~ao, motores de passo, drivers TMC5160, placa STM32 e Raspberry~Pi.}}{25}{figure.caption.33}\protected@file@percent }
+\newlabel{fig:prototipo-bancada}{{3.7}{25}{Prot\'otipo do controlador CNC montado em bancada, com fonte de alimenta\c {c}\~ao, motores de passo, drivers TMC5160, placa STM32 e Raspberry~Pi}{figure.caption.33}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{25}{section.3.6}\protected@file@percent }
+\newlabel{sec:ctrl-visao-geral}{{3.6}{25}{Arquitetura de Controle de Movimento (Vis\~ao Geral)}{section.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.1}Compatibilidade de \emph  {timing} com o TMC5160 (\emph  {STEP}/\emph  {DIR})}{25}{subsection.3.6.1}\protected@file@percent }
+\newlabel{subsec:tmc-step-dir}{{3.6.1}{25}{Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{subsection.3.6.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.8}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{26}{figure.caption.34}\protected@file@percent }
+\newlabel{fig:step_pulse_comparison}{{3.8}{26}{Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada}{figure.caption.34}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Comparativo entre tempos m\'inimos do TMC5160 e tempos configurados no firmware.}}{26}{table.caption.35}\protected@file@percent }
+\newlabel{tab:tmc-timing-vs-projeto}{{3.1}{26}{Comparativo entre tempos m\'inimos do TMC5160 e tempos configurados no firmware}{table.caption.35}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{26}{subsection.3.6.2}\protected@file@percent }
 \citation{tmc5160_ds}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada.}}{23}{figure.caption.30}\protected@file@percent }
-\newlabel{fig:step_pulse_comparison}{{3.4}{23}{Compara\c {c}\~ao visual entre o pulso de STEP implementado no firmware (esquerda) e o pulso m\'inimo requerido pelo datasheet do TMC5160 (direita), evidenciando a robusta margem de tempo utilizada}{figure.caption.30}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Tempos de STEP/DIR: TMC5160 (datasheet) vs. implementa\c {c}\~ao.}}{23}{table.caption.31}\protected@file@percent }
-\newlabel{tab:tmc-timing-vs-projeto}{{3.1}{23}{Tempos de STEP/DIR: TMC5160 (datasheet) vs. implementa\c {c}\~ao}{table.caption.31}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{23}{subsection.3.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.7}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{24}{section.3.7}\protected@file@percent }
-\newlabel{sec:dda}{{3.7}{24}{DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{section.3.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}}{24}{figure.caption.32}\protected@file@percent }
-\newlabel{fig:firmware_dda_sim}{{3.5}{24}{Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento}{figure.caption.32}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.8}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{25}{section.3.8}\protected@file@percent }
-\newlabel{sec:rampa}{{3.8}{25}{Rampa Trapezoidal (TIM7 @ 1\,kHz)}{section.3.8}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.6}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware.}}{25}{figure.caption.33}\protected@file@percent }
-\newlabel{fig:rampa_trapezoidal_simulada}{{3.6}{25}{Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware}{figure.caption.33}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.7}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{27}{section.3.7}\protected@file@percent }
+\newlabel{sec:dda}{{3.7}{27}{DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{section.3.7}{}}
+\citation{fussell2003}
+\citation{idc_cnc_interp}
+\citation{koren_reference}
+\citation{efficient_reference}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.9}{\ignorespaces Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento.}}{28}{figure.caption.36}\protected@file@percent }
+\newlabel{fig:firmware_dda_sim}{{3.9}{28}{Simula\c {c}\~ao da opera\c {c}\~ao interna do DDA para um movimento de 7 passos em X e 4 em Y. O gr\'afico superior mostra a evolu\c {c}\~ao dos acumuladores de fase, e o inferior mostra os pulsos STEP gerados para cada eixo a cada transbordamento}{figure.caption.36}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.8}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{29}{section.3.8}\protected@file@percent }
+\newlabel{sec:rampa}{{3.8}{29}{Rampa Trapezoidal (TIM7 @ 1\,kHz)}{section.3.8}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Atualiza\c {c}\~ao da rampa trapezoidal no TIM7 (por eixo)}}{30}{algorithm.1}\protected@file@percent }
+\newlabel{alg:rampa-trapezoidal}{{1}{30}{Atualiza\c {c}\~ao da rampa trapezoidal no TIM7 (por eixo)}{algorithm.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.10}{\ignorespaces Perfil de velocidade da rampa trapezoidal simulado a partir dos par\^ametros do firmware.}}{30}{figure.caption.37}\protected@file@percent }
+\newlabel{fig:rampa_trapezoidal_simulada}{{3.10}{30}{Perfil de velocidade da rampa trapezoidal simulado a partir dos par\^ametros do firmware}{figure.caption.37}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.9}Controle PI de Posi\c {c}\~ao com Encoder}{30}{section.3.9}\protected@file@percent }
+\newlabel{sec:pi}{{3.9}{30}{Controle PI de Posi\c {c}\~ao com Encoder}{section.3.9}{}}
 \citation{tmc5160_ds}
 \citation{tmc5160_ds}
-\@writefile{toc}{\contentsline {section}{\numberline {3.9}Controle PI de Posi\c {c}\~ao com Encoder}{26}{section.3.9}\protected@file@percent }
-\newlabel{sec:pi}{{3.9}{26}{Controle PI de Posi\c {c}\~ao com Encoder}{section.3.9}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.10}Fila de Movimentos e Segmenta\c {c}\~ao}{26}{section.3.10}\protected@file@percent }
-\newlabel{sec:fila}{{3.10}{26}{Fila de Movimentos e Segmenta\c {c}\~ao}{section.3.10}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.11}Mapeamento para o TMC5160}{26}{section.3.11}\protected@file@percent }
-\newlabel{sec:tmc-mapeamento}{{3.11}{26}{Mapeamento para o TMC5160}{section.3.11}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.11.1}Gera\c {c}\~ao de STEP/DIR (\emph  {``PWM'' de passo})}{26}{subsection.3.11.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{26}{subsection.3.11.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{27}{section.3.12}\protected@file@percent }
-\newlabel{sec:parametros}{{3.12}{27}{Par\^ametros-chaves do Projeto}{section.3.12}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Par\^ametros de tempo e limites usados no firmware.}}{27}{table.caption.34}\protected@file@percent }
-\newlabel{tab:param}{{3.2}{27}{Par\^ametros de tempo e limites usados no firmware}{table.caption.34}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos (Modo \emph  {progress})}{27}{section.3.13}\protected@file@percent }
-\newlabel{sec:casc-progress}{{3.13}{27}{Coordena\c {c}\~ao Multi-eixos (Modo \emph {progress})}{section.3.13}{}}
-\@writefile{toc}{\contentsline {paragraph}{O que a simulação cobre e como.}{28}{section*.35}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Saídas e diagnósticos.}{28}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.10}Fila de Movimentos e Segmenta\c {c}\~ao}{31}{section.3.10}\protected@file@percent }
+\newlabel{sec:fila}{{3.10}{31}{Fila de Movimentos e Segmenta\c {c}\~ao}{section.3.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.11}Mapeamento para o TMC5160}{31}{section.3.11}\protected@file@percent }
+\newlabel{sec:tmc-mapeamento}{{3.11}{31}{Mapeamento para o TMC5160}{section.3.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.11.1}Gera\c {c}\~ao de STEP/DIR (\emph  {``PWM'' de passo})}{31}{subsection.3.11.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{31}{subsection.3.11.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{32}{section.3.12}\protected@file@percent }
+\newlabel{sec:parametros}{{3.12}{32}{Par\^ametros-chaves do Projeto}{section.3.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3.2}{\ignorespaces Par\^ametros de tempo e limites usados no firmware.}}{32}{table.caption.38}\protected@file@percent }
+\newlabel{tab:param}{{3.2}{32}{Par\^ametros de tempo e limites usados no firmware}{table.caption.38}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos (Modo \emph  {progress})}{32}{section.3.13}\protected@file@percent }
+\newlabel{sec:casc-progress}{{3.13}{32}{Coordena\c {c}\~ao Multi-eixos (Modo \emph {progress})}{section.3.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{O que a simulação cobre e como.}{33}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Saídas e diagnósticos.}{33}{section*.40}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.11}{\ignorespaces Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro.}}{34}{figure.caption.41}\protected@file@percent }
+\newlabel{fig:simulacao-tcc}{{3.11}{34}{Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro}{figure.caption.41}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.12}{\ignorespaces Cenário de simulação com atrito programável por eixo, destacando as janelas de carga e o impacto sobre as curvas de posição, velocidade e erro de sincronismo.}}{34}{figure.caption.42}\protected@file@percent }
+\newlabel{fig:simulacao-atrito}{{3.12}{34}{Cenário de simulação com atrito programável por eixo, destacando as janelas de carga e o impacto sobre as curvas de posição, velocidade e erro de sincronismo}{figure.caption.42}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.14}Controle de Sincronismo: \emph  {Throttle} por Erro}{34}{section.3.14}\protected@file@percent }
+\newlabel{sec:throttle-erro}{{3.14}{34}{Controle de Sincronismo: \emph {Throttle} por Erro}{section.3.14}{}}
 \citation{tmc5160_ds}
 \citation{stm32l4_rm}
 \citation{tmc5160_ds}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.7}{\ignorespaces Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro.}}{29}{figure.caption.37}\protected@file@percent }
-\newlabel{fig:simulacao-tcc}{{3.7}{29}{Tela do simulador interativo, destacando os controles (parâmetros por eixo, carga programável e comandos de execução) e as curvas de posição, velocidade e erro}{figure.caption.37}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.14}Controle de Sincronismo: \emph  {Throttle} por Erro}{29}{section.3.14}\protected@file@percent }
-\newlabel{sec:throttle-erro}{{3.14}{29}{Controle de Sincronismo: \emph {Throttle} por Erro}{section.3.14}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{29}{section.3.15}\protected@file@percent }
-\newlabel{sec:boaspraticas}{{3.15}{29}{Boas pr\'aticas e Diagn\'ostico}{section.3.15}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3.16}Refer\^encias cruzadas}{30}{section.3.16}\protected@file@percent }
-\newlabel{sec:refs-cruzadas}{{3.16}{30}{Refer\^encias cruzadas}{section.3.16}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {4}Resultados e Discussão}{31}{chapter.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{35}{section.3.15}\protected@file@percent }
+\newlabel{sec:boaspraticas}{{3.15}{35}{Boas pr\'aticas e Diagn\'ostico}{section.3.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.16}Refer\^encias cruzadas}{35}{section.3.16}\protected@file@percent }
+\newlabel{sec:refs-cruzadas}{{3.16}{35}{Refer\^encias cruzadas}{section.3.16}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4}Resultados e Discussão}{36}{chapter.4}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:resultados}{{4}{31}{Resultados e Discussão}{chapter.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{31}{section.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{31}{section.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{31}{section.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.4}Fluxo do comando \texttt  {cnc\text  {-}cli}}{32}{section.4.4}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Fluxo do comando \texttt  {cnc\text  {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}}{33}{figure.caption.38}\protected@file@percent }
-\newlabel{fig:cnc-cli-flow}{{4.1}{33}{Fluxo do comando \texttt {cnc\text {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED}{figure.caption.38}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {5}Conclusão}{35}{chapter.5}\protected@file@percent }
+\newlabel{cap:resultados}{{4}{36}{Resultados e Discussão}{chapter.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{36}{section.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{36}{section.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{36}{section.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}Fluxo do comando \texttt  {cnc\text  {-}cli}}{37}{section.4.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces Fluxo do comando \texttt  {cnc\text  {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED.}}{38}{figure.caption.43}\protected@file@percent }
+\newlabel{fig:cnc-cli-flow}{{4.1}{38}{Fluxo do comando \texttt {cnc\text {-}cli}: validação, aplicação de patches TMC, enfileiramento de movimentos no STM32, monitoramento e estados do LED}{figure.caption.43}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {5}Conclusão}{40}{chapter.5}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{cap:conclusao}{{5}{35}{Conclusão}{chapter.5}{}}
+\newlabel{cap:conclusao}{{5}{40}{Conclusão}{chapter.5}{}}
 \bibstyle{apalike}
 \bibdata{Ref/SampleReferences}
 \bibcite{astrom1995}{{\r A}str{\"o}m and H{\"a}gglund, 1995}
@@ -222,7 +239,7 @@
 \bibcite{unit3_interpolators}{Suh et~al., 2008}
 \bibcite{tmc5160_ds}{{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, }
 \bibcite{tmcs28_datasheet}{{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}, 2022}
-\@writefile{toc}{\contentsline {chapter}{Bibliografia}{36}{chapter.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{Bibliografia}{41}{chapter.5}\protected@file@percent }
 \bibcite{efficient_reference}{Wang and Hu, 2016}
 \bibcite{adaptive_fuzzy_pid}{Wang et~al., 2021}
-\gdef \@abspage@last{53}
+\gdef \@abspage@last{58}

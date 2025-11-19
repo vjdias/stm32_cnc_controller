@@ -5,15 +5,29 @@
 O subsistema de movimento foi dividido em dois la\c{c}os temporizados:
 (i) \textbf{TIM6} a \SI{50}{kHz} (\SI{20}{\micro\second} por tick), dedicado \`a gera\c{c}\~ao de pulsos \emph{STEP} a partir de um DDA (Digital Differential Analyzer) em ponto fixo; e
 (ii) \textbf{TIM7} a \SI{1}{kHz} (\SI{1}{ms}), dedicado \`a l\'ogica de rampa trapezoidal (acelera\c{c}\~ao/desacelera\c{c}\~ao), ajuste de velocidade efetiva, leitura dos encoders e controle PI de posi\c{c}\~ao.
-A separa\c{c}\~ao reduz jitter na largura do \emph{STEP} e garante que o c\'alculo das rampas e do PI n\~ao impacte o \emph{timing} do pulso. As constantes de tempo usadas no c\'odigo s\~ao:
+A separa\c{c}\~ao reduz varia\c{c}\~oes temporais na largura do \emph{STEP} e garante que o c\'alculo das rampas e do PI n\~ao impacte o \emph{timing} do pulso. As constantes de tempo usadas no c\'odigo s\~ao:
 \texttt{MOTION\_TIM6\_HZ=50000}, \texttt{MOTION\_STEP\_HIGH\_TICKS=1}, \texttt{MOTION\_STEP\_LOW\_TICKS=1}, \texttt{MOTION\_DIR\_SETUP\_TICKS=1}, \texttt{MOTION\_ENABLE\_SETTLE\_TICKS=2}.
 
 \subsection{Compatibilidade de \emph{timing} com o TMC5160 (\emph{STEP}/\emph{DIR})}
 \label{subsec:tmc-step-dir}
 
-De acordo com o datasheet do TMC5160, as entradas \emph{STEP} e \emph{DIR} possuem filtragem anal\'ogica ($t_{\text{FILTSD}}\approx\SI{20}{ns}$) e requerem tempos m\'inimos:
-$t_{SH}$ (alto de STEP) e $t_{SL}$ (baixo de STEP) $\ge \max(t_{\text{FILTSD}},\,t_{\text{CLK}}+20\text{ ns})$ (tipicamente $\ge\SI{100}{ns}$). Os tempos de \emph{setup/hold} s\~ao $t_{DSU}=\SI{20}{ns}$ (DIR antes de STEP) e $t_{DSH}=\SI{20}{ns}$ (DIR ap\'os STEP) \cite{tmc5160_ds}.
-No nosso projeto, com \textbf{TIM6 a 50 kHz}, configuramos \emph{guardas} muito acima do m\'inimo (margem de seguran\c{c}a):
+O TMC5160 possui um pequeno filtro anal\'ogico nas entradas digitais
+(\(t_{\text{FILTSD}}\approx\SI{20}{ns}\)) para rejeitar ru\'idos estreitos. Por
+isso, o datasheet especifica que os tempos em n\'ivel alto (\(t_{SH}\)) e em
+n\'ivel baixo (\(t_{SL}\)) do sinal \emph{STEP} devem obedecer
+\(t_{SH},t_{SL} \ge \max\{t_{\text{FILTSD}},\,t_{\text{CLK}}+20\,\text{ns}\}\),
+resultado em pulsos efetivos tipicamente acima de \SI{100}{ns}. Al\'em
+disso, o relacionamento entre \emph{DIR} e \emph{STEP} deve respeitar tempos
+de \emph{setup/hold}: pelo menos \SI{20}{ns} entre uma varia\c{c}\~ao em DIR e o
+pr\'oximo pulso de STEP (\(t_{DSU}\)), e mais \SI{20}{ns} ap\'os o pulso antes
+de alterar novamente DIR (\(t_{DSH}\))~\cite{tmc5160_ds}. Em termos pr\'aticos,
+isso garante que o driver tenha tempo suficiente para amostrar o sentido
+(\emph{DIR}) e reconhecer cada pulso de passo (\emph{STEP}) sem incertezas.
+
+No projeto deste TCC, o gerador de pulsos opera com o \textbf{TIM6 a
+\SI{50}{kHz}}, o que significa um \emph{tick} fixo de \SI{20}{\micro s}. A partir
+dele foram definidos tempos de guarda muito maiores que os limites do
+datasheet, introduzindo uma margem de seguran\c{c}a robusta:
 \begin{itemize}
   \item Largura alta de STEP: $t_{SH} = \texttt{MOTION\_STEP\_HIGH\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$;
   \item Tempo baixo entre pulsos: $t_{SL} = \texttt{MOTION\_STEP\_LOW\_TICKS}\cdot\SI{20}{\micro s} = \SI{20}{\micro s}$;
@@ -31,18 +45,18 @@ Logo, todos os requisitos do TMC5160 s\~ao amplamente atendidos com folga (vide 
 
 \begin{table}[H]
   \centering
-  \caption{Tempos de STEP/DIR: TMC5160 (datasheet) vs. implementa\c{c}\~ao.}
+  \caption{Comparativo entre tempos m\'inimos do TMC5160 e tempos configurados no firmware.}
   \label{tab:tmc-timing-vs-projeto}
-  \setlength{\tabcolsep}{4pt}\footnotesize
-  \begin{tabularx}{\textwidth}{lcccX}
+  \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.1}\footnotesize
+  \begin{tabularx}{0.8\textwidth}{lccc}
     \toprule
-    Par\^ametro & TMC5160 (m\'in.) & Projeto & Margem & Observa\c{c}\~ao \\
+    Par\^ametro & TMC5160 (m\'in.) & Projeto & Margem aproximada \\
     \midrule
-    $t_{SH}$ (alto de STEP) & $\ge \max(t_{\text{FILTSD}}, t_{\text{CLK}}+20\text{ ns})$ ($\gtrsim \SI{100}{ns}$) & \SI{20}{\micro s} & $\times 200{,}000$ & \texttt{MOTION\_STEP\_HIGH\_TICKS}=1 \\
-    $t_{SL}$ (baixo de STEP) & idem & \SI{20}{\micro s} & $\times 200{,}000$ & \texttt{MOTION\_STEP\_LOW\_TICKS}=1 \\
-    $t_{DSU}$ (DIR\,$\rightarrow$\,STEP) & \SI{20}{ns} & \SI{20}{\micro s} & $\times 1{,}000$ & \texttt{MOTION\_DIR\_SETUP\_TICKS}=1 \\
-    $t_{DSH}$ (STEP\,$\rightarrow$\,DIR) & \SI{20}{ns} & \SI{20}{\micro s} & $\times 1{,}000$ & Garantido pelo espa\c{c}amento de pulsos \\
-    ENABLE settle & n.\,d. (com filtro interno) & \SI{40}{\micro s} & -- & \texttt{MOTION\_ENABLE\_SETTLE\_TICKS}=2 \\
+    $t_{SH}$ (alto de STEP) & $\gtrsim \SI{100}{ns}$ & \SI{20}{\micro s} & $\times 200{,}000$ \\
+    $t_{SL}$ (baixo de STEP) & $\gtrsim \SI{100}{ns}$ & \SI{20}{\micro s} & $\times 200{,}000$ \\
+    $t_{DSU}$ (DIR\,$\rightarrow$\,STEP) & \SI{20}{ns} & \SI{20}{\micro s} & $\times 1{,}000$ \\
+    $t_{DSH}$ (STEP\,$\rightarrow$\,DIR) & \SI{20}{ns} & \SI{20}{\micro s} & $\times 1{,}000$ \\
+    ENABLE settle & n.\,d. & \SI{40}{\micro s} & -- \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -56,7 +70,30 @@ Com $t_{SH}=t_{SL}=\SI{20}{\micro s}$, o per\'iodo m\'inimo de STEP \'e $\SI{40}
 \]
 
 \subsection{MicroPlyer, resolu\c{c}\~ao e DEDGE}
-Quando \texttt{intpol}=1 em \texttt{CHOPCONF}, o TMC5160 interpola cada pulso de STEP at\'e 256 microsteps (\emph{MicroPlyer}), melhorando suavidade a partir de entradas com resolu\c{c}\~ao mais grossa. O bit \texttt{dedge} define se as duas bordas do STEP contam (requer duty de 50\%) ou apenas a borda de subida. No nosso sistema, os pulsos t\^em duty controlado e largura fixa, e a contagem por borda de subida (padr\~ao) j\'a atende estabilidade e evita assimetria. Veja \cite{tmc5160_ds} para detalhes.
+Quando \texttt{intpol}=1 em \texttt{CHOPCONF}, o TMC5160 interpola cada pulso de STEP at\'e 256 microsteps (\emph{MicroPlyer}), gerando correntes intermedi\'arias nas bobinas mesmo que o host envie passos com resolu\c{c}\~ao mais grossa (por exemplo, 1/16). Isso aumenta a suavidade mec\^anica sem exigir frequ\^encias muito altas no sinal STEP.
+
+O sinal \emph{STEP} pode ser visto como um pulso retangular com per\'iodo
+$T$ e tempo em n\'ivel alto $t_{\text{alto}}$. A raz\~ao entre esses valores
+define o \emph{duty cycle} (ou simplesmente \emph{duty}),
+\[
+  D \;=\; \frac{t_{\text{alto}}}{T},
+\]
+isto \'e, a fra\c{c}\~ao do per\'iodo em que o sinal permanece em n\'ivel alto.
+O bit \texttt{dedge} do TMC5160 controla como esse pulso \'e interpretado:
+com \texttt{dedge}=0, apenas a borda de subida conta como um passo; com
+\texttt{dedge}=1, tanto a borda de subida quanto a de descida passam a ser
+contabilizadas. Nesse segundo modo, o driver assume implicitamente um duty
+pr\'oximo de 50\%, de forma que os passos "adiantados" e "atrasados" fiquem
+sim\'etricos dentro de cada per\'iodo $T$.
+
+No sistema descrito neste trabalho, os pulsos de \emph{STEP} t\^em largura
+fixa e duty bem controlado, definidos pelos par\^ametros
+\texttt{MOTION\_STEP\_HIGH\_TICKS} e \texttt{MOTION\_STEP\_LOW\_TICKS}. Optou-se
+por manter \texttt{dedge}=0 e usar apenas a borda de subida como evento de
+contagem, o que simplifica o \emph{timing}, garante estabilidade temporal,
+evita assimetrias desnecess\'arias e reduz a sensibilidade a pequenas
+varia\c{c}\~oes de duty. Para detalhes adicionais sobre \emph{MicroPlyer},
+\texttt{intpol} e \texttt{dedge}, ver \cite{tmc5160_ds}.
 
 \FloatBarrier
 \section{DDA em Ponto Fixo (TIM6 @ 50\,kHz)}
@@ -71,50 +108,121 @@ A Figura~\ref{fig:firmware_dda_sim} ilustra o funcionamento interno do DDA para 
     \label{fig:firmware_dda_sim}
 \end{figure}
 
-O gerador de passos usa um DDA Q16.16. Para cada eixo $i$, mantemos:
+O gerador de passos utiliza um DDA em ponto fixo Q16.16, em que a parte
+inteira representa o n\'umero de passos emitidos e a parte fracion\'aria
+acumula fra\c{c}\~oes de passo a cada tick. Essa organiza\c{c}\~ao segue a
+formula\c{c}\~ao cl\'assica de geradores DDA para interpoladores de movimento
+multi-eixo descritos na literatura de CNC~\cite{fussell2003,idc_cnc_interp,koren_reference,efficient_reference}.
+Para cada eixo $i$, mantemos o
+seguinte estado interno:
 \begin{itemize}
-  \item acumulador \texttt{dda\_accum\_q16} e incremento \texttt{dda\_inc\_q16};
-  \item velocidade efetiva \texttt{v\_actual\_sps} (steps/s), atualizada no TIM7;
-  \item contadores de largura do STEP: \texttt{step\_high} e \texttt{step\_low}.
+  \item acumulador \texttt{dda\_accum\_q16}, que guarda a fase acumulada em
+        formato Q16.16;
+  \item incremento \texttt{dda\_inc\_q16}, proporcional \`a velocidade efetiva;
+  \item velocidade efetiva \texttt{v\_actual\_sps} (em \emph{steps/s}),
+        atualizada a cada \SI{1}{ms} pelo TIM7;
+  \item contadores de largura do STEP: \texttt{step\_high} e
+        \texttt{step\_low}, usados para controlar o duty do pulso.
 \end{itemize}
-A cada tick do TIM6 (\SI{20}{\micro s}):
+A cada tick do TIM6 (\SI{20}{\micro s}), o DDA integra a velocidade em fase
+fracion\'aria:
 \[
-\texttt{dda\_accum\_q16} \leftarrow \texttt{dda\_accum\_q16} + \texttt{dda\_inc\_q16}.
+  \texttt{dda\_accum\_q16} \leftarrow
+  \texttt{dda\_accum\_q16} + \texttt{dda\_inc\_q16}.
 \]
-Quando \texttt{dda\_accum\_q16} $\ge 1.0$ (i.e., \texttt{Q16\_1}), emitimos um pulso de STEP:
+Sempre que o acumulador ultrapassa um passo inteiro em Q16.16
+(\texttt{dda\_accum\_q16} $\ge \texttt{Q16\_1}$), considera-se que mais um
+passo deve ser emitido. Nessa condi\c{c}\~ao, o firmware gera um pulso de
+\emph{STEP}:
 \[
-\texttt{step\_high} \leftarrow \texttt{MOTION\_STEP\_HIGH\_TICKS},\qquad
-\texttt{emitted\_steps} \leftarrow \texttt{emitted\_steps}+1,
+  \texttt{step\_high} \leftarrow \texttt{MOTION\_STEP\_HIGH\_TICKS},\qquad
+  \texttt{emitted\_steps} \leftarrow \texttt{emitted\_steps}+1,
 \]
-baixando o pino ao final de \texttt{step\_high} e respeitando \texttt{step\_low} (t$_{SL}$).
-O incremento \'e derivado da velocidade efetiva:
+mantendo o pino em n\'ivel alto durante \texttt{step\_high} e, em seguida,
+em n\'ivel baixo por pelo menos \texttt{step\_low} (t$_{SL}$). Dessa forma,
+cada \emph{crossing} de \texttt{Q16\_1} no acumulador corresponde a um pulso
+STEP com largura e espa\c{c}amento bem definidos.
+
+O incremento \texttt{dda\_inc\_q16} \'e calculado diretamente a partir da
+velocidade efetiva desejada:
 \[
-\texttt{dda\_inc\_q16} \;=\; \mathrm{Q16}\!\left(\frac{\texttt{v\_actual\_sps}}{\texttt{MOTION\_TIM6\_HZ}}\right).
+  \texttt{dda\_inc\_q16} \;=\;
+  \mathrm{Q16}\!\left(\frac{\texttt{v\_actual\_sps}}{\texttt{MOTION\_TIM6\_HZ}}\right).
 \]
-Essa rela\c{c}\~ao garante linearidade entre \emph{steps/s} e a taxa de \emph{crossing} do DDA, com jitter sub-\SI{}{\micro s} e duty fixo (ver fun\c{c}\~ao \texttt{motion\_on\_tim6\_tick}).
+Intuitivamente, isso significa que, em m\'edia, $\texttt{v\_actual\_sps}$
+passos s\~ao gerados a cada segundo quando o temporizador opera a
+\texttt{MOTION\_TIM6\_HZ}. Essa rela\c{c}\~ao garante linearidade entre a
+velocidade em \emph{steps/s} e a taxa de \emph{crossing} do DDA, mantendo
+varia\c{c}\~oes temporais sub-\SI{}{\micro s} e duty fixo no sinal STEP (ver
+fun\c{c}\~ao \texttt{motion\_on\_tim6\_tick}).
 
 \FloatBarrier
 \section{Rampa Trapezoidal (TIM7 @ 1\,kHz)}
 \label{sec:rampa}
 
-A cada \SI{1}{ms}, o TIM7 atualiza a velocidade alvo e aplica a rampa:
+A cada \SI{1}{ms}, o TIM7 atualiza a velocidade alvo de cada eixo e aplica
+uma rampa trapezoidal de acelera\c{c}\~ao/desacelera\c{c}\~ao. A refer\^encia de
+velocidade em \emph{steps/s} \'e obtida a partir da quantidade de passos por
+amostra configurada pelo host (\texttt{velocity\_per\_tick}):
 \begin{align*}
-  \texttt{v\_cmd\_sps} &= \texttt{velocity\_per\_tick}\times 1000, \\
-  s_{\text{brake}} &= \left\lfloor \frac{v^2}{2a} \right\rfloor, \quad v=\texttt{v\_actual\_sps},\; a=\texttt{accel\_sps2},
+  \texttt{v\_cmd\_sps} &= \texttt{velocity\_per\_tick}\times 1000,
 \end{align*}
-onde $s_{\text{brake}}$ decide o instante de iniciar a desacelera\c{c}\~ao.
-A acelera\c{c}\~ao discreta usa um acumulador de \SI{1}{ms} (\texttt{g\_v\_accum}) para integrar $a$ em passos unit\'arios de velocidade. A l\'ogica segue:
+pois o la\c{c}o do TIM7 roda a \SI{1}{kHz}. Em seguida, calcula-se a
+``dist\^ancia de frenagem'' em passos para a velocidade atual:
+\begin{align*}
+  s_{\text{brake}} &= \left\lfloor \frac{v^2}{2a} \right\rfloor,
+  \quad v=\texttt{v\_actual\_sps},\; a=\texttt{accel\_sps2},
+\end{align*}
+onde $a$ \'e a acelera\c{c}\~ao m\'axima configurada (\texttt{accel\_sps2}, em
+steps/s$^2$). O termo $s_{\text{brake}}$ representa o n\'umero de passos
+necess\'arios para reduzir a velocidade de $v$ at\'e zero com acelera\c{c}\~ao
+constante $a$, e \'e usado como crit\'erio para decidir quando iniciar a
+fase de desacelera\c{c}\~ao.
+
+A acelera\c{c}\~ao discreta \'e implementada por meio de um acumulador de
+\SI{1}{ms} (\texttt{g\_v\_accum}), que integra $a$ em incrementos unit\'arios
+de velocidade. Em cada ciclo do TIM7, a l\'ogica de rampa, em alto n\'ivel,
+segue os passos abaixo:
 \begin{enumerate}
-  \item Se $\text{passos remanescentes} \le s_{\text{brake}}$, reduza $v$ (freio).
-  \item Caso contr\'ario, ajuste $v$ gradualmente at\'e $\texttt{v\_cmd\_sps}$, sem ultrapassar \texttt{MOTION\_MAX\_SPS}.
-  \item Compute \texttt{dda\_inc\_q16} a partir de \texttt{v\_actual\_sps} (Eq. anterior).
+  \item Se $\text{passos remanescentes} \le s_{\text{brake}}$, inicia a
+        fase de freio, reduzindo gradualmente $\texttt{v\_actual\_sps}$.
+  \item Caso contr\'ario, acelera $\texttt{v\_actual\_sps}$ na dire\c{c}\~ao de
+        $\texttt{v\_cmd\_sps}$, respeitando o limite f\'isico
+        \texttt{MOTION\_MAX\_SPS}.
+  \item Ao final, atualiza \texttt{dda\_inc\_q16} a partir de
+        \texttt{v\_actual\_sps} (Eq.~anterior), para que o DDA reflita a nova
+        velocidade de alvo naquele eixo.
 \end{enumerate}
-O projeto mant\'em \texttt{DEMO\_ACCEL\_SPS2=\num{200000}} como acelera\c{c}\~ao padr\~ao (substitu\'ivel por eixo). A fun\c{c}\~ao \texttt{motion\_remaining\_steps\_total\_for\_axis} soma segmento ativo + fila para desacelera\c{c}\~ao suave entre trechos.
+O projeto mant\'em \texttt{DEMO\_ACCEL\_SPS2=\num{200000}} como acelera\c{c}\~ao
+padr\~ao (podendo ser ajustada por eixo). A fun\c{c}\~ao
+\texttt{motion\_remaining\_steps\_total\_for\_axis} soma o segmento ativo com
+os segmentos ainda enfileirados, permitindo que a decis\~ao de freio leve em
+conta n\~ao apenas o trecho atual, mas tamb\'em a fila de movimentos.
+
+\begin{algorithm}[H]
+  \caption{Atualiza\c{c}\~ao da rampa trapezoidal no TIM7 (por eixo)}
+  \label{alg:rampa-trapezoidal}
+  \begin{algorithmic}[1]
+    \Procedure{update\_ramp}{$v$, $v_{\text{cmd}}$, $a$, $rem$}
+      \State $T_s \gets \SI{1}{ms}$
+      \State $s_{\text{brake}} \gets \left\lfloor \dfrac{v^2}{2a} \right\rfloor$
+      \If{$rem \le s_{\text{brake}}$} \Comment{Entrar em frenagem}
+        \State $v \gets \max\{0,\; v - a T_s\}$
+      \Else \Comment{Ainda h\'a espa\c{c}o para acelerar}
+        \State $v \gets v + a T_s$
+        \State $v \gets \min\{v,\; v_{\text{cmd}},\; \texttt{MOTION\_MAX\_SPS}\}$
+      \EndIf
+      \State $\texttt{v\_actual\_sps} \gets v$
+      \State $\texttt{dda\_inc\_q16} \gets \mathrm{Q16}\!\left(v / \texttt{MOTION\_TIM6\_HZ}\right)$
+      \State \Return $\texttt{v\_actual\_sps}, \texttt{dda\_inc\_q16}$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{Cap03/rampa_trapezoidal.png}
-  \caption{Perfil de velocidade da rampa trapezoidal simulado a partir dos parâmetros do firmware.}
+  \caption{Perfil de velocidade da rampa trapezoidal simulado a partir dos par\^ametros do firmware.}
   \label{fig:rampa_trapezoidal_simulada}
 \end{figure}
 
@@ -128,7 +236,9 @@ e = \texttt{target\_steps} - \left\lfloor \frac{(\texttt{enc\_rel})\cdot \texttt
 \]
 com \texttt{DDA\_STEPS\_PER\_REV} $= 400 \times \texttt{MICROSTEP\_FACTOR}$ (passo do motor \SI{0,9}{\degree}) e
 \texttt{ENC\_COUNTS\_PER\_REV} por eixo ($X/Z=\num{40000}$, $Y=\num{2500}$).
-Aplica-se \emph{deadband} de $\pm$\,\texttt{MOTION\_PI\_DEADBAND\_STEPS} e um filtro exponencial na derivada:
+Aplica-se uma \emph{zona morta} (\emph{deadband}) de $\pm$\,\texttt{MOTION\_PI\_DEADBAND\_STEPS}: enquanto $|e|$ permanecer abaixo desse limiar, o controlador considera o erro nulo e n\~ao gera corre\c{c}\~ao. Isso evita que ru\'ido de quantiza\c{c}\~ao do encoder e pequenas oscila\c{c}\~oes mec\^anicas fiquem realimentando o PI em torno do alvo.
+
+Para o termo derivativo, utiliza-se um filtro exponencial discreto que suaviza varia\c{c}\~oes r\'apidas em $e$:
 \[
 d[n] \leftarrow d[n-1] + \frac{\Delta e - d[n-1]}{2^{\alpha}},\quad \alpha=8.
 \]
@@ -267,6 +377,13 @@ Os gráficos de posição, velocidade e erro utilizam os valores do encoder (nã
   \label{fig:simulacao-tcc}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Cap03/imagens/TCC_SIMULACAO_COM_ATRITO.png}
+  \caption{Cenário de simulação com atrito programável por eixo, destacando as janelas de carga e o impacto sobre as curvas de posição, velocidade e erro de sincronismo.}
+  \label{fig:simulacao-atrito}
+\end{figure}
+
 \FloatBarrier
 \section{Controle de Sincronismo: \emph{Throttle} por Erro}
 \label{sec:throttle-erro}
@@ -290,7 +407,7 @@ reduzindo oscil\c{c}\~oes e o trabalho do PI, sem introduzir paradas bruscas.
 
 \begin{itemize}
   \item \textbf{Ordem dos eventos}: ajustar DIR $\rightarrow$ respeitar \texttt{dir\_settle\_ticks} $\rightarrow$ habilitar driver $\rightarrow$ respeitar \texttt{en\_settle\_ticks} $\rightarrow$ iniciar STEP.
-  \item \textbf{Jitter baixo no STEP}: manter o trabalho pesado (PI, rampa, telemetria) no TIM7; evitar \texttt{printf} em interrup\c{c}\~oes do TIM6 (\texttt{MOTION\_DEBUG\_TIM6\_PRINTS}=0).
+  \item \textbf{Baixa varia\c{c}\~ao temporal no STEP}: manter o trabalho pesado (PI, rampa, telemetria) no TIM7; evitar \texttt{printf} em interrup\c{c}\~oes do TIM6 (\texttt{MOTION\_DEBUG\_TIM6\_PRINTS}=0).
   \item \textbf{Telemetria}: \texttt{encoder\_status} e \texttt{set\_origin} exp\~oem posi\c{c}\~ao absoluta/relativa, erro do PI e refer\^encia do zero.
   \item \textbf{Compatibilidade com o TMC5160}: manter $t_{SH}$, $t_{SL}$, $t_{DSU}$ e $t_{DSH}$ com folga; se usar \texttt{dedge}=1, garantir duty de 50\% e bordas limpas (\cite{tmc5160_ds}).
 \end{itemize}

@@ -43,32 +43,32 @@
 \contentsline {subsection}{\numberline {3.4.5}Validação gráfica do modelo FOPDT}{20}{subsection.3.4.5}%
 \contentsline {section}{\numberline {3.5}Arquitetura de Hardware}{21}{section.3.5}%
 \contentsline {subsection}{\numberline {3.5.1}Vis\~ao geral do sistema}{21}{subsection.3.5.1}%
-\contentsline {subsection}{\numberline {3.5.2}Alimenta\c {c}\~ao e EMC}{21}{subsection.3.5.2}%
-\contentsline {subsection}{\numberline {3.5.3}Drivers TMC5160}{21}{subsection.3.5.3}%
-\contentsline {subsection}{\numberline {3.5.4}Encoder \'{o}ptico TMCS-28}{21}{subsection.3.5.4}%
-\contentsline {subsection}{\numberline {3.5.5}Intertravamentos e seguran\c {c}a}{22}{subsection.3.5.5}%
-\contentsline {subsection}{\numberline {3.5.6}PCB, cabeamento e montagem}{22}{subsection.3.5.6}%
-\contentsline {section}{\numberline {3.6}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{22}{section.3.6}%
-\contentsline {subsection}{\numberline {3.6.1}Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{22}{subsection.3.6.1}%
-\contentsline {subsection}{\numberline {3.6.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{23}{subsection.3.6.2}%
-\contentsline {section}{\numberline {3.7}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{24}{section.3.7}%
-\contentsline {section}{\numberline {3.8}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{25}{section.3.8}%
-\contentsline {section}{\numberline {3.9}Controle PI de Posi\c {c}\~ao com Encoder}{26}{section.3.9}%
-\contentsline {section}{\numberline {3.10}Fila de Movimentos e Segmenta\c {c}\~ao}{26}{section.3.10}%
-\contentsline {section}{\numberline {3.11}Mapeamento para o TMC5160}{26}{section.3.11}%
-\contentsline {subsection}{\numberline {3.11.1}Gera\c {c}\~ao de STEP/DIR (\emph {``PWM'' de passo})}{26}{subsection.3.11.1}%
-\contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{26}{subsection.3.11.2}%
-\contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{27}{section.3.12}%
-\contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos (Modo \emph {progress})}{27}{section.3.13}%
-\contentsline {paragraph}{O que a simulação cobre e como.}{28}{section*.35}%
-\contentsline {paragraph}{Saídas e diagnósticos.}{28}{section*.36}%
-\contentsline {section}{\numberline {3.14}Controle de Sincronismo: \emph {Throttle} por Erro}{29}{section.3.14}%
-\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{29}{section.3.15}%
-\contentsline {section}{\numberline {3.16}Refer\^encias cruzadas}{30}{section.3.16}%
-\contentsline {chapter}{\numberline {4}Resultados e Discussão}{31}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{31}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{31}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{31}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Fluxo do comando \texttt {cnc\text {-}cli}}{32}{section.4.4}%
-\contentsline {chapter}{\numberline {5}Conclusão}{35}{chapter.5}%
-\contentsline {chapter}{Bibliografia}{36}{chapter.5}%
+\contentsline {subsection}{\numberline {3.5.2}Alimenta\c {c}\~ao e EMC}{22}{subsection.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3}Drivers TMC5160}{22}{subsection.3.5.3}%
+\contentsline {subsection}{\numberline {3.5.4}Encoder \'{o}ptico TMCS-28}{22}{subsection.3.5.4}%
+\contentsline {subsection}{\numberline {3.5.5}Intertravamentos e seguran\c {c}a}{23}{subsection.3.5.5}%
+\contentsline {subsection}{\numberline {3.5.6}PCB, cabeamento e montagem}{24}{subsection.3.5.6}%
+\contentsline {section}{\numberline {3.6}Arquitetura de Controle de Movimento (Vis\~ao Geral)}{25}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Compatibilidade de \emph {timing} com o TMC5160 (\emph {STEP}/\emph {DIR})}{25}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}MicroPlyer, resolu\c {c}\~ao e DEDGE}{26}{subsection.3.6.2}%
+\contentsline {section}{\numberline {3.7}DDA em Ponto Fixo (TIM6 @ 50\,kHz)}{27}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Rampa Trapezoidal (TIM7 @ 1\,kHz)}{29}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Controle PI de Posi\c {c}\~ao com Encoder}{30}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Fila de Movimentos e Segmenta\c {c}\~ao}{31}{section.3.10}%
+\contentsline {section}{\numberline {3.11}Mapeamento para o TMC5160}{31}{section.3.11}%
+\contentsline {subsection}{\numberline {3.11.1}Gera\c {c}\~ao de STEP/DIR (\emph {``PWM'' de passo})}{31}{subsection.3.11.1}%
+\contentsline {subsection}{\numberline {3.11.2}Resolu\c {c}\~ao de microstepping e MicroPlyer}{31}{subsection.3.11.2}%
+\contentsline {section}{\numberline {3.12}Par\^ametros-chaves do Projeto}{32}{section.3.12}%
+\contentsline {section}{\numberline {3.13}Coordena\c {c}\~ao Multi-eixos (Modo \emph {progress})}{32}{section.3.13}%
+\contentsline {paragraph}{O que a simulação cobre e como.}{33}{section*.39}%
+\contentsline {paragraph}{Saídas e diagnósticos.}{33}{section*.40}%
+\contentsline {section}{\numberline {3.14}Controle de Sincronismo: \emph {Throttle} por Erro}{34}{section.3.14}%
+\contentsline {section}{\numberline {3.15}Boas pr\'aticas e Diagn\'ostico}{35}{section.3.15}%
+\contentsline {section}{\numberline {3.16}Refer\^encias cruzadas}{35}{section.3.16}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{36}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{36}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{36}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{36}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Fluxo do comando \texttt {cnc\text {-}cli}}{37}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Conclusão}{40}{chapter.5}%
+\contentsline {chapter}{Bibliografia}{41}{chapter.5}%
