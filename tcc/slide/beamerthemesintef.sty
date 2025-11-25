@@ -74,6 +74,8 @@
 \pgfdeclareimage[width=0.09\paperwidth]{logo}{imagens/ufal-extenso-preto-transparente.png}
 \pgfdeclareimage[width=0.09\paperwidth]{whitelogo}{imagens/ufal-extenso-branca-fundo-transparente.png}
 \newcommand{\@logo}{logo}
+% Cor do quadrado atrás da logo no cabeçalho
+\newcommand{\headsquarecolor}{maincolor}
 
 % Set colours
 % NOTE! Beamer colors should be set in the preamble. It often works fine in the 
@@ -84,14 +86,18 @@
         \setbeamercolor{footline}{fg=white}
 		\setbeamercolor{normal text}{fg=white,bg=maincolor}
 		\setbeamercolor{structure}{fg=white}
-		\renewcommand{\@logo}{whitelogo}
+        % Fundo azul, quadrado branco com logo preta
+		\renewcommand{\@logo}{logo}
+		\renewcommand{\headsquarecolor}{white}
 		\setbeamercolor{block title}{fg=maincolor,bg=sintefgrey}
 		\setbeamercolor{block body}{fg=darkgray,bg=sintefgrey}
 	}{%
         \setbeamercolor{footline}{fg=darkgray}
 		\setbeamercolor{normal text}{fg=darkgray,bg=white}
 		\setbeamercolor{structure}{fg=maincolor}
-		\renewcommand{\@logo}{logo}
+        % Fundo branco, quadrado azul com logo branca
+		\renewcommand{\@logo}{whitelogo}
+		\renewcommand{\headsquarecolor}{maincolor}
 		\setbeamercolor{block title}{fg=white,bg=maincolor}
 		\setbeamercolor{block body}{fg=darkgray,bg=sintefgrey}
 	}
@@ -130,8 +136,15 @@
 	\endgroup
 }
 
-% Put the logo in each slide's top left area
-\setbeamertemplate{headline}{\hspace{0.06\textwidth}\pgfuseimage{\@logo}}
+% Put the logo in each slide's top left area, with a colored square behind it.
+% Em fundos brancos: quadrado azul + logo branca.
+% Em fundos azul escuro: quadrado branco + logo preta.
+\setbeamertemplate{headline}{%
+  \hspace{0.06\textwidth}%
+  \begin{tikzpicture}
+    \node[fill=\headsquarecolor, inner sep=4pt] {\pgfuseimage{\@logo}};
+  \end{tikzpicture}%
+}
 
 % Define frame title and subtitle layout
 \setbeamertemplate{frametitle}{%
@@ -179,7 +192,7 @@
       (current page.south east) --
       ([xshift=-0.38\paperwidth]current page.south east) --
       ([xshift=-0.14\paperwidth]current page.north east) -- cycle;
-    % Brasão da UFAL + texto "Universidade Federal de Alagoas"
+    % Brasão da UFAL + texto (sem fundo branco/quadrado)
     \node[anchor=south east, xshift=-0.2cm, yshift=1.1cm] at (current page.south east) {%
       \begin{minipage}{0.35\paperwidth}
         \raggedleft
