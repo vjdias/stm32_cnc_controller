@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  24 NOV 2025 15:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 14:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1148,23 +1148,10 @@ Overfull \vbox (23.01527pt too high) detected at line 138
 [9
 
  <./Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png>]
-<Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png, id=152, 748.29562pt x 737
-.75626pt>
-File: Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png Graphic file (type pn
-g)
-<use Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png>
-Package pdftex.def Info: Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png  u
-sed on input line 148.
-(pdftex.def)             Requested size: 325.11302pt x 320.53864pt.
-
-Overfull \vbox (127.95847pt too high) detected at line 148
- []
-
-
 
 [10
 
- <./Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png>]
+]
 
 [11
 
@@ -1181,83 +1168,91 @@ Overfull \vbox (127.95847pt too high) detected at line 148
 [14
 
 ]
-
-[15
-
-]
-<Cap03/dda_line_rasterization.png, id=186, 722.7pt x 505.89pt>
+<Cap03/dda_line_rasterization.png, id=180, 722.7pt x 505.89pt>
 File: Cap03/dda_line_rasterization.png Graphic file (type png)
 <use Cap03/dda_line_rasterization.png>
 Package pdftex.def Info: Cap03/dda_line_rasterization.png  used on input line 2
-36.
+26.
 (pdftex.def)             Requested size: 325.11302pt x 227.57892pt.
 
-Overfull \vbox (46.99875pt too high) detected at line 236
+Overfull \vbox (46.99875pt too high) detected at line 226
  []
 
 
 
-[16
+[15
 
  <./Cap03/dda_line_rasterization.png>]
 
-[17
+[16
 
 ]
-<Cap03/step_pulse_comparison.png, id=200, 867.24pt x 361.35pt>
+<Cap03/step_pulse_comparison.png, id=193, 867.24pt x 361.35pt>
 File: Cap03/step_pulse_comparison.png Graphic file (type png)
 <use Cap03/step_pulse_comparison.png>
-Package pdftex.def Info: Cap03/step_pulse_comparison.png  used on input line 26
+Package pdftex.def Info: Cap03/step_pulse_comparison.png  used on input line 25
 0.
 (pdftex.def)             Requested size: 368.46407pt x 153.52484pt.
 
 
-[18
+[17
 
  <./Cap03/step_pulse_comparison.png>]
+
+[18
+
+]
 
 [19
 
 ]
+Overfull \vbox (16.33102pt too high) detected at line 300
+ []
+
+
 
 [20
 
 ]
-<Cap03/SimulacaoTCC.png, id=218, 1926.44719pt x 812.28468pt>
-File: Cap03/SimulacaoTCC.png Graphic file (type png)
-<use Cap03/SimulacaoTCC.png>
-Package pdftex.def Info: Cap03/SimulacaoTCC.png  used on input line 294.
-(pdftex.def)             Requested size: 368.46407pt x 155.35204pt.
-
 
 [21
 
- <./Cap03/SimulacaoTCC.png>]
+]
+<Cap03/SimulacaoTCC.png, id=221, 1926.44719pt x 812.28468pt>
+File: Cap03/SimulacaoTCC.png Graphic file (type png)
+<use Cap03/SimulacaoTCC.png>
+Package pdftex.def Info: Cap03/SimulacaoTCC.png  used on input line 320.
+(pdftex.def)             Requested size: 368.46407pt x 155.35204pt.
+
 
 [22
 
-]
-<Cap03/TCC_SIMULACAO_COM_ATRITO.png, id=229, 1926.44719pt x 812.28468pt>
-File: Cap03/TCC_SIMULACAO_COM_ATRITO.png Graphic file (type png)
-<use Cap03/TCC_SIMULACAO_COM_ATRITO.png>
-Package pdftex.def Info: Cap03/TCC_SIMULACAO_COM_ATRITO.png  used on input line
- 317.
-(pdftex.def)             Requested size: 390.13298pt x 164.49913pt.
-
+ <./Cap03/SimulacaoTCC.png>]
 
 [23
 
- <./Cap03/TCC_SIMULACAO_COM_ATRITO.png>]
+]
+<Cap03/TCC_SIMULACAO_COM_ATRITO.png, id=232, 1926.44719pt x 812.28468pt>
+File: Cap03/TCC_SIMULACAO_COM_ATRITO.png Graphic file (type png)
+<use Cap03/TCC_SIMULACAO_COM_ATRITO.png>
+Package pdftex.def Info: Cap03/TCC_SIMULACAO_COM_ATRITO.png  used on input line
+ 343.
+(pdftex.def)             Requested size: 390.13298pt x 164.49913pt.
+
 
 [24
 
-]
+ <./Cap03/TCC_SIMULACAO_COM_ATRITO.png>]
 
 [25
 
 ]
 
 [26
+
+]
+
+[27
 
 ]
 \tf@nav=\write6
@@ -1278,10 +1273,10 @@ Package rerunfilecheck Info: File `main-presentation.out' has not changed.
 (rerunfilecheck)             Checksum: EDF9AE0D022159DF5115165E05FF6F48;819.
  ) 
 Here is how much of TeX's memory you used:
- 27393 strings out of 468081
- 583161 string characters out of 5425304
+ 27394 strings out of 468081
+ 582924 string characters out of 5425304
  920247 words of memory out of 5000000
- 55487 multiletter control sequences out of 15000+600000
+ 55486 multiletter control sequences out of 15000+600000
  653801 words of font info for 107 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  128i,11n,123p,394b,1048s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1310,9 +1305,9 @@ AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmssi10.pfb><C:/Us
 ers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmssi8.
 pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/
 cm/cmsy10.pfb>
-Output written on main-presentation.pdf (26 pages, 891971 bytes).
+Output written on main-presentation.pdf (27 pages, 785860 bytes).
 PDF statistics:
- 774 PDF objects out of 1000 (max. 8388607)
- 58 named destinations out of 1000 (max. 500000)
- 251 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 779 PDF objects out of 1000 (max. 8388607)
+ 60 named destinations out of 1000 (max. 500000)
+ 246 words of extra memory for PDF output out of 10000 (max. 10000000)
 

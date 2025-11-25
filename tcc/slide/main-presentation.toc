@@ -1,6 +1,6 @@
 \babel@toc {brazil}{}\relax 
 \beamer@sectionintoc {1}{Protocolo de comunicação}{3}{0}{1}
 \beamer@sectionintoc {2}{Arquitetura de hardware}{9}{0}{2}
-\beamer@sectionintoc {3}{Arquitetura de software}{14}{0}{3}
-\beamer@sectionintoc {4}{Controle de movimento}{18}{0}{4}
-\beamer@sectionintoc {5}{Resultados e conclusão}{26}{0}{5}
+\beamer@sectionintoc {3}{Arquitetura de software}{13}{0}{3}
+\beamer@sectionintoc {4}{Controle de movimento}{17}{0}{4}
+\beamer@sectionintoc {5}{Resultados e conclusão}{28}{0}{5}

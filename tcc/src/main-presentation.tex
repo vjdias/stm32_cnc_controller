@@ -138,16 +138,6 @@
 \end{frame}
 
 %--------------------------------------------------------------------
-\begin{frame}{Vista superior do conjunto}
-  \centering
-  \includegraphics[width=0.75\linewidth]{TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png}
-  \vspace{0.5em}
-
-  \small Vista superior destacando a distribuição das placas e o roteamento
-  entre lógica, drivers e sensores.
-\end{frame}
-
-%--------------------------------------------------------------------
 \begin{frame}{Encoder óptico TMCS-28}
   \begin{itemize}
     \item Encoder incremental TMCS-28-10k com resolução efetiva de 40\,000 contagens por volta.
@@ -274,6 +264,40 @@
 \end{frame}
 
 %--------------------------------------------------------------------
+\begin{frame}{Modelagem discreta posição $\rightarrow$ velocidade}
+  \begin{itemize}
+    \item Saída medida: posição incremental em passos DDA, a \SI{1}{\kilo\hertz}, a partir dos contadores de encoder.
+    \item Em cada amostra, o erro de posição alimenta um controlador PI/PD discreto que ajusta a velocidade de referência do DDA.
+    \item O termo derivativo é filtrado exponencialmente para reduzir ruído de quantização e vibrações rápidas.
+    \item Dessa forma, a posição medida no tempo discreto é convertida em correções de frequência de STEP (\emph{steps/s}) aplicadas ao DDA.
+  \end{itemize}
+\end{frame}
+
+%--------------------------------------------------------------------
+\begin{frame}{Da física à função de transferência}
+  \begin{itemize}
+    \item Modelo físico (2ª lei de Newton para rotação):
+      \[
+        J\,\frac{d\omega(t)}{dt} + B\,\omega(t) = T_{\text{motor}}(t).
+      \]
+    \item Driver TMC5160 converte frequência de STEP em torque aproximado:
+      \[
+        T_{\text{motor}}(t) \approx K_{\text{sist}}\,f(t).
+      \]
+    \item Substituindo e normalizando por $B$:
+      \[
+        \tau = \frac{J}{B},\quad K = \frac{K_{\text{sist}}}{B},
+      \qquad
+        \tau\,\frac{d\omega(t)}{dt} + \omega(t) = K\,f(t).
+      \]
+    \item Aplicando a transformada de Laplace (condições iniciais nulas):
+      \[
+        G(s) = \frac{\Omega(s)}{F(s)} = \frac{K}{\tau s + 1}.
+      \]
+  \end{itemize}
+\end{frame}
+
+%--------------------------------------------------------------------
 \begin{frame}{Modelo FOPDT e síntese de ganhos PD}
   \begin{itemize}
     \item Malha de velocidade aproximada por modelo FOPDT: ganho $K$, tempo morto $L$ e constante de tempo $\tau$.
@@ -331,7 +355,8 @@
   \begin{itemize}
     \item Reduzir a dependência de múltiplos \emph{polls} SPI por comando.
     \item Explorar reinicialização imediata do DMA assim que uma resposta estiver disponível.
-    \item Explorar perfis de aceleração mais agressivos com prescalers adaptativos no DDA.
+    \item Avaliar perfis de aceleração mais agressivos combinados com prescalers adaptativos no DDA.
+    \item Investigar modelos de controle preditivo, baseados no modelo FOPDT identificado, para correção antecipada de erro de posição/velocidade.
     \item Avaliar envio de múltiplos comandos por ciclo SPI para melhor aproveitamento do canal.
   \end{itemize}
 \end{frame}

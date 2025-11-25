@@ -140,16 +140,6 @@
 \end{frame}
 
 %--------------------------------------------------------------------
-\begin{frame}{Vista superior do conjunto}
-  \centering
-  \includegraphics[width=0.4\linewidth]{TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png}
-  \vspace{0.5em}
-
-  \small Vista superior destacando a distribuição das placas e o roteamento
-  entre lógica, drivers e sensores.
-\end{frame}
-
-%--------------------------------------------------------------------
 \begin{frame}{Encoder óptico TMCS-28}
   \begin{itemize}
     \item Encoder incremental TMCS-28-10k com resolução efetiva de 40\,000 contagens por volta.
@@ -276,12 +266,73 @@
 \end{frame}
 
 %--------------------------------------------------------------------
-\begin{frame}{Modelo FOPDT e síntese de ganhos PD}
+\begin{frame}{Modelagem discreta posição $\rightarrow$ velocidade}
   \begin{itemize}
-    \item Malha de velocidade aproximada por modelo FOPDT: ganho $K$, tempo morto $L$ e constante de tempo $\tau$.
-    \item Parâmetros identificados a partir de respostas a degrau de velocidade obtidas via telemetria.
-    \item Ganhos PD contínuos sintetizados por regras de Ziegler--Nichols para curva de reação.
-    \item Ganhos contínuos escalonados para formato inteiro (fator de escala $S=256$) e catalogados por eixo/microstep.
+    \item Saída medida: posição incremental em passos DDA, a \SI{1}{\kilo\hertz}, a partir dos contadores de encoder.
+    \item Em cada amostra, o erro de posição alimenta um controlador PI/PD discreto que ajusta a velocidade de referência do DDA.
+    \item O termo derivativo é filtrado exponencialmente para reduzir ruído de quantização e vibrações rápidas.
+    \item Assim, a posição medida no tempo discreto é convertida em correções de frequência de STEP (\emph{steps/s}) aplicadas ao DDA.
+  \end{itemize}
+\end{frame}
+
+%--------------------------------------------------------------------
+\begin{frame}{Da física à função de transferência}
+  \begin{itemize}
+    \item Modelo físico (2ª lei de Newton para rotação):
+      \[
+        J\,\frac{d\omega(t)}{dt} + B\,\omega(t) = T_{\text{motor}}(t).
+      \]
+    \item Driver TMC5160 converte frequência de STEP em torque aproximado:
+      \[
+        T_{\text{motor}}(t) \approx K_{\text{sist}}\,f(t).
+      \]
+    \item Substituindo e normalizando por $B$:
+      \[
+        \tau = \frac{J}{B},\quad K = \frac{K_{\text{sist}}}{B},
+      \qquad
+        \tau\,\frac{d\omega(t)}{dt} + \omega(t) = K\,f(t).
+      \]
+    \item Aplicando a transformada de Laplace (condições iniciais nulas):
+      \[
+        G(s) = \frac{\Omega(s)}{F(s)} = \frac{K}{\tau s + 1}.
+      \]
+  \end{itemize}
+\end{frame}
+
+%--------------------------------------------------------------------
+\begin{frame}{Modelo FOPDT da malha de velocidade}
+  \begin{itemize}
+    \item Malha de velocidade aproximada por modelo FOPDT em malha aberta:
+      \[
+        G_v(s) = \frac{K\,e^{-Ls}}{\tau s + 1}.
+      \]
+    \item Degrau de comando $U$ gera resposta teórica
+      \[
+        v(t) = K\,U\,\bigl(1 - e^{-(t-L)/\tau}\bigr) H(t-L),
+      \]
+      derivada via transformada de Laplace.
+    \item Parâmetros $K$, $L$ e $\tau$ extraídos de degraus medidos via telemetria
+      (patamar de velocidade, atraso e constante de tempo).
+    \item Catálogo $(K,L,\tau)$ organizado por eixo e microstep alimenta a síntese dos ganhos do controlador.
+  \end{itemize}
+\end{frame}
+
+%--------------------------------------------------------------------
+\begin{frame}{Síntese PD via Ziegler--Nichols}
+  \begin{itemize}
+    \item Com o modelo FOPDT identificado, aplica-se Ziegler--Nichols (curva de reação) para um regulador PD ($K_i = 0$):
+      \[
+        K_p = 1{,}2\,\frac{\tau}{K\,L}, \qquad
+        T_d = 0{,}5\,L, \qquad
+        K_d = K_p\,T_d.
+      \]
+    \item Ganhos contínuos $(K_p,K_d)$ convertidos para inteiros com fator de escala $S = 256$:
+      \[
+        k_p = \operatorname{round}(S\,K_p), \quad
+        k_d = \operatorname{round}(S\,K_d).
+      \]
+    \item Catálogo de ganhos inteiros por eixo e microstep compartilhado entre o firmware STM32 e o simulador em Python.
+    \item A mesma estrutura de ganhos é usada na validação numérica e nos experimentos, garantindo consistência entre modelo e implementação.
   \end{itemize}
 \end{frame}
 
@@ -334,8 +385,9 @@
   \begin{itemize}
     \item Reduzir a dependência de múltiplos \emph{polls} SPI por comando.
     \item Explorar reinicialização imediata do DMA assim que uma resposta estiver disponível.
-    \item Explorar perfis de aceleração mais agressivos com prescalers adaptativos no DDA.
     \item Avaliar envio de múltiplos comandos por ciclo SPI para melhor aproveitamento do canal.
+    \item Implementar e avaliar outros modelos de controle baeados na correção preditiva do movimento dos motores.
+  
   \end{itemize}
 \end{frame}
 

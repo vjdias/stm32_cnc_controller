@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 13:26
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 14:14
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1304,27 +1304,14 @@ Overfull \vbox (14.91408pt too high) detected at line 140
 [11
 
  <../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png>]
-<../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png, id=130, 748.29562p
-t x 737.75626pt>
-File: ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png Graphic file (
-type png)
-<use ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png>
-Package pdftex.def Info: ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA
-.png  used on input line 150.
-(pdftex.def)             Requested size: 159.333pt x 157.08351pt.
-
-Overfull \vbox (10.3218pt too high) detected at line 150
- []
-
-
 
 [12
 
- <../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png>]
+] (main-presentation.toc)
 
 [13
 
-] (main-presentation.toc)
+]
 
 [14
 
@@ -1336,115 +1323,127 @@ Overfull \vbox (10.3218pt too high) detected at line 150
 
 [16
 
-]
+] (main-presentation.toc)
 
 [17
 
-] (main-presentation.toc)
+]
 
 [18
 
 ]
-
-[19
-
-]
-<../src/Cap03/dda_line_rasterization.png, id=184, 722.7pt x 505.89pt>
+<../src/Cap03/dda_line_rasterization.png, id=176, 722.7pt x 505.89pt>
 File: ../src/Cap03/dda_line_rasterization.png Graphic file (type png)
 <use ../src/Cap03/dda_line_rasterization.png>
 Package pdftex.def Info: ../src/Cap03/dda_line_rasterization.png  used on input
- line 238.
+ line 228.
 (pdftex.def)             Requested size: 199.1693pt x 139.41736pt.
 
-Overfull \vbox (14.41658pt too high) detected at line 238
+Overfull \vbox (14.41658pt too high) detected at line 228
  []
 
+
+
+[19
+
+ <../src/Cap03/dda_line_rasterization.png>]
+LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/n' will be
+(Font)              scaled to size 5.0pt on input line 242.
+LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
+(Font)              scaled to size 5.0pt on input line 242.
 
 
 [20
 
- <../src/Cap03/dda_line_rasterization.png>]
-LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/n' will be
-(Font)              scaled to size 5.0pt on input line 252.
-LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
-(Font)              scaled to size 5.0pt on input line 252.
+]
+<../src/Cap03/step_pulse_comparison.png, id=189, 867.24pt x 361.35pt>
+File: ../src/Cap03/step_pulse_comparison.png Graphic file (type png)
+<use ../src/Cap03/step_pulse_comparison.png>
+Package pdftex.def Info: ../src/Cap03/step_pulse_comparison.png  used on input 
+line 252.
+(pdftex.def)             Requested size: 338.59023pt x 141.0803pt.
+
+Overfull \vbox (5.72502pt too high) detected at line 252
+ []
+
 
 
 [21
 
-]
-<../src/Cap03/step_pulse_comparison.png, id=196, 867.24pt x 361.35pt>
-File: ../src/Cap03/step_pulse_comparison.png Graphic file (type png)
-<use ../src/Cap03/step_pulse_comparison.png>
-Package pdftex.def Info: ../src/Cap03/step_pulse_comparison.png  used on input 
-line 262.
-(pdftex.def)             Requested size: 338.59023pt x 141.0803pt.
-
-Overfull \vbox (5.72502pt too high) detected at line 262
- []
-
-
+ <../src/Cap03/step_pulse_comparison.png>]
 
 [22
 
- <../src/Cap03/step_pulse_comparison.png>]
+]
 
 [23
 
 ]
+Overfull \vbox (11.7298pt too high) detected at line 300
+ []
+
+
 
 [24
 
 ]
-<../src/Cap03/SimulacaoTCC.png, id=213, 1926.44719pt x 812.28468pt>
-File: ../src/Cap03/SimulacaoTCC.png Graphic file (type png)
-<use ../src/Cap03/SimulacaoTCC.png>
-Package pdftex.def Info: ../src/Cap03/SimulacaoTCC.png  used on input line 296.
-
-(pdftex.def)             Requested size: 338.59023pt x 142.75928pt.
-
-Overfull \vbox (7.3505pt too high) detected at line 296
- []
-
-
 
 [25
 
- <../src/Cap03/SimulacaoTCC.png>] (main-presentation.toc)
+]
 
 [26
 
 ]
+<../src/Cap03/SimulacaoTCC.png, id=226, 1926.44719pt x 812.28468pt>
+File: ../src/Cap03/SimulacaoTCC.png Graphic file (type png)
+<use ../src/Cap03/SimulacaoTCC.png>
+Package pdftex.def Info: ../src/Cap03/SimulacaoTCC.png  used on input line 347.
 
-[27
+(pdftex.def)             Requested size: 338.59023pt x 142.75928pt.
 
-]
-<../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png, id=235, 1926.44719pt x 812.28468pt>
-
-File: ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png Graphic file (type png)
-<use ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png>
-Package pdftex.def Info: ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png  used on inp
-ut line 319.
-(pdftex.def)             Requested size: 358.50229pt x 151.15031pt.
-
-Overfull \vbox (15.85938pt too high) detected at line 319
+Overfull \vbox (7.3505pt too high) detected at line 347
  []
 
 
 
+[27
+
+ <../src/Cap03/SimulacaoTCC.png>] (main-presentation.toc)
+
 [28
 
- <../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png>]
+]
 
 [29
 
 ]
+<../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png, id=247, 1926.44719pt x 812.28468pt>
+
+File: ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png Graphic file (type png)
+<use ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png>
+Package pdftex.def Info: ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png  used on inp
+ut line 370.
+(pdftex.def)             Requested size: 358.50229pt x 151.15031pt.
+
+Overfull \vbox (15.85938pt too high) detected at line 370
+ []
+
+
 
 [30
 
-]
+ <../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png>]
 
 [31
+
+]
+
+[32
+
+]
+
+[33
 
 ]
 \tf@nav=\write6
@@ -1465,11 +1464,11 @@ Package rerunfilecheck Info: File `main-presentation.out' has not changed.
 (rerunfilecheck)             Checksum: EDF9AE0D022159DF5115165E05FF6F48;819.
  ) 
 Here is how much of TeX's memory you used:
- 30943 strings out of 468081
- 664193 string characters out of 5425304
+ 30951 strings out of 468081
+ 663985 string characters out of 5425304
  997468 words of memory out of 5000000
- 58928 multiletter control sequences out of 15000+600000
- 829213 words of font info for 135 fonts, out of 8000000 for 9000
+ 58931 multiletter control sequences out of 15000+600000
+ 829636 words of font info for 136 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  128i,18n,123p,394b,1206s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ect
@@ -1483,13 +1482,18 @@ Data/Local/Programs/MiKTeX/fonts/type1/google/carlito/Crlt-Bold.pfb><C:/Users/V
 aldir/AppData/Local/Programs/MiKTeX/fonts/type1/google/carlito/Crlt-Italic.pfb>
 <C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/google/carlito/Crlt-
 Regular.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
-msfonts/cm/cmmi10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
-1/public/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/f
-onts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Program
-s/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on main-presentation.pdf (31 pages, 1728277 bytes).
+msfonts/cm/cmex10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
+1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Valdir/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Loca
+l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/V
+aldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C
+:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbol
+s/msam10.pfb>
+Output written on main-presentation.pdf (33 pages, 1663693 bytes).
 PDF statistics:
- 387 PDF objects out of 1000 (max. 8388607)
- 68 named destinations out of 1000 (max. 500000)
- 134 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 415 PDF objects out of 1000 (max. 8388607)
+ 72 named destinations out of 1000 (max. 500000)
+ 129 words of extra memory for PDF output out of 10000 (max. 10000000)
 
