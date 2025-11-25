@@ -1,0 +1,62 @@
+\documentclass[border=10pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{bytefield}
+
+\definecolor{boxcolor}{gray}{0.9}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% Caixa de campo colorida para o bytefield
+\newcommand{\fieldbox}[1]{%
+  \colorbox{boxcolor}{\shortstack[c]{\tiny #1}}%
+}
+
+% Compatibilidade com diagramas antigos usando bytefield
+\newcommand{\bytebox}[3][]{%
+  \bitbox[#1]{#2}{#3}%
+}
+
+\begin{document}
+
+\begin{minipage}{18cm}
+\centering
+\textbf{Figura 1: Diagrama do frame para o comando \texttt{MOVE\_QUEUE\_ADD (0x01)}}
+\vspace{0.5cm}
+
+\begin{bytefield}[bitwidth=0.8em]{42}
+  \bitheader{0-41} \\
+  \bitbox{1}{\fieldbox{Header\\\texttt{0xAA}}} &
+  \bitbox{1}{\fieldbox{Cmd\\\texttt{0x01}}} &
+  \bitbox{1}{\fieldbox{Frame ID}} &
+  \bitbox{1}{\fieldbox{Dir Mask}} &
+  \bitbox{6}{\fieldbox{Eixo X\\(vx + sx)}} &
+  \bitbox{6}{\fieldbox{Eixo Y\\(vy + sy)}} &
+  \bitbox{6}{\fieldbox{Eixo Z\\(vz + sz)}} &
+  \bitbox{6}{\fieldbox{Ganhos PID X\\(Kp, Ki, Kd)}} &
+  \bitbox{6}{\fieldbox{Ganhos PID Y\\(Kp, Ki, Kd)}} &
+  \bitbox{6}{\fieldbox{Ganhos PID Z\\(Kp, Ki, Kd)}} &
+  \bitbox{2}{\fieldbox{Footer\\Paridade + Tail}}
+\end{bytefield}
+
+\vspace{2cm}
+
+\textbf{Figura 2: Diagrama do frame para o comando \texttt{LED\_CONTROL (0x07)}}
+\vspace{0.5cm}
+
+\begin{bytefield}[bitwidth=1.1em]{9}
+  \bitheader{0-8} \\
+  \bitbox{1}{\fieldbox{Header\\\texttt{0xAA}}} &
+  \bitbox{1}{\fieldbox{Cmd\\\texttt{0x07}}} &
+  \bitbox{1}{\fieldbox{Frame ID}} &
+  \bitbox{1}{\fieldbox{LED Mask}} &
+  \bitbox{1}{\fieldbox{Modo}} &
+  \bitbox{2}{\fieldbox{Freq.\\(uint16)}} &
+  \bitbox{1}{\fieldbox{Paridade\\XOR}} &
+  \bitbox{1}{\fieldbox{Tail\\\texttt{0x55}}}
+\end{bytefield}
+
+\end{minipage}
+\end{document}

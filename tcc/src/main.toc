@@ -69,6 +69,6 @@
 \contentsline {chapter}{\numberline {4}Resultados e Discussão}{39}{chapter.4}%
 \contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{39}{section.4.1}%
 \contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{39}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Comparação entre simulação e experimento com carga}{40}{section.4.3}%
+\contentsline {section}{\numberline {4.3}Comparação entre simulação e experimento com carga}{39}{section.4.3}%
 \contentsline {chapter}{\numberline {5}Conclusão}{42}{chapter.5}%
 \contentsline {chapter}{Bibliografia}{43}{chapter.5}%

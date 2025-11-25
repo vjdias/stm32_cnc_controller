@@ -1,0 +1,6 @@
+\babel@toc {brazil}{}\relax 
+\beamer@sectionintoc {1}{Protocolo de comunicação}{3}{0}{1}
+\beamer@sectionintoc {2}{Arquitetura de hardware}{8}{0}{2}
+\beamer@sectionintoc {3}{Arquitetura de software}{12}{0}{3}
+\beamer@sectionintoc {4}{Controle de movimento}{15}{0}{4}
+\beamer@sectionintoc {5}{Resultados e conclusão}{22}{0}{5}
