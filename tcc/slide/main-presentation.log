@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 11:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 12:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1012,7 +1012,7 @@ File: l3backend-pdftex.def 2025-06-09 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count388
 ) (main-presentation.aux
 Package babel Info: 'brazil' activates 'portuges' shorthands.
-(babel)             Reported on input line 8.
+(babel)             Reported on input line 9.
 )
 \openout1 = `main-presentation.aux'.
 
@@ -1179,30 +1179,24 @@ or `brazil'. on input line 32.
 \c@mv@boldtabular=\count396
  (main-presentation.nav)
 
-<XMU-assets/XMU-logo-negative.png, id=35, 575.2692pt x 508.299pt>
-File: XMU-assets/XMU-logo-negative.png Graphic file (type png)
-<use XMU-assets/XMU-logo-negative.png>
-Package pdftex.def Info: XMU-assets/XMU-logo-negative.png  used on input line 3
-4.
-(pdftex.def)             Requested size: 289.81958pt x 256.0748pt.
-[1
-
-{C:/Users/Valdir/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/Val
-dir/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/carlito/crlt_hsqwq5.enc} <./X
-MU-assets/XMU-logo-negative.png> <./XMU-assets/XMU-negative.png>]
-(main-presentation.toc
-LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
+<imagens/brasao-ufal.png, id=35, 368.577pt x 641.0349pt>
+File: imagens/brasao-ufal.png Graphic file (type png)
+<use imagens/brasao-ufal.png>
+Package pdftex.def Info: imagens/brasao-ufal.png  used on input line 34.
+(pdftex.def)             Requested size: 32.71495pt x 56.9055pt.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 34.
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 34.
+
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Trying to load font information for T1+Caladea-TLF on input
- line 2.
+ line 34.
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/caladea\t1caladea-tlf.
 fd
@@ -1210,18 +1204,22 @@ File: T1Caladea-TLF.fd 2014/08/17 (autoinst) Font definitions for T1/Caladea-TL
 F.
 )
 LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/n' will be
-(Font)              scaled to size 10.95pt on input line 2.
+(Font)              scaled to size 10.95pt on input line 34.
 LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 2.
+(Font)              scaled to size 8.0pt on input line 34.
 LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/n' will be
-(Font)              scaled to size 6.0pt on input line 2.
+(Font)              scaled to size 6.0pt on input line 34.
 LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
-(Font)              scaled to size 10.95pt on input line 2.
+(Font)              scaled to size 10.95pt on input line 34.
 LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
-(Font)              scaled to size 8.0pt on input line 2.
+(Font)              scaled to size 8.0pt on input line 34.
 LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
-(Font)              scaled to size 6.0pt on input line 2.
-)
+(Font)              scaled to size 6.0pt on input line 34.
+ [1{C:/Users/Valdir/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/
+Valdir/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/carlito/crlt_hsqwq5.enc}
+
+ <./imagens/brasao-ufal.png> <./imagens/ufal-extenso-preto-transparente.png>]
+(main-presentation.toc)
 
 [2
 
@@ -1229,7 +1227,7 @@ LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
 
 [3
 
- <./XMU-assets/XMU.png>]
+ <./imagens/ufal-extenso-branca-fundo-transparente.png>]
 LaTeX Font Info:    Trying to load font information for TS1+Crlt-OsF on input l
 ine 52.
 
@@ -1260,6 +1258,10 @@ LaTeX Font Info:    Font shape `T1/Caladea-TLF/m/it' will be
 ]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 87.
+
+Overfull \vbox (2.48602pt too high) detected at line 87
+ []
+
 
 
 [6
@@ -1294,7 +1296,7 @@ Package pdftex.def Info: ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.pn
 g  used on input line 140.
 (pdftex.def)             Requested size: 298.75394pt x 187.09167pt.
 
-Overfull \vbox (33.7037pt too high) detected at line 140
+Overfull \vbox (44.32997pt too high) detected at line 140
  []
 
 
@@ -1311,7 +1313,7 @@ Package pdftex.def Info: ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA
 .png  used on input line 150.
 (pdftex.def)             Requested size: 298.75394pt x 294.54567pt.
 
-Overfull \vbox (129.1577pt too high) detected at line 150
+Overfull \vbox (139.78397pt too high) detected at line 150
  []
 
 
@@ -1354,7 +1356,7 @@ Package pdftex.def Info: ../src/Cap03/dda_line_rasterization.png  used on input
  line 238.
 (pdftex.def)             Requested size: 298.75394pt x 209.1299pt.
 
-Overfull \vbox (65.50287pt too high) detected at line 238
+Overfull \vbox (76.12914pt too high) detected at line 238
  []
 
 
@@ -1417,6 +1419,10 @@ Package pdftex.def Info: ../src/Cap03/TCC_SIMULACAO_COM_ATRITO.png  used on inp
 ut line 319.
 (pdftex.def)             Requested size: 358.50229pt x 151.15031pt.
 
+Overfull \vbox (7.85939pt too high) detected at line 319
+ []
+
+
 
 [28
 
@@ -1451,13 +1457,13 @@ Package rerunfilecheck Info: File `main-presentation.out' has not changed.
 (rerunfilecheck)             Checksum: EDF9AE0D022159DF5115165E05FF6F48;819.
  ) 
 Here is how much of TeX's memory you used:
- 30933 strings out of 468081
- 663893 string characters out of 5425304
- 995927 words of memory out of 5000000
- 58918 multiletter control sequences out of 15000+600000
+ 30942 strings out of 468081
+ 664178 string characters out of 5425304
+ 996258 words of memory out of 5000000
+ 58927 multiletter control sequences out of 15000+600000
  829213 words of font info for 135 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 128i,13n,123p,394b,1212s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 128i,15n,123p,394b,1204s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ect
 t1440.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 600\ectt1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
@@ -1473,7 +1479,7 @@ msfonts/cm/cmmi10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
 1/public/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/f
 onts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Program
 s/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on main-presentation.pdf (31 pages, 1459501 bytes).
+Output written on main-presentation.pdf (31 pages, 1725029 bytes).
 PDF statistics:
  387 PDF objects out of 1000 (max. 8388607)
  68 named destinations out of 1000 (max. 500000)

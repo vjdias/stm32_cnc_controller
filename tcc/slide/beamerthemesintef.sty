@@ -70,8 +70,9 @@
 }
 \footlinecolor{} % Default: no footline
 
-\pgfdeclareimage[width=0.09\paperwidth]{logo}{XMU-assets/XMU-negative.png}
-\pgfdeclareimage[width=0.09\paperwidth]{whitelogo}{XMU-assets/XMU.png}
+% Logos UFAL: preto para fundo claro, branco para fundo escuro
+\pgfdeclareimage[width=0.09\paperwidth]{logo}{imagens/ufal-extenso-preto-transparente.png}
+\pgfdeclareimage[width=0.09\paperwidth]{whitelogo}{imagens/ufal-extenso-branca-fundo-transparente.png}
 \newcommand{\@logo}{logo}
 
 % Set colours
@@ -147,7 +148,8 @@
 \newcommand{\course}[1]{\def\@courseLabel{#1}}
 \newcommand{\IDnumber}[1]{\def\@IDnumber{#1}}
 
-% Define the title page
+% Define the title page (layout igual ao tema original;
+% a única mudança são os arquivos de logo declarados acima)
 \setbeamertemplate{title page}{%
   \vskip0pt plus 1filll%
   % Reposition the box in an inelegant way - but it works!
@@ -167,15 +169,26 @@
 }
 
 % Define slide splitting dimensions (e.g. title and chapter slides)
+% Mantém o layout do tema, mas desenha o fundo azul e
+% a marca da UFAL diretamente em TikZ (ignorando #1).
 \newcommand{\TikzSplitSlide}[1]{%
-  \rule{0.56\paperwidth}{0pt}%
-  \begin{tikzpicture}
-    \clip (-0.1\paperwidth,-0.5\paperheight) -- 
-          ( 0.5\paperwidth,-0.5\paperheight) -- 
-          ( 0.5\paperwidth, 0.5\paperheight) -- 
-          ( 0.1\paperwidth, 0.5\paperheight) -- cycle; 
-    \node at (0.2\paperwidth,0) {%
-      \includegraphics[height=\paperheight]{#1}%
+  \begin{tikzpicture}[remember picture,overlay]
+    % Faixa azul inclinada à direita
+    \fill[maincolor]
+      (current page.north east) --
+      (current page.south east) --
+      ([xshift=-0.38\paperwidth]current page.south east) --
+      ([xshift=-0.14\paperwidth]current page.north east) -- cycle;
+    % Brasão da UFAL + texto "Universidade Federal de Alagoas"
+    \node[anchor=south east, xshift=-0.2cm, yshift=1.1cm] at (current page.south east) {%
+      \begin{minipage}{0.35\paperwidth}
+        \raggedleft
+        \includegraphics[height=2.0cm]{imagens/brasao-ufal.png}%
+        \hspace{0.6em}%
+        \parbox[b]{0.18\paperwidth}{%
+          \raggedright\textcolor{white}{\bfseries Universidade\\Federal de Alagoas}%
+        }%
+      \end{minipage}
     };
   \end{tikzpicture}
 }
