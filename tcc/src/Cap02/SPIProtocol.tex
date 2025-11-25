@@ -21,7 +21,7 @@ marcadores de início/fim para robustez:
     2 & 1 & FLAGS & Bits de controle/op\c{c}\~oes do comando (reservado = 0x00). \\
     3 & 1 & LEN & Comprimento v\'alido do PAYLOAD (0 a 34 bytes). \\
     4 & 34 & PAYLOAD & Dados da requisi\c{c}\~ao; preencher com 0x00 quando n\~ao usado. \\
-    38 & 2 & CRC16 & Verifica\c{c}\~ao de integridade (LSB,MSB) calculada sobre bytes 0..37. \\
+    38 & 2 & CRC & Verifica\c{c}\~ao de integridade (LSB,MSB) calculada sobre bytes 0..37. \\
     40 & 1 & RSV & Reservado (0x00) para alinhamento/expans\~ao futura. \\
     41 & 1 & EOF & Marcador de fim: \texttt{0x54}. \\
     \bottomrule
@@ -53,7 +53,7 @@ a resposta confirma o estado final.
     4 & 1 & LED\_ID & \texttt{0x00} (LED on-board) \\
     5 & 1 & MODE & \texttt{0x00=OFF}, \texttt{0x01=ON}, \texttt{0x02=TOGGLE} \\
     6..37 & 32 & RSV & \texttt{0x00} \\
-    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    38 & 2 & CRC & CRC-16 sobre bytes 0..37 \\
     40 & 1 & RSV & \texttt{0x00} \\
     41 & 1 & EOF & \texttt{0x54} \\
     \bottomrule
@@ -76,7 +76,7 @@ a resposta confirma o estado final.
     4 & 1 & STATUS & \texttt{0x00=OK}, \texttt{\textgreater 0}=erro \\
     5 & 1 & LED\_STATE & \texttt{0x00=OFF}, \texttt{0x01=ON} \\
     6..37 & 32 & RSV & \texttt{0x00} \\
-    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    38 & 2 & CRC & CRC-16 sobre bytes 0..37 \\
     40 & 1 & RSV & \texttt{0x00} \\
     41 & 1 & EOF & \texttt{0x54} \\
     \bottomrule
@@ -108,7 +108,7 @@ Campos não usados devem ser zero.
     17..20 & 4 & FEED & Velocidade m\'axima alvo em passos/s (uint32). Limitador para o perfil de movimento. \\
     21 & 1 & JERK & Par\^ametro opcional do perfil (suaviza\c{c}\~ao). Se n\~ao utilizado, enviar 0x00.  \\
     22..37 & 16 & RSV & \texttt{0x00} \\
-    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    38 & 2 & CRC & CRC-16 sobre bytes 0..37 \\
     40 & 1 & RSV & \texttt{0x00} \\
     41 & 1 & EOF & \texttt{0x54} \\
     \bottomrule
@@ -132,7 +132,7 @@ Campos não usados devem ser zero.
     5 & 1 & QUEUE\_DEPTH & Itens pendentes na fila de movimentos \\
     6 & 1 & RESERVED & \texttt{0x00} \\
     7..37 & 31 & RSV & \texttt{0x00} \\
-    38 & 2 & CRC16 & CRC-16 sobre bytes 0..37 \\
+    38 & 2 & CRC & CRC-16 sobre bytes 0..37 \\
     40 & 1 & RSV & \texttt{0x00} \\
     41 & 1 & EOF & \texttt{0x54} \\
     \bottomrule
@@ -144,7 +144,7 @@ Campos não usados devem ser zero.
 \begin{itemize}
   \item \textbf{STATUS}: 0x00=aceito (comando enfileirado/executando); 0x01=ocupado (tentar novamente); valores \textgreater 0 indicam erro (cdigo especfico do firmware).
   \item \textbf{QUEUE\_DEPTH}: tamanho atual da fila de movimentos, til para controle de fluxo do mestre.
-  \item \textbf{CRC16}: valida a integridade do quadro; CRC invlido deve ser tratado como erro de comunicao.
+  \item \textbf{CRC}: valida a integridade do quadro; CRC invlido deve ser tratado como erro de comunicao.
 \end{itemize}
 
 \FloatBarrier

@@ -57,7 +57,7 @@
       \begin{itemize}
         \item \textbf{SOF} (0xAB), \textbf{CMD}, \textbf{FLAGS}, \textbf{LEN}.
         \item \textbf{PAYLOAD} com até 34~bytes úteis.
-        \item \textbf{CRC16} sobre os bytes 0..37.
+        \item \textbf{CRC} de 16 bits sobre os bytes 0..37.
         \item \textbf{EOF} (0x54) como marcador de fim de quadro.
       \end{itemize}
     \item Quando não há resposta pronta, o escravo devolve padrão 0xA5 em todo o payload.
@@ -319,10 +319,10 @@
 %--------------------------------------------------------------------
 \begin{frame}{Conclusões}
   \begin{itemize}
-    \item Controlador CNC embarcado em STM32L475 atinge geração determinística de pulsos e malhas de controle estáveis.
-    \item Protocolo SPI com quadros fixos e CRC16 garante comunicação robusta com a Raspberry Pi.
-    \item Metodologia incremental facilitou a validação de cada bloco crítico (timers, SPI, encoders, PID).
-    \item Identificação FOPDT e catálogo de ganhos PD proporcionam sintonia sistemática da malha de velocidade.
+    \item STM32L475 com DDA a \SI{50}{\kilo\hertz} entrega geração determinística de pulsos e malhas de controle estáveis.
+    \item Protocolo SPI com quadros fixos e CRC de 16 bits garante enlace robusto com a Raspberry Pi.
+    \item Roteiro incremental agilizou a validação de timers, SPI, encoders e controladores PID.
+    \item Modelo FOPDT e catálogo de ganhos PD viabilizaram sintonia sistemática da malha de velocidade.
   \end{itemize}
 \end{frame}
 
@@ -331,7 +331,7 @@
   \begin{itemize}
     \item Reduzir a dependência de múltiplos \emph{polls} SPI por comando.
     \item Explorar reinicialização imediata do DMA assim que uma resposta estiver disponível.
-    \item Investigar perfis de movimento mais agressivos com prescalers adaptativos.
+    \item Explorar perfis de aceleração mais agressivos com prescalers adaptativos no DDA.
     \item Avaliar envio de múltiplos comandos por ciclo SPI para melhor aproveitamento do canal.
   \end{itemize}
 \end{frame}
@@ -346,4 +346,3 @@
 \end{frame}
 
 \end{document}
-
