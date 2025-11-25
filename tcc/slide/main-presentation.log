@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 12:50
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  25 NOV 2025 13:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1294,9 +1294,9 @@ e png)
 <use ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.png>
 Package pdftex.def Info: ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_COMPLETO.pn
 g  used on input line 140.
-(pdftex.def)             Requested size: 298.75394pt x 187.09167pt.
+(pdftex.def)             Requested size: 239.00558pt x 149.6758pt.
 
-Overfull \vbox (52.32996pt too high) detected at line 140
+Overfull \vbox (14.91408pt too high) detected at line 140
  []
 
 
@@ -1311,9 +1311,9 @@ type png)
 <use ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA.png>
 Package pdftex.def Info: ../src/Cap03/imagens/TCC_CIRCUITO_CONTROLE_SEMFAN_CIMA
 .png  used on input line 150.
-(pdftex.def)             Requested size: 298.75394pt x 294.54567pt.
+(pdftex.def)             Requested size: 159.333pt x 157.08351pt.
 
-Overfull \vbox (147.78395pt too high) detected at line 150
+Overfull \vbox (10.3218pt too high) detected at line 150
  []
 
 
@@ -1354,9 +1354,9 @@ File: ../src/Cap03/dda_line_rasterization.png Graphic file (type png)
 <use ../src/Cap03/dda_line_rasterization.png>
 Package pdftex.def Info: ../src/Cap03/dda_line_rasterization.png  used on input
  line 238.
-(pdftex.def)             Requested size: 298.75394pt x 209.1299pt.
+(pdftex.def)             Requested size: 199.1693pt x 139.41736pt.
 
-Overfull \vbox (84.12912pt too high) detected at line 238
+Overfull \vbox (14.41658pt too high) detected at line 238
  []
 
 
@@ -1467,7 +1467,7 @@ Package rerunfilecheck Info: File `main-presentation.out' has not changed.
 Here is how much of TeX's memory you used:
  30943 strings out of 468081
  664193 string characters out of 5425304
- 997477 words of memory out of 5000000
+ 997468 words of memory out of 5000000
  58928 multiletter control sequences out of 15000+600000
  829213 words of font info for 135 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1487,7 +1487,7 @@ msfonts/cm/cmmi10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type
 1/public/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/f
 onts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Program
 s/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on main-presentation.pdf (31 pages, 1728163 bytes).
+Output written on main-presentation.pdf (31 pages, 1728142 bytes).
 PDF statistics:
  387 PDF objects out of 1000 (max. 8388607)
  68 named destinations out of 1000 (max. 500000)
