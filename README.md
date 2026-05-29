@@ -40,7 +40,7 @@ Este repositório descreve e implementa um **controlador CNC** baseado no **STM3
 | **USART1 (VCP)** | **PB6=TX**, **PB7=RX** | USB do ST-LINK |
 | **STEP** | PB4 (X), PB0 (Y), PB1 (Z) | GPIO Out, Very High |
 | **DIR** | PA3 (X), PB2 (Y), PA2 (Z) | GPIO Out, Very High |
-| **EN** | PC4 (X), PC5 (Y), PA8 (Z) | GPIO Out |
+| **EN** | PC4 (X), PC5 (Y), PD5 (Z, PMOD) | GPIO Out |
 | **EXTI** | PC0/PC1/PC2 (PROX_X/Y/Z), PC13 (E-STOP) | ISR **só-flag** |
 
 ### 2.1) Interconexões KiCad (STM32 ↔ TMC5160 ↔ Raspberry Pi)

@@ -80,13 +80,14 @@ SYMBOLS = {
             PinDef(6, "SPI_NSS", -23.0, 0.0, 0),
             PinDef(7, "STEP_X", 23.0, 20.0, 180),
             PinDef(8, "DIR_X", 23.0, 15.0, 180),
-            PinDef(9, "EN_X", 23.0, 10.0, 180),
+            # Annotate actual MCU pins for EN lines
+            PinDef(9, "EN_X (PC4)", 23.0, 10.0, 180),
             PinDef(10, "STEP_Y", 23.0, 5.0, 180),
             PinDef(11, "DIR_Y", 23.0, 0.0, 180),
-            PinDef(12, "EN_Y", 23.0, -5.0, 180),
+            PinDef(12, "EN_Y (PC5)", 23.0, -5.0, 180),
             PinDef(13, "STEP_Z", 23.0, -10.0, 180),
             PinDef(14, "DIR_Z", 23.0, -15.0, 180),
-            PinDef(15, "EN_Z", 23.0, -20.0, 180),
+            PinDef(15, "EN_Z (PD5)", 23.0, -20.0, 180),
             PinDef(16, "ENC_XA", -23.0, -5.0, 0),
             PinDef(17, "ENC_XB", -23.0, -10.0, 0),
             PinDef(18, "ENC_YA", -23.0, -15.0, 0),
@@ -219,7 +220,7 @@ NETS = {
         ("TMC", "DIR_X"),
     ],
     "EN_X": [
-        ("STM32", "EN_X"),
+        ("STM32", "EN_X (PC4)"),
         ("TMC", "EN_X"),
     ],
     "STEP_Y": [
@@ -231,7 +232,7 @@ NETS = {
         ("TMC", "DIR_Y"),
     ],
     "EN_Y": [
-        ("STM32", "EN_Y"),
+        ("STM32", "EN_Y (PC5)"),
         ("TMC", "EN_Y"),
     ],
     "STEP_Z": [
@@ -243,7 +244,7 @@ NETS = {
         ("TMC", "DIR_Z"),
     ],
     "EN_Z": [
-        ("STM32", "EN_Z"),
+        ("STM32", "EN_Z (PD5)"),
         ("TMC", "EN_Z"),
     ],
     "ENC_XA": [
