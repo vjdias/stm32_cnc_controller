@@ -44,11 +44,111 @@ quando disponíveis. A integração com os drivers TMC5160 ocorre por meio
 de uma API dedicada que abstrai comandos STEP/DIR/EN e monitora
 condições de falha.
 
+A Figura~\ref{fig:arquitetura-blocos} resume a arquitetura em blocos,
+mostrando a separação entre supervisão, comunicação, serviços de
+aplicação e laços temporizados de controle.
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+    \begin{minipage}{0.94\textwidth}
+        \centering
+        \begin{tabular}{c}
+            \textbf{Raspberry Pi 3 A+} \\
+            \footnotesize cliente SPI, scripts de teste e supervisão \\
+            \(\Downarrow\) SPI2 / DMA circular \\
+            \textbf{Camada App} \\
+            \footnotesize \texttt{app\_poll}, roteamento de comandos e fila de respostas \\
+            \(\Downarrow\) chamadas de serviço \\
+            \textbf{Services} \\
+            \footnotesize movimento, PID, homing, segurança, telemetria e TMC5160 \\
+            \(\Downarrow\) bases temporais \\
+            \textbf{TIM7 @ \SI{1}{\kilo\hertz}} \(\longrightarrow\)
+            \textbf{TIM6 @ \SI{50}{\kilo\hertz}} \\
+            \footnotesize rampa, leitura de encoder e controle \(\longrightarrow\)
+            DDA e pulsos STEP/DIR/EN \\
+            \(\Downarrow\) \\
+            \textbf{Drivers TMC5160 + motores + encoders}
+        \end{tabular}
+    \end{minipage}}
+    \caption{Diagrama em blocos da arquitetura de software e controle de movimento.}
+    \label{fig:arquitetura-blocos}
+\end{figure}
+
+\subsection{Fluxo do comando \texttt{cnc-cli}}
+
+O comando \texttt{cnc-cli} executa uma sequ\^encia declarativa de a\c{c}\~oes
+descritas em um arquivo JSON, incluindo \emph{patches} no TMC5160,
+ajustes de PID e movimentos. A Figura~\ref{fig:fluxo-cnc-cli} resume o
+fluxo principal, desde a valida\c{c}\~ao da sequ\^encia no host at\'e o
+encerramento da execu\c{c}\~ao no STM32. Em alto n\'ivel, ele envolve:
+\begin{enumerate}
+\item leitura de \texttt{application.cfg} e do arquivo de sequ\^encia;
+\item valida\c{c}\~ao dos limites de PID, velocidade e par\^ametros do
+  TMC5160;
+\item abertura do enlace SPI com o STM32;
+\item sinaliza\c{c}\~ao de execu\c{c}\~ao pelo LED do firmware;
+\item itera\c{c}\~ao sobre os passos da sequ\^encia
+  (\texttt{tmc\{\}}, \texttt{pid\{\}} e \texttt{move\{\}});
+\item monitoramento peri\'odico do estado da fila de movimentos e dos
+  registradores de diagn\'ostico do TMC5160;
+\item aplica\c{c}\~ao de rotina de seguran\c{c}a em caso de falha;
+\item encerramento normal com desligamento seguro dos est\'agios de
+  pot\^encia.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+    \begin{minipage}{0.92\textwidth}
+        \small
+        \begin{center}
+            \textbf{Fluxo resumido do \texttt{cnc-cli}}
+        \end{center}
+        Ler configura\c{c}\~oes e arquivo JSON $\rightarrow$
+        validar limites $\rightarrow$
+        abrir SPI com o STM32 $\rightarrow$
+        aplicar \emph{patches} TMC / atualizar PID / enfileirar movimentos
+        $\rightarrow$
+        iniciar movimento $\rightarrow$
+        monitorar fila e \texttt{DRV\_STATUS} $\rightarrow$
+        encerrar por sucesso ou aplicar rotina de seguran\c{c}a em falha.
+    \end{minipage}}
+    \caption{Fluxo resumido do comando \texttt{cnc-cli}, desde a valida\c{c}\~ao da sequ\^encia at\'e o monitoramento e encerramento da execu\c{c}\~ao.}
+    \label{fig:fluxo-cnc-cli}
+\end{figure}
+
+\noindent Em termos operacionais:
+\begin{enumerate}
+\item o cliente carrega o \texttt{application.cfg} e o JSON da sequ\^encia;
+\item cada item \'e verificado contra os limites configurados no host;
+\item a comunica\c{c}\~ao com o STM32 ocorre pelo protocolo CNC sobre SPI;
+\item comandos \texttt{tmc\{\ldots\}} aplicam \emph{patches} em
+  registradores como \texttt{CHOPCONF}, \texttt{PWMCONF} e
+  \texttt{IHOLD\_IRUN};
+\item comandos \texttt{pid\{\ldots\}} atualizam ganhos padr\~ao por eixo;
+\item comandos \texttt{move\{\ldots\}} enfileiram segmentos e disparam o
+  in\'icio do movimento;
+\item o cliente acompanha o progresso por meio de
+  \texttt{MOVE\_QUEUE\_STATUS} e dos registradores de falha do TMC5160;
+\item em caso de sobretemperatura, subtens\~ao ou \emph{driver error},
+  aplica-se um estado seguro com corrente nula e desligamento dos
+  \emph{drivers}.
+\end{enumerate}
+
+\noindent No caso espec\'ifico de \texttt{MOVE\_QUEUE\_STATUS}, a
+identifica\c{c}\~ao do quadro \texttt{frameId} \'e preservada no terceiro
+byte \'util do protocolo em ambos os sentidos: a requisi\c{c}\~ao tem
+4 bytes e usa \texttt{raw[2]} como \texttt{frameId}, enquanto a resposta
+tem 12 bytes e tamb\'em ecoa \texttt{frameId} em \texttt{raw[2]}. Esse
+espelhamento facilita correlacionar a consulta enviada pelo host com o
+estado devolvido pelo firmware.
+
 \section{Procedimentos de teste}
 
 Os testes de validação foram conduzidos em três frentes. Primeiro,
 medições com osciloscópio e analisador lógico verificaram a frequência
-dos pulsos STEP e o jitter do TIM6, confirmando a estabilidade em
+dos pulsos STEP e a variação temporal (\emph{jitter}) do TIM6, confirmando a estabilidade em
 \SI{50}{\kilo\hertz}. Em seguida, foram realizadas varreduras de ganho
 nos controladores PID para avaliar margem de fase e resposta a degraus,
 utilizando logs exportados via USART1. Por fim, o pipeline SPI foi

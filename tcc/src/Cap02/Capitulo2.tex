@@ -4,8 +4,8 @@ Este capítulo apresenta os conceitos fundamentais utilizados na
 implementação do controlador CNC embarcado. São abordados os princípios
 de sistemas CNC, a configuração de temporizadores no STM32L475, os
 métodos DDA para geração de pulsos, a modelagem de motores de passo,
-os controladores PID e os aspectos de comunicação SPI/USART empregados no
-projeto.
+os controladores PID, o modelo FOPDT usado na identificação experimental
+e os aspectos de comunicação SPI/USART empregados no projeto.
 
 \section{Sistemas CNC}
 
@@ -17,8 +17,9 @@ modernos combinam processamento em tempo real com interfaces de alto
 nível para planejar trajetórias, compensar erros e monitorar a execução.
 A adoção de arquiteturas híbridas---com uma unidade embarcada
 responsável pelo tempo real e um computador auxiliar para supervisão---
-diminui a suscetibilidade a jitter e a perdas de sincronismo, mantendo a
-flexibilidade de integração com sistemas de gestão.
+diminui a suscetibilidade a variações temporais e a perdas de
+sincronismo, mantendo a flexibilidade de integração com sistemas de
+gestão.
 
 \section{Temporizadores do STM32L475}
 
@@ -45,7 +46,7 @@ Algoritmos DDA são integradores digitais que aproximam trajetórias
 contínuas por meio de incrementos discretos, amplamente utilizados em
 sistemas de gráficos e em controladores de movimento para motores de
 passo~\cite{fussell2003}. O método acumula um erro fracionário em cada
-interação e emite um pulso quando a soma ultrapassa um limiar definido,
+iteração e emite um pulso quando a soma ultrapassa um limiar definido,
 resultando em uma sequência de passos que aproxima a velocidade ou a
 trajetória desejada. Arquiteturas clássicas de interpolação tratam o DDA
 como núcleo do gerador de pulsos, responsável por alimentar os laços de
@@ -66,15 +67,36 @@ planicidade de avanço descrita pelas referências.
 
 Motores de passo híbridos apresentam dinâmica eletromecânica dominada
 por indutâncias de fase, resistência de enrolamento e um torque
-relacionado à diferença angular entre rotor e campo magnético. Modelos
-clássicos de motores de passo descrevem a relação entre corrente,
-torque e velocidade angular por meio de equações diferenciais acopladas
-que podem ser discretizadas para implementação em controladores digitais
-~\cite{kenjo1994}. A precisão do controle depende da estimação do torque
-de carga $T_L$, do momento de inércia equivalente $J$ e da compensação
-de efeitos como ressonâncias de meia etapa. A utilização de encoders em
-modo quadratura provê realimentação adicional para compensar perda de
-passos e acúmulo de erro estático.
+relacionado à diferença angular entre rotor e campo magnético. Uma forma
+clássica de representar uma fase do motor é
+\begin{equation}
+    v_f(t) = R_f i_f(t) + L_f \frac{di_f(t)}{dt} + e_f(t),
+\end{equation}
+em que $v_f$ é a tensão aplicada à fase, $i_f$ é a corrente, $R_f$ e
+$L_f$ são a resistência e a indutância do enrolamento, e $e_f$ representa
+a força contraeletromotriz induzida pelo movimento. O torque resultante
+depende da corrente nas fases e da diferença entre a posição elétrica
+comandada e a posição real do rotor, podendo ser resumido por
+\begin{equation}
+    T_e(t) = K_t i_f(t) \sin(\theta_s(t)-\theta(t)).
+\end{equation}
+A parte mecânica é descrita por
+\begin{equation}
+    J\frac{d\omega(t)}{dt} + B\omega(t) = T_e(t) - T_L(t),
+\end{equation}
+com $J$ representando a inércia equivalente, $B$ o atrito viscoso,
+$\omega$ a velocidade angular e $T_L$ o torque de carga
+refletido no eixo~\cite{kenjo1994}.
+
+Essa modelagem difere da adotada em motores de corrente contínua
+convencionais porque o motor de passo não é tratado apenas como uma
+máquina com torque proporcional à corrente de armadura. A posição do
+campo estatórico também é uma variável de comando, avançando em passos ou
+micropassos. Por isso, a relação entre torque, posição e corrente é mais
+acoplada, e efeitos como perda de passo, ressonância e erro de
+sincronismo passam a ser relevantes para o controle. A utilização de
+encoders em modo quadratura provê realimentação adicional para compensar
+perda de passos e acúmulo de erro estático.
 
 \section{Controlador PID digital}
 
@@ -90,14 +112,49 @@ Para implementação digital, é comum utilizar a forma incremental
 \begin{equation}
     u[k] = u[k-1] + K_p(e[k] - e[k-1]) + K_i T_s e[k] + \frac{K_d}{T_s}(e[k] - 2e[k-1] + e[k-2]),
 \end{equation}
-onde $T_s$ é o período de amostragem. No laço de \SI{1}{\kilo\hertz}, o
-período fixo reduz o esforço computacional e facilita a análise de
-estabilidade. Estratégias derivadas, como anti-\emph{windup} e filtros de
-primeira ordem no termo derivativo, são essenciais para lidar com o
-ruído proveniente dos encoders e das variações do torque de
-carga. Pesquisas recentes destacam ainda controladores PID
-acoplados/cross-coupled que tratam o erro de contorno entre eixos como
+onde $e[k]$ é o erro discreto entre referência e medição na amostra $k$,
+$u[k]$ é o sinal de controle calculado para essa mesma amostra, e $T_s$ é
+o período de amostragem. Os termos $e[k]-e[k-1]$ e
+$e[k]-2e[k-1]+e[k-2]$ correspondem, respectivamente, às diferenças
+finitas de primeira e segunda ordem usadas para representar as ações
+proporcional e derivativa na forma incremental. Assim, o último termo não
+introduz uma segunda derivada física no motor; ele aparece porque a forma
+incremental calcula a variação do sinal de controle a partir da derivada
+discreta do erro.
+
+No laço de \SI{1}{\kilo\hertz}, o período fixo reduz o esforço
+computacional e facilita a análise de estabilidade. Estratégias
+derivadas, como anti-\emph{windup} e filtros de primeira ordem no termo
+derivativo, são essenciais para lidar com o ruído proveniente dos
+encoders e das variações do torque de carga. Pesquisas recentes destacam
+ainda controladores PID com controle cruzado de eixos
+(\emph{cross-coupled}) que tratam o erro de contorno entre eixos como
 variável adicional, reduzindo desvios em trajetórias complexas~\cite{adaptive_fuzzy_pid}.
+
+\section{Modelo FOPDT e síntese de ganhos}
+\label{sec:fopdt}
+
+Para aproximar a resposta de velocidade em cada eixo, considera-se o
+modelo de primeira ordem com atraso puro (FOPDT, do inglês
+\emph{First-Order Plus Dead Time}). Sua função de transferência é
+escrita como
+\begin{equation}
+    G_v(s)=\frac{K e^{-Ls}}{\tau s+1},
+\end{equation}
+em que $K$ é o ganho estático, $L$ é o atraso puro e $\tau$ é a constante
+de tempo. Para uma entrada degrau de amplitude $U$ aplicada após o atraso,
+$u(t)=UH(t-L)$, a resposta no tempo é
+\begin{equation}
+    y(t)=KU\left(1-e^{-(t-L)/\tau}\right)H(t-L).
+\end{equation}
+
+A presença de $H(t-L)$ indica explicitamente que a saída permanece nula
+antes do atraso. Quando $t<L$, tem-se $H(t-L)=0$ e, portanto, $y(t)=0$.
+Quando $t\geq L$, o degrau unitário assume valor 1; nessa condição, o
+termo $H(t-L)$ deixa de alterar a expressão e a resposta passa a convergir
+exponencialmente para $KU$. Essa separação evita a impressão de que a
+função de Heaviside desaparece da solução: ela apenas passa a valer 1 no
+trecho posterior ao atraso.
 
 \section{Integração PID-DDA}
 
@@ -118,7 +175,59 @@ microstepping de cada eixo, enquanto o DDA executa as transições
 discretas, possibilitando perfis suaves e respeitando os limites de
 aceleração definidos pelo firmware.
 
+\section{Sincroniza\c{c}\~ao Cruzada de Eixos}
+\label{sec:sync_cross}
+
+Em movimentos multi-eixo, a coordena\c{c}\~ao cinem\'atica exige que cada
+eixo siga uma fra\c{c}\~ao coerente do avan\c{c}o global, minimizando erro
+de sincronismo e erro de contorno. Neste trabalho, o termo
+\emph{sincroniza\c{c}\~ao cruzada de eixos} designa o conjunto de
+estrat\'egias que, sobre as malhas de posi\c{c}\~ao e velocidade por eixo,
+imp\~oem coer\^encia temporal ao grupo, em linha com abordagens
+\emph{cross-coupled} descritas na literatura.
+
+Sejam $s_i(t)$ as posi\c{c}\~oes desejadas e $x_i(t)$ as posi\c{c}\~oes
+medidas. Um progresso normalizado por eixo pode ser escrito como
+\begin{equation}
+    p_i(t) =
+    \frac{x_i(t) - x_i(0)}
+         {\max\{1, |s_i(T) - s_i(0)|\}},
+\end{equation}
+em que $T$ representa a dura\c{c}\~ao nominal do movimento. Uma escolha
+natural para o eixo mestre \'e aquele com maior restante absoluto, ou de
+forma equivalente, menor progresso relativo. O erro de sincronismo em um
+eixo n\~ao mestre pode ser expresso por
+\begin{equation}
+    e_{\text{sync},i}(t) = p_m(t) - p_i(t), \qquad i \neq m.
+\end{equation}
+
+Uma lei simples de modula\c{c}\~ao de avan\c{c}o reescala a velocidade de
+refer\^encia dos eixos n\~ao mestres:
+\begin{equation}
+    v_{\text{ref},i}(t) =
+    \sigma\!\left(e_{\text{sync},i}(t)\right) v_{\text{nom},i}(t),
+\end{equation}
+com
+\begin{equation}
+    \sigma(e)
+    =
+    1 - (1 - \sigma_{\min})
+    \min\left\{1, \frac{|e|}{e_{\text{th}}}\right\},
+\end{equation}
+em que $\sigma_{\min}\in(0,1)$ define a fra\c{c}\~ao m\'inima admiss\'ivel
+de velocidade e $e_{\text{th}}$ \'e um limiar de sincronismo. Em situa\c{c}\~oes
+cr\'iticas, uma reten\c{c}\~ao de sincronismo pode impor
+$v_{\text{ref},i}=0$ at\'e que a defasagem volte a uma faixa segura.
+
+Durante a fase final do movimento, conv\'em adotar uma janela de
+acabamento mais conservadora, com menor troca de mestre e maior toler\^ancia
+a pequenas varia\c{c}\~oes. Essa sincroniza\c{c}\~ao cruzada n\~ao substitui
+as malhas PID por eixo; ela atua como um supervisor de alto n\'ivel que
+gera refer\^encias coerentes e respeita limita\c{c}\~oes de acelera\c{c}\~ao e
+satura\c{c}\~ao.
+
 \section{Comunicação SPI e USART}
+\label{sec:spi_usart}
 
 A comunicação com a Raspberry Pi utiliza o periférico SPI2 em modo
 escravo com DMA circular. Esse desenho reduz a carga da CPU e garante que
@@ -131,3 +240,10 @@ inversões de prioridade que poderiam comprometer o determinismo do
 sistema~\cite{um2153}. A análise do pipeline de polls evidencia como o
 firmware pausa e reinicia o DMA para garantir que cada resposta seja
 transmitida somente após processamento completo.
+
+A escolha do SPI para comandos foi motivada pela disponibilidade do
+barramento na Raspberry Pi, pelo tamanho curto dos quadros e pela
+possibilidade de usar DMA no STM32. A USART permaneceu separada do canal
+de comando para servir como caminho de observabilidade: logs podem ser
+perdidos ou reduzidos em cenários de carga, mas não devem bloquear a
+execução do movimento.

@@ -1,24 +1,23 @@
 \chapter*{Abstract}
-\noindent This dissertation describes the development of a CNC controller
-focused on temporal determinism, implemented on the STM32L475
-microcontroller and integrated with a Raspberry Pi host. The design uses
-a \SI{50}{\kilo\hertz} pulse generator based on a Digital Differential
-Analyzer (DDA) running on timer TIM6, closes a \SI{1}{\kilo\hertz} PID
-loop with TIM7, and leverages quadrature encoders through LPTIM1 and
-timers TIM3 and TIM5 for position estimation. Communication with the host is
-handled by an SPI protocol with circular DMA, complemented by USART1
-logging to preserve observability without affecting real-time
-constraints.
+\noindent This dissertation presents the development of an embedded CNC
+controller aimed at predictable and repeatable motion over three axes. The
+solution combines an STM32L475 microcontroller, responsible for real-time
+tasks, with a Raspberry Pi used as the supervision interface and command
+host. The proposal reduces the dependence on a general-purpose computer
+for direct motion-signal generation while preserving the flexibility of a
+high-level interface.
 
-The theoretical background covers CNC systems, stepper motor modeling,
-PID control, and DDA algorithms. The methodology followed an incremental
-bring-up roadmap that validated the clock tree, critical interrupts,
-control loops, and communication services. Results show stable DDA output
-at \SI{50}{\kilo\hertz}, PID loop jitter below \SI{3}{\micro\second}, and
-the behavior of the SPI poll pipeline, highlighting the need for three
-cycles to acknowledge LED commands. The work concludes by emphasizing the
-robustness of the proposed firmware and suggests future optimizations for
-DMA handling and auxiliary services.
+The system was built through an incremental architecture: timers were
+validated first, followed by motor pulse generation, encoder reading,
+closed-loop control, and host communication. The theoretical background
+discusses the concepts required for this integration, including CNC
+systems, stepper motors, PID control, embedded communication, and digital
+step generation. Bench tests indicated stable motion generation, low
+temporal variation in critical services, and consistent behavior of the
+communication protocol. As a result, this work consolidates a firmware and
+documentation base for future evolution of the controller, especially in
+communication optimization, telemetry improvements, and fine tuning of
+motion profiles.
 
 \vspace{5mm}
 

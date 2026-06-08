@@ -2,77 +2,175 @@
 
 Esta se\c{c}\~ao descreve o circuito do controlador, os blocos f\'isicos
 e as conex\~oes empregadas entre a placa STM32, os drivers de pot\^encia
-TMC5160 e o encoder \'{o}ptico incremental TMCS-28. Tamb\'em s\~ao listadas
-recomenda\c{c}\~oes de montagem, alimenta\c{c}\~ao e EMC.
+TMC5160, a Raspberry Pi 3 A+ usada como mestre SPI e o encoder
+\'{o}ptico incremental TMCS-28. Tamb\'em s\~ao listadas recomenda\c{c}\~oes
+de montagem, alimenta\c{c}\~ao e EMC.
 
 \subsection{Vis\~ao geral do sistema}
 
 O sistema \'e composto por:
 
-- \textbf{L\'ogica}: placa com STM32L475 operando a \SI{3.3}{V}, cristal de
+\begin{itemize}
+\item \textbf{L\'ogica}: placa com STM32L475 operando a \SI{3.3}{V}, cristal de
   refer\^encia e interfaces SPI/USART/GPIO.
-- \textbf{Drivers de eixo}: m\'odulos/placa com \textbf{TMC5160} recebendo
+\item \textbf{Host}: Raspberry Pi 3 A+ respons\'avel pela interface de
+  alto n\'ivel, envio de quadros SPI e execu\c{c}\~ao dos scripts de teste.
+\item \textbf{Drivers de eixo}: m\'odulos/placa com \textbf{TMC5160} recebendo
   sinais \texttt{STEP}/\texttt{DIR}/\texttt{EN} e configurados via \texttt{SPI}.
-- \textbf{Realimenta\c{c}\~ao}: encoder \'{o}ptico \textbf{TMCS-28} (ABN, TTL
+\item \textbf{Realimenta\c{c}\~ao}: encoder \'{o}ptico \textbf{TMCS-28} (ABN, TTL
   \SI{5}{V}) acoplado ao eixo principal.
-- \textbf{Alimenta\c{c}\~ao}: trilha de \SI{5}{V} para l\'ogica e sensores;
+\item \textbf{Alimenta\c{c}\~ao}: trilha de \SI{5}{V} para l\'ogica e sensores;
   regulador \SI{3.3}{V} local para o microcontrolador; alimenta\c{c}\~ao separada/filtrada
   para os est\'agios de pot\^encia dos motores.
+\end{itemize}
+
+A montagem em base de prototipagem foi usada apenas para valida\c{c}\~ao de
+bancada e controle dos sinais, n\~ao para conduzir corrente dos motores. Por
+isso, as conex\~oes de pot\^encia permanecem separadas e as linhas cr\'iticas
+devem ser conferidas por continuidade, fixa\c{c}\~ao mec\^anica e al\'ivio de
+tra\c{c}\~ao antes dos ensaios.
+
+A Figura~\ref{fig:hardware-controlador-cnc} apresenta o modelo
+tridimensional do conjunto eletr\^onico. A vista em perspectiva destaca a
+separa\c{c}\~ao entre a placa STM32L475, a interface com a Raspberry Pi,
+a base de prototipagem e os m\'odulos de pot\^encia TMC5160. A vista
+superior evidencia a distribui\c{c}\~ao das placas e a organiza\c{c}\~ao
+f\'isica adotada para manter os sinais de baixa tens\~ao afastados das
+regi\~oes de maior corrente.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.58\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/pdf_recovered/hardware_controller_perspective.png}
+        \caption{Vista em perspectiva do conjunto eletr\^onico.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.36\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/pdf_recovered/hardware_controller_top.png}
+        \caption{Vista superior com distribui\c{c}\~ao das placas.}
+    \end{subfigure}
+    \caption{Modelo 3D do controlador CNC com placa STM32, interface para Raspberry Pi, base de prototipagem e m\'odulos de pot\^encia TMC5160.}
+    \label{fig:hardware-controlador-cnc}
+\end{figure}
 
 \subsection{Alimenta\c{c}\~ao e EMC}
 
-- \textbf{\SI{5}{V} l\'ogica}: entrada regulada (fonte externa), com
+\begin{itemize}
+\item \textbf{\SI{5}{V} l\'ogica}: entrada regulada (fonte externa), com
   capacitores de granel (\SI{10}{\micro F} a \SI{47}{\micro F}) e
   desacoplamentos locais (\SI{100}{nF}) pr\'oximos aos CI.
-- \textbf{\SI{3.3}{V}}: regulador LDO dedicado ao STM32 e perif\'ericos
+\item \textbf{\SI{3.3}{V}}: regulador LDO dedicado ao STM32 e perif\'ericos
   \SI{3.3}{V}. Seguir recomenda\c{c}\~oes de estabilidade do LDO (ESR dos
   capacitores) e planos de terra.
-- \textbf{Aterramento}: retorno de alta corrente dos motores mantido
+\item \textbf{Aterramento}: retorno de alta corrente dos motores mantido
   separado do plano de l\'ogica; conex\~ao em estrela/pr\'oximo ao ponto de
   entrada da energia. Loops curtos para sinais comuta\c{c}\~ao.
+\end{itemize}
 
 \subsection{Drivers TMC5160}
 
-- \textbf{Sinais}: \texttt{STEP}/\texttt{DIR}/\texttt{EN} do STM32 (\SI{3.3}{V})
+\begin{itemize}
+\item \textbf{Sinais}: \texttt{STEP}/\texttt{DIR}/\texttt{EN} do STM32 (\SI{3.3}{V})
   para TMC5160. Interposi\c{c}\~ao de \emph{level shifter} se necess\'ario
   conforme a placa utilizada.
-- \textbf{SPI}: barramento dedicado para configura\c{c}\~ao (\texttt{SCK},
+\item \textbf{SPI}: barramento dedicado para configura\c{c}\~ao (\texttt{SCK},
   \texttt{MOSI}, \texttt{MISO}, \texttt{CS\_x}). Resistores de termina\c{c}\~ao/
   s\'erie curtos para integridade de sinal.
-- \textbf{Pot\^encia}: desacoplamento de VM com capacitores de baixa ESR;
+\item \textbf{Pot\^encia}: desacoplamento de VM com capacitores de baixa ESR;
   rota\c{c}\~ao larga para trilhas de corrente.
-- \textbf{Prote\c{c}\~oes}: leitura de \texttt{DRV\_STATUS} para falhas e EN
+\item \textbf{Prote\c{c}\~oes}: leitura de \texttt{DRV\_STATUS} para falhas e EN
   global intertravado pelo E-STOP.
+\end{itemize}
 
 \subsection{Encoder \'{o}ptico TMCS-28}
 
-- \textbf{Sa\'idas}: \textbf{A}, \textbf{B} (quadratura) e \textbf{N}
+\begin{itemize}
+\item \textbf{Sa\'idas}: \textbf{A}, \textbf{B} (quadratura) e \textbf{N}
   (\emph{index}) em TTL \SI{5}{V}. Adaptar n\'{\i}vel para \SI{3.3}{V}
   (divisores/\emph{level shifter}) antes de entrar no STM32.
-- \textbf{Conex\~ao no STM32}: A/B em temporizadores com modo encoder
+\item \textbf{Conex\~ao no STM32}: A/B em temporizadores com modo encoder
   (por exemplo, LPTIM1/TIM3/TIM5); N em entrada de captura/interrup\c{c}\~ao para
   refer\^encia de zero.
-- \textbf{Resolu\c{c}\~ao}: neste TCC utiliza\-se \textbf{TMCS-28-10k}
+\item \textbf{Resolu\c{c}\~ao}: neste TCC utiliza\-se \textbf{TMCS-28-10k}
   (625\,lpr, \textbf{40\,000\,cpr}). Convers\~ao \(\theta = 360^{\circ}\cdot
   \text{count}/40{,}000\). Velocidade: \(\text{rpm} = 60\,\text{CPS}/40{,}000\).
+\end{itemize}
+
+A Figura~\ref{fig:tmcs28-suporte-cad} mostra o suporte impresso em 3D
+projetado para acoplar o encoder TMCS-28 ao eixo do motor de passo e
+fornecer um ponteiro vis\'ivel. O suporte foi concebido para preservar o
+alinhamento axial, manter espa\c{c}o para o disco graduado e permitir
+fixa\c{c}\~ao compat\'ivel com o padr\~ao mec\^anico dos motores NEMA 23.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.72\textwidth]{figures/pdf_recovered/tmcs28_support_cad.png}
+    \caption{Modelo 3D do suporte do encoder TMCS-28 e do ponteiro acoplado ao eixo do motor de passo.}
+    \label{fig:tmcs28-suporte-cad}
+\end{figure}
+
+A Figura~\ref{fig:motores-tmcs28-prototipo} apresenta a montagem f\'isica
+dos motores de passo com suportes impressos, ponteiros e encoders
+TMCS-28 acoplados. Essa configura\c{c}\~ao foi usada nos ensaios de
+identifica\c{c}\~ao e de compara\c{c}\~ao entre simula\c{c}\~ao e
+experimento.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\textwidth]{figures/pdf_recovered/prototype_motors_tmcs28.jpg}
+    \caption{Vista dos motores de passo com suportes impressos em 3D, ponteiros e encoder TMCS-28 acoplado ao eixo para realimenta\c{c}\~ao de posi\c{c}\~ao.}
+    \label{fig:motores-tmcs28-prototipo}
+\end{figure}
 
 \subsection{Intertravamentos e seguran\c{c}a}
 
-- \textbf{E-STOP}: linha f\'isica que desabilita \texttt{EN} dos drivers e
+\begin{itemize}
+\item \textbf{E-STOP}: linha f\'isica que desabilita \texttt{EN} dos drivers e
   gera EXTI no STM32 para parada ordenada.
-- \textbf{Fins de curso}: entradas com resistores de \emph{pull-up}
+\item \textbf{Fins de curso}: entradas com resistores de \emph{pull-up}
   e filtros RC opcionais; priorizar roteamento distante de trilhas de
   pot\^encia.
+\end{itemize}
+
+Al\'em dos intertravamentos f\'isicos, a prote\c{c}\~ao el\'etrica dos
+motores usa os registros \texttt{GSTAT} e \texttt{DRV\_STATUS} do
+TMC5160 como diagn\'ostico indireto do estado dos drivers e do
+cabeamento. Avisos como subtens\~ao, sobretemperatura, \texttt{OTPW},
+\texttt{OT} e erro de driver indicam condi\c{c}\~oes que exigem redu\c{c}\~ao
+de corrente ou desligamento do est\'agio de pot\^encia. Na rotina de
+seguran\c{c}a, o cliente for\c{c}a \texttt{IHOLD = IRUN = 0}, ajusta
+\texttt{CHOPCONF.TOFF = 0} e configura \texttt{PWMCONF.FREEWHEEL = 1},
+removendo corrente das bobinas e levando o TMC5160 a um estado seguro.
 
 \subsection{PCB, cabeamento e montagem}
 
-- \textbf{Layout}: separar dom\'inios de l\'ogica e pot\^encia; manter
-  pares de A/B e linhas de SPI curtos e com retorno pr\'oximo.
-- \textbf{Cabeamento}: utilizar pares tr\'ancados para A/B e sinais STEP/DIR;
-  blindagem quando o ambiente possuir ru\'{\i}do elevado.
-- \textbf{Ordem de testes}: valida\c{c}\~ao da alimenta\c{c}\~ao (teste inicial),
+\begin{itemize}
+\item \textbf{Layout}: separar dom\'inios de l\'ogica e pot\^encia. A base
+  mec\^anica foi organizada em n\'iveis: STM32 e Raspberry Pi na regi\~ao
+  inferior, protoboard apenas para conex\~oes e pequenos ajustes de
+  l\'ogica na regi\~ao central, e m\'odulos TMC5160 com dissipadores na
+  regi\~ao superior.
+\item \textbf{Cabeamento}: utilizar pares tr\'ancados para A/B e sinais STEP/DIR;
+  manter linhas SPI curtas, com retorno pr\'oximo, e usar blindagem quando
+  o ambiente possuir ru\'{\i}do elevado.
+\item \textbf{Ordem de testes}: valida\c{c}\~ao da alimenta\c{c}\~ao (teste inicial),
   clock/USART, SPI dos TMC5160, leitura ABN do TMCS-28 e, por fim,
   acionamento de motores sem carga.
+\end{itemize}
+
+A Figura~\ref{fig:prototipo-bancada} mostra o prot\'otipo em bancada com
+fonte de alimenta\c{c}\~ao, motores, drivers TMC5160, placa STM32 e
+Raspberry Pi interligados. A disposi\c{c}\~ao segue a separa\c{c}\~ao entre
+dom\'inios de pot\^encia e l\'ogica adotada no modelo mec\^anico.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\textwidth]{figures/pdf_recovered/prototype_bench_complete.jpg}
+    \caption{Prot\'otipo do controlador CNC montado em bancada, com fonte de alimenta\c{c}\~ao, motores de passo, drivers TMC5160, placa STM32 e Raspberry Pi.}
+    \label{fig:prototipo-bancada}
+\end{figure}
 
 Como refer\^encia adicional de montagem e integra\c{c}\~ao de hardware, ver
 \cite{romeros_tcc_ifmg_2022}.

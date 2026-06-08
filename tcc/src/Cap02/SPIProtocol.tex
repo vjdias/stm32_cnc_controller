@@ -28,7 +28,8 @@ marcadores de início/fim para robustez:
   \end{tabularx}
 \end{table}
 
-Quando não há resposta pronta, o escravo devolve um quadro com todos os 21 bytes preenchido com \texttt{0xA5}.
+Quando não há resposta pronta, o escravo devolve um quadro com todos os
+42 bytes preenchidos com \texttt{0xA5}.
 Quando a resposta de um serviço está completa, o escravo publica o quadro final
 com \texttt{EOF=0x54} e CRC válido, conforme observado no cliente \texttt{cnc\_spi\_client.py}.
 
@@ -85,8 +86,14 @@ a resposta confirma o estado final.
 
 \subsection*{Serviço Movimento (exemplo de comando composto)}
 
-O serviço de movimento recebe metas por eixo e parâmetros cinemáticos simplificados.
-Campos não usados devem ser zero.
+O serviço de movimento recebe metas por eixo e parâmetros cinemáticos
+simplificados. Neste trabalho, a cinemática usada pelo firmware é
+cartesiana direta: os campos \texttt{X\_STEPS}, \texttt{Y\_STEPS} e
+\texttt{Z\_STEPS} já chegam como deslocamentos relativos por eixo, enquanto
+\texttt{FEED} limita a velocidade máxima do segmento. Assim, a conversão
+geométrica mais complexa fica fora deste quadro e o serviço de movimento
+se concentra em enfileirar passos, sentido e limite de velocidade. Campos
+não usados devem ser zero.
 
 \begin{table}[H]
   \centering
@@ -100,7 +107,7 @@ Campos não usados devem ser zero.
     0 & 1 & SOF & \texttt{0xAB} \\
     1 & 1 & CMD & \texttt{0x20} (MOVE) \\
     2 & 1 & FLAGS & \texttt{0x00} \\
-    3 & 1 & LEN & Deve refletir o total de bytes uteis do payload (exemplo:\texttt{0x15}). \\
+    3 & 1 & LEN & Deve refletir o total de bytes úteis do payload (exemplo: \texttt{0x15}). \\
     4 & 1 & AXIS\_MASK & M\'ascara de eixos: Bit0=X, Bit1=Y, Bit2=Z. Permite ativar eixos individualmente. \\
     5..8 & 4 & X\_STEPS & \texttt{int32} (passos relativos) Positivo/negativo define o sentido. \\
     9..12 & 4 & Y\_STEPS & \texttt{int32} (passos relativos)  Positivo/negativo define o sentido.\\
@@ -142,9 +149,9 @@ Campos não usados devem ser zero.
 \vspace{2mm}
 \noindent\footnotesize\textit{Notas sobre os campos da resposta MOVE:}
 \begin{itemize}
-  \item \textbf{STATUS}: 0x00=aceito (comando enfileirado/executando); 0x01=ocupado (tentar novamente); valores \textgreater 0 indicam erro (cdigo especfico do firmware).
-  \item \textbf{QUEUE\_DEPTH}: tamanho atual da fila de movimentos, til para controle de fluxo do mestre.
-  \item \textbf{CRC16}: valida a integridade do quadro; CRC invlido deve ser tratado como erro de comunicao.
+  \item \textbf{STATUS}: 0x00=aceito (comando enfileirado/executando); 0x01=ocupado (tentar novamente); valores \textgreater 0 indicam erro (código específico do firmware).
+  \item \textbf{QUEUE\_DEPTH}: tamanho atual da fila de movimentos, útil para controle de fluxo do mestre.
+  \item \textbf{CRC16}: valida a integridade do quadro; CRC inválido deve ser tratado como erro de comunicação.
 \end{itemize}
 
 \FloatBarrier
@@ -199,4 +206,5 @@ junto ao TMC5160 (Seção~\ref{sec:tmc5160-examples}).
 
 % (Resposta Movimento reposicionada)
 
-Os exemplos acima alinham-se ao fluxo de \emph{poll} descrito na Seção~2.7.
+Os exemplos acima alinham-se ao fluxo de \emph{poll} descrito na
+Seção~\ref{sec:spi_usart}.

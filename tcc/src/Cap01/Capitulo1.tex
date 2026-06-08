@@ -22,6 +22,12 @@ monitorados por encoders de alta resolução, sincronizar serviços de
 homing e segurança, e permitir a inserção de novas rotinas sem
 comprometer as janelas temporais estabelecidas.
 
+O código-fonte, os arquivos de configuração e a documentação de apoio do
+projeto estão organizados no repositório
+\url{https://github.com/vjdias/stm32_cnc_controller}, de modo que a
+continuação do trabalho possa partir da mesma base de firmware e testes
+descrita neste texto.
+
 \section{Objetivos}\label{sec:objetivos}
 
 \subsection{Objetivo Geral}
@@ -41,17 +47,19 @@ protocolo de comunicação SPI com um cliente Raspberry Pi.
           Services) que facilitem a validação incremental.
     \item Validar o pipeline de comunicação SPI escravo com DMA circular
           e logs assíncronos via USART1.
-    \item Registrar testes que comprovem jitter reduzido e estabilidade
-          nos serviços críticos.
+    \item Registrar testes que comprovem baixa variação temporal
+          (\emph{jitter}), isto é, pequena diferença entre o instante
+          esperado e o instante real de execução dos serviços críticos.
 \end{itemize}
 
 \section{Organização do texto}\label{sec:organizacao}
 
 O Capítulo~\ref{cap:fundamentacao} apresenta a fundamentação teórica
-sobre CNC, temporizadores STM32, DDA, controle PID e protocolos de
-comunicação. O Capítulo~\ref{cap:metodologia} descreve a metodologia de
-\emph{bring-up} incremental utilizada para configurar o firmware e o
-hardware de suporte. Em seguida, o Capítulo~\ref{cap:resultados}
+sobre CNC, temporizadores STM32, DDA, modelagem de motores de passo,
+controle PID, modelo FOPDT e protocolos de comunicação. O
+Capítulo~\ref{cap:metodologia} descreve a metodologia de \emph{bring-up}
+incremental utilizada para configurar o firmware e o hardware de suporte.
+Em seguida, o Capítulo~\ref{cap:resultados}
 reúne os resultados experimentais, analisando desempenho dos serviços e
 o comportamento do pipeline SPI. Por fim, o
 Capítulo~\ref{cap:conclusao} sintetiza as contribuições, limitações e

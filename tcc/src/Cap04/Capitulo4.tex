@@ -8,9 +8,11 @@ do pipeline SPI e a interação com o cliente Raspberry Pi.
 
 A medição do gerador de passos configurado no TIM6 demonstrou a
 estabilidade do DDA em \SI{50}{\kilo\hertz}, com variação máxima de
-\SI{0.4}{\percent} entre ciclos consecutivos. O pulso STEP mínimo de
-\SI{1}{\micro\second} atende aos requisitos dos drivers TMC5160. O laço
-PID executado no TIM7 manteve jitter inferior a \SI{3}{\micro\second}
+\SI{0.4}{\percent} entre ciclos consecutivos. O pulso \texttt{STEP}
+configurado com \SI{20}{\micro\second} em n\'ivel alto e
+\SI{20}{\micro\second} em n\'ivel baixo atende com ampla margem aos
+requisitos dos drivers TMC5160. O laço
+PID executado no TIM7 manteve variação temporal (\emph{jitter}) inferior a \SI{3}{\micro\second}
 segundo o tempo instrumentado na ISR. Essas medições confirmam que as
 interrupções de alta prioridade permanecem isoladas das rotinas de
 comunicação e registro de eventos.
@@ -39,6 +41,62 @@ payload diretamente para o buffer ativo do DMA, diminuindo o tempo médio
 entre polls em \SI{18}{\percent}. Entretanto, essa otimização exige
 tratamento cuidadoso de coerência entre buffers para evitar corrupção de
 dados quando múltiplos serviços respondem simultaneamente.
+
+\section{Compara\c{c}\~ao entre simula\c{c}\~ao e experimento com carga}
+
+Para avaliar a ader\^encia do modelo num\'erico da malha de velocidade,
+foi realizado um ensaio multi-eixos em que os tr\^es motores receberam o
+mesmo alvo de seis voltas completas, com micropasso configurado em 1/256,
+baixa corrente de regime e ganhos PID ajustados a partir da an\'alise
+FOPDT. No firmware, os ganhos inteiros utilizados foram
+$K_p=(801, 6408, 797)$, $K_i=(0,0,0)$ e $K_d=(0,4,0)$ para os eixos
+$(X, Y, Z)$, respectivamente.
+
+A telemetria foi amostrada a cada \SI{1}{\milli\second}, registrando
+identificador, tempo, posi\c{c}\~ao de encoder e contagem acumulada de
+pulsos de passo. Os dados medidos foram pr\'e-processados com remo\c{c}\~ao
+de linhas corrompidas, aceita\c{c}\~ao apenas de registros com cinco campos
+num\'ericos v\'alidos, imposi\c{c}\~ao de monotonicidade estrita para o
+identificador e monotonicidade n\~ao decrescente para tempo e contagem de
+pulsos, al\'em da utiliza\c{c}\~ao do valor absoluto do encoder. A partir
+da sequ\^encia de contagens acumuladas, derivou-se a velocidade em passos
+por segundo para cada eixo, mantendo a mesma calibra\c{c}\~ao de encoders
+usada na identifica\c{c}\~ao do modelo.
+
+Em paralelo, foi executada uma simula\c{c}\~ao num\'erica com os mesmos
+par\^ametros de micropasso, ganhos e alvo de seis voltas, utilizando o
+esquema de sincroniza\c{c}\~ao entre eixos descrito no Cap\'itulo 3. Dessa
+simula\c{c}\~ao foram extra\'idas as curvas de velocidade comandada em
+passos por segundo por eixo. A Figura~\ref{fig:simulacao-experimento-carga}
+mostra a sobreposi\c{c}\~ao entre as curvas medidas e simuladas.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.72\textwidth]{figures/pdf_recovered/simulation_experiment_load_comparison.png}
+    \caption{Compara\c{c}\~ao entre velocidade de passo medida e simulada para o ensaio de seis voltas completas, por eixo.}
+    \label{fig:simulacao-experimento-carga}
+\end{figure}
+
+A sobreposi\c{c}\~ao indicou que, no eixo X, a velocidade m\'edia de regime medida
+ficou cerca de \SI{10}{\percent} abaixo da velocidade simulada,
+sugerindo que a carga e o atrito est\'atico reduziram o ganho efetivo sob
+baixa corrente de excita\c{c}\~ao.
+
+No eixo Y, a diferen\c{c}a relativa ficou em torno de \SI{8}{\percent},
+com boa coer\^encia na forma da curva, indicando que o modelo capturou de
+forma razo\'avel a resposta din\^amica e o acoplamento cruzado. No eixo Z,
+por outro lado, a velocidade medida superou a simulada em cerca de
+\SI{23}{\percent}, evidenciando que a combina\c{c}\~ao de massa carregada,
+gravidade e atrito gerou um comportamento mais agressivo do que o
+previsto pelo modelo nominal.
+
+Esses resultados indicam que a simula\c{c}\~ao reproduz bem a din\^amica
+de velocidade em condi\c{c}\~oes de carga moderada, mas que cargas
+assim\'etricas e atrito n\~ao linear levam a desvios sistem\'aticos em
+determinados eixos. Em aplica\c{c}\~oes industriais, esse tipo de an\'alise
+\'e \'util para orientar ajuste fino de ganhos, inclus\~ao de termos de
+compensa\c{c}\~ao de atrito e ado\c{c}\~ao de observadores de perturba\c{c}\~ao
+quando se deseja reduzir o erro em regime sob carga.
 
 \section{Integração com a Raspberry Pi}
 

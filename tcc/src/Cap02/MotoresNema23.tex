@@ -1,0 +1,143 @@
+% Texto restaurado a partir do PDF entregue.
+\section{Motores de Passo NEMA 23, Passo de 0,9$^\circ$ e Sele\c{c}\~ao da Corrente $I_{RMS}$}
+\label{sec:nema23_irms}
+
+\subsection{NEMA 23: geometria e implica\c{c}\~oes mec\^anicas}
+
+NEMA 23 define as dimens\~oes da \emph{flange} do motor
+(aproximadamente \SI{57}{\milli\meter} $\times$
+\SI{57}{\milli\meter}) e o padr\~ao de fura\c{c}\~ao de montagem, mas n\~ao
+define torque, corrente nominal ou passo el\'etrico. Assim, motores com
+essa carca\c{c}a podem variar em comprimento do corpo, in\'ercia do rotor,
+resist\^encia e indut\^ancia por fase, al\'em do torque de reten\c{c}\~ao.
+No projeto deste trabalho, os tr\^es eixos utilizam motores NEMA 23 por
+combinarem: (i) facilidade de fixa\c{c}\~ao em estruturas CNC;
+(ii) bom compromisso entre torque e tamanho; e
+(iii) ampla disponibilidade de \emph{drivers} compat\'iveis, como o
+TMC5160.
+
+\subsection{Passo el\'etrico: 1,8$^\circ$ vs 0,9$^\circ$}
+
+O \^angulo de passo el\'etrico corresponde \`a rota\c{c}\~ao do eixo a cada
+passo inteiro sem \emph{microstepping}. Os valores mais usuais s\~ao
+$1{,}8^\circ$ e $0{,}9^\circ$, o que leva a
+\begin{equation}
+    N_{\text{passos/rev}} = \frac{360^\circ}{\theta_{\text{passo}}}.
+\end{equation}
+Assim, motores de $1{,}8^\circ$ possuem 200 passos por volta, enquanto os
+de $0{,}9^\circ$ possuem 400 passos por volta.
+
+Na pr\'atica, o passo de $0{,}9^\circ$ oferece maior resolu\c{c}\~ao
+mec\^anica por volta e reduz o \emph{ripple} posicional em baixas
+velocidades. Em contrapartida, exige taxa de pulsos mais alta para a
+mesma velocidade angular. Para um fator de microstepping $M$, vale
+\begin{equation}
+    \text{RPS} = \frac{f_{\text{STEP}}}{N \cdot M}
+    \quad \Rightarrow \quad
+    f_{\text{STEP}} = \text{RPS} \cdot N \cdot M.
+\end{equation}
+Portanto, a mesma rota\c{c}\~ao por segundo em um motor de $0{,}9^\circ$
+demanda o dobro da frequ\^encia de pulsos em rela\c{c}\~ao a um motor de
+$1{,}8^\circ$.
+
+\subsection{Microstepping, suavidade e taxa de passos}
+
+O \emph{microstepping} interpola correntes aproximadamente senoidais nas
+fases do motor, reduzindo ru\'ido, vibra\c{c}\~ao e rugosidade de
+movimento. Entretanto, a resolu\c{c}\~ao efetiva de comando continua
+limitada pela frequ\^encia de pulsos \texttt{STEP} dispon\'ivel no
+controlador. Al\'em disso, o torque incremental associado a cada
+micropasso \'e menor do que o torque de passo inteiro, raz\~ao pela qual a
+opera\c{c}\~ao com cargas din\^amicas exige correntes compat\'iveis com a
+acelera\c{c}\~ao desejada e com a curva torque versus velocidade do motor.
+
+\subsection{Par\^ametros el\'etricos e modelo de primeira ordem}
+
+Motores de passo bipolares s\~ao especificados por corrente por fase
+$I_{\text{rated}}$, resist\^encia $R$ e indut\^ancia $L$. Em primeira
+aproxima\c{c}\~ao, a din\^amica de corrente da fase pode ser escrita como
+\begin{equation}
+    \frac{di}{dt} \approx \frac{V_{\text{bus}} - v_{\text{chopper}}}{L},
+    \qquad
+    \tau = \frac{L}{R}.
+\end{equation}
+No TMC5160, o controle por corrente aplica \emph{chopping} para manter o
+valor de $I_{RMS}$ desejado, usando tens\~ao de barramento elevada para
+acelerar a resposta de corrente contra a indut\^ancia do enrolamento. O
+aquecimento cresce aproximadamente com $P \propto I_{RMS}^2 R$, de modo
+que trabalhar com fra\c{c}\~oes moderadas da corrente nominal reduz a
+dissipa\c{c}\~ao sem necessariamente comprometer o torque requerido.
+
+\subsection{Torques relevantes}
+
+\begin{itemize}
+\item \textbf{Torque de reten\c{c}\~ao} ($T_{\text{hold}}$): torque
+  est\'atico m\'aximo com corrente nominal e eixo travado.
+\item \textbf{Torque de detente} ($T_{\text{det}}$): ondula\c{c}\~ao
+  mec\^anica intr\'inseca do rotor sem corrente aplicada.
+\item \textbf{Torque din\^amico}: decresce com a velocidade el\'etrica
+  devido \`a limita\c{c}\~ao de $di/dt$ e \`a for\c{c}a
+  contraeletromotriz; por isso, barramentos mais altos ajudam a preservar
+  torque em rota\c{c}\~oes elevadas.
+\end{itemize}
+
+\subsection{Resumo para os motores usados}
+
+\begin{itemize}
+\item \textbf{JK57HM76-2804}: NEMA 23, corrente nominal de
+  aproximadamente \SI{2.8}{\ampere} por fase e torque de reten\c{c}\~ao em
+  torno de \SI{1.8}{\newton\meter}. \'E adequado aos eixos que exigem
+  maior for\c{c}a est\'atica.
+\item \textbf{23HM8430 0,9$^\circ$}: NEMA 23, corrente nominal de
+  aproximadamente \SI{3.0}{\ampere} e torque de reten\c{c}\~ao pr\'oximo de
+  \SI{1.5}{\newton\meter}. O passo fino nativo favorece resolu\c{c}\~ao e
+  suavidade em baixas velocidades.
+\end{itemize}
+
+\subsection{Fundamenta\c{c}\~ao te\'orica para a sele\c{c}\~ao de $I_{RMS}$}
+
+Como primeira aproxima\c{c}\~ao, o torque de reten\c{c}\~ao pode ser usado
+para estimar a constante de torque do motor:
+\begin{equation}
+    k_T \approx \frac{T_{\text{hold}}}{I_{\text{rated}}}
+    \qquad [\si{\newton\meter\per\ampere}].
+\end{equation}
+Com isso, uma estimativa da corrente m\'inima pr\'atica para superar o
+torque de detente pode ser escrita como
+\begin{equation}
+    I_{\min} \approx \alpha \frac{T_{\text{det}}}{k_T},
+\end{equation}
+em que $\alpha$ \'e um fator de seguran\c{c}a escolhido entre 1,5 e 2,5
+para compensar atrito e irregularidades din\^amicas.
+
+Assumindo $T_{\text{det}} \approx \SI{0.06}{\newton\meter}$ como valor
+t\'ipico para motores NEMA 23, obt\'em-se a Tabela~\ref{tab:irms-estimado}.
+
+\begin{table}[H]
+    \centering
+    \caption{Estimativa da corrente m\'inima pr\'atica ($I_{RMS}$).}
+    \label{tab:irms-estimado}
+    \setlength{\tabcolsep}{4pt}\footnotesize
+    \begin{tabularx}{\textwidth}{lccXX}
+        \toprule
+        Motor & $I_{\text{rated}}$ [A] & $T_{\text{hold}}$ [N$\cdot$m] & $k_T$ [N$\cdot$m/A] & $I_{\min}$ [A] \\
+        \midrule
+        JK57HM76-2804 & 2,8 & 1,8 & 0,643 & 0,14--0,23 \\
+        23HM8430 0,9$^\circ$ & 3,0 & 1,5 & 0,50 & 0,18--0,30 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Do ponto de vista t\'ermico e de robustez, adotou-se no firmware um
+perfil de corrente reduzida para os testes de bancada, com
+$I_{\text{RUN}} \approx \SI{0.28}{\ampere}$ e
+$I_{\text{HOLD}} \approx \SI{0.12}{\ampere}$ no motor JK57HM76-2804, e
+$I_{\text{RUN}} \approx \SI{0.30}{\ampere}$ com
+$I_{\text{HOLD}} \approx \SIrange{0.12}{0.15}{\ampere}$ no 23HM8430.
+Esses valores representam apenas uma fra\c{c}\~ao da corrente nominal,
+reduzindo expressivamente a pot\^encia dissipada sem preju\'izo
+significativo sobre o torque necess\'ario aos movimentos previstos neste
+prot\'otipo CNC. Caso o processo venha a exigir maior acelera\c{c}\~ao ou
+maior esfor\c{c}o mec\^anico, o ajuste de $I_{\text{RUN}}$ pode ser feito
+dinamicamente no TMC5160 por meio do registrador
+\texttt{IHOLD\_IRUN}.

@@ -84,17 +84,17 @@ Romeros, F.~M. (2022).
 \newblock User manual.
 
 \bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
-  ]{tmc5160_ds}
-{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)}.
-\newblock {\em TMC5160A: Datasheet and Register Description}.
-\newblock Stepper Motor Driver IC.
-
-\bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
   2022]{tmcs28_datasheet}
 {TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)} (2022).
 \newblock {\em TMCS-28 Hardware Manual: Optical Incremental Encoder (Rev.
   1.80)}.
 \newblock Accessories for Stepper \& BLDC, Hardware Version V1.00.
+
+\bibitem[{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)},
+  sd]{tmc5160_ds}
+{TRINAMIC Motion Control GmbH \& Co. KG (Analog Devices)} (s.d.).
+\newblock {\em TMC5160A: Datasheet and Register Description}.
+\newblock Stepper Motor Driver IC.
 
 \bibitem[Wang and Hu, 2016]{efficient_reference}
 Wang, L. and Hu, J. (2016).

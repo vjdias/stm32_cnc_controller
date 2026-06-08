@@ -1,7 +1,7 @@
 \chapter{Conclusão}\label{cap:conclusao}
 
 Este trabalho apresentou o desenvolvimento de um controlador CNC
-embarcardo no STM32L475 com ênfase em determinismo temporal. A
+embarcado no STM32L475 com ênfase em determinismo temporal. A
 arquitetura proposta integrou geração de pulsos DDA a
 \SI{50}{\kilo\hertz}, controle PID em \SI{1}{\kilo\hertz}, leitura de
 encoders em modo quadratura e comunicação SPI com DMA circular voltada à
@@ -11,8 +11,9 @@ necessárias para garantir a estabilidade do sistema.
 
 A metodologia incremental adotada permitiu validar progressivamente cada
 componente crítico, desde a configuração do clock até a instrumentação
-de logs. Os resultados indicaram jitter reduzido no gerador de passos e
-no laço PID, bem como o comportamento do pipeline SPI ao lidar com polls
+de logs. Os resultados indicaram baixa variação temporal no gerador de
+passos e no laço PID, bem como o comportamento do pipeline SPI ao lidar
+com polls
 sequenciais do mestre. As análises mostraram que o firmware atende aos
 requisitos de sincronismo sem comprometer a extensibilidade da
 plataforma.

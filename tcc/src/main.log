@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  28 OCT 2025 15:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.16)  6 JUN 2026 00:44
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -608,24 +608,24 @@ Package babel Info: 'portuguese' activates 'portuges' shorthands.
 )
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 23.
-LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 24.
+LaTeX Font Info:    ... okay on input line 24.
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
 kii
@@ -690,7 +690,7 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring OFF on input line 23.
+Package hyperref Info: Link coloring OFF on input line 24.
 (main.out) (main.out)
 \@outlinefile=\write3
 \openout3 = `main.out'.
@@ -711,22 +711,22 @@ Package: lscape 2020/05/28 v3.02 Landscape Pages (DPC)
 Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 ))
 Package translations Info: no dictionary file `translations-basic-dictionary-po
-rtuges.trsl' found. on input line 23.
+rtuges.trsl' found. on input line 24.
 \openout2 = `Identificacao.aux'.
 
 (Identificacao.tex)
-<Cap00/IC.jpg, id=150, 1185.42876pt x 1185.42876pt>
+<Cap00/IC.jpg, id=278, 1185.42876pt x 1185.42876pt>
 File: Cap00/IC.jpg Graphic file (type jpg)
 <use Cap00/IC.jpg>
-Package pdftex.def Info: Cap00/IC.jpg  used on input line 26.
+Package pdftex.def Info: Cap00/IC.jpg  used on input line 27.
 (pdftex.def)             Requested size: 99.57533pt x 99.58464pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 26.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 27.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 26.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 27.
 
 
 (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
@@ -756,53 +756,102 @@ l.15 \end{titlepage}
 
 
 ]) (Cap00/AtaAssinada.tex
+<../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado_ass
+inado_assinado_copia1.pdf, id=296, 597.55246pt x 845.07718pt>
+File: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinad
+o_assinado_assinado_copia1.pdf Graphic file (type pdf)
+<use ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado
+_assinado_assinado_copia1.pdf>
+Package pdftex.def Info: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_
+valdir_dias_assinado_assinado_assinado_copia1.pdf  used on input line 4.
+(pdftex.def)             Requested size: 597.551pt x 845.07512pt.
+<../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado_ass
+inado_assinado_copia1.pdf, id=298, page=1, 597.55246pt x 845.07718pt>
+File: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinad
+o_assinado_assinado_copia1.pdf Graphic file (type pdf)
+<use ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado
+_assinado_assinado_copia1.pdf, page 1>
+Package pdftex.def Info: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_
+valdir_dias_assinado_assinado_assinado_copia1.pdf , page1 used on input line 4.
+
+(pdftex.def)             Requested size: 597.551pt x 845.07512pt.
+File: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinad
+o_assinado_assinado_copia1.pdf Graphic file (type pdf)
+<use ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado
+_assinado_assinado_copia1.pdf, page 1>
+Package pdftex.def Info: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_
+valdir_dias_assinado_assinado_assinado_copia1.pdf , page1 used on input line 4.
+
+(pdftex.def)             Requested size: 597.57834pt x 845.1138pt.
+File: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinad
+o_assinado_assinado_copia1.pdf Graphic file (type pdf)
+<use ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado
+_assinado_assinado_copia1.pdf, page 1>
+Package pdftex.def Info: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_
+valdir_dias_assinado_assinado_assinado_copia1.pdf , page1 used on input line 4.
+
+(pdftex.def)             Requested size: 597.57834pt x 845.1138pt.
+File: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinad
+o_assinado_assinado_copia1.pdf Graphic file (type pdf)
+<use ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado
+_assinado_assinado_copia1.pdf, page 1>
+Package pdftex.def Info: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_
+valdir_dias_assinado_assinado_assinado_copia1.pdf , page1 used on input line 4.
+
+(pdftex.def)             Requested size: 597.57834pt x 845.1138pt.
+
 
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.8 \end{titlepage}
-                    [1
+l.4 ...dias_assinado_assinado_assinado_copia1.pdf}
+                                                  
+File: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinad
+o_assinado_assinado_copia1.pdf Graphic file (type pdf)
+<use ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado
+_assinado_assinado_copia1.pdf, page 1>
+Package pdftex.def Info: ../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_
+valdir_dias_assinado_assinado_assinado_copia1.pdf , page1 used on input line 4.
 
-]) (Cap00/Dedicatoria.tex)
+(pdftex.def)             Requested size: 597.57834pt x 845.1138pt.
+ [1
 
 
-pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.31 \dedicatoria
-                 {} [1
-
-
-] (Cap00/Agradecimentos.tex)
+ <../documentos_pos_defesa/fontes_usuario/avaliacao_tcc_valdir_dias_assinado_as
+sinado_assinado_copia1.pdf>]) (Cap00/Dedicatoria.tex)
 
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.ii}) has
  been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.32 \agradecimentos
-                    {} [2
+l.32 \dedicatoria
+                 {} [2
 
 
-
-] (Cap00/Epigrafe.tex)
+] (Cap00/Agradecimentos.tex)
 
 [3
 
 
 
-] (Cap00/Resumo.tex)
+] (Cap00/Epigrafe.tex)
 
 [4
 
 
 
-] (Cap00/Abstract.tex)
+] (Cap00/Resumo.tex)
 
 [5
+
+
+
+] (Cap00/Abstract.tex)
+
+[6
 
 
 
@@ -812,18 +861,18 @@ l.32 \agradecimentos
 
 
 
-[6
+[7
 
 
 
 ] (main.lot
-Underfull \hbox (badness 10000) in paragraph at lines 12--12
+Underfull \hbox (badness 10000) in paragraph at lines 13--13
  [][] [][]\OT1/cmr/m/n/12 Registros STM32 L4 uti-li-za-dos neste tra-ba-lho (ve
 r 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 13--13
+Underfull \hbox (badness 10000) in paragraph at lines 14--14
  [][] [][]\OT1/cmr/m/n/12 Registros TMC5160 uti-li-za-dos neste tra-ba-lho (ver
  
  []
@@ -834,35 +883,45 @@ Underfull \hbox (badness 10000) in paragraph at lines 13--13
 
 
 
-[7
-
-
-] (Cap00/Simbolos.tex)
-
 [8
 
 
-] (Cap00/Abreviaturas.tex)
+] (Cap00/Simbolos.tex
 
 [9
 
 
+]
+
+[10])
+
+[11] (Cap00/Abreviaturas.tex
+
+[12
 
 
-] (main.toc
-
-[10
 
 
+]
+
+[13])
+
+[14] (main.toc
+
+[15
 
 
-])
+
+
+]
+
+[16])
 \tf@toc=\write6
 \openout6 = `main.toc'.
 
 
 
-[11] (Cap01/Capitulo1.tex
+[17] (Cap01/Capitulo1.tex
 Cap\'{\i }tulo 1.
 
 
@@ -872,7 +931,7 @@ Cap\'{\i }tulo 1.
 ])
 
 Package babel Info: 'portuguese' activates 'portuges' shorthands.
-(babel)             Reported on input line 56.
+(babel)             Reported on input line 57.
 [2] (Cap02/Capitulo2.tex
 Cap\'{\i }tulo 2.
 
@@ -882,150 +941,505 @@ Cap\'{\i }tulo 2.
 
 ]
 
-[4]) (Cap02/SPIProtocol.tex
+[4]
 
 [5]
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-
 [6]
 
-[7]
+[7]) (Cap02/SPIProtocol.tex
+
+[8]
+
+[9]
 LaTeX Font Info:    Trying to load font information for OML+cmr on input line 1
-45.
+52.
  (C:\Users\Valdir\AppData\Local\Programs\MiKTeX\tex/latex/base\omlcmr.fd
 File: omlcmr.fd 2024/11/19 v2.5n Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 145.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 152.
 
 
-[8]) (Cap02/DriversTMC.tex
+[10]) (Cap02/DriversTMC.tex
 
-[9]) (Cap02/RegTables.tex
-Underfull \hbox (badness 4328) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Prescaler para $1$$[]$
+[11]) (Cap02/MotoresNema23.tex
+
+[12]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `superscript' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\circ' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `subscript' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 2.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `superscript' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\circ' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `superscript' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\circ' on input line 19.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 19.
+
+
+
+[13]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 97.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `subscript' on input line 97.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 97.
+
+)
+
+[14] (Cap02/RegTables.tex
+Underfull \hbox (badness 10000) in paragraph at lines 12--12
+[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros STM32 L4 uti-li-za-dos neste tra-ba
+-lho (ver
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Entradas ma-pe-a-das
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 Per^^S^^Podo de
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Polaridade n~ao in-
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 Per^^S^^Podo de
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-\OT1/cmr/m/n/10 ver-tida (con-forme
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 Per^^S^^Podo
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Modo es-cravo,
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 m^^Saximo de
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
+Underfull \hbox (badness 1460) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 (con-ta-gem em
+ []
+
+
+Underfull \hbox (badness 4832) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 Entradas ma-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 pe-a-das para
+ []
+
+
+Overfull \hbox (1.84012pt too wide) in paragraph at lines 36--36
 \OT1/cmr/m/n/10 fase/polaridade
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 DMA cir-cu-lar para
+Underfull \hbox (badness 2689) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 DMA cir-cu-lar
  []
 
 
-Underfull \hbox (badness 1248) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Tamanho e en-dere^^Xcos
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 para SPI2
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Baud rate para
+Overfull \hbox (2.9512pt too wide) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 logs/telemetria.| 
  []
 
 
-Underfull \hbox (badness 1648) in paragraph at lines 34--34
-[]|\OT1/cmr/m/n/10 Interrup^^Xc~oes de se-gu-
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 Interrup^^Xc~oes
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 34--34
-\OT1/cmr/m/n/10 TIM6, SPI/DMA,
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+[]|\OT1/cmr/m/n/10 Prioriza^^Xc~ao:
  []
 
 
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 se-gu-ran^^Xca,
+ []
 
-[10]
-Underfull \hbox (badness 10000) in paragraph at lines 41--41
-[]\OT1/cmr/m/n/12 Tabela 2.10: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 TIM6,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 SPI/DMA,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--36
+\OT1/cmr/m/n/10 TIM7,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 43--43
+[]\OT1/cmr/m/n/12 Tabela 2.11: |Re-gis-tros TMC5160 uti-li-za-dos neste tra-ba-
 lho (ver
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 57--57
+Underfull \hbox (badness 10000) in paragraph at lines 59--59
 []|\OT1/cmr/m/n/10 Limite de co-muta^^Xc~ao ste-alth-
  []
 
-
-
-[11])
-
-[12] (Cap03/Capitulo3.tex
-Cap\'{\i }tulo 3.
-) (Cap03/ArquiteturaHardware.tex
-
-[13
-
-
-]
-Underfull \hbox (badness 3148) in paragraph at lines 12--21
-[]\OT1/cmr/m/n/10 - \OT1/cmr/bx/n/10 L^^Sogica\OT1/cmr/m/n/10 : placa com STM32
-L475 ope-rando a $3\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 3$$V$, cris-tal de re-fer^
-encia e in-ter-fa-ces
- []
-
-
-
-[14])
-
-[15] (Cap04/Capitulo4.tex
-Cap\'{\i }tulo 4.
-
-
-[16
-
-
-])
-
-[17] (Cap05/Capitulo5.tex
-Cap\'{\i }tulo 5.
 )
+
+[15]
+
+[16]
+
+[17] (Cap03/Capitulo3.tex
+Cap\'{\i }tulo 3.
+
 
 [18
 
 
-] (main.bbl
+]
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <14.4> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 78.
+LaTeX Font Info:    Trying to load font information for OMS+cmtt on input line 
+92.
+LaTeX Font Info:    No file OMScmtt.fd. on input line 92.
 
-[19
+
+LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
+(Font)              using `OMS/cmsy/m/n' instead
+(Font)              for symbol `textbraceleft' on input line 92.
+
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 116.
+
+
+[19]) (Cap03/IdentificacaoFopdt.tex
+
+[20]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 67.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 67.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 67.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 67.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 67.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\tau' on input line 67.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 67.
+
+
+
+[21]
+<figures/pdf_recovered/fopdt_x_1_4.png, id=786, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_x_1_4.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_x_1_4.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_x_1_4.png  used on input l
+ine 122.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_x_1_16.png, id=788, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_x_1_16.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_x_1_16.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_x_1_16.png  used on input 
+line 128.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_x_1_256.png, id=789, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_x_1_256.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_x_1_256.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_x_1_256.png  used on input
+ line 134.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_y_1_4.png, id=790, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_y_1_4.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_y_1_4.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_y_1_4.png  used on input l
+ine 145.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_y_1_16.png, id=791, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_y_1_16.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_y_1_16.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_y_1_16.png  used on input 
+line 151.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_y_1_256.png, id=792, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_y_1_256.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_y_1_256.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_y_1_256.png  used on input
+ line 157.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_z_1_4.png, id=793, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_z_1_4.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_z_1_4.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_z_1_4.png  used on input l
+ine 168.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_z_1_16.png, id=794, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_z_1_16.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_z_1_16.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_z_1_16.png  used on input 
+line 174.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+<figures/pdf_recovered/fopdt_z_1_256.png, id=795, 782.925pt x 417.56pt>
+File: figures/pdf_recovered/fopdt_z_1_256.png Graphic file (type png)
+<use figures/pdf_recovered/fopdt_z_1_256.png>
+Package pdftex.def Info: figures/pdf_recovered/fopdt_z_1_256.png  used on input
+ line 180.
+(pdftex.def)             Requested size: 145.68144pt x 77.69337pt.
+) (Cap03/ArquiteturaHardware.tex
+
+[22 <./figures/pdf_recovered/fopdt_x_1_4.png> <./figures/pdf_recovered/fopdt_x_
+1_16.png> <./figures/pdf_recovered/fopdt_x_1_256.png> <./figures/pdf_recovered/
+fopdt_y_1_4.png> <./figures/pdf_recovered/fopdt_y_1_16.png> <./figures/pdf_reco
+vered/fopdt_y_1_256.png> <./figures/pdf_recovered/fopdt_z_1_4.png> <./figures/p
+df_recovered/fopdt_z_1_16.png> <./figures/pdf_recovered/fopdt_z_1_256.png>]
+Underfull \hbox (badness 3179) in paragraph at lines 14--16
+[]\OT1/cmr/bx/n/10 L^^Sogica\OT1/cmr/m/n/10 : placa com STM32L475 ope-rando a $
+3\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 3$$V$, cris-tal de re-fer^encia e in-ter-fa-
+ces
+ []
+
+<figures/pdf_recovered/hardware_controller_perspective.png, id=811, 1713.40125p
+t x 1073.00874pt>
+File: figures/pdf_recovered/hardware_controller_perspective.png Graphic file (t
+ype png)
+<use figures/pdf_recovered/hardware_controller_perspective.png>
+Package pdftex.def Info: figures/pdf_recovered/hardware_controller_perspective.
+png  used on input line 45.
+(pdftex.def)             Requested size: 264.0424pt x 165.34863pt.
+<figures/pdf_recovered/hardware_controller_top.png, id=812, 997.7275pt x 983.67
+5pt>
+File: figures/pdf_recovered/hardware_controller_top.png Graphic file (type png)
+
+<use figures/pdf_recovered/hardware_controller_top.png>
+Package pdftex.def Info: figures/pdf_recovered/hardware_controller_top.png  use
+d on input line 51.
+(pdftex.def)             Requested size: 163.88815pt x 161.5789pt.
+
+Underfull \hbox (badness 2913) in paragraph at lines 52--52
+[]\OT1/cmr/m/n/10.95 (b) |Vista su-pe-rior com dis-tri-
+ []
+
+
+
+[23 <./figures/pdf_recovered/hardware_controller_perspective.png> <./figures/pd
+f_recovered/hardware_controller_top.png>]
+<figures/pdf_recovered/tmcs28_support_cad.png, id=821, 1299.85625pt x 907.39pt>
+
+File: figures/pdf_recovered/tmcs28_support_cad.png Graphic file (type png)
+<use figures/pdf_recovered/tmcs28_support_cad.png>
+Package pdftex.def Info: figures/pdf_recovered/tmcs28_support_cad.png  used on 
+input line 109.
+(pdftex.def)             Requested size: 327.7763pt x 228.79918pt.
+<figures/pdf_recovered/prototype_motors_tmcs28.jpg, id=823, 4015.0pt x 2260.445
+pt>
+File: figures/pdf_recovered/prototype_motors_tmcs28.jpg Graphic file (type jpg)
+
+<use figures/pdf_recovered/prototype_motors_tmcs28.jpg>
+Package pdftex.def Info: figures/pdf_recovered/prototype_motors_tmcs28.jpg  use
+d on input line 122.
+(pdftex.def)             Requested size: 400.61703pt x 225.54036pt.
+
+
+[24 <./figures/pdf_recovered/tmcs28_support_cad.png>]
+<figures/pdf_recovered/prototype_bench_complete.jpg, id=830, 4015.0pt x 2260.44
+5pt>
+File: figures/pdf_recovered/prototype_bench_complete.jpg Graphic file (type jpg
+)
+<use figures/pdf_recovered/prototype_bench_complete.jpg>
+Package pdftex.def Info: figures/pdf_recovered/prototype_bench_complete.jpg  us
+ed on input line 170.
+(pdftex.def)             Requested size: 400.61703pt x 225.54036pt.
+
+
+[25 <./figures/pdf_recovered/prototype_motors_tmcs28.jpg>])
+(Cap03/ControleMovimento.tex
+
+[26 <./figures/pdf_recovered/prototype_bench_complete.jpg>]
+<figures/pdf_recovered/step_timing_tmc5160.png, id=844, 1204.5pt x 501.875pt>
+File: figures/pdf_recovered/step_timing_tmc5160.png Graphic file (type png)
+<use figures/pdf_recovered/step_timing_tmc5160.png>
+Package pdftex.def Info: figures/pdf_recovered/step_timing_tmc5160.png  used on
+ input line 47.
+(pdftex.def)             Requested size: 400.61703pt x 166.92111pt.
+
+
+[27 <./figures/pdf_recovered/step_timing_tmc5160.png>]
+<figures/pdf_recovered/dda_xy_simulation.png, id=854, 1204.5pt x 803.0pt>
+File: figures/pdf_recovered/dda_xy_simulation.png Graphic file (type png)
+<use figures/pdf_recovered/dda_xy_simulation.png>
+Package pdftex.def Info: figures/pdf_recovered/dda_xy_simulation.png  used on i
+nput line 117.
+(pdftex.def)             Requested size: 400.61703pt x 267.07379pt.
+
+
+[28 <./figures/pdf_recovered/dda_xy_simulation.png>]
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
+put line 166.
+
+
+[29]
+<figures/pdf_recovered/trapezoidal_ramp_simulation.png, id=871, 1505.625pt x 10
+03.75pt>
+File: figures/pdf_recovered/trapezoidal_ramp_simulation.png Graphic file (type 
+png)
+<use figures/pdf_recovered/trapezoidal_ramp_simulation.png>
+Package pdftex.def Info: figures/pdf_recovered/trapezoidal_ramp_simulation.png 
+ used on input line 264.
+(pdftex.def)             Requested size: 391.51021pt x 260.99948pt.
+
+
+[30]
+Underfull \hbox (badness 1603) in paragraph at lines 315--321
+\OT1/cmr/m/n/10 com \OT1/cmr/m/it/10 anti-windup \OT1/cmr/m/n/10 por li-mita^^X
+c~ao da in-te-gral em $\OMS/cmtt/m/n/10 ^^F[]$ \OT1/cmr/m/n/10 e sa-tura^^Xc~ao
+ sim^^Setrica em
+ []
+
+
+
+[31 <./figures/pdf_recovered/trapezoidal_ramp_simulation.png>]
+
+[32]
+
+[33]
+<figures/pdf_recovered/python_interactive_simulator.png, id=907, 2568.59625pt x
+ 1083.04625pt>
+File: figures/pdf_recovered/python_interactive_simulator.png Graphic file (type
+ png)
+<use figures/pdf_recovered/python_interactive_simulator.png>
+Package pdftex.def Info: figures/pdf_recovered/python_interactive_simulator.png
+  used on input line 467.
+(pdftex.def)             Requested size: 432.48051pt x 182.34715pt.
+
+
+[34])
+
+[35 <./figures/pdf_recovered/python_interactive_simulator.png>]
+
+[36] (Cap04/Capitulo4.tex
+Cap\'{\i }tulo 4.
+
+
+[37
 
 
 ]
-Underfull \hbox (badness 3009) in paragraph at lines 94--98
+<figures/pdf_recovered/simulation_experiment_load_comparison.png, id=936, 978.6
+5625pt x 1109.14375pt>
+File: figures/pdf_recovered/simulation_experiment_load_comparison.png Graphic f
+ile (type png)
+<use figures/pdf_recovered/simulation_experiment_load_comparison.png>
+Package pdftex.def Info: figures/pdf_recovered/simulation_experiment_load_compa
+rison.png  used on input line 75.
+(pdftex.def)             Requested size: 327.7763pt x 371.48508pt.
+
+
+[38]
+
+[39 <./figures/pdf_recovered/simulation_experiment_load_comparison.png>])
+
+[40] (Cap05/Capitulo5.tex
+Cap\'{\i }tulo 5.
+)
+
+[41
+
+
+] (main.bbl
+Underfull \hbox (badness 3009) in paragraph at lines 88--92
+[]\OT1/cmr/m/n/10 TRINAMIC Mo-tion Con-trol
+ []
+
+
+
+[42
+
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 95--98
 []\OT1/cmr/m/n/10 TRINAMIC Mo-tion Con-trol
  []
 
 )
 
-[20] (main.aux (Identificacao.aux))
+[43] (main.aux (Identificacao.aux))
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
@@ -1035,16 +1449,16 @@ L3 programming layer <2025-09-02>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 0B1BD9034932B6E62C8BFF2FB6E56B11;6231.
+(rerunfilecheck)             Checksum: B56B11A204D17631C0351E574AAB6FE6;13941.
  ) 
 Here is how much of TeX's memory you used:
- 20312 strings out of 468081
- 385930 string characters out of 5425304
- 889942 words of memory out of 5000000
- 48503 multiletter control sequences out of 15000+600000
- 643157 words of font info for 96 fonts, out of 8000000 for 9000
+ 20798 strings out of 468081
+ 399821 string characters out of 5425304
+ 890735 words of memory out of 5000000
+ 48831 multiletter control sequences out of 15000+600000
+ 647616 words of font info for 115 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,85p,318b,1188s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,17n,85p,467b,1215s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tct
 i1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 600\tcrm1000.pk> <C:\Users\Valdir\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
@@ -1053,25 +1467,32 @@ e1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Valdir/AppData/Local/Progr
 ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx8.pfb><C:/Users/Valdir/AppData/Lo
 cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><C:/Users/Valdi
-r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/U
-sers/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12
-.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts
-/cm/cmmi8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public
-/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/typ
-e1/public/amsfonts/cm/cmr12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/
-fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Valdir/AppData/Local/Programs
-/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Valdir/AppData/Local/
-Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsl12.pfb><C:/Users/Valdir/AppD
-ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/V
-aldir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C
-:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmt
-i10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
-nts/cm/cmti12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmtt10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/font
-s/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on main.pdf (35 pages, 839070 bytes).
+r/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/
+Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex1
+0.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/cm/cmmi10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/amsfonts/cm/cmmi12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/
+type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKT
+eX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Valdir/AppData/Local/Prog
+rams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Valdir/AppData/L
+ocal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Valdir/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users
+/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><
+C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cm
+r8.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
+ts/cm/cmsl12.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/pub
+lic/amsfonts/cm/cmsy10.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts
+/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Valdir/AppData/Local/Programs/MiK
+TeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/Valdir/AppData/Local/Pro
+grams/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/Valdir/AppData
+/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Users/Vald
+ir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/
+Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt1
+2.pfb><C:/Users/Valdir/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/symbols/msam10.pfb>
+Output written on main.pdf (63 pages, 8729068 bytes).
 PDF statistics:
- 565 PDF objects out of 1000 (max. 8388607)
- 114 named destinations out of 1000 (max. 500000)
- 302 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1136 PDF objects out of 1200 (max. 8388607)
+ 261 named destinations out of 1000 (max. 500000)
+ 668 words of extra memory for PDF output out of 10000 (max. 10000000)
 

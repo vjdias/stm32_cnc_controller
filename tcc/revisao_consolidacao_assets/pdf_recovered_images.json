@@ -1,0 +1,182 @@
+[
+  {
+    "page": 1,
+    "image_index": 1,
+    "source_name": "Im1.jpg",
+    "file": "tcc/src/figures/pdf_recovered/page_01_img_01.jpg",
+    "width": 1181,
+    "height": 1181,
+    "mode": "RGB"
+  },
+  {
+    "page": 39,
+    "image_index": 1,
+    "source_name": "Im2.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_01.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 2,
+    "source_name": "Im3.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_02.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 3,
+    "source_name": "Im4.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_03.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 4,
+    "source_name": "Im5.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_04.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 5,
+    "source_name": "Im6.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_05.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 6,
+    "source_name": "Im7.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_06.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 7,
+    "source_name": "Im8.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_07.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 8,
+    "source_name": "Im9.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_08.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 39,
+    "image_index": 9,
+    "source_name": "Im10.png",
+    "file": "tcc/src/figures/pdf_recovered/page_39_img_09.png",
+    "width": 780,
+    "height": 416,
+    "mode": "RGBA"
+  },
+  {
+    "page": 40,
+    "image_index": 1,
+    "source_name": "Im11.png",
+    "file": "tcc/src/figures/pdf_recovered/page_40_img_01.png",
+    "width": 1707,
+    "height": 1069,
+    "mode": "RGBA"
+  },
+  {
+    "page": 40,
+    "image_index": 2,
+    "source_name": "Im12.png",
+    "file": "tcc/src/figures/pdf_recovered/page_40_img_02.png",
+    "width": 994,
+    "height": 980,
+    "mode": "RGBA"
+  },
+  {
+    "page": 41,
+    "image_index": 1,
+    "source_name": "Im13.png",
+    "file": "tcc/src/figures/pdf_recovered/page_41_img_01.png",
+    "width": 1295,
+    "height": 904,
+    "mode": "RGBA"
+  },
+  {
+    "page": 42,
+    "image_index": 1,
+    "source_name": "Im14.jpg",
+    "file": "tcc/src/figures/pdf_recovered/page_42_img_01.jpg",
+    "width": 4000,
+    "height": 2252,
+    "mode": "RGB"
+  },
+  {
+    "page": 43,
+    "image_index": 1,
+    "source_name": "Im15.jpg",
+    "file": "tcc/src/figures/pdf_recovered/page_43_img_01.jpg",
+    "width": 4000,
+    "height": 2252,
+    "mode": "RGB"
+  },
+  {
+    "page": 44,
+    "image_index": 1,
+    "source_name": "Im16.png",
+    "file": "tcc/src/figures/pdf_recovered/page_44_img_01.png",
+    "width": 1200,
+    "height": 500,
+    "mode": "RGBA"
+  },
+  {
+    "page": 46,
+    "image_index": 1,
+    "source_name": "Im17.png",
+    "file": "tcc/src/figures/pdf_recovered/page_46_img_01.png",
+    "width": 1200,
+    "height": 800,
+    "mode": "RGBA"
+  },
+  {
+    "page": 50,
+    "image_index": 1,
+    "source_name": "Im18.png",
+    "file": "tcc/src/figures/pdf_recovered/page_50_img_01.png",
+    "width": 1500,
+    "height": 1000,
+    "mode": "RGBA"
+  },
+  {
+    "page": 54,
+    "image_index": 1,
+    "source_name": "Im19.png",
+    "file": "tcc/src/figures/pdf_recovered/page_54_img_01.png",
+    "width": 2559,
+    "height": 1079,
+    "mode": "RGBA"
+  },
+  {
+    "page": 57,
+    "image_index": 1,
+    "source_name": "Im20.png",
+    "file": "tcc/src/figures/pdf_recovered/page_57_img_01.png",
+    "width": 975,
+    "height": 1105,
+    "mode": "RGBA"
+  }
+]

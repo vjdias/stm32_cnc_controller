@@ -7,23 +7,22 @@ Reallocating 'name_of_file' (item size: 1) to 8 items.
 The style file: apalike.bst
 Reallocating 'name_of_file' (item size: 1) to 21 items.
 Database file #1: Ref/SampleReferences.bib
-Warning--empty year in tmc5160_ds
 You've used 19 entries,
             1935 wiz_defined-function locations,
-            569 strings with 6365 characters,
-and the built_in function-call counts, 5931 in all, are:
+            570 strings with 6369 characters,
+and the built_in function-call counts, 5933 in all, are:
 = -- 589
 > -- 184
 < -- 17
 + -- 57
 - -- 56
-* -- 421
-:= -- 1073
+* -- 423
+:= -- 1074
 add.period$ -- 60
 call.type$ -- 19
 change.case$ -- 116
 chr.to.int$ -- 18
-cite$ -- 20
+cite$ -- 19
 duplicate$ -- 263
 empty$ -- 436
 format.name$ -- 81
@@ -33,11 +32,11 @@ int.to.str$ -- 0
 missing$ -- 11
 newline$ -- 100
 num.names$ -- 57
-pop$ -- 109
+pop$ -- 107
 preamble$ -- 1
 purify$ -- 123
 quote$ -- 0
-skip$ -- 205
+skip$ -- 207
 stack$ -- 0
 substring$ -- 334
 swap$ -- 33
@@ -45,8 +44,7 @@ text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 108
-warning$ -- 1
+warning$ -- 0
 while$ -- 47
 width$ -- 0
-write$ -- 241
-(There was 1 warning)
+write$ -- 242

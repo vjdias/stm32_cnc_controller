@@ -1,16 +1,53 @@
 \chapter*{Lista de Símbolos}
 
 \begin{description}
+    \item[$ARR$] \quad Valor do registrador de auto-reload usado na configuração dos temporizadores.
+    \item[$\alpha$] \quad Parâmetro de filtragem exponencial usado no termo derivativo discreto e fator de segurança nas estimativas de corrente mínima.
+    \item[$B$] \quad Coeficiente de atrito viscoso equivalente do eixo.
+    \item[$c$] \quad Contagem acumulada do encoder.
+    \item[$D$] \quad Duty cycle do sinal STEP, isto é, a fração do período em que o pulso permanece em nível alto.
+    \item[$\Delta c_k, \Delta p_k, \Delta t_k$] \quad Variações discretas de contagem e tempo usadas na estimação experimental de velocidades.
+    \item[{$e[k]$}] \quad Erro discreto entre referência e medição na amostra $k$.
+    \item[$e_{\text{sync},i}$] \quad Erro de sincronismo do eixo $i$ em relação ao eixo mestre.
+    \item[$e_f(t)$] \quad Força contraeletromotriz induzida na fase do motor.
+    \item[$e_{\text{th}}$] \quad Limiar de sincronismo usado na modulação cruzada de velocidade entre eixos.
     \item[$f_{\text{sys}}$] \quad Frequência do clock principal do microcontrolador.
+    \item[$f_{\text{bus}}$] \quad Frequência do barramento que alimenta o temporizador.
     \item[$f_{\text{TIM6}}$] \quad Frequência de interrupção do temporizador TIM6 usada pelo DDA.
     \item[$f_{\text{loop}}$] \quad Frequência do laço de controle executado no TIM7.
+    \item[$H(t)$] \quad Função degrau unitário de Heaviside.
+    \item[$I_{RMS}$] \quad Corrente eficaz de fase adotada no ajuste dos drivers de motor.
+    \item[$I_{\text{HOLD}}, I_{\text{RUN}}$] \quad Correntes de sustentação e de regime configuradas no TMC5160.
+    \item[$k$] \quad Índice discreto de amostragem.
     \item[$N_{\text{steps}}$] \quad Número de pulsos STEP gerados para cada eixo.
+    \item[$p$] \quad Contagem acumulada de pulsos STEP do atuador.
+    \item[$p_i$] \quad Progresso relativo do eixo $i$ em um segmento de movimento.
+    \item[$PSC$] \quad Valor do prescaler usado na configuração dos temporizadores.
+    \item[$Q16.16$] \quad Formato de ponto fixo com 16 bits para a parte inteira e 16 bits para a parte fracionária.
+    \item[$Q16\_1$] \quad Representação, no formato Q16.16, do valor unitário que corresponde a um passo inteiro acumulado no DDA.
+    \item[$\lfloor \cdot \rfloor$] \quad Operador piso, que retorna o maior inteiro menor ou igual ao argumento.
+    \item[$s_{\text{brake}}$] \quad Distância de frenagem estimada em passos para a rampa trapezoidal.
+    \item[$\sigma(e)$] \quad Função de modulação aplicada à velocidade de referência em função do erro de sincronismo.
+    \item[$\sigma_{\min}$] \quad Fração mínima admissível da velocidade nominal na modulação cruzada entre eixos.
     \item[$\theta$] \quad Posição angular estimada a partir do encoder.
     \item[$e(t)$] \quad Erro instantâneo entre referência e posição medida.
     \item[$u(t)$] \quad Sinal de controle produzido pelo regulador PID.
+    \item[{$u[k]$}] \quad Sinal de controle discreto produzido pelo regulador PID na amostra $k$.
     \item[$K_p, K_i, K_d$] \quad Ganhos proporcional, integral e derivativo do controlador.
+    \item[$K$] \quad Ganho estático do modelo FOPDT.
+    \item[$K_t$] \quad Constante de torque do motor.
+    \item[$L$] \quad Atraso puro do modelo FOPDT.
+    \item[$L_f$] \quad Indutância de fase do motor de passo.
     \item[$J$] \quad Momento de inércia equivalente do eixo controlado.
+    \item[$R_f$] \quad Resistência de fase do motor de passo.
+    \item[$\theta_s$] \quad Posição elétrica comandada pelo campo estatórico.
     \item[$T_L$] \quad Torque de carga refletido no eixo do motor de passo.
+    \item[$T_e$] \quad Torque eletromagnético produzido pelo motor.
     \item[$T_s$] \quad Período de amostragem do laço de controle.
+    \item[$\tau$] \quad Constante de tempo do modelo FOPDT.
+    \item[$U$] \quad Amplitude do degrau aplicado na identificação experimental.
+    \item[$\bar{v}_{\text{cmd}}, \bar{v}_{\text{enc}}$] \quad Velocidades médias em regime usadas na estimação do ganho estático experimental.
+    \item[$v_f(t)$] \quad Tensão aplicada à fase do motor.
     \item[$V_{\text{bus}}$] \quad Tensão do barramento que alimenta os drivers TMC5160.
+    \item[$\omega$] \quad Velocidade angular do eixo.
 \end{description}
