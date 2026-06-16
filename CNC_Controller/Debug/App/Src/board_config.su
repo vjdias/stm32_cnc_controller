@@ -2,5 +2,4 @@
 ../App/Src/board_config.c:55:13:configure_output	48	static
 ../App/Src/board_config.c:99:6:board_config_apply_motion_gpio	32	static
 ../App/Src/board_config.c:127:6:board_config_force_encoder_quadrature	8	static
-../App/Src/board_config.c:134:6:board_config_remap_tim3_encoder_pins	32	static
-../App/Src/board_config.c:151:6:board_config_apply_interrupt_priorities	8	static
+../App/Src/board_config.c:133:6:board_config_apply_interrupt_priorities	8	static

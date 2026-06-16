@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "lptim.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -26,8 +27,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "Services/Motion/motion_service.h"
 #include "app.h"
 #include "board_config.h"
+#include "Services/Safety/safety_service.h"
 #include "Services/Log/log_service.h"
 #include "Protocol/frame_defs.h"
 #include <stdio.h>
@@ -51,7 +54,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+volatile uint32_t g_spi_error_count = 0;
+volatile uint32_t g_spi_last_error = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,21 +99,24 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_SPI1_Init();
+  MX_SPI2_Init();
   MX_TIM6_Init();
-  MX_TIM2_Init();
   MX_TIM5_Init();
   MX_TIM7_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_TIM15_Init();
+  MX_LPTIM1_Init();
   /* USER CODE BEGIN 2 */
     board_config_apply_motion_gpio();
-    board_config_remap_tim3_encoder_pins();
     board_config_force_encoder_quadrature();
     board_config_apply_interrupt_priorities();
     //board_config_apply_spi_dma_profile();
     app_init();
+    // Inicia timers do laço de passos (TIM6) e controle/status (TIM7)
+    HAL_TIM_Base_Start_IT(&htim6);
+    HAL_TIM_Base_Start_IT(&htim7);
+    motion_demo_set_continuous(1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -179,6 +186,64 @@ void SystemClock_Config(void)
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     app_spi_isr_txrx_done(hspi);
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    if (hspi == NULL) return;
+    if (hspi->Instance != APP_SPI_INSTANCE) return;
+
+    g_spi_last_error = hspi->ErrorCode;
+    g_spi_error_count++;
+
+    /* Indicação visual simples para diagnóstico */
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+}
+
+/* Botões de segurança (EXTI):
+ * - B1 (PC13): E-STOP imediato (pressionado = nível baixo)
+ * - B2 (PC0): Release/recover + funções extras do demo (pressionado = baixo)
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    switch (GPIO_Pin) {
+    case GPIO_PIN_13: /* B1 - E-STOP */
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET) {
+            /* Pressionado: aciona E-STOP e para tudo agora */
+            safety_estop_assert();
+            motion_emergency_stop();
+            /* Opcionalmente interrompe os timers para cessar qualquer atividade em ISR */
+            HAL_TIM_Base_Stop_IT(&htim6);
+            HAL_TIM_Base_Stop_IT(&htim7);
+            /* Se houver PWM em TIM15 (LED/auxiliar), pare também */
+            HAL_TIM_PWM_Stop(&htim15, TIM_CHANNEL_1);
+        }
+        break;
+    case GPIO_PIN_0:  /* B2 - Release/Resume + demo speed step */
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == GPIO_PIN_RESET) {
+            /* Libera segurança */
+            safety_estop_release();
+            /* Garante que os timers base voltem a rodar */
+            HAL_TIM_Base_Start_IT(&htim6);
+            HAL_TIM_Base_Start_IT(&htim7);
+            /* Reativa movimentos conforme contexto */
+            if (motion_demo_is_active()) {
+                /* Cicla velocidade no modo demo contínuo */
+                motion_demo_cycle_speed();
+            } else {
+                /* Se o demo estava desligado (ex.: após E-STOP), religa */
+                motion_demo_set_continuous(1);
+                /* Se usa PWM em TIM15 para indicação, retome */
+                HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
+            }
+        }
+        break;
+    case GPIO_PIN_1:
+    case GPIO_PIN_2:
+    default:
+        /* Reservado para sensores PROX/limites; sem ação específica aqui */
+        break;
+    }
 }
 
 /* USER CODE END 4 */

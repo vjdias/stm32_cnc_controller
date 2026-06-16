@@ -5,12 +5,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../App/Src/Services/Motion/motion_hw.c \
 ../App/Src/Services/Motion/motion_service.c 
 
 OBJS += \
+./App/Src/Services/Motion/motion_hw.o \
 ./App/Src/Services/Motion/motion_service.o 
 
 C_DEPS += \
+./App/Src/Services/Motion/motion_hw.d \
 ./App/Src/Services/Motion/motion_service.d 
 
 
@@ -21,7 +24,7 @@ App/Src/Services/Motion/%.o App/Src/Services/Motion/%.su App/Src/Services/Motion
 clean: clean-App-2f-Src-2f-Services-2f-Motion
 
 clean-App-2f-Src-2f-Services-2f-Motion:
-	-$(RM) ./App/Src/Services/Motion/motion_service.cyclo ./App/Src/Services/Motion/motion_service.d ./App/Src/Services/Motion/motion_service.o ./App/Src/Services/Motion/motion_service.su
+	-$(RM) ./App/Src/Services/Motion/motion_hw.cyclo ./App/Src/Services/Motion/motion_hw.d ./App/Src/Services/Motion/motion_hw.o ./App/Src/Services/Motion/motion_hw.su ./App/Src/Services/Motion/motion_service.cyclo ./App/Src/Services/Motion/motion_service.d ./App/Src/Services/Motion/motion_service.o ./App/Src/Services/Motion/motion_service.su
 
 .PHONY: clean-App-2f-Src-2f-Services-2f-Motion
 

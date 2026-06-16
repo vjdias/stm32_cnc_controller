@@ -1,0 +1,38 @@
+\babel@toc {portuguese}{}\relax 
+\contentsline {chapter}{\numberline {1}Introdução}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Objetivos}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Objetivo Geral}{1}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}Objetivos Específicos}{2}{subsection.1.1.2}%
+\contentsline {section}{\numberline {1.2}Organização do texto}{2}{section.1.2}%
+\contentsline {chapter}{\numberline {2}Fundamentação Teórica}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Sistemas CNC}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Temporizadores do STM32L475}{3}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Digital Differential Analyzer}{4}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Modelagem de motores de passo}{4}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Controlador PID digital}{5}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Integração PID-DDA}{5}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Comunicação SPI e USART}{6}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Driver Trinamic TMC5160 e Encoder TMCS-28}{9}{section.2.8}%
+\contentsline {subsection}{\numberline {2.8.1}TMC5160}{9}{subsection.2.8.1}%
+\contentsline {subsection}{\numberline {2.8.2}TMCS-28 (Trinamic/Analog Devices)}{10}{subsection.2.8.2}%
+\contentsline {subsection}{\numberline {2.8.3}Implic\c {c}\~oes de projeto}{10}{subsection.2.8.3}%
+\contentsline {section}{\numberline {2.9}Registros de Configura\c {c}\~ao Utilizados}{10}{section.2.9}%
+\contentsline {subsection}{\numberline {2.9.1}STM32L475}{11}{subsection.2.9.1}%
+\contentsline {subsection}{\numberline {2.9.2}TMC5160}{12}{subsection.2.9.2}%
+\contentsline {chapter}{\numberline {3}Metodologia}{13}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Roteiro incremental de bring-up}{13}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Arquitetura de software}{13}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Procedimentos de teste}{14}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Arquitetura de Hardware}{14}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Vis\~ao geral do sistema}{14}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Alimenta\c {c}\~ao e EMC}{14}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Drivers TMC5160}{14}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Encoder \'{o}ptico TMCS-28}{14}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Intertravamentos e seguran\c {c}a}{15}{subsection.3.4.5}%
+\contentsline {subsection}{\numberline {3.4.6}PCB, cabeamento e montagem}{15}{subsection.3.4.6}%
+\contentsline {chapter}{\numberline {4}Resultados e Discussão}{16}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Desempenho dos serviços principais}{16}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Análise do pipeline SPI}{16}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Integração com a Raspberry Pi}{16}{section.4.3}%
+\contentsline {chapter}{\numberline {5}Conclusão}{18}{chapter.5}%
+\contentsline {chapter}{Bibliografia}{19}{chapter.5}%

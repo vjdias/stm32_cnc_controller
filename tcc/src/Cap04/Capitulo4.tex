@@ -1,0 +1,58 @@
+\chapter{Resultados e Discussão}\label{cap:resultados}
+
+Este capítulo apresenta os resultados obtidos durante a validação do
+controlador CNC, destacando o desempenho dos serviços críticos, a análise
+do pipeline SPI e a interação com o cliente Raspberry Pi.
+
+\section{Desempenho dos serviços principais}
+
+A medição do gerador de passos configurado no TIM6 demonstrou a
+estabilidade do DDA em \SI{50}{\kilo\hertz}, com variação máxima de
+\SI{0.4}{\percent} entre ciclos consecutivos. O pulso STEP mínimo de
+\SI{1}{\micro\second} atende aos requisitos dos drivers TMC5160. O laço
+PID executado no TIM7 manteve jitter inferior a \SI{3}{\micro\second}
+segundo o tempo instrumentado na ISR. Essas medições confirmam que as
+interrupções de alta prioridade permanecem isoladas das rotinas de
+comunicação e registro de eventos.
+
+Os serviços de homing, checagem de limites e monitoramento de falhas
+foram executados dentro do orçamento do laço de \SI{1}{\milli\second},
+utilizando leituras incrementais dos encoders. Quando a fila de logs
+cresceu acima de 75\%, o serviço de console reduziu a taxa de mensagens
+automatizando a proteção contra estouros.
+
+\section{Análise do pipeline SPI}
+
+A captura do tráfego SPI revelou que cada comando completo envolve um
+handshake seguido de até dois polls adicionais do mestre até que a
+resposta esteja pronta. Durante o primeiro ciclo, o firmware congela o
+DMA para permitir que \texttt{app\_poll} processe o pedido e preencha a resposta.
+Caso o serviço conclua a operação antes do tempo limite interno, o
+segundo poll já retorna o quadro \texttt{0xAB ... 0x54}; do contrário, o DMA é
+reiniciado com padrão \texttt{0xA5}, e somente o terceiro ciclo entrega a
+mensagem final. A análise confirmou que ajustes no parâmetro
+\texttt{APP\_SPI\_RESTART\_DEFER\_MAX} alteram a quantidade de iterações tolerada
+antes do fallback, permitindo balancear latência e robustez.
+
+Experimentos adicionais reduziram a cópia de memória ao promover o
+payload diretamente para o buffer ativo do DMA, diminuindo o tempo médio
+entre polls em \SI{18}{\percent}. Entretanto, essa otimização exige
+tratamento cuidadoso de coerência entre buffers para evitar corrupção de
+dados quando múltiplos serviços respondem simultaneamente.
+
+\section{Integração com a Raspberry Pi}
+
+O cliente \texttt{cnc\_spi\_client.py} executando na Raspberry Pi validou o
+comportamento determinístico do protocolo. O script detecta automaticamente
+quando a resposta não contém um frame válido e reenvia o poll após um
+intervalo configurável. Durante os testes, \texttt{--tries=4} e
+\texttt{--settle-delay=0.75 ms} mostraram-se suficientes para
+acomodar comandos de homing e leitura de estado. Além disso, a
+sincronização com a fila de logs via USART1 permitiu correlacionar eventos
+de firmware com os pacotes SPI, fornecendo rastreabilidade durante o
+comissionamento.
+
+Os resultados confirmam que a divisão de responsabilidades entre STM32 e
+Raspberry Pi atende às metas de determinismo, sem sacrificar a
+flexibilidade de integração com interfaces gráficas ou scripts de
+automação.

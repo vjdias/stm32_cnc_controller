@@ -1,0 +1,500 @@
+"""Configuração de drivers TMC5160 a partir do Raspberry Pi."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Iterable, List, Tuple
+
+try:  # pragma: no cover - dependência externa
+    import spidev  # type: ignore
+except Exception:  # pragma: no cover - ambiente sem spidev
+    spidev = None
+
+
+# Endereços de registradores relevantes do TMC5160
+REG_GCONF = 0x00
+REG_GSTAT = 0x01
+REG_IHOLD_IRUN = 0x10
+REG_TPOWERDOWN = 0x11
+REG_TPWMTHRS = 0x13
+REG_CHOPCONF = 0x6C
+REG_PWMCONF = 0x70
+
+
+STATUS_FLAG_DESCRIPTIONS = {
+    7: ("stallguard", "StallGuard detectado"),
+    6: ("ot", "Sobretemperatura (OT)"),
+    5: ("otpw", "Pré-aviso de sobretemperatura (OTPW)"),
+    4: ("s2ga", "Curto à terra na fase A (S2GA)"),
+    3: ("s2gb", "Curto à terra na fase B (S2GB)"),
+    2: ("s2vsa", "Curto à alimentação na fase A (S2VSA)"),
+    1: ("s2vsb", "Curto à alimentação na fase B (S2VSB)"),
+    0: ("uv_cp", "Subtensão do charge pump (UV_CP)"),
+}
+
+FAULT_BITS = (6, 5, 4, 3, 2, 1, 0)
+
+GSTAT_FLAGS = {
+    0: "RESET: driver foi resetado desde a última leitura (limpe escrevendo 1).",
+    1: (
+        "DRV_ERR: falha de driver (sobretemperatura ou curto nas saídas). "
+        "Escreva 1 para limpar após resolver a causa."
+    ),
+    2: "UV_CP: subtensão no charge pump detectada (verifique alimentação/EN).",
+}
+
+GCONF_FLAGS = {
+    0: "I_SCALE_ANALOG=1 → corrente definida pelo pino VREF (0=controle digital).",
+    1: "INTERNAL_RSENSE=1 → resistores de sense internos habilitados.",
+    2: "EN_PWM_MODE=1 → StealthChop habilitado (Step/Dir silencioso).",
+    3: "ENC_COMMUTATION=1 → comutação via encoder ativada.",
+    4: "SHAFT=1 → inversão do sentido do motor.",
+    5: "DIAG0_ERROR=1 → falhas de driver no pino DIAG0.",
+    6: "DIAG0_OTPW=1 → aviso de sobretemperatura no DIAG0.",
+    7: "DIAG0_STALL=1 → StallGuard no DIAG0.",
+    8: "DIAG1_STALL/INDEX=1 → DIAG1 sinaliza stall/index (conforme modo).",
+    9: "DIAG1_ONSTATE=1 → DIAG1 indica estado ON do power stage.",
+    10: "DIAG1_STEPS_SKIPPED=1 → DIAG1 sinaliza passos perdidos.",
+    11: "DIAG0_INT_PUSHPULL=1 → saída DIAG0 em push-pull interno.",
+    12: "DIAG1_PUSHPULL=1 → saída DIAG1 em push-pull.",
+    13: "SMALL_HYSTERESIS=1 → histerese reduzida no comparador de corrente.",
+    14: "STOP_ENABLE=1 → entrada stop ativa.",
+    15: "DIRECT_MODE=1 → controle direto (bypass do interpolador).",
+    16: "TEST_MODE=1 → modo de teste interno (usar somente conforme datasheet).",
+}
+
+
+@dataclass(frozen=True)
+class TMC5160RegisterPreset:
+    """Coleção ordenada de escritas de registradores para preparar o driver."""
+
+    writes: Tuple[Tuple[int, int], ...]
+
+    @staticmethod
+    def default() -> "TMC5160RegisterPreset":
+        """Preset usado para habilitar STEP/DIR e corrente nominal."""
+
+        return TMC5160RegisterPreset(
+            writes=(
+                # Limpa falhas latentes (UVLO, overtemp, short). Escrever 1 limpa o bit.
+                (REG_GSTAT, 0x00000007),
+                # Ativa o modo PWM de controle de corrente para operação Step/Dir.
+                (REG_GCONF, 0x00000004),
+                # Correntes padrão (baixas): IHOLD=1/32, IRUN=1/32, demora 6 * 2^n clock
+                (REG_IHOLD_IRUN, 0x00060101),
+                # Tempo até desligar bobina após parada (20 * 16 ciclos de clock interno)
+                (REG_TPOWERDOWN, 0x00000014),
+                # Limiar para modo StealthChop (velocidades abaixo de ~rpm) — 500 ticks
+                (REG_TPWMTHRS, 0x000001F4),
+                # Chopper configuration: toff=3, hstrt=5, hend=0, tbl=2, mres=16 µsteps
+                (REG_CHOPCONF, 0x10410150),
+                # PWM configuration: autoscale/autograd, freq=2, ofs=36, grad=14
+                (REG_PWMCONF, 0xC10D0024),
+            )
+        )
+
+
+@dataclass(frozen=True)
+class TMC5160Status:
+    """Representa o byte de status retornado pelo TMC5160."""
+
+    raw: int
+
+    def flag(self, bit: int) -> bool:
+        return bool(self.raw & (1 << bit))
+
+    @property
+    def stallguard(self) -> bool:
+        return self.flag(7)
+
+    def active_faults(self) -> List[str]:
+        return [
+            STATUS_FLAG_DESCRIPTIONS[bit][1]
+            for bit in FAULT_BITS
+            if self.flag(bit)
+        ]
+
+    def has_fault(self) -> bool:
+        return bool(self.active_faults())
+
+    def summary(self) -> str:
+        stall_text = (
+            "StallGuard detectado (SG=1)."
+            if self.stallguard
+            else "StallGuard inativo (SG=0)."
+        )
+        faults = self.active_faults()
+        if faults:
+            fault_text = "Alertas ativos: {}.".format(
+                ", ".join(faults)
+            )
+        else:
+            fault_text = (
+                "Alertas ativos: nenhum (OT/OTPW/S2GA/S2GB/S2VSA/S2VSB/UV_CP limpos)."
+            )
+        return f"{stall_text} {fault_text}"
+
+
+@dataclass(frozen=True)
+class TMC5160TransferResult:
+    """Resultado de uma transferência SPI com o TMC5160."""
+
+    address: int
+    value: int
+    response: Tuple[int, int, int, int, int]
+
+    def __post_init__(self) -> None:
+        if len(self.response) != 5:
+            raise ValueError("Resposta do TMC5160 deve conter 5 bytes")
+
+    @property
+    def status(self) -> TMC5160Status:
+        return TMC5160Status(self.response[0])
+
+    @property
+    def previous_data(self) -> int:
+        _, b1, b2, b3, b4 = self.response
+        return (b1 << 24) | (b2 << 16) | (b3 << 8) | b4
+
+    @property
+    def raw_hex(self) -> str:
+        return " ".join(f"0x{byte:02X}" for byte in self.response)
+
+    def raise_on_faults(self) -> None:
+        faults = self.status.active_faults()
+        if faults:
+            fault_list = ", ".join(faults)
+            raise RuntimeError(
+                "Driver TMC5160 sinalizou alertas: {faults} (status=0x{status:02X}, "
+                "resposta={raw})".format(
+                    faults=fault_list,
+                    status=self.status.raw,
+                    raw=self.raw_hex,
+                )
+            )
+
+
+@dataclass(frozen=True)
+class TMC5160ReadResult:
+    """Resultado de uma leitura de registrador do TMC5160."""
+
+    address: int
+    request: TMC5160TransferResult
+    reply: TMC5160TransferResult
+
+    @property
+    def value(self) -> int:
+        """Retorna o valor efetivo do registrador solicitado."""
+
+        return self.reply.previous_data
+
+    @property
+    def raw_hex(self) -> str:
+        """Concatena os 5 bytes recebidos na resposta útil."""
+
+        return self.reply.raw_hex
+
+    def raise_on_faults(self) -> None:
+        """Propaga qualquer alerta sinalizado pelo driver."""
+
+        self.request.raise_on_faults()
+        self.reply.raise_on_faults()
+
+
+def _decode_flag_bits(mapping, value: int) -> List[str]:
+    details = [desc for bit, desc in sorted(mapping.items()) if value & (1 << bit)]
+    if not details:
+        return ["Nenhum bit relevante ativo."]
+    return details
+
+
+def _percent_of_fullscale(raw: int) -> int:
+    if raw <= 0:
+        return 0
+    return int(round(raw * 100 / 31))
+
+
+def decode_register_value(address: int, value: int) -> List[str]:
+    """Traduz valores de registradores conhecidos do TMC5160."""
+
+    if address == REG_GSTAT:
+        return _decode_flag_bits(GSTAT_FLAGS, value)
+
+    if address == REG_GCONF:
+        active = [
+            desc for bit, desc in sorted(GCONF_FLAGS.items()) if value & (1 << bit)
+        ]
+        if not active:
+            active.append(
+                "Todos os bits conhecidos limpos → modo básico SpreadCycle/Step-DIR."
+            )
+        return active
+
+    if address == REG_IHOLD_IRUN:
+        ihold = value & 0x1F
+        irun = (value >> 8) & 0x1F
+        iholddelay = (value >> 16) & 0x0F
+        return [
+            f"IHOLD={ihold} (~{_percent_of_fullscale(ihold)}% da corrente nominal).",
+            f"IRUN={irun} (~{_percent_of_fullscale(irun)}% da corrente nominal).",
+            (
+                "IHOLDDELAY={delay} (rampa de corrente hold→run em {delay}×8 ciclos de PWM)."
+            ).format(delay=iholddelay),
+        ]
+
+    if address == REG_TPOWERDOWN:
+        delay_cycles = value & 0xFF
+        if delay_cycles:
+            seconds = delay_cycles * (2**18) / 12_000_000
+            ms = seconds * 1000
+            return [
+                f"TPOWERDOWN={delay_cycles} (~{ms:.1f} ms até reduzir corrente após parada, fCLK=12 MHz)."
+            ]
+        return ["TPOWERDOWN=0 (redução imediata da corrente em standstill)."]
+
+    if address == REG_TPWMTHRS:
+        threshold = value & 0xFFFFF
+        if threshold:
+            microsteps_per_s = int(round(12_000_000 * 256 / threshold))
+            return [
+                (
+                    "TPWMTHRS={val} → transição StealthChop→SpreadCycle quando a velocidade "
+                    "exceder ~{spd} micropassos/s (fCLK=12 MHz)."
+                ).format(val=threshold, spd=microsteps_per_s)
+            ]
+        return ["TPWMTHRS=0 (StealthChop sempre ativo; sem comutação automática)."]
+
+    if address == REG_CHOPCONF:
+        toff = value & 0x0F
+        hstrt = (value >> 4) & 0x07
+        hend = (value >> 7) & 0x0F
+        tbl = (value >> 15) & 0x03
+        vsense = (value >> 17) & 0x01
+        mres = (value >> 24) & 0x0F
+        intpol = (value >> 28) & 0x01
+        dedge = (value >> 29) & 0x01
+        diss2g = (value >> 30) & 0x01
+        diss2vs = (value >> 31) & 0x01
+        microsteps = 1 << (8 - mres) if 0 <= mres <= 8 else None
+        details = [
+            f"TOFF={toff} (tempo off do chopper; 0 desativa PWM).",
+            f"HSTRT={hstrt} / HEND={hend} (ajuste de fast/slow decay).",
+            f"TBL={tbl} (tempo mínimo de blanking).",
+            (
+                "VSENSE={} → {}".format(
+                    vsense,
+                    "0.18 V drop nos resistores de sense" if vsense else "0.325 V drop",
+                )
+            ),
+        ]
+        if microsteps:
+            details.append(
+                f"MRES={mres} → {microsteps} micropassos por passo completo."
+            )
+        else:
+            details.append("MRES={} (valor reservado)".format(mres))
+        details.append(
+            "INTPOL={} → interpolação de micropassos {}.".format(
+                intpol, "ativa" if intpol else "desativada"
+            )
+        )
+        details.append(
+            "DEDGE={} → pulsos STEP amostrados em {} borda(s).".format(
+                dedge, "ambas" if dedge else "bordas de subida"
+            )
+        )
+        if diss2g:
+            details.append("DISS2G=1 → proteção short-to-ground desabilitada.")
+        if diss2vs:
+            details.append("DISS2VS=1 → proteção short-to-supply desabilitada.")
+        if not diss2g and not diss2vs:
+            details.append("Proteções S2G/S2VS ativas.")
+        return details
+
+    if address == REG_PWMCONF:
+        pwm_ofs = value & 0xFF
+        pwm_grad = (value >> 8) & 0xFF
+        pwm_freq = (value >> 16) & 0x03
+        autoscale = (value >> 18) & 0x01
+        autograd = (value >> 19) & 0x01
+        freewheel = (value >> 20) & 0x03
+        pwm_reg = (value >> 22) & 0x03
+        pwm_lim = (value >> 24) & 0x03
+        freq_desc = {
+            0: "fPWM=2/1024·fCLK",
+            1: "fPWM=2/683·fCLK",
+            2: "fPWM=2/512·fCLK",
+            3: "fPWM=2/410·fCLK",
+        }.get(pwm_freq, "Frequência PWM reservada")
+        freewheel_desc = {
+            0: "normal",
+            1: "passive short break",
+            2: "passive fast decay",
+            3: "freewheeling",
+        }.get(freewheel, "modo reservado")
+        return [
+            f"PWM_OFS={pwm_ofs} (offset de corrente).",
+            f"PWM_GRAD={pwm_grad} (gradiente de corrente).",
+            f"PWM_FREQ={pwm_freq} ({freq_desc}).",
+            "PWM_AUTOSCALE={} → ajuste automático de corrente {}.".format(
+                autoscale, "ativo" if autoscale else "desabilitado"
+            ),
+            "PWM_AUTOGRAD={} → gradiente automático {}.".format(
+                autograd, "ativo" if autograd else "desabilitado"
+            ),
+            f"PWM_FREEWHEEL={freewheel} (modo {freewheel_desc}).",
+            f"PWM_REG={pwm_reg} (limite de regulação StealthChop).",
+            f"PWM_LIM={pwm_lim} (limite de regulação extra).",
+        ]
+
+    return []
+
+
+class TMC5160Configurator:
+    """Configura um driver TMC5160 ligado ao barramento SPI do Raspberry Pi."""
+
+    def __init__(
+        self,
+        *,
+        bus: int = 0,
+        device: int = 1,
+        speed_hz: int = 4_000_000,
+        register_preset: TMC5160RegisterPreset | None = None,
+        spi_device_factory=None,
+    ) -> None:
+        self._bus = bus
+        self._device = device
+        self._speed_hz = speed_hz
+        self._registers = register_preset or TMC5160RegisterPreset.default()
+        self._spi = None
+        self._spi_device_factory = spi_device_factory
+
+    def _ensure_spi(self):
+        if self._spi is not None:
+            return self._spi
+
+        factory = self._spi_device_factory
+        if factory is None:
+            if spidev is None:  # pragma: no cover - ambiente sem hardware
+                raise RuntimeError(
+                    "Biblioteca spidev não disponível; instale-a no Raspberry Pi."
+                )
+            factory = spidev.SpiDev  # type: ignore
+
+        spi_dev = factory()
+        spi_dev.open(self._bus, self._device)
+        spi_dev.max_speed_hz = self._speed_hz
+        try:
+            spi_dev.mode = 0b11  # MODE 3: CPOL=1, CPHA=1 (2nd edge)
+        except OSError as exc:
+            close = getattr(spi_dev, "close", None)
+            if callable(close):
+                close()
+            raise RuntimeError(
+                (
+                    "Não foi possível configurar o modo SPI 3 (CPOL=1, CPHA=1) em "
+                    "/dev/spidev{bus}.{dev}: {error}. Verifique se o overlay/driver SPI "
+                    "habilitado para esse barramento suporta modo 3 e se o dispositivo "
+                    "está livre. Ajuste --bus/--dev ou reconfigure o dtoverlay correspondente."
+                ).format(bus=self._bus, dev=self._device, error=exc)
+            ) from exc
+        spi_dev.bits_per_word = 8
+        if hasattr(spi_dev, "lsbfirst"):
+            spi_dev.lsbfirst = False
+        if hasattr(spi_dev, "cshigh"):
+            spi_dev.cshigh = False
+        self._spi = spi_dev
+        return spi_dev
+
+    def close(self) -> None:
+        if self._spi is not None:
+            try:
+                close = getattr(self._spi, "close", None)
+                if callable(close):
+                    close()
+            finally:
+                self._spi = None
+
+    def __enter__(self) -> "TMC5160Configurator":
+        self._ensure_spi()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        self.close()
+
+    @staticmethod
+    def _build_frame(address: int, value: int, *, raw: bool = False) -> List[int]:
+        if not 0 <= value <= 0xFFFFFFFF:
+            raise ValueError("Valor de registrador deve caber em 32 bits")
+        if raw:
+            if not 0 <= address <= 0xFF:
+                raise ValueError("Endereço bruto deve caber em 8 bits")
+            first_byte = address & 0xFF
+        else:
+            if not 0 <= address <= 0x7F:
+                raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+            first_byte = address & 0x7F
+        frame = [first_byte]
+        for shift in (24, 16, 8, 0):
+            frame.append((value >> shift) & 0xFF)
+        return frame
+
+    def _transfer(self, address: int, value: int, *, raw: bool = False) -> TMC5160TransferResult:
+        spi = self._ensure_spi()
+        frame = self._build_frame(address, value, raw=raw)
+        response = spi.xfer2(frame)
+        if len(response) != 5:
+            raise RuntimeError(
+                "Resposta SPI inválida do TMC5160: esperado 5 bytes, recebido {}".format(
+                    len(response)
+                )
+            )
+        return TMC5160TransferResult(address, value, tuple(response))
+
+    def write_register(self, address: int, value: int) -> TMC5160TransferResult:
+        return self._transfer(address, value)
+
+    def configure(self) -> List[TMC5160TransferResult]:
+        results: List[TMC5160TransferResult] = []
+        for address, value in self._registers.writes:
+            results.append(self._transfer(address, value))
+        return results
+
+    def apply_registers(self, writes: Iterable[Tuple[int, int]]) -> List[TMC5160TransferResult]:
+        results: List[TMC5160TransferResult] = []
+        for address, value in writes:
+            results.append(self._transfer(address, value))
+        return results
+
+    def read_register(self, address: int) -> TMC5160ReadResult:
+        """Realiza uma leitura de registrador seguindo o protocolo de duas etapas."""
+
+        if not 0 <= address <= 0x7F:
+            raise ValueError("Endereço de registrador deve estar entre 0x00 e 0x7F")
+
+        request = self._transfer(0x80 | address, 0x00000000, raw=True)
+        reply = self._transfer(0x00, 0x00000000, raw=True)
+        return TMC5160ReadResult(address, request, reply)
+
+    def read_registers(self, addresses: Iterable[int]) -> List[TMC5160ReadResult]:
+        """Lê múltiplos registradores retornando os resultados individuais."""
+
+        return [self.read_register(address) for address in addresses]
+
+
+__all__ = [
+    "REG_GCONF",
+    "REG_GSTAT",
+    "REG_IHOLD_IRUN",
+    "REG_TPOWERDOWN",
+    "REG_TPWMTHRS",
+    "REG_CHOPCONF",
+    "REG_PWMCONF",
+    "STATUS_FLAG_DESCRIPTIONS",
+    "TMC5160Status",
+    "TMC5160TransferResult",
+    "TMC5160ReadResult",
+    "TMC5160RegisterPreset",
+    "TMC5160Configurator",
+    "decode_register_value",
+]
+

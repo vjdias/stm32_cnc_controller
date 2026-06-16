@@ -1,0 +1,26 @@
+\chapter*{Resumo}
+\noindent Este trabalho descreve o desenvolvimento de um controlador CNC
+com foco em determinismo temporal, implementado sobre o microcontrolador
+STM32L475 e integrado a uma Raspberry Pi. O projeto emprega o gerador de
+pulsos baseado em \emph{Digital Differential Analyzer} (DDA) a
+\SI{50}{\kilo\hertz} usando o temporizador TIM6, fecha o laço PID de
+\SI{1}{\kilo\hertz} com o TIM7 e utiliza encoders em modo quadratura no
+LPTIM1 e nos timers TIM3 e TIM5 para estimar posição. A comunicação com o host
+segue um protocolo SPI com DMA circular, complementado por logs via
+USART1, garantindo observabilidade sem comprometer os prazos de tempo
+real.
+
+A fundamentação teórica apresenta conceitos de CNC, modelagem de motores
+de passo, controle PID e algoritmos DDA. A metodologia foi conduzida por
+um roteiro incremental que validou clock, interrupções críticas, laços
+de controle e serviços de comunicação. Os resultados mostram a
+estabilidade do DDA em \SI{50}{\kilo\hertz}, jitter inferior a
+\SI{3}{\micro\second} no laço PID e o comportamento do pipeline SPI,
+destacando a necessidade de três ciclos de enquete para o \emph{ack} de
+comandos de LED. O trabalho conclui evidenciando a robustez do
+firmware proposto e apresenta sugestões para otimização futura do DMA e
+dos serviços auxiliares.
+
+\vspace{5mm}
+
+\noindent\textbf{\textit{Palavras-chave}:~controle CNC;~STM32L475;~DDA;~controlador PID;~SPI determinístico.}

@@ -98,6 +98,20 @@ def _validate_handshake_frame(
     if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_READY}:
         return
 
+    if {
+        SPI_DMA_HANDSHAKE_READY,
+        SPI_DMA_HANDSHAKE_NO_COMM,
+    }.issuperset(set(normalized_statuses)) and any(
+        status == SPI_DMA_HANDSHAKE_READY for status in normalized_statuses
+    ):
+        # Alguns firmwares podem atualizar o eco do handshake de maneira
+        # preguiçosa, deixando ``0x00`` (NO_COMM) nos primeiros bytes do
+        # payload até que o laço principal termine de copiar todo o buffer
+        # DMA. Desde que pelo menos um ``0xA5`` (READY) tenha sido observado,
+        # tratamos o quadro como handshake válido para continuar com o
+        # polling.
+        return
+
     if set(normalized_statuses) == {SPI_DMA_HANDSHAKE_BUSY}:
         raise BufferError(
             "STM32 respondeu BUSY (0x5A) para todo o frame DMA de "
